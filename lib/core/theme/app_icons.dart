@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:goodtime/features/game/domain/problem_type.dart';
+import 'package:goodtime/core/models/problem_key.dart';
 
-/// Raccolta centralizzata delle icone usate nell'app.
+/// Raccolta centralizzata delle icone e delle label di navigazione e problemi.
 class AppIcons {
   const AppIcons._();
 
@@ -32,38 +32,38 @@ class AppIcons {
   /// Icona per tornare indietro.
   static const IconData back = Icons.arrow_back;
 
-  /// Restituisce l'icona associata al [ProblemType].
-  static IconData forProblemType(ProblemType type) {
-    switch (type) {
-      case ProblemType.lighting:
+  /// Restituisce l'icona associata al [ProblemKey].
+  static IconData forProblemKey(ProblemKey key) {
+    switch (key) {
+      case ProblemKey.lighting:
         return Icons.lightbulb_outline;
-      case ProblemType.potholes:
+      case ProblemKey.potholes:
         return Icons.car_repair;
-      case ProblemType.waste:
+      case ProblemKey.waste:
         return Icons.delete_outline;
-      case ProblemType.cleanliness:
+      case ProblemKey.cleanliness:
         return Icons.cleaning_services_outlined;
-      case ProblemType.green:
+      case ProblemKey.green:
         return Icons.park_outlined;
-      case ProblemType.signage:
+      case ProblemKey.signage:
         return Icons.signpost_outlined;
     }
   }
 
-  /// Restituisce la label in italiano associata al [ProblemType].
-  static String labelForProblemType(ProblemType type) {
-    switch (type) {
-      case ProblemType.lighting:
+  /// Restituisce la label in italiano associata al [ProblemKey].
+  static String labelForProblemKey(ProblemKey key) {
+    switch (key) {
+      case ProblemKey.lighting:
         return 'Illuminazione';
-      case ProblemType.potholes:
+      case ProblemKey.potholes:
         return 'Buche';
-      case ProblemType.waste:
+      case ProblemKey.waste:
         return 'Rifiuti';
-      case ProblemType.cleanliness:
+      case ProblemKey.cleanliness:
         return 'Pulizia';
-      case ProblemType.green:
+      case ProblemKey.green:
         return 'Verde pubblico';
-      case ProblemType.signage:
+      case ProblemKey.signage:
         return 'Segnaletica';
     }
   }
