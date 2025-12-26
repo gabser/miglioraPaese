@@ -32,7 +32,7 @@ class IconLabel extends StatelessWidget {
             icon,
             size: iconSize,
           ),
-          const SizedBox(width: AppTokens.s12),
+          const SizedBox(width: AppTokens.s8),
           Text(
             text,
             style: textTheme.bodyMedium,

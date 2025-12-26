@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:goodtime/core/models/problem_key.dart';
 import 'package:goodtime/core/theme/app_icons.dart';
 import 'package:goodtime/core/theme/app_tokens.dart';
 import 'package:goodtime/core/widgets/icon_label.dart';
 import 'package:goodtime/core/widgets/max_width_container.dart';
-import 'package:goodtime/features/game/domain/problem_type.dart';
 
 /// Schermata iniziale che conferma l'avvio e presenta il tema base.
 class BootScreen extends StatelessWidget {
@@ -102,11 +102,11 @@ class BootScreen extends StatelessWidget {
                       Wrap(
                         spacing: AppTokens.s16,
                         runSpacing: AppTokens.s12,
-                        children: ProblemType.values
+                        children: ProblemKey.values
                             .map(
-                              (type) => IconLabel(
-                                icon: AppIcons.forProblemType(type),
-                                text: AppIcons.labelForProblemType(type),
+                              (problem) => IconLabel(
+                                icon: AppIcons.forProblemKey(problem),
+                                text: AppIcons.labelForProblemKey(problem),
                               ),
                             )
                             .toList(),
