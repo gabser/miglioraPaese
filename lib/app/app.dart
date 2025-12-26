@@ -9,7 +9,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Fanta Comune',
+      title: 'GoodTime',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       routerConfig: _routerConfig,

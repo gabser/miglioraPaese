@@ -16,7 +16,7 @@ class BootScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fanta Comune'),
+        title: const Text('GoodTime'),
       ),
       body: SafeArea(
         child: MaxWidthContainer(
@@ -30,14 +30,14 @@ class BootScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Fanta Comune',
+                        'GoodTime',
                         style: textTheme.headlineMedium?.copyWith(
                           color: colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: AppTokens.s12),
                       Text(
-                        'Il Fantacalcio dei problemi del tuo Comune.',
+                        'Pianifica attività e routine con un taccuino digitale.',
                         style: textTheme.titleMedium,
                       ),
                       const SizedBox(height: AppTokens.s16),
