@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
+import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
@@ -105,6 +108,7 @@ class MockGameRepository implements GameRepository {
     accuracy: 0,
     predictionsCount: 0,
   );
+  final Map<String, AggregatedInsight> _insightCache = {};
 
   final List<LeaderboardEntry> _leaderboardBase = List.generate(
     9,
@@ -209,6 +213,148 @@ class MockGameRepository implements GameRepository {
     );
   }
 
+  Map<PredictionChoice, int> _weightedChoiceDistribution(
+    int total,
+    Map<PredictionChoice, double> weights,
+    Random random,
+  ) {
+    final distribution = <PredictionChoice, int>{};
+    var allocated = 0;
+
+    for (final entry in weights.entries) {
+      final value = (total * entry.value).floor();
+      distribution[entry.key] = value;
+      allocated += value;
+    }
+
+    var remainder = total - allocated;
+    final orderedChoices = weights.keys.toList()
+      ..sort((a, b) => weights[b]!.compareTo(weights[a]!));
+    var index = orderedChoices.isEmpty ? 0 : random.nextInt(orderedChoices.length);
+    while (remainder > 0) {
+      final choice = orderedChoices[index % orderedChoices.length];
+      distribution[choice] = (distribution[choice] ?? 0) + 1;
+      remainder--;
+      index++;
+    }
+
+    return distribution;
+  }
+
+  Map<MotivationKey, int> _weightedMotivationDistribution(
+    int total,
+    Map<MotivationKey, double> weights,
+  ) {
+    final distribution = <MotivationKey, int>{};
+    var allocated = 0;
+
+    for (final entry in weights.entries) {
+      final value = (total * entry.value).floor();
+      distribution[entry.key] = value;
+      allocated += value;
+    }
+
+    var remainder = total - allocated;
+    final orderedKeys = weights.keys.toList()
+      ..sort((a, b) => weights[b]!.compareTo(weights[a]!));
+    var index = 0;
+    while (remainder > 0) {
+      final key = orderedKeys[index % orderedKeys.length];
+      distribution[key] = (distribution[key] ?? 0) + 1;
+      remainder--;
+      index++;
+    }
+
+    return distribution;
+  }
+
+  AggregatedInsight _syntheticInsight(String problemId) {
+    final problem = _problems.firstWhere((p) => p.id == problemId);
+    final random = Random(problemId.hashCode ^ 42);
+    final baseTotal = 6 + random.nextInt(12);
+    final choiceWeights = switch (problem.status) {
+      ProblemStatus.improving => {
+          PredictionChoice.improve: 0.52,
+          PredictionChoice.stable: 0.32,
+          PredictionChoice.worsen: 0.16,
+        },
+      ProblemStatus.stable => {
+          PredictionChoice.improve: 0.36,
+          PredictionChoice.stable: 0.4,
+          PredictionChoice.worsen: 0.24,
+        },
+      ProblemStatus.worsening => {
+          PredictionChoice.improve: 0.2,
+          PredictionChoice.stable: 0.32,
+          PredictionChoice.worsen: 0.48,
+        },
+    };
+
+    final motivationWeights = switch (problem.status) {
+      ProblemStatus.improving => {
+          MotivationKey.visibleActions: 0.38,
+          MotivationKey.seasonality: 0.22,
+          MotivationKey.personalExperience: 0.16,
+          MotivationKey.unmetPromises: 0.12,
+          MotivationKey.recentDecline: 0.12,
+        },
+      ProblemStatus.stable => {
+          MotivationKey.seasonality: 0.24,
+          MotivationKey.personalExperience: 0.2,
+          MotivationKey.visibleActions: 0.18,
+          MotivationKey.unmetPromises: 0.18,
+          MotivationKey.recentDecline: 0.2,
+        },
+      ProblemStatus.worsening => {
+          MotivationKey.recentDecline: 0.34,
+          MotivationKey.unmetPromises: 0.22,
+          MotivationKey.personalExperience: 0.16,
+          MotivationKey.seasonality: 0.14,
+          MotivationKey.visibleActions: 0.14,
+        },
+    };
+
+    final choiceDistribution = _weightedChoiceDistribution(baseTotal, choiceWeights, random);
+    final motivationDistribution = _weightedMotivationDistribution(
+      max(baseTotal - 1, 6),
+      motivationWeights,
+    );
+
+    return AggregatedInsight(
+      problemId: problemId,
+      totalPredictions: baseTotal,
+      choiceDistribution: Map.unmodifiable(choiceDistribution),
+      motivationDistribution: Map.unmodifiable(motivationDistribution),
+    );
+  }
+
+  AggregatedInsight _buildAggregatedInsight(String problemId) {
+    final baseInsight = _syntheticInsight(problemId);
+    final choiceDistribution = Map<PredictionChoice, int>.from(baseInsight.choiceDistribution);
+    final motivationDistribution = Map<MotivationKey, int>.from(baseInsight.motivationDistribution);
+
+    final existing = _predictions[problemId];
+    if (existing != null) {
+      choiceDistribution[existing.choice] = (choiceDistribution[existing.choice] ?? 0) + 1;
+      for (final motivation in existing.motivations) {
+        motivationDistribution[motivation] = (motivationDistribution[motivation] ?? 0) + 1;
+      }
+    }
+
+    final totalPredictions = choiceDistribution.values.fold<int>(0, (sum, value) => sum + value);
+
+    return AggregatedInsight(
+      problemId: problemId,
+      totalPredictions: totalPredictions,
+      choiceDistribution: Map.unmodifiable(choiceDistribution),
+      motivationDistribution: Map.unmodifiable(motivationDistribution),
+    );
+  }
+
+  void _invalidateInsight(String problemId) {
+    _insightCache.remove(problemId);
+  }
+
   void _updateProblem(String problemId, Problem Function(Problem) updater) {
     final index = _problems.indexWhere((problem) => problem.id == problemId);
     if (index == -1) {
@@ -250,6 +396,7 @@ class MockGameRepository implements GameRepository {
       );
       _results.remove(problemId);
       _reputation = _calculateReputation();
+      _invalidateInsight(problemId);
     });
   }
 
@@ -266,6 +413,7 @@ class MockGameRepository implements GameRepository {
       _predictions[problemId] = existing.copyWith(
         motivations: List<MotivationKey>.unmodifiable(motivations.take(2)),
       );
+      _invalidateInsight(problemId);
     });
   }
 
@@ -300,6 +448,18 @@ class MockGameRepository implements GameRepository {
           );
         },
       );
+    });
+  }
+
+  @override
+  Future<AggregatedInsight> getAggregatedInsight(String problemId) {
+    return _withDelay(() {
+      final cached = _insightCache[problemId];
+      if (cached != null) return cached;
+
+      final insight = _buildAggregatedInsight(problemId);
+      _insightCache[problemId] = insight;
+      return insight;
     });
   }
 

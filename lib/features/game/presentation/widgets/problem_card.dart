@@ -6,11 +6,13 @@ import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
 import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/widgets/segmented_choice.dart';
 import 'package:fanta_comune/core/widgets/status_pill.dart';
+import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/problem_status.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
+import 'package:fanta_comune/features/game/presentation/widgets/insight_card.dart';
 import 'package:fanta_comune/features/game/presentation/widgets/motivation_chips.dart';
 
 /// Card premium per mostrare un problema con stato e azione di previsione.
@@ -25,6 +27,7 @@ class ProblemCard extends StatelessWidget {
     this.onTap,
     this.onRefresh,
     this.result,
+    this.insight,
     super.key,
   });
 
@@ -51,6 +54,9 @@ class ProblemCard extends StatelessWidget {
 
   /// Esito della previsione dopo la risoluzione del turno.
   final PredictionResult? result;
+
+  /// Insight aggregato di riferimento, mostrato solo dopo il responso.
+  final AggregatedInsight? insight;
 
   @override
   Widget build(BuildContext context) {
@@ -124,18 +130,35 @@ class ProblemCard extends StatelessWidget {
                       onSelectChoice: onSelectChoice,
                     ),
             ),
+            if (hasResult) ...[
+              const SizedBox(height: AppTokens.s12),
+              AnimatedSwitcherX(
+                duration: AppMotion.normal,
+                switchInCurve: const Interval(0.2, 1, curve: AppMotion.standard),
+                child: insight != null
+                    ? InsightCard(
+                        key: ValueKey('insight-${problem.id}-${insight?.totalPredictions}'),
+                        insight: insight!,
+                        userChoice: selectedChoice,
+                        problemTitle: problem.title,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+            if (!hasResult) ...[
+              const SizedBox(height: AppTokens.s12),
+              AnimatedSwitcherX(
+                duration: AppMotion.fast,
+                child: selectedChoice != null
+                    ? _MotivationSection(
+                        key: ValueKey('motivation-${problem.id}-${selectedChoice?.name}'),
+                        selectedMotivations: selectedMotivations,
+                        onSelectMotivations: onSelectMotivations,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
             const SizedBox(height: AppTokens.s12),
-            AnimatedSwitcherX(
-              duration: AppMotion.fast,
-              child: !hasResult && selectedChoice != null
-                  ? _MotivationSection(
-                      key: ValueKey('motivation-${problem.id}-${selectedChoice?.name}'),
-                      selectedMotivations: selectedMotivations,
-                      onSelectMotivations: onSelectMotivations,
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            if (!hasResult) const SizedBox(height: AppTokens.s12),
             AnimatedSwitcherX(
               duration: AppMotion.fast,
               child: hasResult

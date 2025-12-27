@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/prediction_result.dart';
@@ -12,10 +13,11 @@ class PlayState extends Equatable {
   const PlayState({
     this.isLoading = false,
     this.currentTurn,
-    this.problems = const [],
-    this.myPredictions = const {},
-    this.motivations = const {},
-    this.results = const {},
+    this.problems = const <Problem>[],
+    this.myPredictions = const <String, PredictionChoice>{},
+    this.motivations = const <String, List<MotivationKey>>{},
+    this.results = const <String, PredictionResult>{},
+    this.insights = const <String, AggregatedInsight>{},
     this.reputation = const ReputationScore(
       totalPoints: 0,
       accuracy: 0,
@@ -42,6 +44,9 @@ class PlayState extends Equatable {
   /// Esiti delle previsioni già risolte.
   final Map<String, PredictionResult> results;
 
+  /// Insight aggregati sui problemi già risolti, indicizzati per [Problem.id].
+  final Map<String, AggregatedInsight> insights;
+
   /// Punteggio aggregato derivato dalle previsioni concluse.
   final ReputationScore reputation;
 
@@ -56,6 +61,7 @@ class PlayState extends Equatable {
     Map<String, PredictionChoice>? myPredictions,
     Map<String, List<MotivationKey>>? motivations,
     Map<String, PredictionResult>? results,
+    Map<String, AggregatedInsight>? insights,
     ReputationScore? reputation,
     String? error,
   }) {
@@ -66,6 +72,7 @@ class PlayState extends Equatable {
       myPredictions: myPredictions ?? this.myPredictions,
       motivations: motivations ?? this.motivations,
       results: results ?? this.results,
+      insights: insights ?? this.insights,
       reputation: reputation ?? this.reputation,
       error: error,
     );
@@ -79,6 +86,7 @@ class PlayState extends Equatable {
         myPredictions,
         motivations,
         results,
+        insights,
         reputation,
         error,
       ];

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
+import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/prediction_result.dart';
@@ -19,6 +20,22 @@ class PlayCubit extends Cubit<PlayState> {
   final GameRepository repository;
   final AppPrefs prefs;
 
+  Future<Map<String, AggregatedInsight>> _loadInsightsForProblems(
+    Iterable<String> problemIds,
+  ) async {
+    final targets = problemIds.toSet();
+    final preserved = Map<String, AggregatedInsight>.fromEntries(
+      state.insights.entries.where((entry) => targets.contains(entry.key)),
+    );
+
+    for (final id in targets) {
+      if (preserved.containsKey(id)) continue;
+      final insight = await repository.getAggregatedInsight(id);
+      preserved[id] = insight;
+    }
+    return preserved;
+  }
+
   /// Carica turno, problemi e previsioni utente riusando il repository mock.
   Future<void> load() async {
     emit(state.copyWith(isLoading: true, error: null));
@@ -29,6 +46,7 @@ class PlayCubit extends Cubit<PlayState> {
       final predictions = await repository.getMyPredictions(turn.id);
       final results = await repository.getPredictionResults(turn.id);
       final reputation = await repository.getReputationScore(turn.id);
+      final insights = results.isNotEmpty ? await _loadInsightsForProblems(results.keys) : const <String, AggregatedInsight>{};
 
       emit(
         state.copyWith(
@@ -42,6 +60,7 @@ class PlayCubit extends Cubit<PlayState> {
             (key, value) => MapEntry(key, value.motivations),
           ),
           results: results,
+          insights: insights,
           reputation: reputation,
           error: null,
         ),
@@ -143,11 +162,13 @@ class PlayCubit extends Cubit<PlayState> {
 
       final resolved = await repository.getPredictionResults(turnId);
       final reputation = await repository.getReputationScore(turnId);
+      final insights = await _loadInsightsForProblems(resolved.keys);
 
       emit(
         state.copyWith(
           isLoading: false,
           results: resolved,
+          insights: insights,
           reputation: reputation,
           error: null,
         ),

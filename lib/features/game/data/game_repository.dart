@@ -1,3 +1,4 @@
+import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
 import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
@@ -49,6 +50,9 @@ abstract class GameRepository {
     required String problemId,
     required bool resolved,
   });
+
+  /// Restituisce l'insight aggregato (mock) per il problema indicato.
+  Future<AggregatedInsight> getAggregatedInsight(String problemId);
 
   /// Restituisce il problema associato all'[problemId] richiesto.
   Future<Problem> getProblemById(String problemId);
