@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/privacy/privacy_copy.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
@@ -7,7 +6,8 @@ import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
 import 'package:fanta_comune/core/widgets/primary_card.dart';
-import 'package:fanta_comune/features/boot/boot_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 /// Pagina dedicata a privacy e controllo dei dati locali.
 class PrivacyPage extends StatelessWidget {
@@ -17,12 +17,7 @@ class PrivacyPage extends StatelessWidget {
     final prefs = context.read<AppPrefs>();
     await prefs.clearAll();
     if (!context.mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => const BootScreen(),
-      ),
-      (route) => false,
-    );
+    context.go('/boot');
   }
 
   @override

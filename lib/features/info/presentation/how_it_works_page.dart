@@ -5,7 +5,7 @@ import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
 import 'package:fanta_comune/core/widgets/primary_card.dart';
-import 'package:fanta_comune/features/info/presentation/privacy_page.dart';
+import 'package:go_router/go_router.dart';
 
 /// Pagina informativa che spiega in breve le regole di gioco e rimanda alla privacy.
 class HowItWorksPage extends StatelessWidget {
@@ -74,13 +74,7 @@ class HowItWorksPage extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (context) => const PrivacyPage(),
-                        ),
-                      );
-                    },
+                    onPressed: () => context.go('/privacy'),
                     icon: const Icon(AppIcons.privacy),
                     label: const Text('Privacy'),
                   ),
