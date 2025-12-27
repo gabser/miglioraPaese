@@ -7,8 +7,10 @@ import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
+import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
+import 'package:fanta_comune/features/game/domain/reputation_score.dart';
 import 'package:fanta_comune/features/game/logic/play_cubit.dart';
 import 'package:fanta_comune/features/game/logic/play_state.dart';
 import 'package:fanta_comune/features/game/presentation/widgets/problem_card.dart';
@@ -68,6 +70,7 @@ class _PlayView extends StatelessWidget {
                             choice: choice,
                           ),
                           onRefreshProblem: cubit.refreshProblem,
+                          onResolveTurn: cubit.resolveTurn,
                         ),
                         if (state.error != null) ...[
                           const SizedBox(height: AppTokens.s12),
@@ -91,12 +94,14 @@ class _PlayContent extends StatelessWidget {
     required this.state,
     required this.onSelect,
     required this.onRefreshProblem,
+    required this.onResolveTurn,
     super.key,
   });
 
   final PlayState state;
   final void Function(String problemId, PredictionChoice choice) onSelect;
   final void Function(String problemId) onRefreshProblem;
+  final VoidCallback onResolveTurn;
 
   String _countdownLabel() {
     final turn = state.currentTurn;
@@ -160,6 +165,17 @@ class _PlayContent extends StatelessWidget {
             color: colorScheme.onSurfaceVariant,
           ),
         ),
+        const SizedBox(height: AppTokens.s12),
+        _ReputationCard(reputation: state.reputation),
+        const SizedBox(height: AppTokens.s12),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: state.myPredictions.isEmpty ? null : onResolveTurn,
+            icon: const Icon(Icons.check_circle_outline),
+            label: const Text('Calcola risultati (demo)'),
+          ),
+        ),
         const SizedBox(height: AppTokens.s16),
         ListView.separated(
           shrinkWrap: true,
@@ -169,6 +185,7 @@ class _PlayContent extends StatelessWidget {
           itemBuilder: (context, index) {
             final problem = state.problems[index];
             final selectedChoice = state.myPredictions[problem.id];
+            final result = state.results[problem.id];
 
             return ProblemCard(
               key: ValueKey(problem.id),
@@ -176,10 +193,127 @@ class _PlayContent extends StatelessWidget {
               selectedChoice: selectedChoice,
               onSelectChoice: (choice) => onSelect(problem.id, choice),
               onRefresh: () => onRefreshProblem(problem.id),
+              result: result,
             );
           },
         ),
       ],
+    );
+  }
+}
+
+class _ReputationCard extends StatelessWidget {
+  const _ReputationCard({required this.reputation});
+
+  final ReputationScore reputation;
+
+  String _accuracyLabel() {
+    if (reputation.predictionsCount == 0) return '0%';
+    return '${(reputation.accuracy * 100).clamp(0, 100).toStringAsFixed(0)}%';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return PrimaryCard(
+      padding: const EdgeInsets.all(AppTokens.s16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Reputazione',
+            style: textTheme.titleMedium,
+          ),
+          const SizedBox(height: AppTokens.s8),
+          AnimatedSwitcherX(
+            duration: AppMotion.normal,
+            child: Row(
+              key: ValueKey('${reputation.totalPoints}-${reputation.predictionsCount}-${reputation.accuracy}'),
+              children: [
+                _Metric(
+                  label: 'Punti',
+                  value: reputation.totalPoints.toString(),
+                  icon: AppIcons.spark,
+                  color: colorScheme.primary,
+                ),
+                const SizedBox(width: AppTokens.s12),
+                _Metric(
+                  label: 'Accuratezza',
+                  value: _accuracyLabel(),
+                  icon: Icons.adjust,
+                  color: colorScheme.tertiary,
+                ),
+                const SizedBox(width: AppTokens.s12),
+                _Metric(
+                  label: 'Previsioni',
+                  value: reputation.predictionsCount.toString(),
+                  icon: Icons.query_stats,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppTokens.s8),
+          Text(
+            'Premi “Calcola risultati (demo)” per vedere come le tue previsioni incidono su punti e affidabilità.',
+            style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Metric extends StatelessWidget {
+  const _Metric({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Expanded(
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppTokens.s8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
+            ),
+            child: Icon(icon, color: color),
+          ),
+          const SizedBox(width: AppTokens.s8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: textTheme.bodySmall,
+              ),
+              AnimatedSwitcherX(
+                duration: AppMotion.fast,
+                child: Text(
+                  value,
+                  key: ValueKey(value),
+                  style: textTheme.titleMedium?.copyWith(color: color),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
