@@ -3,8 +3,10 @@ import 'package:fanta_comune/core/theme/app_motion.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
+import 'package:fanta_comune/features/game/domain/insight_history.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
+import 'package:fanta_comune/features/game/presentation/widgets/trend_sparkline.dart';
 
 /// Card sobria che mostra un insight aggregato sulle percezioni collettive.
 class InsightCard extends StatefulWidget {
@@ -13,6 +15,9 @@ class InsightCard extends StatefulWidget {
     required this.insight,
     this.userChoice,
     required this.problemTitle,
+    this.history,
+    this.isHistoryLoading = false,
+    this.onLoadHistory,
     super.key,
   });
 
@@ -25,6 +30,15 @@ class InsightCard extends StatefulWidget {
   /// Titolo del problema, utile per le etichette di accessibilità.
   final String problemTitle;
 
+  /// Storico sintetico delle percezioni, popolato su richiesta.
+  final InsightHistory? history;
+
+  /// Indica se il recupero dello storico è in corso.
+  final bool isHistoryLoading;
+
+  /// Callback per richiedere il recupero dello storico al primo tap.
+  final VoidCallback? onLoadHistory;
+
   @override
   State<InsightCard> createState() => _InsightCardState();
 }
@@ -32,6 +46,7 @@ class InsightCard extends StatefulWidget {
 class _InsightCardState extends State<InsightCard> {
   static const _minimumSignals = 10;
   bool _visible = false;
+  bool _showHistory = false;
 
   bool get _hasSignals => widget.insight.totalPredictions >= _minimumSignals;
 
@@ -44,6 +59,15 @@ class _InsightCardState extends State<InsightCard> {
         _visible = true;
       });
     });
+  }
+
+  void _toggleHistory() {
+    setState(() {
+      _showHistory = !_showHistory;
+    });
+    if (_showHistory && widget.history == null && !widget.isHistoryLoading) {
+      widget.onLoadHistory?.call();
+    }
   }
 
   PredictionChoice _primaryChoice() {
@@ -93,10 +117,70 @@ class _InsightCardState extends State<InsightCard> {
     return 'Motivazioni più comuni: $labels';
   }
 
+  PredictionChoice _historyLeadingChoice() {
+    final history = widget.history;
+    if (history == null || history.snapshots.isEmpty) return _primaryChoice();
+
+    return history.snapshots.last.choiceDistribution.entries.reduce(
+      (a, b) => a.value >= b.value ? a : b,
+    ).key;
+  }
+
+  List<double> _historyValuesFor(PredictionChoice choice) {
+    final history = widget.history;
+    if (history == null) return const [];
+
+    return history.snapshots
+        .map((snapshot) => snapshot.pct(choice).clamp(0, 100))
+        .toList(growable: false);
+  }
+
+  String _trendCopy(PredictionChoice choice, List<double> values) {
+    if (values.length < 2) return 'Trend in formazione: stiamo accumulando segnali.';
+    final delta = values.last - values.first;
+    if (delta.abs() < 2.5) {
+      return switch (choice) {
+        PredictionChoice.improve => 'Percezione di miglioramento stabile.',
+        PredictionChoice.stable => 'Sensazione di stabilità confermata nel tempo.',
+        PredictionChoice.worsen => 'Timore di peggioramento stabile.',
+      };
+    }
+    if (delta > 0) {
+      return switch (choice) {
+        PredictionChoice.improve => 'Tendenza: più persone vedono un miglioramento.',
+        PredictionChoice.stable => 'Tendenza: cresce la percezione di stabilità.',
+        PredictionChoice.worsen => 'Tendenza: più persone temono un peggioramento.',
+      };
+    }
+    return switch (choice) {
+      PredictionChoice.improve => 'Tendenza: fiducia in calo rispetto al miglioramento.',
+      PredictionChoice.stable => 'Tendenza: meno persone pensano resti stabile.',
+      PredictionChoice.worsen => 'Tendenza: timore di peggioramento in calo.',
+    };
+  }
+
+  bool get _historyDimmed {
+    final history = widget.history;
+    if (history == null || history.snapshots.isEmpty) return true;
+    return history.snapshots.last.totalPredictions < _minimumSignals;
+  }
+
+  Color _colorForChoice(ColorScheme colorScheme, PredictionChoice choice) {
+    return switch (choice) {
+      PredictionChoice.improve => colorScheme.primary,
+      PredictionChoice.stable => colorScheme.tertiary,
+      PredictionChoice.worsen => colorScheme.error,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final historyChoice = _historyLeadingChoice();
+    final historyValues = _historyValuesFor(historyChoice);
+    final trendCopy = _trendCopy(historyChoice, historyValues);
+    final historyColor = _colorForChoice(colorScheme, historyChoice);
 
     if (!_visible) {
       return const SizedBox.shrink();
@@ -139,11 +223,138 @@ class _InsightCardState extends State<InsightCard> {
                   colorScheme: colorScheme,
                   textTheme: textTheme,
                 ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: _toggleHistory,
+                    icon: Icon(_showHistory ? Icons.expand_less : Icons.show_chart),
+                    label: Text(_showHistory ? 'Nascondi andamento' : 'Vedi andamento'),
+                  ),
+                ),
+                AnimatedSize(
+                  duration: AppMotion.fast,
+                  curve: AppMotion.standard,
+                  child: _showHistory
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: AppTokens.s8),
+                          child: _HistoryTrend(
+                            history: widget.history,
+                            values: historyValues,
+                            color: historyColor,
+                            trendCopy: trendCopy,
+                            isLoading: widget.isHistoryLoading,
+                            dimmed: _historyDimmed,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
               ],
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _HistoryTrend extends StatelessWidget {
+  const _HistoryTrend({
+    required this.history,
+    required this.values,
+    required this.color,
+    required this.trendCopy,
+    required this.isLoading,
+    required this.dimmed,
+  });
+
+  final InsightHistory? history;
+  final List<double> values;
+  final Color color;
+  final String trendCopy;
+  final bool isLoading;
+  final bool dimmed;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final snapshotCount = history?.snapshots.length ?? 6;
+    final heading = 'Andamento (ultimi ${snapshotCount == 0 ? 6 : snapshotCount} turni)';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              heading,
+              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const Spacer(),
+            if (dimmed)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTokens.s12,
+                  vertical: AppTokens.s8,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
+                ),
+                child: Text(
+                  'Trend in formazione',
+                  style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppTokens.s8),
+        if (isLoading)
+          Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: AppTokens.s8),
+              Text(
+                'Carichiamo i segnali recenti...',
+                style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+              ),
+            ],
+          )
+        else if (history == null)
+          Text(
+            'Apri per vedere come stanno cambiando le percezioni.',
+            style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+          )
+        else ...[
+          TrendSparkline(
+            values: values,
+            color: color,
+            dimmed: dimmed,
+          ),
+          const SizedBox(height: AppTokens.s8),
+          Text(
+            trendCopy,
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (dimmed) ...[
+            const SizedBox(height: AppTokens.s8 / 2),
+            Text(
+              'Servono ancora alcuni segnali per consolidare il trend.',
+              style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ],
+      ],
     );
   }
 }

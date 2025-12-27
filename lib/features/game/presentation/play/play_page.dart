@@ -206,6 +206,8 @@ class _PlayContent extends StatelessWidget {
             final selectedChoice = state.myPredictions[problem.id];
             final result = state.results[problem.id];
             final insight = state.insights[problem.id];
+            final history = state.insightHistories[problem.id];
+            final isHistoryLoading = state.loadingInsightHistories.contains(problem.id);
             final selectedMotivations = state.motivations[problem.id] ?? const [];
 
             return ProblemCard(
@@ -218,6 +220,9 @@ class _PlayContent extends StatelessWidget {
               onRefresh: () => onRefreshProblem(problem.id),
               result: result,
               insight: insight,
+              history: history,
+              isHistoryLoading: isHistoryLoading,
+              onLoadHistory: () => cubit.loadProblemHistory(problem.id),
             );
           },
         ),

@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
+import 'package:fanta_comune/features/game/domain/insight_history.dart';
+import 'package:fanta_comune/features/game/domain/insight_snapshot.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
@@ -109,6 +111,8 @@ class MockGameRepository implements GameRepository {
     predictionsCount: 0,
   );
   final Map<String, AggregatedInsight> _insightCache = {};
+  final Map<String, InsightHistory> _insightHistoryCache = {};
+  List<ReputationScore>? _reputationHistoryCache;
 
   final List<LeaderboardEntry> _leaderboardBase = List.generate(
     9,
@@ -268,6 +272,133 @@ class MockGameRepository implements GameRepository {
     return distribution;
   }
 
+  List<InsightSnapshot> _buildSnapshotsForProblem(Problem problem) {
+    final baseInsight = _syntheticInsight(problem.id);
+    final random = Random(problem.id.hashCode ^ 73);
+    final snapshots = <InsightSnapshot>[];
+    var totalPredictions = max(baseInsight.totalPredictions - 4, 6);
+    var weightShift = 0.06;
+
+    final choiceWeights = switch (problem.status) {
+      ProblemStatus.improving => {
+          PredictionChoice.improve: 0.52,
+          PredictionChoice.stable: 0.32,
+          PredictionChoice.worsen: 0.16,
+        },
+      ProblemStatus.stable => {
+          PredictionChoice.improve: 0.36,
+          PredictionChoice.stable: 0.4,
+          PredictionChoice.worsen: 0.24,
+        },
+      ProblemStatus.worsening => {
+          PredictionChoice.improve: 0.2,
+          PredictionChoice.stable: 0.32,
+          PredictionChoice.worsen: 0.48,
+        },
+    };
+
+    final motivationWeights = switch (problem.status) {
+      ProblemStatus.improving => {
+          MotivationKey.visibleActions: 0.36,
+          MotivationKey.seasonality: 0.22,
+          MotivationKey.personalExperience: 0.18,
+          MotivationKey.unmetPromises: 0.12,
+          MotivationKey.recentDecline: 0.12,
+        },
+      ProblemStatus.stable => {
+          MotivationKey.seasonality: 0.26,
+          MotivationKey.personalExperience: 0.2,
+          MotivationKey.visibleActions: 0.18,
+          MotivationKey.unmetPromises: 0.18,
+          MotivationKey.recentDecline: 0.18,
+        },
+      ProblemStatus.worsening => {
+          MotivationKey.recentDecline: 0.34,
+          MotivationKey.unmetPromises: 0.22,
+          MotivationKey.personalExperience: 0.18,
+          MotivationKey.seasonality: 0.14,
+          MotivationKey.visibleActions: 0.12,
+        },
+    };
+
+    for (var i = 0; i < 6; i++) {
+      totalPredictions += 3 + random.nextInt(6);
+      final variation = (random.nextDouble() * weightShift) - (weightShift / 2);
+      final normalizedWeights = <PredictionChoice, double>{};
+      for (final entry in choiceWeights.entries) {
+        final noise = (random.nextDouble() * 0.04) - 0.02;
+        final trendFactor = entry.key == PredictionChoice.improve && problem.status == ProblemStatus.improving
+            ? variation.abs()
+            : variation;
+        normalizedWeights[entry.key] = (entry.value + trendFactor + noise).clamp(0.14, 0.7);
+      }
+      final totalWeight = normalizedWeights.values.fold<double>(0, (sum, value) => sum + value);
+      final weights = normalizedWeights.map((key, value) => MapEntry(key, value / totalWeight));
+      final choiceDistribution = _weightedChoiceDistribution(totalPredictions, weights, Random(problem.id.hashCode ^ i));
+      final motivationDistribution = _weightedMotivationDistribution(
+        max(totalPredictions - 2, 6),
+        motivationWeights,
+      );
+      final orderedMotivations = motivationDistribution.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      final topMotivations = orderedMotivations.take(2).map((entry) => entry.key).toList(growable: false);
+
+      snapshots.add(
+        InsightSnapshot(
+          turnId: 'turn-${i + 1}',
+          at: DateTime.now().subtract(Duration(days: (5 - i))),
+          totalPredictions: totalPredictions,
+          choiceDistribution: Map.unmodifiable(choiceDistribution),
+          motivationTop: List<MotivationKey>.unmodifiable(topMotivations),
+        ),
+      );
+
+      weightShift = (weightShift * 0.75).clamp(0.02, 0.08);
+    }
+
+    return snapshots;
+  }
+
+  InsightHistory _buildInsightHistory(String problemId) {
+    final problem = _problems.firstWhere((problem) => problem.id == problemId);
+    final snapshots = _buildSnapshotsForProblem(problem);
+    return InsightHistory(
+      problemId: problemId,
+      snapshots: List<InsightSnapshot>.unmodifiable(snapshots),
+    );
+  }
+
+  List<ReputationScore> _buildReputationHistory(String municipalityId) {
+    final random = Random(municipalityId.hashCode ^ 99);
+    final baselinePoints = 540 + random.nextInt(120);
+    final baselineAccuracy = 0.48 + (random.nextDouble() * 0.18);
+    final history = <ReputationScore>[];
+    var accumulatedPoints = baselinePoints;
+    var accuracy = baselineAccuracy;
+    var predictions = 8 + random.nextInt(4);
+
+    for (var i = 0; i < 7; i++) {
+      accumulatedPoints += 12 + random.nextInt(24);
+      final drift = (random.nextDouble() * 0.12) - 0.06;
+      accuracy = (accuracy + drift).clamp(0.4, 0.95);
+      predictions += random.nextInt(3);
+
+      history.add(
+        ReputationScore(
+          totalPoints: accumulatedPoints,
+          accuracy: accuracy,
+          predictionsCount: predictions,
+        ),
+      );
+    }
+
+    if (_reputation.totalPoints > 0 || _reputation.predictionsCount > 0) {
+      history[history.length - 1] = _reputation;
+    }
+
+    return List<ReputationScore>.unmodifiable(history);
+  }
+
   AggregatedInsight _syntheticInsight(String problemId) {
     final problem = _problems.firstWhere((p) => p.id == problemId);
     final random = Random(problemId.hashCode ^ 42);
@@ -396,6 +527,7 @@ class MockGameRepository implements GameRepository {
       );
       _results.remove(problemId);
       _reputation = _calculateReputation();
+      _reputationHistoryCache = null;
       _invalidateInsight(problemId);
     });
   }
@@ -427,6 +559,7 @@ class MockGameRepository implements GameRepository {
       final result = _evaluatePrediction(problem.status, choice);
       _results[problemId] = result;
       _reputation = _calculateReputation();
+      _reputationHistoryCache = null;
       return result;
     });
   }
@@ -505,5 +638,29 @@ class MockGameRepository implements GameRepository {
   @override
   Future<ReputationScore> getReputationScore(String turnId) {
     return _withDelay(() => _reputation);
+  }
+
+  @override
+  Future<InsightHistory> getInsightHistory(String problemId) {
+    return _withDelay(() {
+      final cached = _insightHistoryCache[problemId];
+      if (cached != null) return cached;
+
+      final history = _buildInsightHistory(problemId);
+      _insightHistoryCache[problemId] = history;
+      return history;
+    });
+  }
+
+  @override
+  Future<List<ReputationScore>> getReputationHistory({required String municipalityId}) {
+    return _withDelay(() {
+      final cached = _reputationHistoryCache;
+      if (cached != null) return cached;
+
+      final history = _buildReputationHistory(municipalityId);
+      _reputationHistoryCache = history;
+      return history;
+    });
   }
 }

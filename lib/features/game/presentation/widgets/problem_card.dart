@@ -7,6 +7,7 @@ import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/widgets/segmented_choice.dart';
 import 'package:fanta_comune/core/widgets/status_pill.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
+import 'package:fanta_comune/features/game/domain/insight_history.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/problem_status.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
@@ -28,6 +29,9 @@ class ProblemCard extends StatelessWidget {
     this.onRefresh,
     this.result,
     this.insight,
+    this.history,
+    this.isHistoryLoading = false,
+    this.onLoadHistory,
     super.key,
   });
 
@@ -57,6 +61,15 @@ class ProblemCard extends StatelessWidget {
 
   /// Insight aggregato di riferimento, mostrato solo dopo il responso.
   final AggregatedInsight? insight;
+
+  /// Storico sintetico degli insight per il problema, opzionale.
+  final InsightHistory? history;
+
+  /// Indica se il caricamento dello storico è in corso.
+  final bool isHistoryLoading;
+
+  /// Callback per avviare il recupero dello storico su richiesta.
+  final VoidCallback? onLoadHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +154,9 @@ class ProblemCard extends StatelessWidget {
                         insight: insight!,
                         userChoice: selectedChoice,
                         problemTitle: problem.title,
+                        history: history,
+                        isHistoryLoading: isHistoryLoading,
+                        onLoadHistory: onLoadHistory,
                       )
                     : const SizedBox.shrink(),
               ),
