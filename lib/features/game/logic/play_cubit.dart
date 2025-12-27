@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
+import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/logic/play_state.dart';
 
 /// Gestisce il flusso di gioco "Gioca": carica turno, problemi e previsioni.
@@ -25,6 +26,8 @@ class PlayCubit extends Cubit<PlayState> {
       final turn = await repository.getCurrentTurn(municipalityId);
       final problems = await repository.listProblems(municipalityId);
       final predictions = await repository.getMyPredictions(turn.id);
+      final results = await repository.getPredictionResults(turn.id);
+      final reputation = await repository.getReputationScore(turn.id);
 
       emit(
         state.copyWith(
@@ -34,6 +37,8 @@ class PlayCubit extends Cubit<PlayState> {
           myPredictions: predictions.map(
             (key, value) => MapEntry(key, value.choice),
           ),
+          results: results,
+          reputation: reputation,
           error: null,
         ),
       );
@@ -52,7 +57,9 @@ class PlayCubit extends Cubit<PlayState> {
 
     final updatedPredictions = Map<String, PredictionChoice>.from(state.myPredictions)
       ..[problemId] = choice;
-    emit(state.copyWith(myPredictions: updatedPredictions, error: null));
+    final updatedResults = Map<String, PredictionResult>.from(state.results)
+      ..remove(problemId);
+    emit(state.copyWith(myPredictions: updatedPredictions, error: null, results: updatedResults));
 
     try {
       await repository.upsertPrediction(
@@ -75,6 +82,36 @@ class PlayCubit extends Cubit<PlayState> {
       emit(state.copyWith(problems: updatedProblems, error: null));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  /// Risolve tutte le previsioni correnti, aggiornando esiti e reputazione mock.
+  Future<void> resolveTurn() async {
+    final turnId = state.currentTurn?.id;
+    if (turnId == null || state.myPredictions.isEmpty) return;
+
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      for (final entry in state.myPredictions.entries) {
+        await repository.resolvePrediction(
+          problemId: entry.key,
+          choice: entry.value,
+        );
+      }
+
+      final resolved = await repository.getPredictionResults(turnId);
+      final reputation = await repository.getReputationScore(turnId);
+
+      emit(
+        state.copyWith(
+          isLoading: false,
+          results: resolved,
+          reputation: reputation,
+          error: null,
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
 }

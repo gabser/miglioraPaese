@@ -8,6 +8,7 @@ import 'package:fanta_comune/core/widgets/segmented_choice.dart';
 import 'package:fanta_comune/core/widgets/status_pill.dart';
 import 'package:fanta_comune/features/game/domain/problem_status.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
+import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
 
 /// Card premium per mostrare un problema con stato e azione di previsione.
@@ -19,6 +20,7 @@ class ProblemCard extends StatelessWidget {
     required this.onSelectChoice,
     this.onTap,
     this.onRefresh,
+    this.result,
     super.key,
   });
 
@@ -36,6 +38,9 @@ class ProblemCard extends StatelessWidget {
 
   /// Callback opzionale per aggiornare i dati del problema.
   final VoidCallback? onRefresh;
+
+  /// Esito della previsione dopo la risoluzione del turno.
+  final PredictionResult? result;
 
   @override
   Widget build(BuildContext context) {
@@ -159,38 +164,96 @@ class ProblemCard extends StatelessWidget {
               onChanged: onSelectChoice,
             ),
             const SizedBox(height: AppTokens.s12),
-            AnimatedSwitcherX(
-              duration: AppMotion.fast,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: AnimatedOpacity(
-                  key: ValueKey(selectedChoice),
-                  duration: AppMotion.fast,
-                  curve: AppMotion.standard,
-                  opacity: selectedChoice != null ? 1 : 0,
-                  child: selectedChoice != null
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppTokens.s12,
-                            vertical: AppTokens.s8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(AppTokens.radius),
-                          ),
-                          child: Text(
-                            'Previsione registrata',
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
+            if (result == null)
+              AnimatedSwitcherX(
+                duration: AppMotion.fast,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: AnimatedOpacity(
+                    key: ValueKey(selectedChoice),
+                    duration: AppMotion.fast,
+                    curve: AppMotion.standard,
+                    opacity: selectedChoice != null ? 1 : 0,
+                    child: selectedChoice != null
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppTokens.s12,
+                              vertical: AppTokens.s8,
                             ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(AppTokens.radius),
+                            ),
+                            child: Text(
+                              'Previsione registrata',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
                 ),
-              ),
-            ),
+              )
+            else
+              _ResultBadge(result: result!),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ResultBadge extends StatelessWidget {
+  const _ResultBadge({required this.result});
+
+  final PredictionResult result;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final (text, color, textColor) = switch (result) {
+      PredictionResult.correct => ('✅ Previsione corretta', colorScheme.primaryContainer, colorScheme.onPrimaryContainer),
+      PredictionResult.partial => ('🟡 Quasi corretta', colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
+      PredictionResult.wrong => ('❌ Sbagliata', colorScheme.errorContainer, colorScheme.onErrorContainer),
+      PredictionResult.pending => ('In attesa di risultato', colorScheme.surfaceContainerHigh, colorScheme.onSurfaceVariant),
+    };
+
+    return AnimatedSwitcherX(
+      duration: AppMotion.fast,
+      child: TweenAnimationBuilder<double>(
+        key: ValueKey(result),
+        tween: Tween<double>(begin: 0.9, end: 1),
+        duration: AppMotion.fast,
+        curve: AppMotion.emphasized,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTokens.s12,
+            vertical: AppTokens.s8,
+          ),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(AppTokens.radius),
+          ),
+          child: Text(
+            text,
+            style: textTheme.bodySmall?.copyWith(
+              color: textColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        builder: (context, value, child) {
+          return Opacity(
+            opacity: value,
+            child: Transform.scale(
+              scale: value,
+              child: child,
+            ),
+          );
+        },
       ),
     );
   }

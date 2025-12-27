@@ -1,11 +1,16 @@
 import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
+import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
+import 'package:fanta_comune/features/game/domain/reputation_score.dart';
 import 'package:fanta_comune/features/game/domain/turn.dart';
 import 'package:fanta_comune/features/leaderboard/domain/leaderboard_entry.dart';
 
 /// Contratto astratto per recuperare dati di gioco e classifica.
 abstract class GameRepository {
+  /// Identificativo dell'utente corrente utilizzato per evidenziare la classifica.
+  String get currentUserId;
+
   /// Restituisce il turno corrente per il [municipalityId].
   Future<Turn> getCurrentTurn(String municipalityId);
 
@@ -24,6 +29,12 @@ abstract class GameRepository {
     required PredictionChoice choice,
   });
 
+  /// Risolve una previsione e restituisce l'esito deterministico basato sullo stato finale.
+  Future<PredictionResult> resolvePrediction({
+    required String problemId,
+    required PredictionChoice choice,
+  });
+
   /// Segnala se il problema è stato risolto o peggiorato, aggiornandone lo stato.
   Future<void> tapSignal({
     required String problemId,
@@ -38,4 +49,10 @@ abstract class GameRepository {
     required String municipalityId,
     String? leagueId,
   });
+
+  /// Restituisce gli esiti salvati delle previsioni dell'utente per il turno.
+  Future<Map<String, PredictionResult>> getPredictionResults(String turnId);
+
+  /// Restituisce il punteggio di reputazione corrente per il turno.
+  Future<ReputationScore> getReputationScore(String turnId);
 }

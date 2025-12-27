@@ -2,8 +2,10 @@ import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
+import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
 import 'package:fanta_comune/features/game/domain/problem_status.dart';
+import 'package:fanta_comune/features/game/domain/reputation_score.dart';
 import 'package:fanta_comune/features/game/domain/turn.dart';
 import 'package:fanta_comune/features/game/domain/turn_state.dart';
 import 'package:fanta_comune/features/leaderboard/domain/leaderboard_entry.dart';
@@ -14,6 +16,7 @@ class MockGameRepository implements GameRepository {
   MockGameRepository();
 
   static const _latency = Duration(milliseconds: 250);
+  static const _currentUserId = 'user:self';
   final Turn _currentTurn = Turn(
     id: 'turn-2024-09',
     startAt: DateTime.now().subtract(const Duration(days: 5)),
@@ -93,8 +96,15 @@ class MockGameRepository implements GameRepository {
     ),
   };
 
-  final List<LeaderboardEntry> _leaderboard = List.generate(
-    10,
+  final Map<String, PredictionResult> _results = {};
+  ReputationScore _reputation = const ReputationScore(
+    totalPoints: 0,
+    accuracy: 0,
+    predictionsCount: 0,
+  );
+
+  final List<LeaderboardEntry> _leaderboardBase = List.generate(
+    9,
     (index) => LeaderboardEntry(
       userId: 'user:${index + 1}',
       displayName: 'Cittadino ${index + 1}',
@@ -107,6 +117,9 @@ class MockGameRepository implements GameRepository {
     await Future.delayed(_latency);
     return body();
   }
+
+  @override
+  String get currentUserId => _currentUserId;
 
   ProblemStatus _nextStatus(ProblemStatus status, bool resolved) {
     if (resolved) {
@@ -132,6 +145,65 @@ class MockGameRepository implements GameRepository {
       case ProblemStatus.worsening:
         return -16;
     }
+  }
+
+  PredictionResult _evaluatePrediction(ProblemStatus status, PredictionChoice choice) {
+    switch (status) {
+      case ProblemStatus.improving:
+        return switch (choice) {
+          PredictionChoice.improve => PredictionResult.correct,
+          PredictionChoice.stable => PredictionResult.partial,
+          PredictionChoice.worsen => PredictionResult.wrong,
+        };
+      case ProblemStatus.stable:
+        if (choice == PredictionChoice.stable) {
+          return PredictionResult.correct;
+        }
+        return PredictionResult.partial;
+      case ProblemStatus.worsening:
+        return switch (choice) {
+          PredictionChoice.worsen => PredictionResult.correct,
+          PredictionChoice.stable => PredictionResult.partial,
+          PredictionChoice.improve => PredictionResult.wrong,
+        };
+    }
+  }
+
+  int _pointsForResult(PredictionResult result) {
+    switch (result) {
+      case PredictionResult.correct:
+        return 10;
+      case PredictionResult.partial:
+        return 4;
+      case PredictionResult.wrong:
+      case PredictionResult.pending:
+        return 0;
+    }
+  }
+
+  ReputationScore _calculateReputation() {
+    if (_results.isEmpty) {
+      return const ReputationScore(
+        totalPoints: 0,
+        accuracy: 0,
+        predictionsCount: 0,
+      );
+    }
+
+    final totalPoints = _results.values.fold<int>(
+      0,
+      (sum, result) => sum + _pointsForResult(result),
+    );
+    final totalResolved = _results.length;
+    final correctCount = _results.values.where((r) => r == PredictionResult.correct).length;
+    final partialCount = _results.values.where((r) => r == PredictionResult.partial).length;
+    final accuracyScore = (correctCount + (partialCount * 0.5)) / totalResolved;
+
+    return ReputationScore(
+      totalPoints: totalPoints,
+      accuracy: accuracyScore.clamp(0, 1).toDouble(),
+      predictionsCount: totalResolved,
+    );
   }
 
   void _updateProblem(String problemId, Problem Function(Problem) updater) {
@@ -171,6 +243,22 @@ class MockGameRepository implements GameRepository {
         choice: choice,
         createdAt: DateTime.now(),
       );
+      _results.remove(problemId);
+      _reputation = _calculateReputation();
+    });
+  }
+
+  @override
+  Future<PredictionResult> resolvePrediction({
+    required String problemId,
+    required PredictionChoice choice,
+  }) {
+    return _withDelay(() {
+      final problem = _problems.firstWhere((problem) => problem.id == problemId);
+      final result = _evaluatePrediction(problem.status, choice);
+      _results[problemId] = result;
+      _reputation = _calculateReputation();
+      return result;
     });
   }
 
@@ -206,6 +294,35 @@ class MockGameRepository implements GameRepository {
     required String municipalityId,
     String? leagueId,
   }) {
-    return _withDelay(() => List<LeaderboardEntry>.unmodifiable(_leaderboard));
+    return _withDelay(() {
+      final selfEntry = LeaderboardEntry(
+        userId: _currentUserId,
+        displayName: 'Tu',
+        points: 900 + _reputation.totalPoints,
+        rank: 0,
+      );
+      final combined = <LeaderboardEntry>[
+        ..._leaderboardBase,
+        selfEntry,
+      ];
+      combined.sort((a, b) => b.points.compareTo(a.points));
+
+      final ranked = <LeaderboardEntry>[];
+      for (var i = 0; i < combined.length && i < 10; i++) {
+        ranked.add(combined[i].copyWith(rank: i + 1));
+      }
+
+      return List<LeaderboardEntry>.unmodifiable(ranked);
+    });
+  }
+
+  @override
+  Future<Map<String, PredictionResult>> getPredictionResults(String turnId) {
+    return _withDelay(() => Map<String, PredictionResult>.unmodifiable(_results));
+  }
+
+  @override
+  Future<ReputationScore> getReputationScore(String turnId) {
+    return _withDelay(() => _reputation);
   }
 }

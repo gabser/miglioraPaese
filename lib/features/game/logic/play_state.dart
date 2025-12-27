@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
+import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
+import 'package:fanta_comune/features/game/domain/reputation_score.dart';
 import 'package:fanta_comune/features/game/domain/turn.dart';
 
 /// Stato del flusso di gioco "Gioca", con dati del turno e previsioni correnti.
@@ -11,6 +13,12 @@ class PlayState extends Equatable {
     this.currentTurn,
     this.problems = const [],
     this.myPredictions = const {},
+    this.results = const {},
+    this.reputation = const ReputationScore(
+      totalPoints: 0,
+      accuracy: 0,
+      predictionsCount: 0,
+    ),
     this.error,
   });
 
@@ -26,6 +34,12 @@ class PlayState extends Equatable {
   /// Mappa delle previsioni effettuate dall'utente, indicizzata per problema.
   final Map<String, PredictionChoice> myPredictions;
 
+  /// Esiti delle previsioni già risolte.
+  final Map<String, PredictionResult> results;
+
+  /// Punteggio aggregato derivato dalle previsioni concluse.
+  final ReputationScore reputation;
+
   /// Messaggio di errore opzionale per comunicazioni leggere alla UI.
   final String? error;
 
@@ -35,6 +49,8 @@ class PlayState extends Equatable {
     Turn? currentTurn,
     List<Problem>? problems,
     Map<String, PredictionChoice>? myPredictions,
+    Map<String, PredictionResult>? results,
+    ReputationScore? reputation,
     String? error,
   }) {
     return PlayState(
@@ -42,10 +58,12 @@ class PlayState extends Equatable {
       currentTurn: currentTurn ?? this.currentTurn,
       problems: problems ?? this.problems,
       myPredictions: myPredictions ?? this.myPredictions,
+      results: results ?? this.results,
+      reputation: reputation ?? this.reputation,
       error: error,
     );
   }
 
   @override
-  List<Object?> get props => [isLoading, currentTurn, problems, myPredictions, error];
+  List<Object?> get props => [isLoading, currentTurn, problems, myPredictions, results, reputation, error];
 }
