@@ -38,27 +38,30 @@ class _PlayView extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return MaxWidthContainer(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTokens.s16),
-        child: BlocBuilder<PlayCubit, PlayState>(
-          builder: (context, state) {
-            final cubit = context.read<PlayCubit>();
+      child: BlocBuilder<PlayCubit, PlayState>(
+        builder: (context, state) {
+          final cubit = context.read<PlayCubit>();
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const IconLabel(icon: AppIcons.play, text: 'Gioca'),
-                const SizedBox(height: AppTokens.s16),
-                AnimatedSwitcherX(
-                  duration: AppMotion.normal,
-                  child: state.isLoading
-                      ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(AppTokens.s24),
-                            child: CircularProgressIndicator(),
-                          ),
-                        )
-                      : _PlayContent(
+          return AnimatedSwitcherX(
+            duration: AppMotion.normal,
+            child: state.isLoading
+                ? const Center(
+                    key: ValueKey('play-loading'),
+                    child: Padding(
+                      padding: EdgeInsets.all(AppTokens.s24),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                : SingleChildScrollView(
+                    key: const ValueKey('play-content'),
+                    padding: const EdgeInsets.all(AppTokens.s16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const IconLabel(icon: AppIcons.play, text: 'Gioca'),
+                        const SizedBox(height: AppTokens.s16),
+                        _PlayContent(
+                          key: ValueKey('has-problems-${state.problems.isNotEmpty}'),
                           state: state,
                           onSelect: (problemId, choice) => cubit.selectPrediction(
                             problemId: problemId,
@@ -66,18 +69,18 @@ class _PlayView extends StatelessWidget {
                           ),
                           onRefreshProblem: cubit.refreshProblem,
                         ),
-                ),
-                if (state.error != null) ...[
-                  const SizedBox(height: AppTokens.s12),
-                  Text(
-                    state.error!,
-                    style: textTheme.bodySmall?.copyWith(color: colorScheme.error),
+                        if (state.error != null) ...[
+                          const SizedBox(height: AppTokens.s12),
+                          Text(
+                            state.error!,
+                            style: textTheme.bodySmall?.copyWith(color: colorScheme.error),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                ],
-              ],
-            );
-          },
-        ),
+          );
+        },
       ),
     );
   }
@@ -88,6 +91,7 @@ class _PlayContent extends StatelessWidget {
     required this.state,
     required this.onSelect,
     required this.onRefreshProblem,
+    super.key,
   });
 
   final PlayState state;
