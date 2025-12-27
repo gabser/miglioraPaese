@@ -161,28 +161,33 @@ class ProblemCard extends StatelessWidget {
             const SizedBox(height: AppTokens.s12),
             AnimatedSwitcherX(
               duration: AppMotion.fast,
-              child: selectedChoice != null
-                  ? Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        key: ValueKey(selectedChoice),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTokens.s12,
-                          vertical: AppTokens.s8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(AppTokens.radius),
-                        ),
-                        child: Text(
-                          'Previsione registrata',
-                          style: textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: AnimatedOpacity(
+                  key: ValueKey(selectedChoice),
+                  duration: AppMotion.fast,
+                  curve: AppMotion.standard,
+                  opacity: selectedChoice != null ? 1 : 0,
+                  child: selectedChoice != null
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTokens.s12,
+                            vertical: AppTokens.s8,
                           ),
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(AppTokens.radius),
+                          ),
+                          child: Text(
+                            'Previsione registrata',
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ),
             ),
           ],
         ),
