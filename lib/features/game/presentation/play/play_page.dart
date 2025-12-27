@@ -205,6 +205,7 @@ class _PlayContent extends StatelessWidget {
             final problem = state.problems[index];
             final selectedChoice = state.myPredictions[problem.id];
             final result = state.results[problem.id];
+            final insight = state.insights[problem.id];
             final selectedMotivations = state.motivations[problem.id] ?? const [];
 
             return ProblemCard(
@@ -216,6 +217,7 @@ class _PlayContent extends StatelessWidget {
               onSelectMotivations: (motivations) => onSelectMotivations(problem.id, motivations),
               onRefresh: () => onRefreshProblem(problem.id),
               result: result,
+              insight: insight,
             );
           },
         ),
