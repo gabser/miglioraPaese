@@ -6,10 +6,12 @@ import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
 import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/widgets/segmented_choice.dart';
 import 'package:fanta_comune/core/widgets/status_pill.dart';
+import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/problem_status.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
+import 'package:fanta_comune/features/game/presentation/widgets/motivation_chips.dart';
 
 /// Card premium per mostrare un problema con stato e azione di previsione.
 class ProblemCard extends StatelessWidget {
@@ -17,7 +19,9 @@ class ProblemCard extends StatelessWidget {
   const ProblemCard({
     required this.problem,
     required this.selectedChoice,
+    required this.selectedMotivations,
     required this.onSelectChoice,
+    required this.onSelectMotivations,
     this.onTap,
     this.onRefresh,
     this.result,
@@ -30,8 +34,14 @@ class ProblemCard extends StatelessWidget {
   /// Scelta corrente dell'utente su questo problema.
   final PredictionChoice? selectedChoice;
 
+  /// Motivazioni attualmente selezionate.
+  final List<MotivationKey> selectedMotivations;
+
   /// Callback al cambio di previsione.
   final ValueChanged<PredictionChoice> onSelectChoice;
+
+  /// Callback al cambio motivazioni.
+  final ValueChanged<List<MotivationKey>> onSelectMotivations;
 
   /// Callback opzionale al tap della card.
   final VoidCallback? onTap;
@@ -117,6 +127,17 @@ class ProblemCard extends StatelessWidget {
             const SizedBox(height: AppTokens.s12),
             AnimatedSwitcherX(
               duration: AppMotion.fast,
+              child: !hasResult && selectedChoice != null
+                  ? _MotivationSection(
+                      key: ValueKey('motivation-${problem.id}-${selectedChoice?.name}'),
+                      selectedMotivations: selectedMotivations,
+                      onSelectMotivations: onSelectMotivations,
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            if (!hasResult) const SizedBox(height: AppTokens.s12),
+            AnimatedSwitcherX(
+              duration: AppMotion.fast,
               child: hasResult
                   ? _ChoiceSection(
                       key: ValueKey('choice-${problem.id}-resolved'),
@@ -193,6 +214,48 @@ class _StatusRow extends StatelessWidget {
           style: textTheme.bodySmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MotivationSection extends StatelessWidget {
+  const _MotivationSection({
+    required this.selectedMotivations,
+    required this.onSelectMotivations,
+    super.key,
+  });
+
+  final List<MotivationKey> selectedMotivations;
+  final ValueChanged<List<MotivationKey>> onSelectMotivations;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Perché lo pensi?',
+          style: textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: AppTokens.s8),
+        Text(
+          'Scegline al massimo due',
+          style: textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: AppTokens.s8),
+        MotivationChips(
+          selected: selectedMotivations,
+          onChanged: onSelectMotivations,
         ),
       ],
     );

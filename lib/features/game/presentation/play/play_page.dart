@@ -9,6 +9,7 @@ import 'package:fanta_comune/core/widgets/icon_label.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
 import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
+import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/reputation_score.dart';
 import 'package:fanta_comune/features/game/logic/play_cubit.dart';
@@ -69,6 +70,10 @@ class _PlayView extends StatelessWidget {
                             problemId: problemId,
                             choice: choice,
                           ),
+                          onSelectMotivations: (problemId, motivations) => cubit.setMotivations(
+                            problemId: problemId,
+                            motivations: motivations,
+                          ),
                           onRefreshProblem: cubit.refreshProblem,
                           onResolveTurn: cubit.resolveTurn,
                         ),
@@ -93,6 +98,7 @@ class _PlayContent extends StatelessWidget {
   const _PlayContent({
     required this.state,
     required this.onSelect,
+    required this.onSelectMotivations,
     required this.onRefreshProblem,
     required this.onResolveTurn,
     super.key,
@@ -100,6 +106,7 @@ class _PlayContent extends StatelessWidget {
 
   final PlayState state;
   final void Function(String problemId, PredictionChoice choice) onSelect;
+  final void Function(String problemId, List<MotivationKey> motivations) onSelectMotivations;
   final void Function(String problemId) onRefreshProblem;
   final VoidCallback onResolveTurn;
 
@@ -198,12 +205,15 @@ class _PlayContent extends StatelessWidget {
             final problem = state.problems[index];
             final selectedChoice = state.myPredictions[problem.id];
             final result = state.results[problem.id];
+            final selectedMotivations = state.motivations[problem.id] ?? const [];
 
             return ProblemCard(
               key: ValueKey(problem.id),
               problem: problem,
               selectedChoice: selectedChoice,
+              selectedMotivations: selectedMotivations,
               onSelectChoice: (choice) => onSelect(problem.id, choice),
+              onSelectMotivations: (motivations) => onSelectMotivations(problem.id, motivations),
               onRefresh: () => onRefreshProblem(problem.id),
               result: result,
             );

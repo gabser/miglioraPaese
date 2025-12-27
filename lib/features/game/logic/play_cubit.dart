@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
+import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/logic/play_state.dart';
@@ -37,6 +38,9 @@ class PlayCubit extends Cubit<PlayState> {
           myPredictions: predictions.map(
             (key, value) => MapEntry(key, value.choice),
           ),
+          motivations: predictions.map(
+            (key, value) => MapEntry(key, value.motivations),
+          ),
           results: results,
           reputation: reputation,
           error: null,
@@ -54,18 +58,56 @@ class PlayCubit extends Cubit<PlayState> {
   }) async {
     final turnId = state.currentTurn?.id;
     if (turnId == null) return;
+    final previousChoice = state.myPredictions[problemId];
 
     final updatedPredictions = Map<String, PredictionChoice>.from(state.myPredictions)
       ..[problemId] = choice;
+    final updatedMotivations = Map<String, List<MotivationKey>>.from(state.motivations);
+    if (previousChoice != null && previousChoice != choice) {
+      updatedMotivations.remove(problemId);
+    }
     final updatedResults = Map<String, PredictionResult>.from(state.results)
       ..remove(problemId);
-    emit(state.copyWith(myPredictions: updatedPredictions, error: null, results: updatedResults));
+    emit(
+      state.copyWith(
+        myPredictions: updatedPredictions,
+        motivations: updatedMotivations,
+        error: null,
+        results: updatedResults,
+      ),
+    );
 
     try {
       await repository.upsertPrediction(
         turnId: turnId,
         problemId: problemId,
         choice: choice,
+        motivations: updatedMotivations[problemId] ?? const [],
+      );
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  /// Imposta o aggiorna le motivazioni per una previsione già selezionata.
+  Future<void> setMotivations({
+    required String problemId,
+    required List<MotivationKey> motivations,
+  }) async {
+    final turnId = state.currentTurn?.id;
+    final prediction = state.myPredictions[problemId];
+    if (turnId == null || prediction == null) return;
+
+    final limited = motivations.take(2).toList(growable: false);
+    final updatedMotivations = Map<String, List<MotivationKey>>.from(state.motivations)
+      ..[problemId] = limited;
+    emit(state.copyWith(motivations: updatedMotivations, error: null));
+
+    try {
+      await repository.updatePredictionMotivations(
+        turnId: turnId,
+        problemId: problemId,
+        motivations: limited,
       );
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
