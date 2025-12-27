@@ -29,6 +29,12 @@ class AppIcons {
   /// Icona per le impostazioni.
   static const IconData settings = Icons.settings_outlined;
 
+  /// Icona per previsioni positive/miglioramenti.
+  static const IconData spark = Icons.auto_fix_high;
+
+  /// Icona per trend negativi.
+  static const IconData trendingDown = Icons.trending_down;
+
   /// Icona per tornare indietro.
   static const IconData back = Icons.arrow_back;
 
