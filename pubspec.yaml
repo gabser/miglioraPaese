@@ -1,5 +1,5 @@
-name: goodtime
-description: "App Flutter per pianificazione personale con design system Material 3."
+name: fanta_comune
+description: "App Flutter 'Fanta Comune' con preferenze locali e motion system."
 publish_to: "none"
 
 environment:
@@ -8,6 +8,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_bloc: ^8.1.6
+  equatable: ^2.0.5
+  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:

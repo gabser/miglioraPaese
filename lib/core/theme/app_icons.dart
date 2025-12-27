@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:goodtime/core/models/problem_key.dart';
+import 'package:fanta_comune/core/models/problem_key.dart';
 
 /// Raccolta centralizzata delle icone e delle label di navigazione e problemi.
 class AppIcons {

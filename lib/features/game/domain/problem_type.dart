@@ -1,4 +1,4 @@
-import 'package:goodtime/core/models/problem_key.dart';
+import 'package:fanta_comune/core/models/problem_key.dart';
 
 /// Tipologie di problema civico gestite dal dominio di gioco.
 enum ProblemType {

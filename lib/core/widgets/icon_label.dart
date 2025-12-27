@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:goodtime/core/theme/app_tokens.dart';
+import 'package:fanta_comune/core/theme/app_tokens.dart';
 
 /// Widget riusabile che abbina un'icona a un testo con semantica accessibile.
 class IconLabel extends StatelessWidget {
