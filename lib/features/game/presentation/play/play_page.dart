@@ -128,7 +128,7 @@ class _PlayContent extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppTokens.s24),
           child: Text(
-            'Nessun problema attivo per questo Comune',
+            'Non ci sono situazioni aperte ora. Torna presto per una nuova sfida di Fanta Comune.',
             style: textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
@@ -160,7 +160,7 @@ class _PlayContent extends StatelessWidget {
         ),
         const SizedBox(height: AppTokens.s12),
         Text(
-          'Scegli come evolverà ogni problema in Fanta Comune.',
+          'Scegli come pensi evolverà ogni situazione, poi scopri il feedback di Fanta Comune.',
           style: textTheme.bodyMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
@@ -173,9 +173,21 @@ class _PlayContent extends StatelessWidget {
           child: FilledButton.icon(
             onPressed: state.myPredictions.isEmpty ? null : onResolveTurn,
             icon: const Icon(Icons.check_circle_outline),
-            label: const Text('Calcola risultati (demo)'),
+            label: const Text('Scopri com’è andata'),
           ),
         ),
+        if (state.myPredictions.isEmpty) ...[
+          const SizedBox(height: AppTokens.s8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              'Scegli almeno una situazione per vedere il responso.',
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: AppTokens.s16),
         ListView.separated(
           shrinkWrap: true,
@@ -227,37 +239,33 @@ class _ReputationCard extends StatelessWidget {
             style: textTheme.titleMedium,
           ),
           const SizedBox(height: AppTokens.s8),
-          AnimatedSwitcherX(
-            duration: AppMotion.normal,
-            child: Row(
-              key: ValueKey('${reputation.totalPoints}-${reputation.predictionsCount}-${reputation.accuracy}'),
-              children: [
-                _Metric(
-                  label: 'Punti',
-                  value: reputation.totalPoints.toString(),
-                  icon: AppIcons.spark,
-                  color: colorScheme.primary,
-                ),
-                const SizedBox(width: AppTokens.s12),
-                _Metric(
-                  label: 'Accuratezza',
-                  value: _accuracyLabel(),
-                  icon: Icons.adjust,
-                  color: colorScheme.tertiary,
-                ),
-                const SizedBox(width: AppTokens.s12),
-                _Metric(
-                  label: 'Previsioni',
-                  value: reputation.predictionsCount.toString(),
-                  icon: Icons.query_stats,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              _Metric(
+                label: 'Punti',
+                value: reputation.totalPoints.toString(),
+                icon: AppIcons.spark,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: AppTokens.s12),
+              _Metric(
+                label: 'Accuratezza',
+                value: _accuracyLabel(),
+                icon: Icons.adjust,
+                color: colorScheme.tertiary,
+              ),
+              const SizedBox(width: AppTokens.s12),
+              _Metric(
+                label: 'Previsioni',
+                value: reputation.predictionsCount.toString(),
+                icon: Icons.query_stats,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ],
           ),
           const SizedBox(height: AppTokens.s8),
           Text(
-            'Premi “Calcola risultati (demo)” per vedere come le tue previsioni incidono su punti e affidabilità.',
+            'Ogni esito aggiorna punti e affidabilità: scopri come cambia la tua reputazione dopo il responso.',
             style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
           ),
         ],

@@ -57,6 +57,7 @@ class ProblemCard extends StatelessWidget {
       ProblemStatus.stable => 'stabile',
       ProblemStatus.worsening => 'peggiora',
     };
+    final hasResult = result != null;
 
     return Semantics(
       label: 'Problema ${problem.title}, stato $statusLabel',
@@ -101,104 +102,200 @@ class ProblemCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppTokens.s12),
-            Row(
-              children: [
-                StatusPill(status: problem.status),
-                const SizedBox(width: AppTokens.s12),
-                AnimatedSwitcherX(
-                  duration: AppMotion.fast,
-                  child: Text(
-                    trendText,
-                    key: ValueKey(trendText),
-                    style: textTheme.titleMedium?.copyWith(color: trendColor),
-                  ),
+            AnimatedSwitcherX(
+              duration: AppMotion.fast,
+              child: hasResult
+                  ? _ResultBadge(result: result!)
+                  : _ChoiceSection(
+                      key: ValueKey('choice-${problem.id}-primary'),
+                      selectedChoice: selectedChoice,
+                      colorScheme: colorScheme,
+                      hasResult: false,
+                      onSelectChoice: onSelectChoice,
+                    ),
+            ),
+            const SizedBox(height: AppTokens.s12),
+            AnimatedSwitcherX(
+              duration: AppMotion.fast,
+              child: hasResult
+                  ? _ChoiceSection(
+                      key: ValueKey('choice-${problem.id}-resolved'),
+                      selectedChoice: selectedChoice,
+                      colorScheme: colorScheme,
+                      hasResult: true,
+                      onSelectChoice: onSelectChoice,
+                    )
+                  : _StatusRow(
+                      status: problem.status,
+                      trendText: trendText,
+                      trendColor: trendColor,
+                      updatedHours: updatedHours,
+                    ),
+            ),
+            const SizedBox(height: AppTokens.s12),
+            AnimatedSwitcherX(
+              duration: AppMotion.fast,
+              child: hasResult
+                  ? _StatusRow(
+                      status: problem.status,
+                      trendText: trendText,
+                      trendColor: trendColor,
+                      updatedHours: updatedHours,
+                      subdued: true,
+                    )
+                  : _SelectionHint(selectedChoice: selectedChoice),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusRow extends StatelessWidget {
+  const _StatusRow({
+    required this.status,
+    required this.trendText,
+    required this.trendColor,
+    required this.updatedHours,
+    this.subdued = false,
+  });
+
+  final ProblemStatus status;
+  final String trendText;
+  final Color trendColor;
+  final int updatedHours;
+  final bool subdued;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        StatusPill(status: status),
+        const SizedBox(width: AppTokens.s12),
+        AnimatedSwitcherX(
+          duration: AppMotion.fast,
+          child: Text(
+            trendText,
+            key: ValueKey(trendText),
+            style: textTheme.titleMedium?.copyWith(
+              color: subdued ? colorScheme.onSurfaceVariant : trendColor,
+              fontWeight: subdued ? FontWeight.w600 : textTheme.titleMedium?.fontWeight,
+            ),
+          ),
+        ),
+        const Spacer(),
+        Text(
+          'Aggiornato ${updatedHours}h fa',
+          style: textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ChoiceSection extends StatelessWidget {
+  const _ChoiceSection({
+    required this.selectedChoice,
+    required this.colorScheme,
+    required this.hasResult,
+    required this.onSelectChoice,
+    super.key,
+  });
+
+  final PredictionChoice? selectedChoice;
+  final ColorScheme colorScheme;
+  final bool hasResult;
+  final ValueChanged<PredictionChoice> onSelectChoice;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      duration: AppMotion.fast,
+      opacity: hasResult ? 0.7 : 1,
+      child: SegmentedChoice<PredictionChoice>(
+        value: selectedChoice,
+        options: const [
+          PredictionChoice.improve,
+          PredictionChoice.stable,
+          PredictionChoice.worsen,
+        ],
+        labelBuilder: (choice) => switch (choice) {
+          PredictionChoice.improve => 'Migliora',
+          PredictionChoice.stable => 'Stabile',
+          PredictionChoice.worsen => 'Peggiora',
+        },
+        optionBuilder: (choice, isSelected) {
+          final (icon, color) = switch (choice) {
+            PredictionChoice.improve => (AppIcons.spark, colorScheme.primary),
+            PredictionChoice.stable => (Icons.remove, colorScheme.tertiary),
+            PredictionChoice.worsen => (AppIcons.trendingDown, colorScheme.error),
+          };
+
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected ? color : colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: AppTokens.s8),
+              Text(
+                switch (choice) {
+                  PredictionChoice.improve => 'Migliora',
+                  PredictionChoice.stable => 'Stabile',
+                  PredictionChoice.worsen => 'Peggiora',
+                },
+              ),
+            ],
+          );
+        },
+        onChanged: onSelectChoice,
+      ),
+    );
+  }
+}
+
+class _SelectionHint extends StatelessWidget {
+  const _SelectionHint({required this.selectedChoice});
+
+  final PredictionChoice? selectedChoice;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: AnimatedOpacity(
+        duration: AppMotion.fast,
+        curve: AppMotion.standard,
+        opacity: selectedChoice != null ? 1 : 0,
+        child: selectedChoice != null
+            ? Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTokens.s12,
+                  vertical: AppTokens.s8,
                 ),
-                const Spacer(),
-                Text(
-                  'Aggiornato ${updatedHours}h fa',
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
+                ),
+                child: Text(
+                  'Scelta registrata',
                   style: textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: AppTokens.s16),
-            SegmentedChoice<PredictionChoice>(
-              value: selectedChoice,
-              options: const [
-                PredictionChoice.improve,
-                PredictionChoice.stable,
-                PredictionChoice.worsen,
-              ],
-              labelBuilder: (choice) => switch (choice) {
-                PredictionChoice.improve => 'Migliora',
-                PredictionChoice.stable => 'Stabile',
-                PredictionChoice.worsen => 'Peggiora',
-              },
-              optionBuilder: (choice, isSelected) {
-                final (icon, color) = switch (choice) {
-                  PredictionChoice.improve => (AppIcons.spark, colorScheme.primary),
-                  PredictionChoice.stable => (Icons.remove, colorScheme.tertiary),
-                  PredictionChoice.worsen => (AppIcons.trendingDown, colorScheme.error),
-                };
-
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      icon,
-                      size: 18,
-                      color: isSelected ? color : colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: AppTokens.s8),
-                    Text(
-                      switch (choice) {
-                        PredictionChoice.improve => 'Migliora',
-                        PredictionChoice.stable => 'Stabile',
-                        PredictionChoice.worsen => 'Peggiora',
-                      },
-                    ),
-                  ],
-                );
-              },
-              onChanged: onSelectChoice,
-            ),
-            const SizedBox(height: AppTokens.s12),
-            if (result == null)
-              AnimatedSwitcherX(
-                duration: AppMotion.fast,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: AnimatedOpacity(
-                    key: ValueKey(selectedChoice),
-                    duration: AppMotion.fast,
-                    curve: AppMotion.standard,
-                    opacity: selectedChoice != null ? 1 : 0,
-                    child: selectedChoice != null
-                        ? Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppTokens.s12,
-                              vertical: AppTokens.s8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainerHigh,
-                              borderRadius: BorderRadius.circular(AppTokens.radius),
-                            ),
-                            child: Text(
-                              'Previsione registrata',
-                              style: textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ),
               )
-            else
-              _ResultBadge(result: result!),
-          ],
-        ),
+            : const SizedBox.shrink(),
       ),
     );
   }
@@ -215,45 +312,47 @@ class _ResultBadge extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     final (text, color, textColor) = switch (result) {
-      PredictionResult.correct => ('✅ Previsione corretta', colorScheme.primaryContainer, colorScheme.onPrimaryContainer),
-      PredictionResult.partial => ('🟡 Quasi corretta', colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
-      PredictionResult.wrong => ('❌ Sbagliata', colorScheme.errorContainer, colorScheme.onErrorContainer),
-      PredictionResult.pending => ('In attesa di risultato', colorScheme.surfaceContainerHigh, colorScheme.onSurfaceVariant),
+      PredictionResult.correct => ('Hai letto bene la situazione', colorScheme.primaryContainer, colorScheme.onPrimaryContainer),
+      PredictionResult.partial => ('Ci eri quasi', colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
+      PredictionResult.wrong => ('Qui la situazione è andata diversamente', colorScheme.errorContainer, colorScheme.onErrorContainer),
+      PredictionResult.pending => ('In attesa di verifica', colorScheme.surfaceContainerHigh, colorScheme.onSurfaceVariant),
     };
 
-    return AnimatedSwitcherX(
+    return AnimatedSwitcher(
       duration: AppMotion.fast,
-      child: TweenAnimationBuilder<double>(
+      switchInCurve: const Interval(0.12, 1, curve: AppMotion.standard),
+      switchOutCurve: AppMotion.standard,
+      transitionBuilder: (child, animation) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: const Interval(0.12, 1, curve: AppMotion.standard),
+        );
+
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.95, end: 1).animate(curved),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
         key: ValueKey(result),
-        tween: Tween<double>(begin: 0.9, end: 1),
-        duration: AppMotion.fast,
-        curve: AppMotion.emphasized,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTokens.s12,
-            vertical: AppTokens.s8,
-          ),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(AppTokens.radius),
-          ),
-          child: Text(
-            text,
-            style: textTheme.bodySmall?.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w600,
-            ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTokens.s12,
+          vertical: AppTokens.s8,
+        ),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+        ),
+        child: Text(
+          text,
+          style: textTheme.bodySmall?.copyWith(
+            color: textColor,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        builder: (context, value, child) {
-          return Opacity(
-            opacity: value,
-            child: Transform.scale(
-              scale: value,
-              child: child,
-            ),
-          );
-        },
       ),
     );
   }
