@@ -13,8 +13,7 @@ import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/widgets/segmented_choice.dart';
 import 'package:fanta_comune/core/widgets/status_pill.dart';
 import 'package:fanta_comune/core/privacy/privacy_copy.dart';
-import 'package:fanta_comune/features/info/presentation/how_it_works_page.dart';
-import 'package:fanta_comune/features/info/presentation/privacy_page.dart';
+import 'package:go_router/go_router.dart';
 
 /// Schermata iniziale che conferma l'avvio e presenta il tema base.
 class BootScreen extends StatefulWidget {
@@ -40,6 +39,7 @@ class _BootScreenState extends State<BootScreen> {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final appPrefs = context.read<AppPrefs>();
+    final nextLocation = appPrefs.municipalityId == null ? '/onboarding' : '/home';
 
     return Scaffold(
       appBar: AppBar(
@@ -78,6 +78,29 @@ class _BootScreenState extends State<BootScreen> {
                   ),
                   const SizedBox(height: AppTokens.s16),
                   PrimaryCard(
+                    child: Wrap(
+                      spacing: AppTokens.s12,
+                      runSpacing: AppTokens.s12,
+                      children: [
+                        FilledButton.icon(
+                          icon: const Icon(AppIcons.play),
+                          label: const Text('Vai all’app'),
+                          onPressed: () => context.go(nextLocation),
+                        ),
+                        OutlinedButton.icon(
+                          icon: const Icon(AppIcons.privacy),
+                          label: const Text('Reset dati locali'),
+                          onPressed: () async {
+                            await appPrefs.clearAll();
+                            if (!mounted) return;
+                            context.go('/boot');
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppTokens.s16),
+                  PrimaryCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -98,24 +121,12 @@ class _BootScreenState extends State<BootScreen> {
                             FilledButton.icon(
                               icon: const Icon(AppIcons.info),
                               label: const Text('Come funziona'),
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (context) => const HowItWorksPage(),
-                                  ),
-                                );
-                              },
+                              onPressed: () => context.go('/how-it-works'),
                             ),
                             OutlinedButton.icon(
                               icon: const Icon(AppIcons.privacy),
                               label: const Text('Privacy'),
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (context) => const PrivacyPage(),
-                                  ),
-                                );
-                              },
+                              onPressed: () => context.go('/privacy'),
                             ),
                           ],
                         ),
