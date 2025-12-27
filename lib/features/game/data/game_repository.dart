@@ -1,4 +1,5 @@
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
+import 'package:fanta_comune/features/game/domain/insight_history.dart';
 import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
@@ -68,4 +69,10 @@ abstract class GameRepository {
 
   /// Restituisce il punteggio di reputazione corrente per il turno.
   Future<ReputationScore> getReputationScore(String turnId);
+
+  /// Restituisce lo storico sintetico delle percezioni per il [problemId] richiesto.
+  Future<InsightHistory> getInsightHistory(String problemId);
+
+  /// Restituisce lo storico delle reputazioni per il comune indicato.
+  Future<List<ReputationScore>> getReputationHistory({required String municipalityId});
 }

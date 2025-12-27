@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
+import 'package:fanta_comune/features/game/domain/insight_history.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/prediction_result.dart';
@@ -36,6 +37,53 @@ class PlayCubit extends Cubit<PlayState> {
     return preserved;
   }
 
+  /// Carica e cache l'andamento storico per il problema richiesto.
+  Future<void> loadProblemHistory(String problemId) async {
+    if (state.insightHistories.containsKey(problemId) ||
+        state.loadingInsightHistories.contains(problemId)) {
+      return;
+    }
+    final loading = Set<String>.from(state.loadingInsightHistories)..add(problemId);
+    emit(state.copyWith(loadingInsightHistories: loading, error: null));
+
+    try {
+      final history = await repository.getInsightHistory(problemId);
+      final updatedHistories = Map<String, InsightHistory>.from(state.insightHistories)
+        ..[problemId] = history;
+      loading.remove(problemId);
+      emit(
+        state.copyWith(
+          insightHistories: updatedHistories,
+          loadingInsightHistories: loading,
+          error: null,
+        ),
+      );
+    } catch (e) {
+      loading.remove(problemId);
+      emit(state.copyWith(loadingInsightHistories: loading, error: e.toString()));
+    }
+  }
+
+  /// Recupera lo storico reputazione e lo mantiene in cache locale.
+  Future<void> loadReputationHistory() async {
+    if (state.reputationHistory.isNotEmpty || state.isReputationHistoryLoading) return;
+
+    emit(state.copyWith(isReputationHistoryLoading: true, error: null));
+    try {
+      final municipalityId = prefs.municipalityId ?? 'demo';
+      final history = await repository.getReputationHistory(municipalityId: municipalityId);
+      emit(
+        state.copyWith(
+          reputationHistory: history,
+          isReputationHistoryLoading: false,
+          error: null,
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isReputationHistoryLoading: false, error: e.toString()));
+    }
+  }
+
   /// Carica turno, problemi e previsioni utente riusando il repository mock.
   Future<void> load() async {
     emit(state.copyWith(isLoading: true, error: null));
@@ -62,6 +110,7 @@ class PlayCubit extends Cubit<PlayState> {
           results: results,
           insights: insights,
           reputation: reputation,
+          loadingInsightHistories: const {},
           error: null,
         ),
       );
@@ -163,6 +212,11 @@ class PlayCubit extends Cubit<PlayState> {
       final resolved = await repository.getPredictionResults(turnId);
       final reputation = await repository.getReputationScore(turnId);
       final insights = await _loadInsightsForProblems(resolved.keys);
+      List<ReputationScore>? reputationHistory;
+      if (state.reputationHistory.isNotEmpty) {
+        final municipalityId = prefs.municipalityId ?? 'demo';
+        reputationHistory = await repository.getReputationHistory(municipalityId: municipalityId);
+      }
 
       emit(
         state.copyWith(
@@ -170,6 +224,7 @@ class PlayCubit extends Cubit<PlayState> {
           results: resolved,
           insights: insights,
           reputation: reputation,
+          reputationHistory: reputationHistory ?? state.reputationHistory,
           error: null,
         ),
       );

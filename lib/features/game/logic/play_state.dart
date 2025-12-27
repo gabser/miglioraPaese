@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
+import 'package:fanta_comune/features/game/domain/insight_history.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/prediction_result.dart';
@@ -18,11 +19,15 @@ class PlayState extends Equatable {
     this.motivations = const <String, List<MotivationKey>>{},
     this.results = const <String, PredictionResult>{},
     this.insights = const <String, AggregatedInsight>{},
+    this.insightHistories = const <String, InsightHistory>{},
+    this.loadingInsightHistories = const <String>{},
     this.reputation = const ReputationScore(
       totalPoints: 0,
       accuracy: 0,
       predictionsCount: 0,
     ),
+    this.reputationHistory = const <ReputationScore>[],
+    this.isReputationHistoryLoading = false,
     this.error,
   });
 
@@ -47,8 +52,20 @@ class PlayState extends Equatable {
   /// Insight aggregati sui problemi già risolti, indicizzati per [Problem.id].
   final Map<String, AggregatedInsight> insights;
 
+  /// Storico sintetico degli insight per ogni problema risolto.
+  final Map<String, InsightHistory> insightHistories;
+
+  /// Identifica i problemi per cui è in corso il caricamento dello storico.
+  final Set<String> loadingInsightHistories;
+
   /// Punteggio aggregato derivato dalle previsioni concluse.
   final ReputationScore reputation;
+
+  /// Storico reputazione calcolato in base ai turni precedenti.
+  final List<ReputationScore> reputationHistory;
+
+  /// Indica se è in corso il caricamento dello storico reputazione.
+  final bool isReputationHistoryLoading;
 
   /// Messaggio di errore opzionale per comunicazioni leggere alla UI.
   final String? error;
@@ -62,7 +79,11 @@ class PlayState extends Equatable {
     Map<String, List<MotivationKey>>? motivations,
     Map<String, PredictionResult>? results,
     Map<String, AggregatedInsight>? insights,
+    Map<String, InsightHistory>? insightHistories,
+    Set<String>? loadingInsightHistories,
     ReputationScore? reputation,
+    List<ReputationScore>? reputationHistory,
+    bool? isReputationHistoryLoading,
     String? error,
   }) {
     return PlayState(
@@ -73,7 +94,11 @@ class PlayState extends Equatable {
       motivations: motivations ?? this.motivations,
       results: results ?? this.results,
       insights: insights ?? this.insights,
+      insightHistories: insightHistories ?? this.insightHistories,
+      loadingInsightHistories: loadingInsightHistories ?? this.loadingInsightHistories,
       reputation: reputation ?? this.reputation,
+      reputationHistory: reputationHistory ?? this.reputationHistory,
+      isReputationHistoryLoading: isReputationHistoryLoading ?? this.isReputationHistoryLoading,
       error: error,
     );
   }
@@ -87,7 +112,11 @@ class PlayState extends Equatable {
         motivations,
         results,
         insights,
+        insightHistories,
+        loadingInsightHistories,
         reputation,
+        reputationHistory,
+        isReputationHistoryLoading,
         error,
       ];
 }
