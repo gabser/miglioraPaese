@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:goodtime/core/theme/app_motion.dart';
+import 'package:fanta_comune/core/theme/app_motion.dart';
 
 /// AnimatedSwitcher preconfigurato con transizione leggera (fade + slide).
 class AnimatedSwitcherX extends StatelessWidget {

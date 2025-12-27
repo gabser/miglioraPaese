@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:goodtime/core/theme/app_tokens.dart';
+import 'package:fanta_comune/core/theme/app_tokens.dart';
 
 /// Contenitore che limita la larghezza e centra il contenuto su schermi ampi.
 class MaxWidthContainer extends StatelessWidget {

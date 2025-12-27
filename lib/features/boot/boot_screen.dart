@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:goodtime/core/models/problem_key.dart';
-import 'package:goodtime/core/theme/app_icons.dart';
-import 'package:goodtime/core/theme/app_tokens.dart';
-import 'package:goodtime/core/widgets/animated_size_x.dart';
-import 'package:goodtime/core/widgets/animated_switcher_x.dart';
-import 'package:goodtime/core/widgets/icon_label.dart';
-import 'package:goodtime/core/widgets/max_width_container.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fanta_comune/core/models/problem_key.dart';
+import 'package:fanta_comune/core/preferences/app_prefs.dart';
+import 'package:fanta_comune/core/theme/app_icons.dart';
+import 'package:fanta_comune/core/theme/app_tokens.dart';
+import 'package:fanta_comune/core/widgets/animated_size_x.dart';
+import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
+import 'package:fanta_comune/core/widgets/icon_label.dart';
+import 'package:fanta_comune/core/widgets/max_width_container.dart';
 
 /// Schermata iniziale che conferma l'avvio e presenta il tema base.
 class BootScreen extends StatefulWidget {
@@ -19,13 +21,21 @@ class _BootScreenState extends State<BootScreen> {
   bool _showMotionDetails = false;
 
   @override
+  void initState() {
+    super.initState();
+    final prefs = context.read<AppPrefs>();
+    _showMotionDetails = prefs.motionDemoEnabled;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final appPrefs = context.read<AppPrefs>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('GoodTime'),
+        title: const Text('Fanta Comune'),
       ),
       body: SafeArea(
         child: MaxWidthContainer(
@@ -39,19 +49,19 @@ class _BootScreenState extends State<BootScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'GoodTime',
+                        'Fanta Comune',
                         style: textTheme.headlineMedium?.copyWith(
                           color: colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: AppTokens.s12),
                       Text(
-                        'Pianifica attività e routine con un taccuino digitale.',
+                        'Crea partite civiche, segnala problemi e scala la classifica locale.',
                         style: textTheme.titleMedium,
                       ),
                       const SizedBox(height: AppTokens.s16),
                       Text(
-                        'Bootstrap completato. Prossimo step: UI e routing.',
+                        'Bootstrap completato. Prossimo step: feature di gioco e routing.',
                         style: textTheme.bodyMedium,
                       ),
                     ],
@@ -145,13 +155,14 @@ class _BootScreenState extends State<BootScreen> {
                           style: textTheme.titleMedium,
                         ),
                         subtitle: Text(
-                          'Transizioni leggere e coerenti con i token di motion.',
+                          'Transizioni coordinate con AnimatedSwitcherX e token di motion.',
                           style: textTheme.bodyMedium,
                         ),
-                        onChanged: (value) {
+                        onChanged: (value) async {
                           setState(() {
                             _showMotionDetails = value;
                           });
+                          await appPrefs.setMotionDemoEnabled(value);
                         },
                       ),
                       AnimatedSwitcherX(

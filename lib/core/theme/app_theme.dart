@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:goodtime/core/theme/app_tokens.dart';
+import 'package:fanta_comune/core/theme/app_motion.dart';
+import 'package:fanta_comune/core/theme/app_tokens.dart';
 
 /// Tema centralizzato basato su Material 3 e ColorScheme derivato da seed.
 class AppTheme {
@@ -28,6 +29,8 @@ class AppTheme {
       secondarySelectedColor: colorScheme.secondaryContainer,
       disabledColor: colorScheme.onSurface.withOpacity(0.12),
     );
+
+    const transitionsBuilder = _AppPageTransitionsBuilder();
 
     return ThemeData(
       useMaterial3: true,
@@ -88,13 +91,45 @@ class AppTheme {
       chipTheme: baseChipTheme,
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.fuchsia: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.android: transitionsBuilder,
+          TargetPlatform.iOS: transitionsBuilder,
+          TargetPlatform.linux: transitionsBuilder,
+          TargetPlatform.macOS: transitionsBuilder,
+          TargetPlatform.windows: transitionsBuilder,
+          TargetPlatform.fuchsia: transitionsBuilder,
         },
+      ),
+    );
+  }
+}
+
+class _AppPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _AppPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final fadeAnimation = animation.drive(
+      CurveTween(curve: AppMotion.standard),
+    );
+
+    final offsetAnimation = animation.drive(
+      Tween<Offset>(
+        begin: const Offset(0, 0.025),
+        end: Offset.zero,
+      ).chain(CurveTween(curve: AppMotion.standard)),
+    );
+
+    return FadeTransition(
+      opacity: fadeAnimation,
+      child: SlideTransition(
+        position: offsetAnimation,
+        child: child,
       ),
     );
   }

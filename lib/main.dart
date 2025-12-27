@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:goodtime/app/app.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fanta_comune/app/app.dart';
+import 'package:fanta_comune/core/preferences/app_prefs.dart';
 
-void main() {
-  runApp(const App());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final appPrefs = await AppPrefs.init();
+
+  runApp(
+    RepositoryProvider<AppPrefs>.value(
+      value: appPrefs,
+      child: const App(),
+    ),
+  );
 }
