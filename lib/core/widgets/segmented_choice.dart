@@ -11,17 +11,21 @@ class SegmentedChoice<T> extends StatelessWidget {
     required this.options,
     required this.labelBuilder,
     required this.onChanged,
+    this.optionBuilder,
     super.key,
   });
 
-  /// Valore attualmente selezionato.
-  final T value;
+  /// Valore attualmente selezionato (può essere null per nessuna scelta).
+  final T? value;
 
   /// Lista di opzioni selezionabili.
   final List<T> options;
 
   /// Builder del testo visibile per ogni opzione.
   final String Function(T) labelBuilder;
+
+  /// Builder opzionale per personalizzare il contenuto visuale di ogni opzione.
+  final Widget Function(T option, bool isSelected)? optionBuilder;
 
   /// Callback chiamata al cambio di selezione.
   final ValueChanged<T> onChanged;
@@ -32,15 +36,16 @@ class SegmentedChoice<T> extends StatelessWidget {
 
     if (Theme.of(context).useMaterial3) {
       return SegmentedButton<T>(
+        emptySelectionAllowed: true,
         segments: options
             .map(
               (option) => ButtonSegment<T>(
                 value: option,
-                label: Text(labelBuilder(option)),
+                label: optionBuilder?.call(option, option == value) ?? Text(labelBuilder(option)),
               ),
             )
             .toList(),
-        selected: {value},
+        selected: value == null ? <T>{} : {value!},
         onSelectionChanged: (newSelection) {
           if (newSelection.isNotEmpty) {
             onChanged(newSelection.first);
@@ -54,8 +59,9 @@ class SegmentedChoice<T> extends StatelessWidget {
         spacing: AppTokens.s8,
         runSpacing: AppTokens.s8,
         children: options.map((option) {
-          final isSelected = option == value;
+          final isSelected = value != null && option == value;
           final label = labelBuilder(option);
+          final labelKey = '$label$isSelected';
 
           return Semantics(
             button: true,
@@ -63,10 +69,15 @@ class SegmentedChoice<T> extends StatelessWidget {
             child: ChoiceChip(
               label: AnimatedSwitcherX(
                 duration: AppMotion.normal,
-                child: Text(
-                  label,
-                  key: ValueKey(label + isSelected.toString()),
-                ),
+                child: optionBuilder != null
+                    ? KeyedSubtree(
+                        key: ValueKey(labelKey),
+                        child: optionBuilder!(option, isSelected),
+                      )
+                    : Text(
+                        label,
+                        key: ValueKey(labelKey),
+                      ),
               ),
               selected: isSelected,
               onSelected: (_) => onChanged(option),
