@@ -12,6 +12,9 @@ import 'package:fanta_comune/core/widgets/max_width_container.dart';
 import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/widgets/segmented_choice.dart';
 import 'package:fanta_comune/core/widgets/status_pill.dart';
+import 'package:fanta_comune/core/privacy/privacy_copy.dart';
+import 'package:fanta_comune/features/info/presentation/how_it_works_page.dart';
+import 'package:fanta_comune/features/info/presentation/privacy_page.dart';
 
 /// Schermata iniziale che conferma l'avvio e presenta il tema base.
 class BootScreen extends StatefulWidget {
@@ -69,6 +72,52 @@ class _BootScreenState extends State<BootScreen> {
                         Text(
                           'Bootstrap completato. Prossimo step: feature di gioco e routing.',
                           style: textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppTokens.s16),
+                  PrimaryCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Info & privacy',
+                          style: textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: AppTokens.s8),
+                        Text(
+                          PrivacyCopy.micropitch,
+                          style: textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: AppTokens.s12),
+                        Wrap(
+                          spacing: AppTokens.s12,
+                          runSpacing: AppTokens.s12,
+                          children: [
+                            FilledButton.icon(
+                              icon: const Icon(AppIcons.info),
+                              label: const Text('Come funziona'),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (context) => const HowItWorksPage(),
+                                  ),
+                                );
+                              },
+                            ),
+                            OutlinedButton.icon(
+                              icon: const Icon(AppIcons.privacy),
+                              label: const Text('Privacy'),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (context) => const PrivacyPage(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),
