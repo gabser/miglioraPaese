@@ -1,4 +1,5 @@
 import 'package:fanta_comune/features/game/domain/prediction.dart';
+import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
@@ -27,6 +28,14 @@ abstract class GameRepository {
     required String turnId,
     required String problemId,
     required PredictionChoice choice,
+    List<MotivationKey> motivations = const [],
+  });
+
+  /// Aggiorna le motivazioni associate a una previsione esistente.
+  Future<void> updatePredictionMotivations({
+    required String turnId,
+    required String problemId,
+    required List<MotivationKey> motivations,
   });
 
   /// Risolve una previsione e restituisce l'esito deterministico basato sullo stato finale.

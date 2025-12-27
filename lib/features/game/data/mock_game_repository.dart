@@ -1,5 +1,6 @@
 import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
+import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/prediction_result.dart';
@@ -87,12 +88,14 @@ class MockGameRepository implements GameRepository {
       problemId: 'problem-2',
       choice: PredictionChoice.stable,
       createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+      motivations: const [],
     ),
     'problem-3': Prediction(
       turnId: 'turn-2024-09',
       problemId: 'problem-3',
       choice: PredictionChoice.improve,
       createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+      motivations: const [],
     ),
   };
 
@@ -235,6 +238,7 @@ class MockGameRepository implements GameRepository {
     required String turnId,
     required String problemId,
     required PredictionChoice choice,
+    List<MotivationKey> motivations = const [],
   }) {
     return _withDelay(() {
       _predictions[problemId] = Prediction(
@@ -242,9 +246,26 @@ class MockGameRepository implements GameRepository {
         problemId: problemId,
         choice: choice,
         createdAt: DateTime.now(),
+        motivations: List<MotivationKey>.unmodifiable(motivations.take(2)),
       );
       _results.remove(problemId);
       _reputation = _calculateReputation();
+    });
+  }
+
+  @override
+  Future<void> updatePredictionMotivations({
+    required String turnId,
+    required String problemId,
+    required List<MotivationKey> motivations,
+  }) {
+    return _withDelay(() {
+      final existing = _predictions[problemId];
+      if (existing == null) return;
+
+      _predictions[problemId] = existing.copyWith(
+        motivations: List<MotivationKey>.unmodifiable(motivations.take(2)),
+      );
     });
   }
 

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
@@ -13,6 +14,7 @@ class PlayState extends Equatable {
     this.currentTurn,
     this.problems = const [],
     this.myPredictions = const {},
+    this.motivations = const {},
     this.results = const {},
     this.reputation = const ReputationScore(
       totalPoints: 0,
@@ -34,6 +36,9 @@ class PlayState extends Equatable {
   /// Mappa delle previsioni effettuate dall'utente, indicizzata per problema.
   final Map<String, PredictionChoice> myPredictions;
 
+  /// Motivazioni selezionate per le previsioni, indicizzate per problema.
+  final Map<String, List<MotivationKey>> motivations;
+
   /// Esiti delle previsioni già risolte.
   final Map<String, PredictionResult> results;
 
@@ -49,6 +54,7 @@ class PlayState extends Equatable {
     Turn? currentTurn,
     List<Problem>? problems,
     Map<String, PredictionChoice>? myPredictions,
+    Map<String, List<MotivationKey>>? motivations,
     Map<String, PredictionResult>? results,
     ReputationScore? reputation,
     String? error,
@@ -58,6 +64,7 @@ class PlayState extends Equatable {
       currentTurn: currentTurn ?? this.currentTurn,
       problems: problems ?? this.problems,
       myPredictions: myPredictions ?? this.myPredictions,
+      motivations: motivations ?? this.motivations,
       results: results ?? this.results,
       reputation: reputation ?? this.reputation,
       error: error,
@@ -65,5 +72,14 @@ class PlayState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [isLoading, currentTurn, problems, myPredictions, results, reputation, error];
+  List<Object?> get props => [
+        isLoading,
+        currentTurn,
+        problems,
+        myPredictions,
+        motivations,
+        results,
+        reputation,
+        error,
+      ];
 }

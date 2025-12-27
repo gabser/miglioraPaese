@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 
 /// Previsione effettuata dall'utente su un problema durante un turno.
@@ -9,6 +10,7 @@ class Prediction extends Equatable {
     required this.problemId,
     required this.choice,
     required this.createdAt,
+    this.motivations = const [],
   });
 
   /// Identificativo del turno in cui è stata fatta la previsione.
@@ -23,21 +25,26 @@ class Prediction extends Equatable {
   /// Timestamp di creazione della previsione.
   final DateTime createdAt;
 
+  /// Motivazioni opzionali che spiegano la scelta effettuata.
+  final List<MotivationKey> motivations;
+
   /// Restituisce una copia immutabile con eventuali aggiornamenti.
   Prediction copyWith({
     String? turnId,
     String? problemId,
     PredictionChoice? choice,
     DateTime? createdAt,
+    List<MotivationKey>? motivations,
   }) {
     return Prediction(
       turnId: turnId ?? this.turnId,
       problemId: problemId ?? this.problemId,
       choice: choice ?? this.choice,
       createdAt: createdAt ?? this.createdAt,
+      motivations: motivations ?? this.motivations,
     );
   }
 
   @override
-  List<Object?> get props => [turnId, problemId, choice, createdAt];
+  List<Object?> get props => [turnId, problemId, choice, createdAt, motivations];
 }
