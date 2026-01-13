@@ -1,11 +1,14 @@
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
+import 'package:fanta_comune/features/game/domain/critical_insight.dart';
+import 'package:fanta_comune/features/game/domain/hypothesis_confidence.dart';
 import 'package:fanta_comune/features/game/domain/insight_history.dart';
-import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
+import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
 import 'package:fanta_comune/features/game/domain/reputation_score.dart';
+import 'package:fanta_comune/features/game/domain/reflection_question.dart';
 import 'package:fanta_comune/features/game/domain/turn.dart';
 import 'package:fanta_comune/features/leaderboard/domain/leaderboard_entry.dart';
 
@@ -31,6 +34,7 @@ abstract class GameRepository {
     required String problemId,
     required PredictionChoice choice,
     List<MotivationKey> motivations = const [],
+    HypothesisConfidence? confidence,
   });
 
   /// Aggiorna le motivazioni associate a una previsione esistente.
@@ -39,6 +43,9 @@ abstract class GameRepository {
     required String problemId,
     required List<MotivationKey> motivations,
   });
+
+  /// Restituisce una domanda di riflessione associata al problema.
+  Future<ReflectionQuestion> getReflectionQuestion(String problemId);
 
   /// Risolve una previsione e restituisce l'esito deterministico basato sullo stato finale.
   Future<PredictionResult> resolvePrediction({
@@ -75,4 +82,12 @@ abstract class GameRepository {
 
   /// Restituisce lo storico delle reputazioni per il comune indicato.
   Future<List<ReputationScore>> getReputationHistory({required String municipalityId});
+
+  /// Restituisce un set di insight critici aggregati post-risoluzione.
+  Future<List<CriticalInsight>> getCriticalInsights({
+    required String problemId,
+    required PredictionChoice? userChoice,
+    required HypothesisConfidence? userConfidence,
+    required int? userReflectionIndex,
+  });
 }

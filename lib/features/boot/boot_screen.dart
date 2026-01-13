@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/core/models/problem_status.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
@@ -7,11 +8,15 @@ import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/animated_size_x.dart';
 import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
+import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
 import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/widgets/segmented_choice.dart';
 import 'package:fanta_comune/core/widgets/status_pill.dart';
+import 'package:fanta_comune/core/widgets/stamp_action_button.dart';
+import 'package:fanta_comune/core/widgets/sticker_badge.dart';
+import 'package:fanta_comune/core/theme/typography_x.dart';
 import 'package:fanta_comune/core/privacy/privacy_copy.dart';
 import 'package:go_router/go_router.dart';
 
@@ -38,58 +43,80 @@ class _BootScreenState extends State<BootScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final isCompact = MediaQuery.of(context).size.width < 600;
+    final sectionGap = isCompact ? AppTokens.s12 : AppTokens.s16;
+    final cardPadding = EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16);
     final appPrefs = context.read<AppPrefs>();
-    final nextLocation = appPrefs.municipalityId == null ? '/onboarding' : '/home';
+    final nextLocation = appPrefs.hasSeenWarmWelcome
+        ? (appPrefs.municipalityId == null ? '/onboarding' : '/play')
+        : '/welcome';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fanta Comune'),
+        title: const Text(VenialCopy.appTitle),
       ),
       body: SafeArea(
         child: MaxWidthContainer(
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppTokens.s16),
+              padding: EdgeInsets.symmetric(vertical: sectionGap),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   PrimaryCard(
+                    textured: true,
+                    elevated: true,
+                    padding: cardPadding,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        StickerBadge(
+                          label: VenialCopy.bootStickerLabel,
+                          animate: true,
+                        ),
+                        const SizedBox(height: AppTokens.s12),
+                        CardIllustrationSlot(
+                          fallbackIcon: AppIcons.board,
+                          height: 90,
+                          compact: true,
+                          labelRibbon: VenialCopy.bootHeroRibbon,
+                        ),
+                        const SizedBox(height: AppTokens.s12),
                         Text(
-                          'Fanta Comune',
-                          style: textTheme.headlineMedium?.copyWith(
+                          VenialCopy.bootHeroTitle,
+                          style: TypographyX.headlineSmall(context)?.copyWith(
                             color: colorScheme.primary,
                           ),
                         ),
                         const SizedBox(height: AppTokens.s12),
                         Text(
-                          'Crea partite civiche, segnala problemi e scala la classifica locale.',
+                          VenialCopy.bootHeroSubtitle,
                           style: textTheme.titleMedium,
                         ),
                         const SizedBox(height: AppTokens.s16),
                         Text(
-                          'Bootstrap completato. Prossimo step: feature di gioco e routing.',
+                          VenialCopy.bootHeroNote,
                           style: textTheme.bodyMedium,
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppTokens.s16),
+                  SizedBox(height: sectionGap),
                   PrimaryCard(
+                    textured: true,
+                    padding: cardPadding,
                     child: Wrap(
                       spacing: AppTokens.s12,
                       runSpacing: AppTokens.s12,
                       children: [
-                        FilledButton.icon(
-                          icon: const Icon(AppIcons.play),
-                          label: const Text('Vai all’app'),
+                        StampActionButton(
+                          icon: AppIcons.play,
+                          label: VenialCopy.bootPrimaryCta,
                           onPressed: () => context.go(nextLocation),
                         ),
                         OutlinedButton.icon(
                           icon: const Icon(AppIcons.privacy),
-                          label: const Text('Reset dati locali'),
+                          label: const Text(VenialCopy.bootResetCta),
                           onPressed: () async {
                             await appPrefs.clearAll();
                             if (!mounted) return;
@@ -99,14 +126,16 @@ class _BootScreenState extends State<BootScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppTokens.s16),
+                  SizedBox(height: sectionGap),
                   PrimaryCard(
+                    textured: true,
+                    padding: cardPadding,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Info & privacy',
-                          style: textTheme.titleLarge,
+                          VenialCopy.bootInfoTitle,
+                          style: TypographyX.titleLarge(context),
                         ),
                         const SizedBox(height: AppTokens.s8),
                         Text(
@@ -120,12 +149,12 @@ class _BootScreenState extends State<BootScreen> {
                           children: [
                             FilledButton.icon(
                               icon: const Icon(AppIcons.info),
-                              label: const Text('Come funziona'),
+                              label: const Text(VenialCopy.bootInfoCtaHow),
                               onPressed: () => context.go('/how-it-works'),
                             ),
                             OutlinedButton.icon(
                               icon: const Icon(AppIcons.privacy),
-                              label: const Text('Privacy'),
+                              label: const Text(VenialCopy.bootInfoCtaPrivacy),
                               onPressed: () => context.go('/privacy'),
                             ),
                           ],
@@ -133,23 +162,25 @@ class _BootScreenState extends State<BootScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppTokens.s16),
+                  SizedBox(height: sectionGap),
                   PrimaryCard(
+                    textured: true,
+                    padding: cardPadding,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Icon set',
-                          style: textTheme.titleLarge,
+                          VenialCopy.bootIconsTitle,
+                          style: TypographyX.titleLarge(context),
                         ),
                         const SizedBox(height: AppTokens.s12),
                         Text(
-                          'Icone centralizzate per navigazione e problemi.',
+                          VenialCopy.bootIconsSubtitle,
                           style: textTheme.bodyMedium,
                         ),
                         const SizedBox(height: AppTokens.s16),
                         Text(
-                          'Tab principali',
+                          VenialCopy.bootIconsTabsTitle,
                           style: textTheme.titleSmall,
                         ),
                         const SizedBox(height: AppTokens.s8),
@@ -159,25 +190,25 @@ class _BootScreenState extends State<BootScreen> {
                           children: const [
                             IconLabel(
                               icon: AppIcons.home,
-                              text: 'Home',
+                              text: VenialCopy.navHome,
                             ),
                             IconLabel(
                               icon: AppIcons.play,
-                              text: 'Gioca',
+                              text: VenialCopy.navPlay,
                             ),
                             IconLabel(
                               icon: AppIcons.leaderboard,
-                              text: 'Classifica',
+                              text: VenialCopy.navLeaderboard,
                             ),
                             IconLabel(
                               icon: AppIcons.profile,
-                              text: 'Profilo',
+                              text: VenialCopy.navProfile,
                             ),
                           ],
                         ),
                         const SizedBox(height: AppTokens.s16),
                         Text(
-                          'Tipologie di problema',
+                          VenialCopy.bootIconsProblemsTitle,
                           style: textTheme.titleSmall,
                         ),
                         const SizedBox(height: AppTokens.s8),
@@ -196,14 +227,16 @@ class _BootScreenState extends State<BootScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppTokens.s16),
+                  SizedBox(height: sectionGap),
                   PrimaryCard(
+                    textured: true,
+                    padding: cardPadding,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Motion demo',
-                          style: textTheme.titleLarge,
+                          VenialCopy.bootMotionTitle,
+                          style: TypographyX.titleLarge(context),
                         ),
                         const SizedBox(height: AppTokens.s12),
                         SwitchListTile.adaptive(
@@ -211,11 +244,11 @@ class _BootScreenState extends State<BootScreen> {
                           value: _showMotionDetails,
                           activeColor: colorScheme.primary,
                           title: Text(
-                            'Mostra dettagli motion demo',
+                            VenialCopy.bootMotionToggle,
                             style: textTheme.titleMedium,
                           ),
                           subtitle: Text(
-                            'Transizioni coordinate con AnimatedSwitcherX e token di motion.',
+                            VenialCopy.bootMotionSubtitle,
                             style: textTheme.bodyMedium,
                           ),
                           onChanged: (value) async {

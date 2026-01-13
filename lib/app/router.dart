@@ -4,10 +4,15 @@ import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/boot/boot_screen.dart';
 import 'package:fanta_comune/features/home/presentation/home_page.dart';
 import 'package:fanta_comune/features/game/presentation/play/play_page.dart';
+import 'package:fanta_comune/features/game/presentation/board/board_page.dart';
 import 'package:fanta_comune/features/info/presentation/how_it_works_page.dart';
 import 'package:fanta_comune/features/info/presentation/privacy_page.dart';
 import 'package:fanta_comune/features/leaderboard/presentation/leaderboard_page.dart';
+import 'package:fanta_comune/features/onboarding/presentation/cynic_onboarding_page.dart';
 import 'package:fanta_comune/features/onboarding/presentation/onboarding_page.dart';
+import 'package:fanta_comune/features/onboarding/presentation/warm_welcome_page.dart';
+import 'package:fanta_comune/features/next_problems/presentation/next_problems_page.dart';
+import 'package:fanta_comune/features/next_problems/presentation/suggest_problem_page.dart';
 import 'package:fanta_comune/features/profile/presentation/profile_page.dart';
 import 'package:fanta_comune/features/shell/presentation/shell_page.dart';
 
@@ -18,16 +23,29 @@ GoRouter buildRouter(AppPrefs appPrefs) {
     refreshListenable: appPrefs,
     redirect: (context, state) {
       final municipalityId = appPrefs.municipalityId;
-      final location = state.uri.path;
-      const publicPaths = {
+      final hasSeenWarmWelcome = appPrefs.hasSeenWarmWelcome;
+      final location = state.matchedLocation.isNotEmpty
+          ? state.matchedLocation
+          : state.uri.path;
+      const infoPaths = {
         '/boot',
-        '/onboarding',
         '/how-it-works',
         '/privacy',
       };
 
+      if (!hasSeenWarmWelcome) {
+        if (location == '/welcome' || infoPaths.contains(location)) {
+          return null;
+        }
+        return '/welcome';
+      }
+
+      if (location == '/welcome') {
+        return null;
+      }
+
       if (municipalityId == null) {
-        if (publicPaths.contains(location)) {
+        if (infoPaths.contains(location) || location == '/onboarding' || location == '/boot') {
           return null;
         }
         return '/onboarding';
@@ -45,8 +63,28 @@ GoRouter buildRouter(AppPrefs appPrefs) {
         builder: (context, state) => const BootScreen(),
       ),
       GoRoute(
+        path: '/welcome',
+        builder: (context, state) => const WarmWelcomePage(),
+      ),
+      GoRoute(
+        path: '/cynic-onboarding',
+        builder: (context, state) => const CynicOnboardingPage(),
+      ),
+      GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingPage(),
+      ),
+      GoRoute(
+        path: '/next-problems',
+        builder: (context, state) => const NextProblemsPage(),
+      ),
+      GoRoute(
+        path: '/suggest-problem',
+        builder: (context, state) => const SuggestProblemPage(),
+      ),
+      GoRoute(
+        path: '/board',
+        builder: (context, state) => const BoardPage(),
       ),
       GoRoute(
         path: '/how-it-works',

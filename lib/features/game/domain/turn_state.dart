@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 /// Stato complessivo di un turno di gioco.
-enum TurnState with EquatableMixin {
+enum TurnState {
   /// Il turno è aperto e accetta nuove previsioni.
   open,
 
@@ -11,6 +11,4 @@ enum TurnState with EquatableMixin {
   /// Il turno è chiuso e non accetta altre modifiche.
   closed;
 
-  @override
-  List<Object?> get props => [index];
 }

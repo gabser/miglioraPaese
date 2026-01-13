@@ -16,7 +16,7 @@ class TrendSparkline extends StatelessWidget {
   });
 
   /// Valori percentuali (0-100) da mostrare in sequenza cronologica.
-  final List<double> values;
+  final List<num> values;
 
   /// Colore principale usato per le barre animate.
   final Color color;
@@ -29,8 +29,12 @@ class TrendSparkline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final entries = values.isEmpty ? const <double>[] : values;
-    final maxValue = entries.isEmpty ? 1.0 : entries.reduce(max).clamp(1, 100);
+    final entries = values.map((value) => value.toDouble()).toList(growable: false);
+    final maxValue = entries.isEmpty
+        ? 1.0
+        : entries
+            .reduce((a, b) => a > b ? a : b)
+            .clamp(1, 100);
 
     return AnimatedOpacity(
       duration: AppMotion.fast,
@@ -42,7 +46,7 @@ class TrendSparkline extends StatelessWidget {
           for (var i = 0; i < entries.length; i++) ...[
             _SparkBar(
               value: entries[i],
-              maxValue: maxValue,
+              maxValue: maxValue.toDouble(),
               color: color,
               maxHeight: maxHeight,
             ),

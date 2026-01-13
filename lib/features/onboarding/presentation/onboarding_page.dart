@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
+import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
+import 'package:fanta_comune/core/theme/vintage_paper.dart';
+import 'package:fanta_comune/core/theme/typography_x.dart';
+import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
 import 'package:fanta_comune/core/widgets/primary_card.dart';
 
@@ -45,47 +49,73 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final prefs = context.read<AppPrefs>();
     await prefs.setMunicipalityId('comune:$city');
     if (!mounted) return;
-    context.go('/home');
+    context.go('/play');
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final isCompact = MediaQuery.of(context).size.width < 600;
+    final padding = isCompact ? AppTokens.s12 : AppTokens.s16;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scegli il tuo Comune'),
+        title: const Text(VenialCopy.onboardingTitle),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(AppTokens.s16),
+            padding: EdgeInsets.all(padding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 IconLabel(
                   icon: AppIcons.home,
-                  text: 'Fanta Comune',
-                  style: textTheme.titleMedium,
+                  text: VenialCopy.appTitle,
+                  iconSize: textTheme.titleMedium?.fontSize ?? 24 ,
                 ),
                 const SizedBox(height: AppTokens.s8),
                 Text(
-                  'Seleziona il Comune per sbloccare le partite e la classifica locale.',
+                  VenialCopy.onboardingSubtitle,
                   style: textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: AppTokens.s16),
+                SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
                 PrimaryCard(
+                  textured: true,
+                  elevated: true,
+                  padding: EdgeInsets.all(padding),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      CardIllustrationSlot(
+                        fallbackIcon: AppIcons.home,
+                        height: 72,
+                        compact: true,
+                        labelRibbon: VenialCopy.onboardingRibbonLabel,
+                      ),
+                      SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTokens.s12,
+                          vertical: AppTokens.s8 / 2,
+                        ),
+                        decoration: VintagePaper.tapeDecoration(colorScheme),
+                        child: Text(
+                          VenialCopy.onboardingCityTitle,
+                          style: TypographyX.titleMedium(context)?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppTokens.s12),
                       TextField(
                         controller: _controller,
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.search),
-                          hintText: 'Cerca il tuo Comune',
+                          hintText: VenialCopy.onboardingSearchHint,
                         ),
                         onChanged: (_) => setState(() {}),
                       ),
@@ -97,7 +127,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             borderRadius: BorderRadius.circular(AppTokens.radius),
                             onTap: () => _selectCity(context, city),
                             child: Semantics(
-                              label: 'Seleziona $city',
+                              label: VenialCopy.onboardingCitySelectTemplate.replaceAll('{city}', city),
                               button: true,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(

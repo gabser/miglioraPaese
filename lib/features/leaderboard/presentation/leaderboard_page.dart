@@ -90,7 +90,7 @@ class LeaderboardPage extends StatelessWidget {
                         return ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: AppTokens.s8,
-                            vertical: AppTokens.s4,
+                            vertical: AppTokens.s8,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppTokens.radius),

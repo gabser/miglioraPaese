@@ -3,8 +3,10 @@ import 'dart:math';
 import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
+import 'package:fanta_comune/features/game/domain/critical_insight.dart';
 import 'package:fanta_comune/features/game/domain/insight_history.dart';
 import 'package:fanta_comune/features/game/domain/insight_snapshot.dart';
+import 'package:fanta_comune/features/game/domain/hypothesis_confidence.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
@@ -12,6 +14,7 @@ import 'package:fanta_comune/features/game/domain/prediction_result.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
 import 'package:fanta_comune/features/game/domain/problem_status.dart';
 import 'package:fanta_comune/features/game/domain/reputation_score.dart';
+import 'package:fanta_comune/features/game/domain/reflection_question.dart';
 import 'package:fanta_comune/features/game/domain/turn.dart';
 import 'package:fanta_comune/features/game/domain/turn_state.dart';
 import 'package:fanta_comune/features/leaderboard/domain/leaderboard_entry.dart';
@@ -112,6 +115,8 @@ class MockGameRepository implements GameRepository {
   );
   final Map<String, AggregatedInsight> _insightCache = {};
   final Map<String, InsightHistory> _insightHistoryCache = {};
+  final Map<String, ReflectionQuestion> _reflectionQuestionCache = {};
+  final Map<String, List<CriticalInsight>> _criticalInsightsCache = {};
   List<ReputationScore>? _reputationHistoryCache;
 
   final List<LeaderboardEntry> _leaderboardBase = List.generate(
@@ -243,6 +248,204 @@ class MockGameRepository implements GameRepository {
     }
 
     return distribution;
+  }
+
+  ReflectionQuestion _buildReflectionQuestion(String problemId) {
+    final random = Random(problemId.hashCode);
+    final templates = <({String prompt, List<String> options, String followUp})>[
+      (
+        prompt: 'Quando pensi a questo problema, cosa pesa di piu\'?',
+        options: [
+          'Esperienze recenti',
+          'Segnali contrastanti',
+          'Poca visibilita\' dei cambiamenti',
+        ],
+        followUp: 'Ok, segnato. Non e\' un test.',
+      ),
+      (
+        prompt: 'Quale segnale ti farebbe cambiare idea piu\' in fretta?',
+        options: [
+          'Nuove segnalazioni in zona',
+          'Interventi visibili',
+          'Dati o report pubblici',
+        ],
+        followUp: 'Grazie, ci aiuta a capire il tuo punto di vista.',
+      ),
+      (
+        prompt: 'Se dovessi spiegare la tua previsione, da cosa partiresti?',
+        options: [
+          'Da una storia personale',
+          'Da un confronto con altri quartieri',
+          'Da un trend che noto spesso',
+        ],
+        followUp: 'Perfetto, qui non c\'e\' una risposta giusta.',
+      ),
+    ];
+    final template = templates[random.nextInt(templates.length)];
+    return ReflectionQuestion(
+      id: 'rq_${problemId}_${random.nextInt(9999)}',
+      prompt: template.prompt,
+      options: List<String>.unmodifiable(template.options),
+      followUpCopy: template.followUp,
+    );
+  }
+
+  Map<HypothesisConfidence, int> _mockConfidenceDistribution(String problemId) {
+    final random = Random(problemId.hashCode);
+    final total = 24 + random.nextInt(30);
+    final weights = <HypothesisConfidence, double>{
+      HypothesisConfidence.gutFeeling: 0.35 + random.nextDouble() * 0.2,
+      HypothesisConfidence.considered: 0.25 + random.nextDouble() * 0.2,
+      HypothesisConfidence.convinced: 0.2 + random.nextDouble() * 0.2,
+    };
+
+    final distribution = <HypothesisConfidence, int>{};
+    var allocated = 0;
+    for (final entry in weights.entries) {
+      final value = (total * entry.value).floor();
+      distribution[entry.key] = value;
+      allocated += value;
+    }
+    var remainder = total - allocated;
+    final ordered = weights.keys.toList()
+      ..sort((a, b) => weights[b]!.compareTo(weights[a]!));
+    var index = ordered.isEmpty ? 0 : random.nextInt(ordered.length);
+    while (remainder > 0) {
+      final key = ordered[index % ordered.length];
+      distribution[key] = (distribution[key] ?? 0) + 1;
+      remainder--;
+      index++;
+    }
+    return distribution;
+  }
+
+  Map<int, int> _mockReflectionDistribution(String problemId) {
+    final random = Random(problemId.hashCode + 42);
+    final total = 18 + random.nextInt(24);
+    final weights = <int, double>{
+      0: 0.34 + random.nextDouble() * 0.15,
+      1: 0.28 + random.nextDouble() * 0.15,
+      2: 0.24 + random.nextDouble() * 0.15,
+    };
+    final distribution = <int, int>{};
+    var allocated = 0;
+    for (final entry in weights.entries) {
+      final value = (total * entry.value).floor();
+      distribution[entry.key] = value;
+      allocated += value;
+    }
+    var remainder = total - allocated;
+    final ordered = weights.keys.toList()
+      ..sort((a, b) => weights[b]!.compareTo(weights[a]!));
+    var index = ordered.isEmpty ? 0 : random.nextInt(ordered.length);
+    while (remainder > 0) {
+      final key = ordered[index % ordered.length];
+      distribution[key] = (distribution[key] ?? 0) + 1;
+      remainder--;
+      index++;
+    }
+    return distribution;
+  }
+
+  String _choiceLabel(PredictionChoice choice) {
+    switch (choice) {
+      case PredictionChoice.improve:
+        return 'migliora';
+      case PredictionChoice.stable:
+        return 'stabile';
+      case PredictionChoice.worsen:
+        return 'peggiora';
+    }
+  }
+
+  List<CriticalInsight> _buildCriticalInsights({
+    required String problemId,
+    required PredictionChoice? userChoice,
+    required HypothesisConfidence? userConfidence,
+    required int? userReflectionIndex,
+  }) {
+    final insight = _buildAggregatedInsight(problemId);
+    final sortedChoices = insight.choiceDistribution.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final primary = sortedChoices.isNotEmpty ? sortedChoices.first : null;
+    final secondary = sortedChoices.length > 1 ? sortedChoices[1] : null;
+    final diff = primary != null && secondary != null ? (primary.value - secondary.value).abs() : 0;
+
+    final insights = <CriticalInsight>[];
+
+    if (primary != null && secondary != null && diff < 4) {
+      insights.add(
+        CriticalInsight(
+          headline: 'Qui le opinioni erano divise.',
+          supporting:
+              'Molti hanno visto "${_choiceLabel(primary.key)}", ma una fetta ha detto "${_choiceLabel(secondary.key)}".',
+          note: 'Opinioni vicine.',
+        ),
+      );
+    } else if (primary != null) {
+      insights.add(
+        CriticalInsight(
+          headline: 'Letture diverse, stesso problema.',
+          supporting: 'La maggioranza ha scelto "${_choiceLabel(primary.key)}", ma restano sfumature.',
+        ),
+      );
+    }
+
+    if (userConfidence == HypothesisConfidence.convinced) {
+      insights.add(
+        const CriticalInsight(
+          headline: 'La sicurezza non sempre coincide con l\'esito.',
+          supporting: 'Interessante: convinzione e accuratezza non vanno sempre insieme.',
+          note: 'Niente giudizi.',
+        ),
+      );
+    } else {
+      final confidenceDist = _mockConfidenceDistribution(problemId);
+      final topConfidence = confidenceDist.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+      if (topConfidence == HypothesisConfidence.gutFeeling) {
+        insights.add(
+          const CriticalInsight(
+            headline: 'Molti hanno scelto a pelle.',
+            supporting: 'Quando i segnali sono misti, il colpo d\'occhio pesa.',
+          ),
+        );
+      } else {
+        insights.add(
+          const CriticalInsight(
+            headline: 'Qui si e\' ragionato un po\'.',
+            supporting: 'Le persone hanno cercato coerenza nei segnali disponibili.',
+          ),
+        );
+      }
+    }
+
+    final reflectionDist = _mockReflectionDistribution(problemId);
+    final topReflection = reflectionDist.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+    final reflectionIndex = userReflectionIndex ?? topReflection;
+    if (reflectionIndex == 0) {
+      insights.add(
+        const CriticalInsight(
+          headline: 'Chi pensa alle persone vede le cose diversamente.',
+          supporting: 'L\'impatto quotidiano cambia la lettura del problema.',
+        ),
+      );
+    } else if (reflectionIndex == 1) {
+      insights.add(
+        const CriticalInsight(
+          headline: 'C\'e\' chi guarda il potenziale.',
+          supporting: 'Il focus e\' su segnali di miglioramento possibili.',
+        ),
+      );
+    } else {
+      insights.add(
+        const CriticalInsight(
+          headline: 'C\'e\' chi guarda tempi e processo.',
+          supporting: 'La lettura passa da priorita\' e coordinamento.',
+        ),
+      );
+    }
+
+    return insights.take(3).toList(growable: false);
   }
 
   Map<MotivationKey, int> _weightedMotivationDistribution(
@@ -516,6 +719,7 @@ class MockGameRepository implements GameRepository {
     required String problemId,
     required PredictionChoice choice,
     List<MotivationKey> motivations = const [],
+    HypothesisConfidence? confidence,
   }) {
     return _withDelay(() {
       _predictions[problemId] = Prediction(
@@ -524,6 +728,7 @@ class MockGameRepository implements GameRepository {
         choice: choice,
         createdAt: DateTime.now(),
         motivations: List<MotivationKey>.unmodifiable(motivations.take(2)),
+        confidence: confidence,
       );
       _results.remove(problemId);
       _reputation = _calculateReputation();
@@ -544,6 +749,7 @@ class MockGameRepository implements GameRepository {
 
       _predictions[problemId] = existing.copyWith(
         motivations: List<MotivationKey>.unmodifiable(motivations.take(2)),
+        confidence: existing.confidence,
       );
       _invalidateInsight(problemId);
     });
@@ -638,6 +844,40 @@ class MockGameRepository implements GameRepository {
   @override
   Future<ReputationScore> getReputationScore(String turnId) {
     return _withDelay(() => _reputation);
+  }
+
+  @override
+  Future<ReflectionQuestion> getReflectionQuestion(String problemId) {
+    return _withDelay(() {
+      final cached = _reflectionQuestionCache[problemId];
+      if (cached != null) return cached;
+
+      final question = _buildReflectionQuestion(problemId);
+      _reflectionQuestionCache[problemId] = question;
+      return question;
+    });
+  }
+
+  @override
+  Future<List<CriticalInsight>> getCriticalInsights({
+    required String problemId,
+    required PredictionChoice? userChoice,
+    required HypothesisConfidence? userConfidence,
+    required int? userReflectionIndex,
+  }) {
+    return _withDelay(() {
+      final cached = _criticalInsightsCache[problemId];
+      if (cached != null) return cached;
+
+      final insights = _buildCriticalInsights(
+        problemId: problemId,
+        userChoice: userChoice,
+        userConfidence: userConfidence,
+        userReflectionIndex: userReflectionIndex,
+      );
+      _criticalInsightsCache[problemId] = insights;
+      return insights;
+    });
   }
 
   @override

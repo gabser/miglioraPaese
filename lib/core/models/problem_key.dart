@@ -6,4 +6,11 @@ enum ProblemKey {
   cleanliness,
   green,
   signage,
+  transport,
+  parking,
+  decor,
+  noise,
+  safety,
+  construction,
+  queues,
 }

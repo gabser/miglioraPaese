@@ -5,10 +5,18 @@ import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
 import 'package:fanta_comune/core/widgets/primary_card.dart';
+import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
+import 'package:fanta_comune/core/widgets/stamp_badge.dart';
+import 'package:fanta_comune/core/widgets/stamp_action_button.dart';
+import 'package:fanta_comune/core/theme/typography_x.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
+import 'package:fanta_comune/features/game/domain/hypothesis_confidence.dart';
+import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/reputation_score.dart';
 import 'package:fanta_comune/features/game/presentation/widgets/trend_sparkline.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
+import 'package:fanta_comune/core/copy/venial_copy.dart';
+import 'package:fanta_comune/features/profile/domain/perspective_role.dart';
 
 /// Pagina profilo che riassume preferenze e andamento reputazione.
 class ProfilePage extends StatefulWidget {
@@ -22,11 +30,14 @@ class _ProfilePageState extends State<ProfilePage> {
   List<ReputationScore>? _history;
   bool _isLoading = true;
   String? _error;
+  PerspectiveRole? _suggestedRole;
+  bool _isLensLoading = true;
 
   @override
   void initState() {
     super.initState();
     _loadHistory();
+    _loadLensSuggestion();
   }
 
   Future<void> _loadHistory() async {
@@ -53,35 +64,238 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _loadLensSuggestion() async {
+    setState(() {
+      _isLensLoading = true;
+    });
+    try {
+      final repository = context.read<GameRepository>();
+      final municipalityId = context.read<AppPrefs>().municipalityId ?? 'demo';
+      final turn = await repository.getCurrentTurn(municipalityId);
+      final predictions = await repository.getMyPredictions(turn.id);
+      final confidences = <String, HypothesisConfidence>{};
+      final motivations = <String, List<MotivationKey>>{};
+      for (final entry in predictions.entries) {
+        final value = entry.value;
+        if (value.confidence != null) {
+          confidences[entry.key] = value.confidence!;
+        }
+        motivations[entry.key] = value.motivations;
+      }
+
+      final suggested = suggestPerspectiveRole(
+        confidences: confidences,
+        motivations: motivations,
+        reflectionAnswers: const {},
+      );
+      if (!mounted) return;
+      setState(() {
+        _suggestedRole = suggested;
+        _isLensLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLensLoading = false;
+      });
+    }
+  }
+
+  void _showPerspectivePicker(AppPrefs prefs, PerspectiveRole? active) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (context) {
+        final textTheme = Theme.of(context).textTheme;
+        final colorScheme = Theme.of(context).colorScheme;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppTokens.s16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  VenialCopy.lensPickerTitle,
+                  style: textTheme.titleLarge,
+                ),
+                const SizedBox(height: AppTokens.s8),
+                Text(
+                  VenialCopy.lensPickerSubtitle,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppTokens.s12),
+                ...PerspectiveRole.values.map(
+                  (role) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppTokens.s12),
+                    child: PrimaryCard(
+                      textured: true,
+                      onTap: () async {
+                        await prefs.setActivePerspective(role);
+                        await prefs.incrementPerspectiveChangesCount();
+                        if (!mounted) return;
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text(VenialCopy.lensChangedSnack)),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          CardIllustrationSlot(
+                            fallbackIcon: role.icon,
+                            height: 56,
+                            compact: true,
+                            labelRibbon: role.label,
+                          ),
+                          const SizedBox(width: AppTokens.s12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  role.label,
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: AppTokens.s4),
+                                Text(
+                                  role.shortDescription,
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (active == role)
+                            const Icon(Icons.check_circle_outline),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final prefs = context.watch<AppPrefs>();
+    final activePerspective = prefs.getActivePerspective();
+    final changesCount = prefs.perspectiveChangesCount;
+    final isCompact = MediaQuery.of(context).size.width < 600;
 
     return Padding(
-      padding: const EdgeInsets.all(AppTokens.s16),
+      padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const IconLabel(icon: AppIcons.profile, text: 'Profilo'),
-          const SizedBox(height: AppTokens.s12),
+          const IconLabel(icon: AppIcons.profile, text: VenialCopy.profileTitle),
+          SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+          PrimaryCard(
+            padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
+            textured: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  VenialCopy.lensSectionTitle,
+                  style: TypographyX.titleLarge(context),
+                ),
+                const SizedBox(height: AppTokens.s8),
+                Text(
+                  VenialCopy.lensSectionSubtitle,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                if (activePerspective != null)
+                  Row(
+                    children: [
+                      StampBadge(
+                        label: activePerspective.label,
+                        icon: activePerspective.icon,
+                        angle: -0.04,
+                      ),
+                      const SizedBox(width: AppTokens.s8),
+                      Expanded(
+                        child: Text(
+                          '${activePerspective.label} · ${activePerspective.shortDescription}',
+                          style: textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Text(
+                    VenialCopy.lensSectionEmpty,
+                    style: textTheme.bodyMedium,
+                  ),
+                const SizedBox(height: AppTokens.s8),
+                if (_isLensLoading)
+                  Text(
+                    VenialCopy.lensSuggestionLoading,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                else if (_suggestedRole != null)
+                  Text(
+                    VenialCopy.lensSuggestionTemplate.replaceAll('{role}', _suggestedRole!.label),
+                    style: textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: StampActionButton(
+                    onPressed: () => _showPerspectivePicker(prefs, activePerspective),
+                    label: VenialCopy.lensChangeCta,
+                    icon: AppIcons.profile,
+                  ),
+                ),
+                if (changesCount > 0) ...[
+                  const SizedBox(height: AppTokens.s8),
+                  Text(
+                    VenialCopy.lensChangeCountTemplate.replaceAll('{count}', '$changesCount'),
+                    style: textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
           _ReputationHistoryCard(
             history: _history,
             isLoading: _isLoading,
             error: _error,
             onRetry: _loadHistory,
           ),
-          const SizedBox(height: AppTokens.s12),
+          SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
           PrimaryCard(
+            padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
+            textured: true,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Identità e preferenze',
-                  style: textTheme.titleLarge,
+                  VenialCopy.profileIdentityTitle,
+                  style: TypographyX.titleLarge(context),
                 ),
                 const SizedBox(height: AppTokens.s8),
                 Text(
-                  'Gestirai badge, impostazioni e cronologia delle tue scelte civiche.',
+                  VenialCopy.profileIdentityBody,
                   style: textTheme.bodyMedium,
                 ),
                 const SizedBox(height: AppTokens.s12),
@@ -90,7 +304,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: TextButton.icon(
                     onPressed: () => context.go('/how-it-works'),
                     icon: const Icon(AppIcons.info),
-                    label: const Text('Come funziona'),
+                    label: const Text(VenialCopy.ctaHowItWorks),
                   ),
                 ),
               ],
@@ -123,12 +337,12 @@ class _ReputationHistoryCard extends StatelessWidget {
   final VoidCallback onRetry;
 
   String _trendText(
-    List<double> values, {
+    List<num> values, {
     required String positive,
     required String negative,
     required String flat,
   }) {
-    if (values.length < 2) return 'Trend in formazione';
+    if (values.length < 2) return VenialCopy.trendLowDataLabel;
     final delta = values.last - values.first;
     if (delta.abs() < 3) return flat;
     return delta > 0 ? positive : negative;
@@ -138,26 +352,28 @@ class _ReputationHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final isCompact = MediaQuery.of(context).size.width < 600;
     final points = history?.map((e) => e.totalPoints.toDouble()).toList(growable: false) ?? const <double>[];
     final accuracy = history?.map((e) => (e.accuracy * 100).clamp(0, 100)).toList(growable: false) ?? const <double>[];
     final lastEntry = history != null && history!.isNotEmpty ? history!.last : null;
     final dimmed = (lastEntry?.predictionsCount ?? 0) < 6;
 
     return PrimaryCard(
-      padding: const EdgeInsets.all(AppTokens.s16),
+      padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
+      textured: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Il tuo andamento',
-            style: textTheme.titleLarge,
+            VenialCopy.reputationTitle,
+            style: TypographyX.titleLarge(context),
           ),
           const SizedBox(height: AppTokens.s8),
           Text(
-            'Uno sguardo leggero a punti e accuratezza negli ultimi turni.',
+            VenialCopy.reputationHelper,
             style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
           ),
-          const SizedBox(height: AppTokens.s12),
+          SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
           if (isLoading)
             Row(
               children: [
@@ -171,7 +387,7 @@ class _ReputationHistoryCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppTokens.s8),
                 Text(
-                  'Carichiamo il tuo storico...',
+                  VenialCopy.profileHistoryLoading,
                   style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ],
@@ -187,7 +403,7 @@ class _ReputationHistoryCard extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: onRetry,
-                  child: const Text('Riprova'),
+                  child: const Text(VenialCopy.retryCta),
                 ),
               ],
             )
@@ -196,14 +412,14 @@ class _ReputationHistoryCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _MiniTrendTile(
-                    title: 'Punti totali',
+                    title: VenialCopy.profileTrendPointsTitle,
                     color: colorScheme.primary,
                     values: points,
                     caption: _trendText(
                       points,
-                      positive: 'Punti in crescita costante.',
-                      negative: 'Punti in leggera flessione.',
-                      flat: 'Punti stabili negli ultimi turni.',
+                      positive: VenialCopy.profileTrendPointsUp,
+                      negative: VenialCopy.profileTrendPointsDown,
+                      flat: VenialCopy.profileTrendPointsFlat,
                     ),
                     dimmed: dimmed,
                   ),
@@ -211,14 +427,14 @@ class _ReputationHistoryCard extends StatelessWidget {
                 const SizedBox(width: AppTokens.s12),
                 Expanded(
                   child: _MiniTrendTile(
-                    title: 'Accuratezza',
+                    title: VenialCopy.profileTrendAccuracyTitle,
                     color: colorScheme.tertiary,
                     values: accuracy,
                     caption: _trendText(
                       accuracy,
-                      positive: 'Precisione in crescita.',
-                      negative: 'Precisione in lieve calo.',
-                      flat: 'Precisione stabile e coerente.',
+                      positive: VenialCopy.profileTrendAccuracyUp,
+                      negative: VenialCopy.profileTrendAccuracyDown,
+                      flat: VenialCopy.profileTrendAccuracyFlat,
                     ),
                     dimmed: dimmed,
                   ),
@@ -228,7 +444,7 @@ class _ReputationHistoryCard extends StatelessWidget {
             if (dimmed) ...[
               const SizedBox(height: AppTokens.s8),
               Text(
-                'Trend in formazione: attendi altri esiti per un quadro più affidabile.',
+                VenialCopy.trendLowDataHelper,
                 style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
               ),
             ],
@@ -250,7 +466,7 @@ class _MiniTrendTile extends StatelessWidget {
 
   final String title;
   final Color color;
-  final List<double> values;
+  final List<num> values;
   final String caption;
   final bool dimmed;
 

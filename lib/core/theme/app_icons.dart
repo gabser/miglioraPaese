@@ -11,6 +11,9 @@ class AppIcons {
   /// Icona per la tab di gioco/avvio partita.
   static const IconData play = Icons.play_circle_outline;
 
+  /// Icona per il tabellone di gioco.
+  static const IconData board = Icons.grid_view_outlined;
+
   /// Icona per la tab Classifica.
   static const IconData leaderboard = Icons.leaderboard_outlined;
 
@@ -53,6 +56,20 @@ class AppIcons {
         return Icons.park_outlined;
       case ProblemKey.signage:
         return Icons.signpost_outlined;
+      case ProblemKey.transport:
+        return Icons.directions_bus_outlined;
+      case ProblemKey.parking:
+        return Icons.local_parking_outlined;
+      case ProblemKey.decor:
+        return Icons.auto_awesome_outlined;
+      case ProblemKey.noise:
+        return Icons.volume_up_outlined;
+      case ProblemKey.safety:
+        return Icons.shield_outlined;
+      case ProblemKey.construction:
+        return Icons.construction_outlined;
+      case ProblemKey.queues:
+        return Icons.hourglass_bottom_outlined;
     }
   }
 
@@ -71,6 +88,20 @@ class AppIcons {
         return 'Verde pubblico';
       case ProblemKey.signage:
         return 'Segnaletica';
+      case ProblemKey.transport:
+        return 'Trasporti';
+      case ProblemKey.parking:
+        return 'Parcheggi';
+      case ProblemKey.decor:
+        return 'Decoro';
+      case ProblemKey.noise:
+        return 'Rumore';
+      case ProblemKey.safety:
+        return 'Sicurezza stradale';
+      case ProblemKey.construction:
+        return 'Cantieri';
+      case ProblemKey.queues:
+        return 'Code uffici';
     }
   }
 }

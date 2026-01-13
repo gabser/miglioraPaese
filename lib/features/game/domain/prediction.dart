@@ -1,50 +1,52 @@
 import 'package:equatable/equatable.dart';
-import 'package:fanta_comune/features/game/domain/motivation_key.dart';
-import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 
-/// Previsione effettuata dall'utente su un problema durante un turno.
+import 'hypothesis_confidence.dart';
+import 'motivation_key.dart';
+import 'prediction_choice.dart';
+
 class Prediction extends Equatable {
-  /// Crea una previsione per [problemId] nel turno [turnId].
+  final String turnId;
+  final String problemId;
+  final PredictionChoice choice;
+  final DateTime createdAt;
+
+  /// Motivazioni opzionali (max 2). Non influenzano punteggio.
+  final List<MotivationKey> motivations;
+  /// Livello di convinzione associato alla previsione.
+  final HypothesisConfidence? confidence;
+
   const Prediction({
     required this.turnId,
     required this.problemId,
     required this.choice,
     required this.createdAt,
     this.motivations = const [],
+    this.confidence,
   });
 
-  /// Identificativo del turno in cui è stata fatta la previsione.
-  final String turnId;
-
-  /// Identificativo del problema associato.
-  final String problemId;
-
-  /// Scelta effettuata dall'utente.
-  final PredictionChoice choice;
-
-  /// Timestamp di creazione della previsione.
-  final DateTime createdAt;
-
-  /// Motivazioni opzionali che spiegano la scelta effettuata.
-  final List<MotivationKey> motivations;
-
-  /// Restituisce una copia immutabile con eventuali aggiornamenti.
   Prediction copyWith({
-    String? turnId,
-    String? problemId,
     PredictionChoice? choice,
     DateTime? createdAt,
     List<MotivationKey>? motivations,
+    HypothesisConfidence? confidence,
   }) {
     return Prediction(
-      turnId: turnId ?? this.turnId,
-      problemId: problemId ?? this.problemId,
+      turnId: turnId,
+      problemId: problemId,
       choice: choice ?? this.choice,
       createdAt: createdAt ?? this.createdAt,
       motivations: motivations ?? this.motivations,
+      confidence: confidence ?? this.confidence,
     );
   }
 
   @override
-  List<Object?> get props => [turnId, problemId, choice, createdAt, motivations];
+  List<Object?> get props => [
+        turnId,
+        problemId,
+        choice,
+        createdAt,
+        motivations,
+        confidence,
+      ];
 }
