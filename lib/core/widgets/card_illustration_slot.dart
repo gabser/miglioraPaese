@@ -25,6 +25,7 @@ class CardIllustrationSlot extends StatelessWidget {
     required this.fallbackIcon,
     this.labelRibbon,
     this.height = 90,
+    this.width,
     this.compact = false,
     this.variant = CardIllustrationVariant.generic,
     this.problemKey,
@@ -37,6 +38,7 @@ class CardIllustrationSlot extends StatelessWidget {
   final IconData fallbackIcon;
   final String? labelRibbon;
   final double height;
+  final double? width;
   final bool compact;
   final CardIllustrationVariant variant;
   final ProblemKey? problemKey;
@@ -53,110 +55,117 @@ class CardIllustrationSlot extends StatelessWidget {
     final accent = accentColor ?? colorScheme.primary;
     final icon = leadingIcon ?? fallbackIcon;
 
-    return SizedBox(
-      height: height,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: VintagePaper.surfaceDecoration(
-                  colorScheme,
-                  radius: AppTokens.radius,
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: CustomPaint(
-                painter: PaperTexture(
-                  color: VintagePaper.inkSoft(colorScheme).withOpacity(0.08),
-                  variant: PaperTextureVariant.dotted,
-                  intensity: 0.5,
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: Container(
-                margin: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppTokens.radius - 3),
-                  border: Border.all(
-                    color: VintagePaper.paperEdge(colorScheme).withOpacity(0.6),
-                  ),
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: image ??
-                  RepaintBoundary(
-                    child: Stack(
-                      children: [
-                        if (showMapMotif)
-                          Positioned.fill(
-                            child: _MapMotif(
-                              accent: accent,
-                              ink: VintagePaper.inkSoft(colorScheme).withOpacity(0.55),
-                              variant: resolvedVariant,
-                            ),
-                          ),
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: _IllustrationPainter(
-                              color: VintagePaper.inkSoft(colorScheme).withOpacity(0.45),
-                              variant: resolvedVariant,
-                            ),
-                          ),
-                        ),
-                        Center(
-                          child: Icon(
-                            icon,
-                            size: compact ? 24 : 36,
-                            color: VintagePaper.inkSoft(colorScheme).withOpacity(0.6),
-                          ),
-                        ),
-                        Positioned(
-                          right: AppTokens.s8,
-                          bottom: AppTokens.s8,
-                          child: _TokenDot(color: accent),
-                        ),
-                      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final resolvedWidth =
+            width ?? (constraints.maxWidth.isFinite ? constraints.maxWidth : height);
+        return SizedBox(
+          width: resolvedWidth,
+          height: height,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppTokens.radius),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: VintagePaper.surfaceDecoration(
+                      colorScheme,
+                      radius: AppTokens.radius,
                     ),
                   ),
-            ),
-            if (labelRibbon != null)
-              Positioned(
-                left: AppTokens.s8,
-                top: AppTokens.s8,
-                child: Transform.rotate(
-                  angle: -0.08,
+                ),
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: PaperTexture(
+                      color: VintagePaper.inkSoft(colorScheme).withOpacity(0.08),
+                      variant: PaperTextureVariant.dotted,
+                      intensity: 0.5,
+                    ),
+                  ),
+                ),
+                Positioned.fill(
                   child: Container(
-                    decoration: VintagePaper.tapeDecoration(colorScheme),
-                    child: CustomPaint(
-                      foregroundPainter: _RibbonStitchPainter(
-                        color: VintagePaper.inkSoft(colorScheme).withOpacity(0.5),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTokens.s8,
-                          vertical: AppTokens.s8 / 2,
-                        ),
-                        child: Text(
-                          labelRibbon!,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: VintagePaper.inkSoft(colorScheme),
-                                letterSpacing: 0.4,
-                              ),
-                        ),
+                    margin: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppTokens.radius - 3),
+                      border: Border.all(
+                        color: VintagePaper.paperEdge(colorScheme).withOpacity(0.6),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
-        ),
-      ),
+                Positioned.fill(
+                  child: image ??
+                      RepaintBoundary(
+                        child: Stack(
+                          children: [
+                            if (showMapMotif)
+                              Positioned.fill(
+                                child: _MapMotif(
+                                  accent: accent,
+                                  ink: VintagePaper.inkSoft(colorScheme).withOpacity(0.55),
+                                  variant: resolvedVariant,
+                                ),
+                              ),
+                            Positioned.fill(
+                              child: CustomPaint(
+                                painter: _IllustrationPainter(
+                                  color: VintagePaper.inkSoft(colorScheme).withOpacity(0.45),
+                                  variant: resolvedVariant,
+                                ),
+                              ),
+                            ),
+                            Center(
+                              child: Icon(
+                                icon,
+                                size: compact ? 24 : 36,
+                                color: VintagePaper.inkSoft(colorScheme).withOpacity(0.6),
+                              ),
+                            ),
+                            Positioned(
+                              right: AppTokens.s8,
+                              bottom: AppTokens.s8,
+                              child: _TokenDot(color: accent),
+                            ),
+                          ],
+                        ),
+                      ),
+                ),
+                if (labelRibbon != null)
+                  Positioned(
+                    left: AppTokens.s8,
+                    top: AppTokens.s8,
+                    child: Transform.rotate(
+                      angle: -0.08,
+                      child: Container(
+                        decoration: VintagePaper.tapeDecoration(colorScheme),
+                        child: CustomPaint(
+                          foregroundPainter: _RibbonStitchPainter(
+                            color: VintagePaper.inkSoft(colorScheme).withOpacity(0.5),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppTokens.s8,
+                              vertical: AppTokens.s8 / 2,
+                            ),
+                            child: Text(
+                              labelRibbon!,
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: VintagePaper.inkSoft(colorScheme),
+                                    letterSpacing: 0.4,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

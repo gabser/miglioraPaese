@@ -81,6 +81,19 @@ class BoardPage extends StatelessWidget {
                         builder: (context, constraints) {
                           final isWide = constraints.maxWidth >= 1000;
                           final gridCrossAxisCount = isWide ? 3 : 2;
+                          final boardFrameHeight = () {
+                            if (isWide) return null;
+                            final frameWidth = constraints.maxWidth;
+                            final gridWidth = frameWidth - (AppTokens.s16 * 2) - (AppTokens.s8 * 2);
+                            final tileWidth = (gridWidth -
+                                    (gridCrossAxisCount - 1) * AppTokens.s16) /
+                                gridCrossAxisCount;
+                            final tileHeight = tileWidth / 1.08;
+                            final rows = (items.length / gridCrossAxisCount).ceil();
+                            final gridHeight =
+                                (rows * tileHeight) + ((rows - 1) * AppTokens.s16);
+                            return gridHeight + (AppTokens.s16 * 2) + (AppTokens.s8 * 2);
+                          }();
 
                           final mainContent = Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,47 +102,73 @@ class BoardPage extends StatelessWidget {
                               const SizedBox(height: AppTokens.s16),
                               _BoardTokensSection(snapshot: data),
                               const SizedBox(height: AppTokens.s16),
-                              Expanded(
-                                child: _BoardFrame(
-                                  child: GridView.builder(
-                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: gridCrossAxisCount,
-                                      crossAxisSpacing: AppTokens.s16,
-                                      mainAxisSpacing: AppTokens.s16,
-                                      childAspectRatio: 1.08,
+                              if (isWide)
+                                Expanded(
+                                  child: _BoardFrame(
+                                    child: GridView.builder(
+                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: gridCrossAxisCount,
+                                        crossAxisSpacing: AppTokens.s16,
+                                        mainAxisSpacing: AppTokens.s16,
+                                        childAspectRatio: 1.08,
+                                      ),
+                                      itemCount: items.length,
+                                      itemBuilder: (context, index) {
+                                        return _BoardTile(
+                                          problem: items[index],
+                                          prediction: data?.predictionsByProblem[items[index].id],
+                                        );
+                                      },
                                     ),
-                                    itemCount: items.length,
-                                    itemBuilder: (context, index) {
-                                      return _BoardTile(
-                                        problem: items[index],
-                                        prediction: data?.predictionsByProblem[items[index].id],
-                                      );
-                                    },
+                                  ),
+                                )
+                              else
+                                SizedBox(
+                                  height: boardFrameHeight,
+                                  child: _BoardFrame(
+                                    child: GridView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: gridCrossAxisCount,
+                                        crossAxisSpacing: AppTokens.s16,
+                                        mainAxisSpacing: AppTokens.s16,
+                                        childAspectRatio: 1.08,
+                                      ),
+                                      itemCount: items.length,
+                                      itemBuilder: (context, index) {
+                                        return _BoardTile(
+                                          problem: items[index],
+                                          prediction: data?.predictionsByProblem[items[index].id],
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
-                              ),
                               const SizedBox(height: AppTokens.s12),
                               _BoardLegend(),
                             ],
                           );
 
                           if (!isWide) {
-                            return Column(
-                              children: [
-                                mainContent,
-                                const SizedBox(height: AppTokens.s16),
-                                const _BoardSideCard(
-                                  title: VenialCopy.boardCardOfDayTitle,
-                                  body: VenialCopy.boardCardOfDayBody,
-                                  icon: Icons.auto_awesome_outlined,
-                                ),
-                                const SizedBox(height: AppTokens.s16),
-                                const _BoardSideCard(
-                                  title: VenialCopy.boardShowcaseTitle,
-                                  body: VenialCopy.boardShowcaseBody,
-                                  icon: Icons.style_outlined,
-                                ),
-                              ],
+                            return SingleChildScrollView(
+                              child: Column(
+                                children: [
+                                  mainContent,
+                                  const SizedBox(height: AppTokens.s16),
+                                  const _BoardSideCard(
+                                    title: VenialCopy.boardCardOfDayTitle,
+                                    body: VenialCopy.boardCardOfDayBody,
+                                    icon: Icons.auto_awesome_outlined,
+                                  ),
+                                  const SizedBox(height: AppTokens.s16),
+                                  const _BoardSideCard(
+                                    title: VenialCopy.boardShowcaseTitle,
+                                    body: VenialCopy.boardShowcaseBody,
+                                    icon: Icons.style_outlined,
+                                  ),
+                                ],
+                              ),
                             );
                           }
 

@@ -94,37 +94,44 @@ GoRouter buildRouter(AppPrefs appPrefs) {
         path: '/privacy',
         builder: (context, state) => const PrivacyPage(),
       ),
-      ShellRoute(
-        builder: (context, state, child) {
-          final currentPath = state.uri.path;
-          final currentIndex = switch (currentPath) {
-            '/home' => 0,
-            '/play' => 1,
-            '/leaderboard' => 2,
-            '/profile' => 3,
-            _ => 0,
-          };
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
           return ShellPage(
-            child: child,
-            currentIndex: currentIndex,
+            navigationShell: navigationShell,
           );
         },
-        routes: [
-          GoRoute(
-            path: '/home',
-            builder: (context, state) => const HomePage(),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const HomePage(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/play',
-            builder: (context, state) => const PlayPage(),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/play',
+                builder: (context, state) => const PlayPage(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/leaderboard',
-            builder: (context, state) => const LeaderboardPage(),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/leaderboard',
+                builder: (context, state) => const LeaderboardPage(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/profile',
-            builder: (context, state) => const ProfilePage(),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfilePage(),
+              ),
+            ],
           ),
         ],
       ),

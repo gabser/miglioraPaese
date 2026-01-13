@@ -10,34 +10,23 @@ import 'package:fanta_comune/core/copy/venial_copy.dart';
 class ShellPage extends StatelessWidget {
   const ShellPage({
     super.key,
-    required this.child,
-    required this.currentIndex,
+    required this.navigationShell,
   });
 
-  final Widget child;
-  final int currentIndex;
+  final StatefulNavigationShell navigationShell;
 
   void _onDestinationSelected(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        if (currentIndex != 0) context.go('/home');
-        break;
-      case 1:
-        if (currentIndex != 1) context.go('/play');
-        break;
-      case 2:
-        if (currentIndex != 2) context.go('/leaderboard');
-        break;
-      case 3:
-        if (currentIndex != 3) context.go('/profile');
-        break;
-    }
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final isWide = mediaQuery.size.width >= 900;
+    final currentIndex = navigationShell.currentIndex;
     final destinations = [
       NavigationDestination(
         icon: _NavTokenIcon(icon: AppIcons.home, selected: false),
@@ -82,9 +71,7 @@ class ShellPage extends StatelessWidget {
             const SizedBox(width: AppTokens.s16),
             Expanded(
               child: MaxWidthContainer(
-                child: SingleChildScrollView(
-                  child: child,
-                ),
+                child: navigationShell,
               ),
             ),
           ],
@@ -93,7 +80,7 @@ class ShellPage extends StatelessWidget {
     }
 
     return Scaffold(
-      body: SafeArea(child: child),
+      body: SafeArea(child: navigationShell),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         destinations: destinations,

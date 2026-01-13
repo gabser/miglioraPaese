@@ -44,17 +44,37 @@ class PlayPage extends StatelessWidget {
 class _PlayView extends StatelessWidget {
   const _PlayView();
 
+  String _countdownLabel(PlayState state) {
+    final turn = state.currentTurn;
+    if (turn == null) return '';
+    final remaining = turn.endAt.difference(DateTime.now());
+    final days = remaining.inDays;
+    if (days > 0) {
+      return VenialCopy.playCountdownDaysTemplate.replaceAll('{days}', '$days');
+    }
+    final hours = remaining.inHours;
+    if (hours > 0) {
+      return VenialCopy.playCountdownHoursTemplate.replaceAll('{hours}', '$hours');
+    }
+    return VenialCopy.playCountdownSoon;
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final isCompact = MediaQuery.of(context).size.width < 600;
     final pagePadding = isCompact ? AppTokens.s12 : AppTokens.s16;
+    final isWide = MediaQuery.of(context).size.width >= 720;
 
     return MaxWidthContainer(
       child: BlocBuilder<PlayCubit, PlayState>(
         builder: (context, state) {
           final cubit = context.read<PlayCubit>();
+          final sectionGap = isCompact ? AppTokens.s8 : AppTokens.s12;
+          final problems = state.problems;
+          final hasProblems = problems.isNotEmpty;
+          final spacing = isCompact ? AppTokens.s8 : AppTokens.s12;
 
           return AnimatedSwitcherX(
             duration: AppMotion.normal,
@@ -66,53 +86,285 @@ class _PlayView extends StatelessWidget {
                       child: CircularProgressIndicator(),
                     ),
                   )
-                : SingleChildScrollView(
-                    key: const ValueKey('play-content'),
-                    padding: EdgeInsets.all(pagePadding),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _BoardHeader(
-                          onOpenBoard: () => context.go('/board'),
-                          hasNewCards: state.hasPendingInsights || state.hasChangedPerception,
+                : CustomScrollView(
+                    key: const PageStorageKey('play-scroll'),
+                    slivers: [
+                      SliverPadding(
+                        padding: EdgeInsets.all(pagePadding),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate(
+                            [
+                              _BoardHeader(
+                                onOpenBoard: () => context.go('/board'),
+                                hasNewCards: state.hasPendingInsights || state.hasChangedPerception,
+                              ),
+                              SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                              const IconLabel(icon: AppIcons.play, text: VenialCopy.playTabLabel),
+                              SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    VenialCopy.playHeader,
+                                    style: TypographyX.titleLarge(context),
+                                  ),
+                                  if (state.currentTurn != null)
+                                    Text(
+                                      _countdownLabel(state),
+                                      style: textTheme.bodyMedium?.copyWith(
+                                        color: colorScheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              SizedBox(height: sectionGap),
+                              Text(
+                                VenialCopy.playIntro,
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              if (state.hasPendingInsights || state.hasChangedPerception) ...[
+                                SizedBox(height: sectionGap),
+                                AnimatedSwitcherX(
+                                  duration: AppMotion.fast,
+                                  child: _RetentionHintCard(
+                                    key: ValueKey('retention-${state.hasChangedPerception}'),
+                                    isChanged: state.hasChangedPerception,
+                                    onTap: cubit.markRetentionSeen,
+                                  ),
+                                ),
+                              ],
+                              SizedBox(height: sectionGap),
+                              _ReputationCard(reputation: state.reputation),
+                              SizedBox(height: sectionGap),
+                              _ResolveTurnCard(
+                                enabled: state.myPredictions.isNotEmpty,
+                                onResolveTurn: cubit.resolveTurn,
+                              ),
+                              if (state.myPredictions.isEmpty) ...[
+                                SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    VenialCopy.playResolveDisabledHint,
+                                    style: textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
+                              PrimaryCard(
+                                padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
+                                textured: true,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      VenialCopy.playNextProblemsTitle,
+                                      style: textTheme.titleMedium,
+                                    ),
+                                    const SizedBox(height: AppTokens.s8),
+                                    Text(
+                                      VenialCopy.playNextProblemsBody,
+                                      style: textTheme.bodySmall?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                    SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                                    Wrap(
+                                      spacing: AppTokens.s12,
+                                      runSpacing: AppTokens.s8,
+                                      children: [
+                                        OutlinedButton(
+                                          onPressed: () => context.go('/suggest-problem'),
+                                          child: const Text(VenialCopy.playSuggestCta),
+                                        ),
+                                        FilledButton(
+                                          onPressed: () => context.go('/next-problems'),
+                                          child: const Text(VenialCopy.playVoteCta),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (!hasProblems)
+                                Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(AppTokens.s24),
+                                    child: Text(
+                                      VenialCopy.playEmpty,
+                                      style: textTheme.bodyMedium?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                )
+                              else
+                                SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
+                            ],
+                          ),
                         ),
-                        SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-                        const IconLabel(icon: AppIcons.play, text: VenialCopy.playTabLabel),
-                        SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
-                        _PlayContent(
-                          key: ValueKey('has-problems-${state.problems.isNotEmpty}'),
-                          state: state,
-                          onSelect: (problemId, choice) => cubit.selectPrediction(
-                            problemId: problemId,
-                            choice: choice,
+                      ),
+                      if (hasProblems)
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(
+                            pagePadding,
+                            0,
+                            pagePadding,
+                            pagePadding,
                           ),
-                          onSelectMotivations: (problemId, motivations) => cubit.setMotivations(
-                            problemId: problemId,
-                            motivations: motivations,
-                          ),
-                          onSelectConfidence: (problemId, confidence) => cubit.setConfidence(
-                            problemId: problemId,
-                            confidence: confidence,
-                          ),
-                          onSelectReflectionAnswer: (problemId, selectedIndex) => cubit.setReflectionAnswer(
-                            problemId: problemId,
-                            selectedOptionIndex: selectedIndex,
-                          ),
-                          onRefreshProblem: cubit.refreshProblem,
-                          onResolveTurn: cubit.resolveTurn,
-                          onLoadHistory: cubit.loadProblemHistory,
-                          onLoadCriticalInsights: cubit.loadCriticalInsights,
-                          onMarkRetentionSeen: cubit.markRetentionSeen,
+                          sliver: isWide
+                              ? SliverList(
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      final leftIndex = index * 2;
+                                      final rightIndex = leftIndex + 1;
+                                      final leftProblem = problems[leftIndex];
+                                      final rightProblem = rightIndex < problems.length
+                                          ? problems[rightIndex]
+                                          : null;
+                                      final bottomPadding =
+                                          index == ((problems.length - 1) ~/ 2) ? 0.0 : spacing;
+
+                                      return Padding(
+                                        padding: EdgeInsets.only(bottom: bottomPadding),
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: _ProblemTile(
+                                                problem: leftProblem,
+                                                state: state,
+                                                onSelect: (problemId, choice) => cubit.selectPrediction(
+                                                  problemId: problemId,
+                                                  choice: choice,
+                                                ),
+                                                onSelectMotivations: (problemId, motivations) =>
+                                                    cubit.setMotivations(
+                                                  problemId: problemId,
+                                                  motivations: motivations,
+                                                ),
+                                                onSelectConfidence: (problemId, confidence) =>
+                                                    cubit.setConfidence(
+                                                  problemId: problemId,
+                                                  confidence: confidence,
+                                                ),
+                                                onSelectReflectionAnswer:
+                                                    (problemId, selectedIndex) =>
+                                                        cubit.setReflectionAnswer(
+                                                  problemId: problemId,
+                                                  selectedOptionIndex: selectedIndex,
+                                                ),
+                                                onRefreshProblem: cubit.refreshProblem,
+                                                onLoadHistory: cubit.loadProblemHistory,
+                                                onLoadCriticalInsights: cubit.loadCriticalInsights,
+                                              ),
+                                            ),
+                                            SizedBox(width: spacing),
+                                            Expanded(
+                                              child: rightProblem == null
+                                                  ? const SizedBox.shrink()
+                                                  : _ProblemTile(
+                                                      problem: rightProblem,
+                                                      state: state,
+                                                      onSelect: (problemId, choice) =>
+                                                          cubit.selectPrediction(
+                                                        problemId: problemId,
+                                                        choice: choice,
+                                                      ),
+                                                      onSelectMotivations:
+                                                          (problemId, motivations) =>
+                                                              cubit.setMotivations(
+                                                        problemId: problemId,
+                                                        motivations: motivations,
+                                                      ),
+                                                      onSelectConfidence:
+                                                          (problemId, confidence) =>
+                                                              cubit.setConfidence(
+                                                        problemId: problemId,
+                                                        confidence: confidence,
+                                                      ),
+                                                      onSelectReflectionAnswer:
+                                                          (problemId, selectedIndex) =>
+                                                              cubit.setReflectionAnswer(
+                                                        problemId: problemId,
+                                                        selectedOptionIndex: selectedIndex,
+                                                      ),
+                                                      onRefreshProblem: cubit.refreshProblem,
+                                                      onLoadHistory: cubit.loadProblemHistory,
+                                                      onLoadCriticalInsights:
+                                                          cubit.loadCriticalInsights,
+                                                    ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                    childCount: (problems.length / 2).ceil(),
+                                  ),
+                                )
+                              : SliverList(
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      final bottomPadding =
+                                          index == problems.length - 1 ? 0.0 : spacing;
+                                      final problem = problems[index];
+
+                                      return Padding(
+                                        padding: EdgeInsets.only(bottom: bottomPadding),
+                                        child: _ProblemTile(
+                                          problem: problem,
+                                          state: state,
+                                          onSelect: (problemId, choice) => cubit.selectPrediction(
+                                            problemId: problemId,
+                                            choice: choice,
+                                          ),
+                                          onSelectMotivations: (problemId, motivations) =>
+                                              cubit.setMotivations(
+                                            problemId: problemId,
+                                            motivations: motivations,
+                                          ),
+                                          onSelectConfidence: (problemId, confidence) =>
+                                              cubit.setConfidence(
+                                            problemId: problemId,
+                                            confidence: confidence,
+                                          ),
+                                          onSelectReflectionAnswer: (problemId, selectedIndex) =>
+                                              cubit.setReflectionAnswer(
+                                            problemId: problemId,
+                                            selectedOptionIndex: selectedIndex,
+                                          ),
+                                          onRefreshProblem: cubit.refreshProblem,
+                                          onLoadHistory: cubit.loadProblemHistory,
+                                          onLoadCriticalInsights: cubit.loadCriticalInsights,
+                                        ),
+                                      );
+                                    },
+                                    childCount: problems.length,
+                                  ),
+                                ),
                         ),
-                        if (state.error != null) ...[
-                          const SizedBox(height: AppTokens.s12),
-                          Text(
-                            state.error!,
-                            style: textTheme.bodySmall?.copyWith(color: colorScheme.error),
+                      if (state.error != null)
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(
+                            pagePadding,
+                            0,
+                            pagePadding,
+                            pagePadding,
                           ),
-                        ],
-                      ],
-                    ),
+                          sliver: SliverToBoxAdapter(
+                            child: Text(
+                              state.error!,
+                              style: textTheme.bodySmall?.copyWith(color: colorScheme.error),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
           );
         },
@@ -154,199 +406,6 @@ class _BoardHeader extends StatelessWidget {
         ),
       ),
       shimmer: hasNewCards,
-    );
-  }
-}
-
-class _PlayContent extends StatelessWidget {
-  const _PlayContent({
-    required this.state,
-    required this.onSelect,
-    required this.onSelectMotivations,
-    required this.onSelectConfidence,
-    required this.onSelectReflectionAnswer,
-    required this.onRefreshProblem,
-    required this.onResolveTurn,
-    required this.onLoadHistory,
-    required this.onLoadCriticalInsights,
-    required this.onMarkRetentionSeen,
-    super.key,
-  });
-
-  final PlayState state;
-  final void Function(String problemId, PredictionChoice choice) onSelect;
-  final void Function(String problemId, List<MotivationKey> motivations) onSelectMotivations;
-  final void Function(String problemId, HypothesisConfidence confidence) onSelectConfidence;
-  final void Function(String problemId, int selectedIndex) onSelectReflectionAnswer;
-  final void Function(String problemId) onRefreshProblem;
-  final void Function(String problemId) onLoadHistory;
-  final void Function(String problemId) onLoadCriticalInsights;
-  final VoidCallback onResolveTurn;
-  final VoidCallback onMarkRetentionSeen;
-
-  String _countdownLabel() {
-    final turn = state.currentTurn;
-    if (turn == null) return '';
-    final remaining = turn.endAt.difference(DateTime.now());
-    final days = remaining.inDays;
-    if (days > 0) {
-      return VenialCopy.playCountdownDaysTemplate.replaceAll('{days}', '$days');
-    }
-    final hours = remaining.inHours;
-    if (hours > 0) {
-      return VenialCopy.playCountdownHoursTemplate.replaceAll('{hours}', '$hours');
-    }
-    return VenialCopy.playCountdownSoon;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-    final isCompact = MediaQuery.of(context).size.width < 600;
-    final sectionGap = isCompact ? AppTokens.s8 : AppTokens.s12;
-
-    if (state.problems.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTokens.s24),
-          child: Text(
-            VenialCopy.playEmpty,
-            style: textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              VenialCopy.playHeader,
-              style: TypographyX.titleLarge(context),
-            ),
-            if (state.currentTurn != null)
-              Text(
-                _countdownLabel(),
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-          ],
-        ),
-        SizedBox(height: sectionGap),
-        Text(
-          VenialCopy.playIntro,
-          style: textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ),
-        if (state.hasPendingInsights || state.hasChangedPerception) ...[
-          SizedBox(height: sectionGap),
-          AnimatedSwitcherX(
-            duration: AppMotion.fast,
-            child: _RetentionHintCard(
-              key: ValueKey('retention-${state.hasChangedPerception}'),
-              isChanged: state.hasChangedPerception,
-              onTap: onMarkRetentionSeen,
-            ),
-          ),
-        ],
-        SizedBox(height: sectionGap),
-        _ReputationCard(reputation: state.reputation),
-        SizedBox(height: sectionGap),
-        _ResolveTurnCard(
-          enabled: state.myPredictions.isNotEmpty,
-          onResolveTurn: onResolveTurn,
-        ),
-        if (state.myPredictions.isEmpty) ...[
-          SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              VenialCopy.playResolveDisabledHint,
-              style: textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
-        SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
-        PrimaryCard(
-          padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
-          textured: true,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                VenialCopy.playNextProblemsTitle,
-                style: textTheme.titleMedium,
-              ),
-              const SizedBox(height: AppTokens.s8),
-              Text(
-                VenialCopy.playNextProblemsBody,
-                style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-              Wrap(
-                spacing: AppTokens.s12,
-                runSpacing: AppTokens.s8,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => context.go('/suggest-problem'),
-                    child: const Text(VenialCopy.playSuggestCta),
-                  ),
-                  FilledButton(
-                    onPressed: () => context.go('/next-problems'),
-                    child: const Text(VenialCopy.playVoteCta),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= 720;
-            final spacing = isCompact ? AppTokens.s8 : AppTokens.s12;
-            final tileWidth = isWide
-                ? (constraints.maxWidth - spacing) / 2
-                : constraints.maxWidth;
-
-            return Wrap(
-              spacing: spacing,
-              runSpacing: spacing,
-              children: [
-                for (final problem in state.problems)
-                  SizedBox(
-                    width: tileWidth,
-                    child: _ProblemTile(
-                      problem: problem,
-                      state: state,
-                      onSelect: onSelect,
-                      onSelectMotivations: onSelectMotivations,
-                      onSelectConfidence: onSelectConfidence,
-                      onSelectReflectionAnswer: onSelectReflectionAnswer,
-                      onRefreshProblem: onRefreshProblem,
-                      onLoadCriticalInsights: onLoadCriticalInsights,
-                      onLoadHistory: onLoadHistory,
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-      ],
     );
   }
 }

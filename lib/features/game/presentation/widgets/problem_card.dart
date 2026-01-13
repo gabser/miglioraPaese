@@ -963,12 +963,16 @@ class _ChoiceSection extends StatelessWidget {
                     color: isSelected ? color : colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: AppTokens.s8),
-                  Text(
-                    switch (choice) {
-                      PredictionChoice.improve => VenialCopy.choiceImproveLabel,
-                      PredictionChoice.stable => VenialCopy.choiceStableLabel,
-                      PredictionChoice.worsen => VenialCopy.choiceWorsenLabel,
-                    },
+                  Flexible(
+                    child: Text(
+                      switch (choice) {
+                        PredictionChoice.improve => VenialCopy.choiceImproveLabel,
+                        PredictionChoice.stable => VenialCopy.choiceStableLabel,
+                        PredictionChoice.worsen => VenialCopy.choiceWorsenLabel,
+                      },
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               );
