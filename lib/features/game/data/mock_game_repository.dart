@@ -163,7 +163,8 @@ class MockGameRepository implements GameRepository {
     }
   }
 
-  PredictionResult _evaluatePrediction(ProblemStatus status, PredictionChoice choice) {
+  PredictionResult _evaluatePrediction(
+      ProblemStatus status, PredictionChoice choice) {
     switch (status) {
       case ProblemStatus.improving:
         return switch (choice) {
@@ -211,8 +212,10 @@ class MockGameRepository implements GameRepository {
       (sum, result) => sum + _pointsForResult(result),
     );
     final totalResolved = _results.length;
-    final correctCount = _results.values.where((r) => r == PredictionResult.correct).length;
-    final partialCount = _results.values.where((r) => r == PredictionResult.partial).length;
+    final correctCount =
+        _results.values.where((r) => r == PredictionResult.correct).length;
+    final partialCount =
+        _results.values.where((r) => r == PredictionResult.partial).length;
     final accuracyScore = (correctCount + (partialCount * 0.5)) / totalResolved;
 
     return ReputationScore(
@@ -239,7 +242,8 @@ class MockGameRepository implements GameRepository {
     var remainder = total - allocated;
     final orderedChoices = weights.keys.toList()
       ..sort((a, b) => weights[b]!.compareTo(weights[a]!));
-    var index = orderedChoices.isEmpty ? 0 : random.nextInt(orderedChoices.length);
+    var index =
+        orderedChoices.isEmpty ? 0 : random.nextInt(orderedChoices.length);
     while (remainder > 0) {
       final choice = orderedChoices[index % orderedChoices.length];
       distribution[choice] = (distribution[choice] ?? 0) + 1;
@@ -252,7 +256,8 @@ class MockGameRepository implements GameRepository {
 
   ReflectionQuestion _buildReflectionQuestion(String problemId) {
     final random = Random(problemId.hashCode);
-    final templates = <({String prompt, List<String> options, String followUp})>[
+    final templates =
+        <({String prompt, List<String> options, String followUp})>[
       (
         prompt: 'Quando pensi a questo problema, cosa pesa di piu\'?',
         options: [
@@ -369,7 +374,9 @@ class MockGameRepository implements GameRepository {
       ..sort((a, b) => b.value.compareTo(a.value));
     final primary = sortedChoices.isNotEmpty ? sortedChoices.first : null;
     final secondary = sortedChoices.length > 1 ? sortedChoices[1] : null;
-    final diff = primary != null && secondary != null ? (primary.value - secondary.value).abs() : 0;
+    final diff = primary != null && secondary != null
+        ? (primary.value - secondary.value).abs()
+        : 0;
 
     final insights = <CriticalInsight>[];
 
@@ -386,7 +393,8 @@ class MockGameRepository implements GameRepository {
       insights.add(
         CriticalInsight(
           headline: 'Letture diverse, stesso problema.',
-          supporting: 'La maggioranza ha scelto "${_choiceLabel(primary.key)}", ma restano sfumature.',
+          supporting:
+              'La maggioranza ha scelto "${_choiceLabel(primary.key)}", ma restano sfumature.',
         ),
       );
     }
@@ -395,13 +403,16 @@ class MockGameRepository implements GameRepository {
       insights.add(
         const CriticalInsight(
           headline: 'La sicurezza non sempre coincide con l\'esito.',
-          supporting: 'Interessante: convinzione e accuratezza non vanno sempre insieme.',
+          supporting:
+              'Interessante: convinzione e accuratezza non vanno sempre insieme.',
           note: 'Niente giudizi.',
         ),
       );
     } else {
       final confidenceDist = _mockConfidenceDistribution(problemId);
-      final topConfidence = confidenceDist.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+      final topConfidence = confidenceDist.entries
+          .reduce((a, b) => a.value >= b.value ? a : b)
+          .key;
       if (topConfidence == HypothesisConfidence.gutFeeling) {
         insights.add(
           const CriticalInsight(
@@ -413,14 +424,16 @@ class MockGameRepository implements GameRepository {
         insights.add(
           const CriticalInsight(
             headline: 'Qui si e\' ragionato un po\'.',
-            supporting: 'Le persone hanno cercato coerenza nei segnali disponibili.',
+            supporting:
+                'Le persone hanno cercato coerenza nei segnali disponibili.',
           ),
         );
       }
     }
 
     final reflectionDist = _mockReflectionDistribution(problemId);
-    final topReflection = reflectionDist.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+    final topReflection =
+        reflectionDist.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
     final reflectionIndex = userReflectionIndex ?? topReflection;
     if (reflectionIndex == 0) {
       insights.add(
@@ -530,21 +543,29 @@ class MockGameRepository implements GameRepository {
       final normalizedWeights = <PredictionChoice, double>{};
       for (final entry in choiceWeights.entries) {
         final noise = (random.nextDouble() * 0.04) - 0.02;
-        final trendFactor = entry.key == PredictionChoice.improve && problem.status == ProblemStatus.improving
+        final trendFactor = entry.key == PredictionChoice.improve &&
+                problem.status == ProblemStatus.improving
             ? variation.abs()
             : variation;
-        normalizedWeights[entry.key] = (entry.value + trendFactor + noise).clamp(0.14, 0.7);
+        normalizedWeights[entry.key] =
+            (entry.value + trendFactor + noise).clamp(0.14, 0.7);
       }
-      final totalWeight = normalizedWeights.values.fold<double>(0, (sum, value) => sum + value);
-      final weights = normalizedWeights.map((key, value) => MapEntry(key, value / totalWeight));
-      final choiceDistribution = _weightedChoiceDistribution(totalPredictions, weights, Random(problem.id.hashCode ^ i));
+      final totalWeight =
+          normalizedWeights.values.fold<double>(0, (sum, value) => sum + value);
+      final weights = normalizedWeights
+          .map((key, value) => MapEntry(key, value / totalWeight));
+      final choiceDistribution = _weightedChoiceDistribution(
+          totalPredictions, weights, Random(problem.id.hashCode ^ i));
       final motivationDistribution = _weightedMotivationDistribution(
         max(totalPredictions - 2, 6),
         motivationWeights,
       );
       final orderedMotivations = motivationDistribution.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
-      final topMotivations = orderedMotivations.take(2).map((entry) => entry.key).toList(growable: false);
+      final topMotivations = orderedMotivations
+          .take(2)
+          .map((entry) => entry.key)
+          .toList(growable: false);
 
       snapshots.add(
         InsightSnapshot(
@@ -648,7 +669,8 @@ class MockGameRepository implements GameRepository {
         },
     };
 
-    final choiceDistribution = _weightedChoiceDistribution(baseTotal, choiceWeights, random);
+    final choiceDistribution =
+        _weightedChoiceDistribution(baseTotal, choiceWeights, random);
     final motivationDistribution = _weightedMotivationDistribution(
       max(baseTotal - 1, 6),
       motivationWeights,
@@ -664,18 +686,23 @@ class MockGameRepository implements GameRepository {
 
   AggregatedInsight _buildAggregatedInsight(String problemId) {
     final baseInsight = _syntheticInsight(problemId);
-    final choiceDistribution = Map<PredictionChoice, int>.from(baseInsight.choiceDistribution);
-    final motivationDistribution = Map<MotivationKey, int>.from(baseInsight.motivationDistribution);
+    final choiceDistribution =
+        Map<PredictionChoice, int>.from(baseInsight.choiceDistribution);
+    final motivationDistribution =
+        Map<MotivationKey, int>.from(baseInsight.motivationDistribution);
 
     final existing = _predictions[problemId];
     if (existing != null) {
-      choiceDistribution[existing.choice] = (choiceDistribution[existing.choice] ?? 0) + 1;
+      choiceDistribution[existing.choice] =
+          (choiceDistribution[existing.choice] ?? 0) + 1;
       for (final motivation in existing.motivations) {
-        motivationDistribution[motivation] = (motivationDistribution[motivation] ?? 0) + 1;
+        motivationDistribution[motivation] =
+            (motivationDistribution[motivation] ?? 0) + 1;
       }
     }
 
-    final totalPredictions = choiceDistribution.values.fold<int>(0, (sum, value) => sum + value);
+    final totalPredictions =
+        choiceDistribution.values.fold<int>(0, (sum, value) => sum + value);
 
     return AggregatedInsight(
       problemId: problemId,
@@ -761,7 +788,8 @@ class MockGameRepository implements GameRepository {
     required PredictionChoice choice,
   }) {
     return _withDelay(() {
-      final problem = _problems.firstWhere((problem) => problem.id == problemId);
+      final problem =
+          _problems.firstWhere((problem) => problem.id == problemId);
       final result = _evaluatePrediction(problem.status, choice);
       _results[problemId] = result;
       _reputation = _calculateReputation();
@@ -838,7 +866,8 @@ class MockGameRepository implements GameRepository {
 
   @override
   Future<Map<String, PredictionResult>> getPredictionResults(String turnId) {
-    return _withDelay(() => Map<String, PredictionResult>.unmodifiable(_results));
+    return _withDelay(
+        () => Map<String, PredictionResult>.unmodifiable(_results));
   }
 
   @override
@@ -893,7 +922,8 @@ class MockGameRepository implements GameRepository {
   }
 
   @override
-  Future<List<ReputationScore>> getReputationHistory({required String municipalityId}) {
+  Future<List<ReputationScore>> getReputationHistory(
+      {required String municipalityId}) {
     return _withDelay(() {
       final cached = _reputationHistoryCache;
       if (cached != null) return cached;

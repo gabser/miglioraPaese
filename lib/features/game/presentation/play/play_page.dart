@@ -54,7 +54,8 @@ class _PlayView extends StatelessWidget {
     }
     final hours = remaining.inHours;
     if (hours > 0) {
-      return VenialCopy.playCountdownHoursTemplate.replaceAll('{hours}', '$hours');
+      return VenialCopy.playCountdownHoursTemplate
+          .replaceAll('{hours}', '$hours');
     }
     return VenialCopy.playCountdownSoon;
   }
@@ -96,13 +97,22 @@ class _PlayView extends StatelessWidget {
                             [
                               _BoardHeader(
                                 onOpenBoard: () => context.go('/board'),
-                                hasNewCards: state.hasPendingInsights || state.hasChangedPerception,
+                                hasNewCards: state.hasPendingInsights ||
+                                    state.hasChangedPerception,
                               ),
-                              SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-                              const IconLabel(icon: AppIcons.play, text: VenialCopy.playTabLabel),
-                              SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
+                              SizedBox(
+                                  height:
+                                      isCompact ? AppTokens.s8 : AppTokens.s12),
+                              const IconLabel(
+                                  icon: AppIcons.play,
+                                  text: VenialCopy.playTabLabel),
+                              SizedBox(
+                                  height: isCompact
+                                      ? AppTokens.s12
+                                      : AppTokens.s16),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     VenialCopy.playHeader,
@@ -125,12 +135,14 @@ class _PlayView extends StatelessWidget {
                                   color: colorScheme.onSurfaceVariant,
                                 ),
                               ),
-                              if (state.hasPendingInsights || state.hasChangedPerception) ...[
+                              if (state.hasPendingInsights ||
+                                  state.hasChangedPerception) ...[
                                 SizedBox(height: sectionGap),
                                 AnimatedSwitcherX(
                                   duration: AppMotion.fast,
                                   child: _RetentionHintCard(
-                                    key: ValueKey('retention-${state.hasChangedPerception}'),
+                                    key: ValueKey(
+                                        'retention-${state.hasChangedPerception}'),
                                     isChanged: state.hasChangedPerception,
                                     onTap: cubit.markRetentionSeen,
                                   ),
@@ -144,7 +156,10 @@ class _PlayView extends StatelessWidget {
                                 onResolveTurn: cubit.resolveTurn,
                               ),
                               if (state.myPredictions.isEmpty) ...[
-                                SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                                SizedBox(
+                                    height: isCompact
+                                        ? AppTokens.s8
+                                        : AppTokens.s12),
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: Text(
@@ -155,9 +170,13 @@ class _PlayView extends StatelessWidget {
                                   ),
                                 ),
                               ],
-                              SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
+                              SizedBox(
+                                  height: isCompact
+                                      ? AppTokens.s12
+                                      : AppTokens.s16),
                               PrimaryCard(
-                                padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
+                                padding: EdgeInsets.all(
+                                    isCompact ? AppTokens.s12 : AppTokens.s16),
                                 textured: true,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,18 +192,25 @@ class _PlayView extends StatelessWidget {
                                         color: colorScheme.onSurfaceVariant,
                                       ),
                                     ),
-                                    SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                                    SizedBox(
+                                        height: isCompact
+                                            ? AppTokens.s8
+                                            : AppTokens.s12),
                                     Wrap(
                                       spacing: AppTokens.s12,
                                       runSpacing: AppTokens.s8,
                                       children: [
                                         OutlinedButton(
-                                          onPressed: () => context.go('/suggest-problem'),
-                                          child: const Text(VenialCopy.playSuggestCta),
+                                          onPressed: () =>
+                                              context.go('/suggest-problem'),
+                                          child: const Text(
+                                              VenialCopy.playSuggestCta),
                                         ),
                                         FilledButton(
-                                          onPressed: () => context.go('/next-problems'),
-                                          child: const Text(VenialCopy.playVoteCta),
+                                          onPressed: () =>
+                                              context.go('/next-problems'),
+                                          child: const Text(
+                                              VenialCopy.playVoteCta),
                                         ),
                                       ],
                                     ),
@@ -194,7 +220,8 @@ class _PlayView extends StatelessWidget {
                               if (!hasProblems)
                                 Center(
                                   child: Padding(
-                                    padding: const EdgeInsets.all(AppTokens.s24),
+                                    padding:
+                                        const EdgeInsets.all(AppTokens.s24),
                                     child: Text(
                                       VenialCopy.playEmpty,
                                       style: textTheme.bodyMedium?.copyWith(
@@ -205,7 +232,10 @@ class _PlayView extends StatelessWidget {
                                   ),
                                 )
                               else
-                                SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
+                                SizedBox(
+                                    height: isCompact
+                                        ? AppTokens.s12
+                                        : AppTokens.s16),
                             ],
                           ),
                         ),
@@ -225,44 +255,58 @@ class _PlayView extends StatelessWidget {
                                       final leftIndex = index * 2;
                                       final rightIndex = leftIndex + 1;
                                       final leftProblem = problems[leftIndex];
-                                      final rightProblem = rightIndex < problems.length
-                                          ? problems[rightIndex]
-                                          : null;
+                                      final rightProblem =
+                                          rightIndex < problems.length
+                                              ? problems[rightIndex]
+                                              : null;
                                       final bottomPadding =
-                                          index == ((problems.length - 1) ~/ 2) ? 0.0 : spacing;
+                                          index == ((problems.length - 1) ~/ 2)
+                                              ? 0.0
+                                              : spacing;
 
                                       return Padding(
-                                        padding: EdgeInsets.only(bottom: bottomPadding),
+                                        padding: EdgeInsets.only(
+                                            bottom: bottomPadding),
                                         child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Expanded(
                                               child: _ProblemTile(
                                                 problem: leftProblem,
                                                 state: state,
-                                                onSelect: (problemId, choice) => cubit.selectPrediction(
+                                                onSelect: (problemId, choice) =>
+                                                    cubit.selectPrediction(
                                                   problemId: problemId,
                                                   choice: choice,
                                                 ),
-                                                onSelectMotivations: (problemId, motivations) =>
-                                                    cubit.setMotivations(
+                                                onSelectMotivations:
+                                                    (problemId, motivations) =>
+                                                        cubit.setMotivations(
                                                   problemId: problemId,
                                                   motivations: motivations,
                                                 ),
-                                                onSelectConfidence: (problemId, confidence) =>
-                                                    cubit.setConfidence(
+                                                onSelectConfidence:
+                                                    (problemId, confidence) =>
+                                                        cubit.setConfidence(
                                                   problemId: problemId,
                                                   confidence: confidence,
                                                 ),
                                                 onSelectReflectionAnswer:
-                                                    (problemId, selectedIndex) =>
-                                                        cubit.setReflectionAnswer(
+                                                    (problemId,
+                                                            selectedIndex) =>
+                                                        cubit
+                                                            .setReflectionAnswer(
                                                   problemId: problemId,
-                                                  selectedOptionIndex: selectedIndex,
+                                                  selectedOptionIndex:
+                                                      selectedIndex,
                                                 ),
-                                                onRefreshProblem: cubit.refreshProblem,
-                                                onLoadHistory: cubit.loadProblemHistory,
-                                                onLoadCriticalInsights: cubit.loadCriticalInsights,
+                                                onRefreshProblem:
+                                                    cubit.refreshProblem,
+                                                onLoadHistory:
+                                                    cubit.loadProblemHistory,
+                                                onLoadCriticalInsights:
+                                                    cubit.loadCriticalInsights,
                                               ),
                                             ),
                                             SizedBox(width: spacing),
@@ -272,33 +316,45 @@ class _PlayView extends StatelessWidget {
                                                   : _ProblemTile(
                                                       problem: rightProblem,
                                                       state: state,
-                                                      onSelect: (problemId, choice) =>
-                                                          cubit.selectPrediction(
+                                                      onSelect: (problemId,
+                                                              choice) =>
+                                                          cubit
+                                                              .selectPrediction(
                                                         problemId: problemId,
                                                         choice: choice,
                                                       ),
                                                       onSelectMotivations:
-                                                          (problemId, motivations) =>
-                                                              cubit.setMotivations(
+                                                          (problemId,
+                                                                  motivations) =>
+                                                              cubit
+                                                                  .setMotivations(
                                                         problemId: problemId,
-                                                        motivations: motivations,
+                                                        motivations:
+                                                            motivations,
                                                       ),
                                                       onSelectConfidence:
-                                                          (problemId, confidence) =>
-                                                              cubit.setConfidence(
+                                                          (problemId,
+                                                                  confidence) =>
+                                                              cubit
+                                                                  .setConfidence(
                                                         problemId: problemId,
                                                         confidence: confidence,
                                                       ),
                                                       onSelectReflectionAnswer:
-                                                          (problemId, selectedIndex) =>
-                                                              cubit.setReflectionAnswer(
+                                                          (problemId,
+                                                                  selectedIndex) =>
+                                                              cubit
+                                                                  .setReflectionAnswer(
                                                         problemId: problemId,
-                                                        selectedOptionIndex: selectedIndex,
+                                                        selectedOptionIndex:
+                                                            selectedIndex,
                                                       ),
-                                                      onRefreshProblem: cubit.refreshProblem,
-                                                      onLoadHistory: cubit.loadProblemHistory,
-                                                      onLoadCriticalInsights:
-                                                          cubit.loadCriticalInsights,
+                                                      onRefreshProblem:
+                                                          cubit.refreshProblem,
+                                                      onLoadHistory: cubit
+                                                          .loadProblemHistory,
+                                                      onLoadCriticalInsights: cubit
+                                                          .loadCriticalInsights,
                                                     ),
                                             ),
                                           ],
@@ -312,36 +368,46 @@ class _PlayView extends StatelessWidget {
                                   delegate: SliverChildBuilderDelegate(
                                     (context, index) {
                                       final bottomPadding =
-                                          index == problems.length - 1 ? 0.0 : spacing;
+                                          index == problems.length - 1
+                                              ? 0.0
+                                              : spacing;
                                       final problem = problems[index];
 
                                       return Padding(
-                                        padding: EdgeInsets.only(bottom: bottomPadding),
+                                        padding: EdgeInsets.only(
+                                            bottom: bottomPadding),
                                         child: _ProblemTile(
                                           problem: problem,
                                           state: state,
-                                          onSelect: (problemId, choice) => cubit.selectPrediction(
+                                          onSelect: (problemId, choice) =>
+                                              cubit.selectPrediction(
                                             problemId: problemId,
                                             choice: choice,
                                           ),
-                                          onSelectMotivations: (problemId, motivations) =>
-                                              cubit.setMotivations(
+                                          onSelectMotivations:
+                                              (problemId, motivations) =>
+                                                  cubit.setMotivations(
                                             problemId: problemId,
                                             motivations: motivations,
                                           ),
-                                          onSelectConfidence: (problemId, confidence) =>
-                                              cubit.setConfidence(
+                                          onSelectConfidence:
+                                              (problemId, confidence) =>
+                                                  cubit.setConfidence(
                                             problemId: problemId,
                                             confidence: confidence,
                                           ),
-                                          onSelectReflectionAnswer: (problemId, selectedIndex) =>
-                                              cubit.setReflectionAnswer(
+                                          onSelectReflectionAnswer:
+                                              (problemId, selectedIndex) =>
+                                                  cubit.setReflectionAnswer(
                                             problemId: problemId,
                                             selectedOptionIndex: selectedIndex,
                                           ),
-                                          onRefreshProblem: cubit.refreshProblem,
-                                          onLoadHistory: cubit.loadProblemHistory,
-                                          onLoadCriticalInsights: cubit.loadCriticalInsights,
+                                          onRefreshProblem:
+                                              cubit.refreshProblem,
+                                          onLoadHistory:
+                                              cubit.loadProblemHistory,
+                                          onLoadCriticalInsights:
+                                              cubit.loadCriticalInsights,
                                         ),
                                       );
                                     },
@@ -360,7 +426,8 @@ class _PlayView extends StatelessWidget {
                           sliver: SliverToBoxAdapter(
                             child: Text(
                               state.error!,
-                              style: textTheme.bodySmall?.copyWith(color: colorScheme.error),
+                              style: textTheme.bodySmall
+                                  ?.copyWith(color: colorScheme.error),
                             ),
                           ),
                         ),
@@ -426,9 +493,12 @@ class _ProblemTile extends StatelessWidget {
   final Problem problem;
   final PlayState state;
   final void Function(String problemId, PredictionChoice choice) onSelect;
-  final void Function(String problemId, List<MotivationKey> motivations) onSelectMotivations;
-  final void Function(String problemId, HypothesisConfidence confidence) onSelectConfidence;
-  final void Function(String problemId, int selectedIndex) onSelectReflectionAnswer;
+  final void Function(String problemId, List<MotivationKey> motivations)
+      onSelectMotivations;
+  final void Function(String problemId, HypothesisConfidence confidence)
+      onSelectConfidence;
+  final void Function(String problemId, int selectedIndex)
+      onSelectReflectionAnswer;
   final void Function(String problemId) onRefreshProblem;
   final void Function(String problemId) onLoadCriticalInsights;
   final void Function(String problemId) onLoadHistory;
@@ -445,7 +515,8 @@ class _ProblemTile extends StatelessWidget {
     final reflectionQuestion = state.reflectionQuestions[problem.id];
     final reflectionAnswer = state.reflectionAnswers[problem.id];
     final criticalInsights = state.criticalInsights[problem.id] ?? const [];
-    final isCriticalLoading = state.loadingCriticalInsights.contains(problem.id);
+    final isCriticalLoading =
+        state.loadingCriticalInsights.contains(problem.id);
 
     return ProblemCard(
       key: ValueKey(problem.id),
@@ -458,8 +529,10 @@ class _ProblemTile extends StatelessWidget {
       criticalInsights: criticalInsights,
       isCriticalInsightsLoading: isCriticalLoading,
       onSelectChoice: (choice) => onSelect(problem.id, choice),
-      onSelectMotivations: (motivations) => onSelectMotivations(problem.id, motivations),
-      onSelectConfidence: (confidence) => onSelectConfidence(problem.id, confidence),
+      onSelectMotivations: (motivations) =>
+          onSelectMotivations(problem.id, motivations),
+      onSelectConfidence: (confidence) =>
+          onSelectConfidence(problem.id, confidence),
       onSelectReflectionAnswer: (selectedIndex) =>
           onSelectReflectionAnswer(problem.id, selectedIndex),
       onRefresh: () => onRefreshProblem(problem.id),
@@ -500,7 +573,9 @@ class _RetentionHintCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StickerBadge(
-            label: isChanged ? VenialCopy.retentionStickerChanged : VenialCopy.retentionStickerPending,
+            label: isChanged
+                ? VenialCopy.retentionStickerChanged
+                : VenialCopy.retentionStickerPending,
             animate: true,
           ),
           const SizedBox(height: AppTokens.s8),
@@ -637,7 +712,8 @@ class _ReputationCard extends StatelessWidget {
           const SizedBox(height: AppTokens.s8),
           Text(
             VenialCopy.reputationHelper,
-            style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: textTheme.bodySmall
+                ?.copyWith(color: colorScheme.onSurfaceVariant),
           ),
         ],
       ),

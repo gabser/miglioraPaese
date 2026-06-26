@@ -108,7 +108,8 @@ class _Controls extends StatelessWidget {
         SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
         BlocBuilder<NextProblemsCubit, NextProblemsState>(
           buildWhen: (prev, next) =>
-              prev.filterStatus != next.filterStatus || prev.sortMode != next.sortMode,
+              prev.filterStatus != next.filterStatus ||
+              prev.sortMode != next.sortMode,
           builder: (context, state) {
             return Wrap(
               spacing: AppTokens.s8,
@@ -121,13 +122,17 @@ class _Controls extends StatelessWidget {
                 ),
                 ChoiceChip(
                   label: const Text(VenialCopy.nextProblemsStatusPending),
-                  selected: state.filterStatus == SuggestedProblemStatus.pending,
-                  onSelected: (_) => cubit.setFilterStatus(SuggestedProblemStatus.pending),
+                  selected:
+                      state.filterStatus == SuggestedProblemStatus.pending,
+                  onSelected: (_) =>
+                      cubit.setFilterStatus(SuggestedProblemStatus.pending),
                 ),
                 ChoiceChip(
                   label: const Text(VenialCopy.nextProblemsStatusApproved),
-                  selected: state.filterStatus == SuggestedProblemStatus.approved,
-                  onSelected: (_) => cubit.setFilterStatus(SuggestedProblemStatus.approved),
+                  selected:
+                      state.filterStatus == SuggestedProblemStatus.approved,
+                  onSelected: (_) =>
+                      cubit.setFilterStatus(SuggestedProblemStatus.approved),
                 ),
               ],
             );
@@ -147,11 +152,13 @@ class _Controls extends StatelessWidget {
               labelBuilder: (mode) => switch (mode) {
                 NextProblemsSortMode.hot => VenialCopy.nextProblemsSortHot,
                 NextProblemsSortMode.newest => VenialCopy.nextProblemsSortNew,
-                NextProblemsSortMode.controversial => VenialCopy.nextProblemsSortSplit,
+                NextProblemsSortMode.controversial =>
+                  VenialCopy.nextProblemsSortSplit,
               },
               optionBuilder: (mode, isSelected) {
                 final icon = switch (mode) {
-                  NextProblemsSortMode.hot => Icons.local_fire_department_outlined,
+                  NextProblemsSortMode.hot =>
+                    Icons.local_fire_department_outlined,
                   NextProblemsSortMode.newest => Icons.schedule_outlined,
                   NextProblemsSortMode.controversial => Icons.whatshot_outlined,
                 };
@@ -161,14 +168,19 @@ class _Controls extends StatelessWidget {
                     Icon(
                       icon,
                       size: 18,
-                      color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                      color: isSelected
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: AppTokens.s8),
                     Text(
                       switch (mode) {
-                        NextProblemsSortMode.hot => VenialCopy.nextProblemsSortHot,
-                        NextProblemsSortMode.newest => VenialCopy.nextProblemsSortNew,
-                        NextProblemsSortMode.controversial => VenialCopy.nextProblemsSortSplit,
+                        NextProblemsSortMode.hot =>
+                          VenialCopy.nextProblemsSortHot,
+                        NextProblemsSortMode.newest =>
+                          VenialCopy.nextProblemsSortNew,
+                        NextProblemsSortMode.controversial =>
+                          VenialCopy.nextProblemsSortSplit,
                       },
                     ),
                   ],
@@ -270,7 +282,8 @@ class _ProblemCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(AppIcons.forProblemKey(problem.category), color: colorScheme.primary),
+              Icon(AppIcons.forProblemKey(problem.category),
+                  color: colorScheme.primary),
               const SizedBox(width: AppTokens.s12),
               Expanded(
                 child: Column(
@@ -301,7 +314,8 @@ class _ProblemCard extends StatelessWidget {
               _CategoryChip(category: problem.category),
               Text(
                 '${VenialCopy.nextProblemsProposedBy} ${problem.submittedByDisplayName}',
-                style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                style: textTheme.labelSmall
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -330,7 +344,8 @@ class _ProblemCard extends StatelessWidget {
                         await cubit.vote(problem.id, VoteChoice.up);
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text(VenialCopy.nextProblemsVotedSnack)),
+                          const SnackBar(
+                              content: Text(VenialCopy.nextProblemsVotedSnack)),
                         );
                       },
               ),
@@ -345,7 +360,8 @@ class _ProblemCard extends StatelessWidget {
                         await cubit.vote(problem.id, VoteChoice.down);
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text(VenialCopy.nextProblemsVotedSnack)),
+                          const SnackBar(
+                              content: Text(VenialCopy.nextProblemsVotedSnack)),
                         );
                       },
               ),
@@ -383,8 +399,10 @@ class _StampVoteButton extends StatelessWidget {
     return InkWell(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(AppTokens.radius),
-      focusColor: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.08),
-      hoverColor: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.06),
+      focusColor:
+          Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.08),
+      hoverColor:
+          Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.06),
       child: Opacity(
         opacity: onPressed == null ? 0.5 : (selected ? 1 : 0.7),
         child: ConstrainedBox(
@@ -393,7 +411,8 @@ class _StampVoteButton extends StatelessWidget {
             child: StampBadge(
               label: label,
               caption: count.toString(),
-              icon: selected ? Icons.check_circle_outline : Icons.circle_outlined,
+              icon:
+                  selected ? Icons.check_circle_outline : Icons.circle_outlined,
               angle: selected ? -0.04 : -0.02,
             ),
           ),
@@ -430,7 +449,6 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
-
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.status});
 
@@ -440,9 +458,18 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final (label, color) = switch (status) {
-      SuggestedProblemStatus.pending => (VenialCopy.nextProblemsStatusPending, colorScheme.surfaceContainerHigh),
-      SuggestedProblemStatus.approved => (VenialCopy.nextProblemsStatusApproved, colorScheme.primaryContainer),
-      SuggestedProblemStatus.rejected => (VenialCopy.nextProblemsStatusRejected, colorScheme.errorContainer),
+      SuggestedProblemStatus.pending => (
+          VenialCopy.nextProblemsStatusPending,
+          colorScheme.surfaceContainerHigh
+        ),
+      SuggestedProblemStatus.approved => (
+          VenialCopy.nextProblemsStatusApproved,
+          colorScheme.primaryContainer
+        ),
+      SuggestedProblemStatus.rejected => (
+          VenialCopy.nextProblemsStatusRejected,
+          colorScheme.errorContainer
+        ),
     };
 
     return Container(

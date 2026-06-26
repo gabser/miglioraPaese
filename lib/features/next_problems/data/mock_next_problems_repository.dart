@@ -133,25 +133,67 @@ class MockNextProblemsRepository implements NextProblemsRepository {
     final random = Random(municipalityId.hashCode);
     final baseDate = DateTime(2024, 1, 6);
     final seeds = <(String, String, ProblemKey)>[
-      ('Buche ovunque', 'Strade con crateri ovunque, serve una missione.', ProblemKey.potholes),
-      ('Illuminazione a intermittenza', 'Lampioni che fanno luce a giorni alterni.', ProblemKey.lighting),
-      ('Rifiuti fuori posto', 'Cassonetti pieni e sacchi in giro.', ProblemKey.waste),
-      ('Bus fantasma', 'Passano quando vogliono, o forse no.', ProblemKey.transport),
-      ('Parcheggi impossibili', 'Giri infiniti per un posto libero.', ProblemKey.parking),
+      (
+        'Buche ovunque',
+        'Strade con crateri ovunque, serve una missione.',
+        ProblemKey.potholes
+      ),
+      (
+        'Illuminazione a intermittenza',
+        'Lampioni che fanno luce a giorni alterni.',
+        ProblemKey.lighting
+      ),
+      (
+        'Rifiuti fuori posto',
+        'Cassonetti pieni e sacchi in giro.',
+        ProblemKey.waste
+      ),
+      (
+        'Bus fantasma',
+        'Passano quando vogliono, o forse no.',
+        ProblemKey.transport
+      ),
+      (
+        'Parcheggi impossibili',
+        'Giri infiniti per un posto libero.',
+        ProblemKey.parking
+      ),
       ('Decoro ballerino', 'Centro curato, periferie meno.', ProblemKey.decor),
-      ('Rumore notturno', 'Tra motorini e locali, si dorme poco.', ProblemKey.noise),
-      ('Verde in pausa', 'Aree verdi trascurate o poco curate.', ProblemKey.green),
-      ('Sicurezza stradale', 'Attraversamenti che sembrano missioni.', ProblemKey.safety),
-      ('Cantieri eterni', 'Lavori che non finiscono mai.', ProblemKey.construction),
+      (
+        'Rumore notturno',
+        'Tra motorini e locali, si dorme poco.',
+        ProblemKey.noise
+      ),
+      (
+        'Verde in pausa',
+        'Aree verdi trascurate o poco curate.',
+        ProblemKey.green
+      ),
+      (
+        'Sicurezza stradale',
+        'Attraversamenti che sembrano missioni.',
+        ProblemKey.safety
+      ),
+      (
+        'Cantieri eterni',
+        'Lavori che non finiscono mai.',
+        ProblemKey.construction
+      ),
       ('Code in ufficio', 'Tempi lunghi agli sportelli.', ProblemKey.queues),
-      ('Segnaletica confusa', 'Cartelli poco chiari o mancanti.', ProblemKey.signage),
+      (
+        'Segnaletica confusa',
+        'Cartelli poco chiari o mancanti.',
+        ProblemKey.signage
+      ),
     ];
 
     return List.generate(seeds.length, (index) {
       final (title, description, category) = seeds[index];
       final votesUp = 6 + random.nextInt(42);
       final votesDown = random.nextInt(18);
-      final status = index % 4 == 0 ? SuggestedProblemStatus.approved : SuggestedProblemStatus.pending;
+      final status = index % 4 == 0
+          ? SuggestedProblemStatus.approved
+          : SuggestedProblemStatus.pending;
       return SuggestedProblem(
         id: 'seed_$index',
         title: title,

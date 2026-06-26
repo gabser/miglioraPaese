@@ -118,122 +118,132 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
         child: MaxWidthContainer(
           child: Padding(
             padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
-            child: PrimaryCard(
-              textured: true,
-              elevated: true,
-              child: BlocBuilder<NextProblemsCubit, NextProblemsState>(
-                builder: (context, state) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      CardIllustrationSlot(
-                        fallbackIcon: AppIcons.play,
-                        height: 72,
-                        compact: true,
-                        labelRibbon: VenialCopy.suggestRibbonLabel,
-                      ),
-                      SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-                      Text(
-                        VenialCopy.suggestTitle,
-                        style: TypographyX.titleLarge(context),
-                      ),
-                      const SizedBox(height: AppTokens.s8),
-                      Text(
-                        VenialCopy.suggestSubtitle,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: PrimaryCard(
+                textured: true,
+                elevated: true,
+                child: BlocBuilder<NextProblemsCubit, NextProblemsState>(
+                  builder: (context, state) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        CardIllustrationSlot(
+                          fallbackIcon: AppIcons.play,
+                          height: 72,
+                          compact: true,
+                          labelRibbon: VenialCopy.suggestRibbonLabel,
                         ),
-                      ),
-                      const SizedBox(height: AppTokens.s8),
-                      PinnedNote(
-                        angle: -0.02,
-                        child: Text(
-                          VenialCopy.suggestOfficialHint,
+                        SizedBox(
+                            height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                        Text(
+                          VenialCopy.suggestTitle,
+                          style: TypographyX.titleLarge(context),
+                        ),
+                        const SizedBox(height: AppTokens.s8),
+                        Text(
+                          VenialCopy.suggestSubtitle,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: AppTokens.s8),
+                        PinnedNote(
+                          angle: -0.02,
+                          child: Text(
+                            VenialCopy.suggestOfficialHint,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                            height: isCompact ? AppTokens.s12 : AppTokens.s16),
+                        TextField(
+                          controller: _titleController,
+                          maxLength: 60,
+                          decoration: const InputDecoration(
+                            hintText: VenialCopy.suggestTitleHint,
+                          ),
+                        ),
+                        SizedBox(
+                            height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                        TextField(
+                          controller: _descriptionController,
+                          maxLength: 140,
+                          minLines: 2,
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            hintText: VenialCopy.suggestDescriptionHint,
+                          ),
+                        ),
+                        SizedBox(
+                            height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                        DropdownButtonFormField<ProblemKey>(
+                          value: _category,
+                          items: ProblemKey.values
+                              .map(
+                                (key) => DropdownMenuItem(
+                                  value: key,
+                                  child: Text(
+                                    AppIcons.labelForProblemKey(key),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() {
+                              _category = value;
+                            });
+                          },
+                          decoration: const InputDecoration(
+                            labelText: VenialCopy.suggestCategoryLabel,
+                          ),
+                        ),
+                        const SizedBox(height: AppTokens.s8),
+                        Text(
+                          VenialCopy.suggestReviewHint,
                           style: textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
                         ),
-                      ),
-                      SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
-                      TextField(
-                        controller: _titleController,
-                        maxLength: 60,
-                        decoration: const InputDecoration(
-                          hintText: VenialCopy.suggestTitleHint,
-                        ),
-                      ),
-                      SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-                      TextField(
-                        controller: _descriptionController,
-                        maxLength: 140,
-                        minLines: 2,
-                        maxLines: 4,
-                        decoration: const InputDecoration(
-                          hintText: VenialCopy.suggestDescriptionHint,
-                        ),
-                      ),
-                      SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-                      DropdownButtonFormField<ProblemKey>(
-                        value: _category,
-                        items: ProblemKey.values
-                            .map(
-                              (key) => DropdownMenuItem(
-                                value: key,
-                                child: Text(
-                                  AppIcons.labelForProblemKey(key),
+                        if (_error != null) ...[
+                          const SizedBox(height: AppTokens.s8),
+                          Text(
+                            _error!,
+                            style: textTheme.bodySmall
+                                ?.copyWith(color: colorScheme.error),
+                          ),
+                        ],
+                        SizedBox(
+                            height: isCompact ? AppTokens.s12 : AppTokens.s16),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (state.submitting) ...[
+                                const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 ),
+                                const SizedBox(width: AppTokens.s8),
+                              ],
+                              StampActionButton(
+                                label: VenialCopy.suggestSubmit,
+                                icon: AppIcons.play,
+                                onPressed: state.submitting ? null : _submit,
                               ),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() {
-                            _category = value;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          labelText: VenialCopy.suggestCategoryLabel,
-                        ),
-                      ),
-                      const SizedBox(height: AppTokens.s8),
-                      Text(
-                        VenialCopy.suggestReviewHint,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      if (_error != null) ...[
-                        const SizedBox(height: AppTokens.s8),
-                        Text(
-                          _error!,
-                          style: textTheme.bodySmall?.copyWith(color: colorScheme.error),
+                            ],
+                          ),
                         ),
                       ],
-                      SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (state.submitting) ...[
-                              const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                              const SizedBox(width: AppTokens.s8),
-                            ],
-                            StampActionButton(
-                              label: VenialCopy.suggestSubmit,
-                              icon: AppIcons.play,
-                              onPressed: state.submitting ? null : _submit,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ),

@@ -145,18 +145,21 @@ class PlayState extends Equatable {
       results: results ?? this.results,
       insights: insights ?? this.insights,
       insightHistories: insightHistories ?? this.insightHistories,
-      loadingInsightHistories: loadingInsightHistories ?? this.loadingInsightHistories,
+      loadingInsightHistories:
+          loadingInsightHistories ?? this.loadingInsightHistories,
       reflectionQuestions: reflectionQuestions ?? this.reflectionQuestions,
       reflectionAnswers: reflectionAnswers ?? this.reflectionAnswers,
       criticalInsights: criticalInsights ?? this.criticalInsights,
-      loadingCriticalInsights: loadingCriticalInsights ?? this.loadingCriticalInsights,
+      loadingCriticalInsights:
+          loadingCriticalInsights ?? this.loadingCriticalInsights,
       suggestedPerspective: suggestedPerspective ?? this.suggestedPerspective,
       hasPendingInsights: hasPendingInsights ?? this.hasPendingInsights,
       hasChangedPerception: hasChangedPerception ?? this.hasChangedPerception,
       hasUnresolvedTurn: hasUnresolvedTurn ?? this.hasUnresolvedTurn,
       reputation: reputation ?? this.reputation,
       reputationHistory: reputationHistory ?? this.reputationHistory,
-      isReputationHistoryLoading: isReputationHistoryLoading ?? this.isReputationHistoryLoading,
+      isReputationHistoryLoading:
+          isReputationHistoryLoading ?? this.isReputationHistoryLoading,
       error: error,
     );
   }

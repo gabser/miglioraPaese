@@ -16,19 +16,22 @@ class VenialCopy {
   static const bootInfoCtaHow = 'Come funziona';
   static const bootInfoCtaPrivacy = 'Privacy';
   static const bootIconsTitle = 'Icon set';
-  static const bootIconsSubtitle = 'Icone centralizzate per navigazione e problemi.';
+  static const bootIconsSubtitle =
+      'Icone centralizzate per navigazione e problemi.';
   static const bootIconsTabsTitle = 'Tab principali';
   static const bootIconsProblemsTitle = 'Tipologie di problema';
   static const bootMotionTitle = 'Motion demo';
   static const bootMotionToggle = 'Mostra dettagli motion demo';
-  static const bootMotionSubtitle = 'Transizioni coordinate con AnimatedSwitcherX e token di motion.';
+  static const bootMotionSubtitle =
+      'Transizioni coordinate con AnimatedSwitcherX e token di motion.';
 
   static const welcomeStep1Title = 'Partiamo piano?';
   static const welcomeStep1Subtitle = 'Qui non devi fare granché.';
   static const welcomeStep1Cta = 'Ok';
 
   static const welcomeStep2Title = 'Dai un\'idea su come potrebbe andare.';
-  static const welcomeStep2Subtitle = 'Poi vediamo com\'e\' andata, senza pressione.';
+  static const welcomeStep2Subtitle =
+      'Poi vediamo com\'e\' andata, senza pressione.';
   static const welcomeStep2Cta = 'Va bene';
 
   static const welcomeStep3Title = 'Vuoi partire subito?';
@@ -51,11 +54,13 @@ class VenialCopy {
 
   static const onboardingStep3Title = 'Regole leggere, zero prediche.';
   static const onboardingStep3Subtitle = 'Tre cose e basta.';
-  static const onboardingStep3Bullet = 'Niente sermoni, solo una previsione semplice.';
+  static const onboardingStep3Bullet =
+      'Niente sermoni, solo una previsione semplice.';
   static const onboardingStep3Cta = 'Ci sono';
 
   static const onboardingStep4Title = 'Quando ci prendi, si vede.';
-  static const onboardingStep4Subtitle = 'E\' un gioco: a volte ci prende, a volte no.';
+  static const onboardingStep4Subtitle =
+      'E\' un gioco: a volte ci prende, a volte no.';
   static const onboardingStep4Bullet = 'Tu scegli, il tempo risponde.';
   static const onboardingStep4Cta = 'Inizia a giocare';
   static const onboardingProgressLabel = 'Passo {step}';
@@ -65,16 +70,20 @@ class VenialCopy {
   static const playHeader = 'Vediamo come va?';
   static const playIntro = 'Scegli a pelle, poi si vede com\'e\' andata.';
   static const playBoardHeaderTitle = 'Il tabellone del Comune';
-  static const playBoardHeaderSubtitle = 'Ogni casella e\' un dubbio da esplorare.';
+  static const playBoardHeaderSubtitle =
+      'Ogni casella e\' un dubbio da esplorare.';
   static const playBoardCta = 'Vedi tabellone';
   static const bannerNewsLabel = 'Nuove carte';
   static const bannerTurnOpenLabel = 'Turno aperto';
   static const playResolveCardTitle = 'Azione di turno';
   static const playResolveCta = 'Pesca le carte del turno';
-  static const playResolveDisabledHint = 'Scegli almeno una situazione e poi guardiamo.';
-  static const playEmpty = 'Per ora niente di urgente. Se ti va, torna piu\' tardi.';
+  static const playResolveDisabledHint =
+      'Scegli almeno una situazione e poi guardiamo.';
+  static const playEmpty =
+      'Per ora niente di urgente. Se ti va, torna piu\' tardi.';
   static const playNextProblemsTitle = 'Hai un\'altra idea in mente?';
-  static const playNextProblemsBody = 'Non risolviamo nulla, ma scegliamo cosa tenere d\'occhio.';
+  static const playNextProblemsBody =
+      'Non risolviamo nulla, ma scegliamo cosa tenere d\'occhio.';
   static const playSuggestCta = 'Proponi un problema';
   static const playVoteCta = 'Vota i prossimi';
   static const playTabLabel = 'Gioca';
@@ -92,21 +101,27 @@ class VenialCopy {
   static const criticalInsightsTitle = 'Punti di vista';
   static const criticalInsightsDisclaimer = 'Niente giudizi: solo prospettive.';
   static const criticalInsightsLoading = 'Raccogliamo prospettive diverse...';
-  static const criticalInsightsLowSignal = 'Troppo presto per dire. Ma e\' interessante vedere le differenze.';
+  static const criticalInsightsLowSignal =
+      'Troppo presto per dire. Ma e\' interessante vedere le differenze.';
   static const lensSectionTitle = 'La tua lente';
-  static const lensSectionSubtitle = 'Una lente e\' solo un modo di leggere i segnali.';
+  static const lensSectionSubtitle =
+      'Una lente e\' solo un modo di leggere i segnali.';
   static const lensSectionEmpty = 'Scegli una lente, se ti va.';
   static const lensSuggestionLoading = 'Cerchiamo una lente che ti somiglia...';
   static const lensSuggestionTemplate = 'Se ti va, potresti provare: {role}.';
   static const lensChangeCta = 'Cambia lente';
-  static const lensChangeCountTemplate = 'Cambiare idea e\' una skill. ({count})';
+  static const lensChangeCountTemplate =
+      'Cambiare idea e\' una skill. ({count})';
   static const lensPickerTitle = 'Scegli una lente';
-  static const lensPickerSubtitle = 'Puoi cambiarla quando vuoi, senza giudizi.';
+  static const lensPickerSubtitle =
+      'Puoi cambiarla quando vuoi, senza giudizi.';
   static const lensChangedSnack = 'Ok, oggi guardiamo le cose cosi\'.';
   static const retentionPendingTitle = 'Qualcosa si e\' mosso?';
-  static const retentionPendingBody = 'Se ti va, dai un\'occhiata agli esiti del turno.';
+  static const retentionPendingBody =
+      'Se ti va, dai un\'occhiata agli esiti del turno.';
   static const retentionChangedTitle = 'Non tutti la pensano allo stesso modo?';
-  static const retentionChangedBody = 'Le percezioni sembrano muoversi: curiosita\' legittima.';
+  static const retentionChangedBody =
+      'Le percezioni sembrano muoversi: curiosita\' legittima.';
   static const retentionCta = 'Guarda se ti va';
   static const retentionStickerPending = 'Piccola novita\'';
   static const retentionStickerChanged = 'Spostamento lento';
@@ -122,7 +137,8 @@ class VenialCopy {
   static const boardTileLabel = 'Casella';
   static const boardTileStatusLabel = 'Stato';
 
-  static const insightHeadlineTemplate = 'Sembra che circa il {percentage}% pensi che {verb}.';
+  static const insightHeadlineTemplate =
+      'Sembra che circa il {percentage}% pensi che {verb}.';
   static const insightDisclaimer = 'Percezioni, non dati ufficiali.';
   static const insightLowSignalHeadline = 'Troppo presto per dirlo.';
   static const insightLowSignalDetail = 'Stiamo ancora annusando l\'aria.';
@@ -137,14 +153,16 @@ class VenialCopy {
   static const stampResultLabel = 'ESITO';
 
   static const reputationTitle = 'Come sta andando';
-  static const reputationHelper = 'Non e\' una scienza, solo un indicatore leggero.';
+  static const reputationHelper =
+      'Non e\' una scienza, solo un indicatore leggero.';
   static const reputationPointsLabel = 'Punti';
   static const reputationAccuracyLabel = 'Accuratezza';
   static const reputationPredictionsLabel = 'Previsioni';
 
   static const trendHeadingTemplate = 'Andamento (ultimi {turns} turni)';
   static const trendLowDataLabel = 'Trend in formazione';
-  static const trendLowDataHelper = 'Servono ancora alcuni segnali per capirci qualcosa.';
+  static const trendLowDataHelper =
+      'Servono ancora alcuni segnali per capirci qualcosa.';
   static const trendLowDataQuick = 'Troppo presto per dirlo.';
   static const trendFlatImprove = 'Sembra stabile sul miglioramento.';
   static const trendFlatStable = 'Stabilita\' percepita, senza scossoni.';
@@ -179,7 +197,8 @@ class VenialCopy {
   static const nextProblemsSortHot = 'Caldi';
   static const nextProblemsSortNew = 'Nuovi';
   static const nextProblemsSortSplit = 'Divisivi';
-  static const nextProblemsPendingHelper = 'In valutazione: vediamo se entra in gioco.';
+  static const nextProblemsPendingHelper =
+      'In valutazione: vediamo se entra in gioco.';
   static const nextProblemsProposedBy = 'Proposto da';
   static const nextProblemsVotedSnack = 'Segnato.';
 
@@ -188,37 +207,45 @@ class VenialCopy {
   static const suggestOfficialHint = 'Non e\' una segnalazione ufficiale.';
   static const suggestRibbonLabel = 'Nuova proposta';
   static const suggestTitleHint = 'Titolo breve';
-  static const suggestDescriptionHint = 'Descrivi in 140 caratteri, anche telegrafico.';
+  static const suggestDescriptionHint =
+      'Descrivi in 140 caratteri, anche telegrafico.';
   static const suggestCategoryLabel = 'Categoria';
   static const suggestSubmit = 'Mettilo in lista';
-  static const suggestReviewHint = 'Va in valutazione. Se piace, entra in gioco.';
+  static const suggestReviewHint =
+      'Va in valutazione. Se piace, entra in gioco.';
   static const suggestSuccess = 'Ok, in valutazione.';
   static const suggestCooldownHint = 'Una proposta ogni 5 minuti va bene.';
-  static const suggestDuplicateHint = 'Sembra gia\' in lista. Vuoi votarlo invece?';
+  static const suggestDuplicateHint =
+      'Sembra gia\' in lista. Vuoi votarlo invece?';
   static const suggestMissingFields = 'Serve un titolo e due righe, se ti va.';
   static const suggestTooLong = 'Restiamo brevi, promesso.';
   static const suggestGenericError = 'Qualcosa si e\' impuntato. Riprova.';
 
   static const onboardingTitle = 'Scegli il tuo Comune';
-  static const onboardingSubtitle = 'Seleziona il Comune per sbloccare il gioco.';
+  static const onboardingSubtitle =
+      'Seleziona il Comune per sbloccare il gioco.';
   static const onboardingSearchHint = 'Cerca il tuo Comune';
   static const onboardingCitySelectTemplate = 'Seleziona {city}';
 
   static const homeWelcomeTitle = 'Benvenuto su {app}';
   static const homeCardTitle = 'La tua plancia leggera';
-  static const homeCardBody = 'Qui potresti trovare spunti, missioni e curiosita\'.';
+  static const homeCardBody =
+      'Qui potresti trovare spunti, missioni e curiosita\'.';
   static const homeBannerTitle = 'Benvenuto su {app}';
-  static const homeBannerSubtitle = 'Una plancia leggera, qualche carta, zero fretta.';
+  static const homeBannerSubtitle =
+      'Una plancia leggera, qualche carta, zero fretta.';
   static const homeBannerSticker = 'Carta iniziale';
   static const homeBannerCta = 'Apri il tabellone';
   static const homePlayCardTitle = 'Pronto per un giro?';
-  static const homePlayCardBody = 'Se ti va, pesca una carta del turno e guarda che aria tira.';
+  static const homePlayCardBody =
+      'Se ti va, pesca una carta del turno e guarda che aria tira.';
   static const homePlayCardCta = 'Entra nel turno';
   static const ctaHowItWorks = 'Come funziona';
 
   static const profileTitle = 'Profilo';
   static const profileIdentityTitle = 'Identita\' e preferenze';
-  static const profileIdentityBody = 'Impostazioni e piccole scelte personali, niente di serio.';
+  static const profileIdentityBody =
+      'Impostazioni e piccole scelte personali, niente di serio.';
   static const profileHistoryLoading = 'Carichiamo il tuo storico...';
   static const retryCta = 'Riprova';
   static const profileTrendPointsTitle = 'Punti totali';
@@ -236,19 +263,25 @@ class VenialCopy {
   static const boardNewsTitle = 'Novita\' sul tabellone';
   static const boardNewsEmpty = 'Nessuna novita\' urgente. Si gioca piano.';
   static const boardNewsPendingTurn = 'Esiti da rivedere';
-  static const boardNewsPendingTurnBody = 'C\'e\' un turno risolto che aspetta uno sguardo.';
+  static const boardNewsPendingTurnBody =
+      'C\'e\' un turno risolto che aspetta uno sguardo.';
   static const boardNewsShifted = 'Percezioni mosse';
-  static const boardNewsShiftedBody = 'Qualcosa e\' cambiato nel modo in cui la gente vede.';
+  static const boardNewsShiftedBody =
+      'Qualcosa e\' cambiato nel modo in cui la gente vede.';
   static const boardNewsProposals = 'Nuove proposte';
-  static const boardNewsProposalsBody = 'Qualcuno ha messo sul tavolo nuovi temi.';
+  static const boardNewsProposalsBody =
+      'Qualcuno ha messo sul tavolo nuovi temi.';
   static const boardTokensTitle = 'I tuoi segnalini';
-  static const boardTokensEmpty = 'Gioca un turno per piazzare i primi segnalini.';
+  static const boardTokensEmpty =
+      'Gioca un turno per piazzare i primi segnalini.';
   static const boardTokensCaption = 'Token = tua scelta sul tabellone.';
   static const boardLegendLabel = 'Legenda';
   static const boardLegendBody = 'Token = tua scelta';
   static const boardZoneLabel = 'Quartiere';
   static const boardCardOfDayTitle = 'Carta del giorno';
-  static const boardCardOfDayBody = 'Una casella a cui dare un\'occhiata, senza fretta.';
+  static const boardCardOfDayBody =
+      'Una casella a cui dare un\'occhiata, senza fretta.';
   static const boardShowcaseTitle = 'Vetrina prossimi problemi';
-  static const boardShowcaseBody = 'Spazio pronto per nuove carte, quando arrivano.';
+  static const boardShowcaseBody =
+      'Spazio pronto per nuove carte, quando arrivano.';
 }

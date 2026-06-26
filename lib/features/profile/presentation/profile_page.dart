@@ -49,7 +49,8 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final repository = context.read<GameRepository>();
       final municipalityId = context.read<AppPrefs>().municipalityId ?? 'demo';
-      final history = await repository.getReputationHistory(municipalityId: municipalityId);
+      final history =
+          await repository.getReputationHistory(municipalityId: municipalityId);
       if (!mounted) return;
       setState(() {
         _history = history;
@@ -137,7 +138,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         if (!mounted) return;
                         Navigator.of(context).pop();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text(VenialCopy.lensChangedSnack)),
+                          const SnackBar(
+                              content: Text(VenialCopy.lensChangedSnack)),
                         );
                       },
                       child: Row(
@@ -197,7 +199,8 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const IconLabel(icon: AppIcons.profile, text: VenialCopy.profileTitle),
+          const IconLabel(
+              icon: AppIcons.profile, text: VenialCopy.profileTitle),
           SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
           PrimaryCard(
             padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
@@ -249,7 +252,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   )
                 else if (_suggestedRole != null)
                   Text(
-                    VenialCopy.lensSuggestionTemplate.replaceAll('{role}', _suggestedRole!.label),
+                    VenialCopy.lensSuggestionTemplate
+                        .replaceAll('{role}', _suggestedRole!.label),
                     style: textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -258,7 +262,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: StampActionButton(
-                    onPressed: () => _showPerspectivePicker(prefs, activePerspective),
+                    onPressed: () =>
+                        _showPerspectivePicker(prefs, activePerspective),
                     label: VenialCopy.lensChangeCta,
                     icon: AppIcons.profile,
                   ),
@@ -266,7 +271,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (changesCount > 0) ...[
                   const SizedBox(height: AppTokens.s8),
                   Text(
-                    VenialCopy.lensChangeCountTemplate.replaceAll('{count}', '$changesCount'),
+                    VenialCopy.lensChangeCountTemplate
+                        .replaceAll('{count}', '$changesCount'),
                     style: textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -314,7 +320,8 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: AppTokens.s8),
             Text(
               _error!,
-              style: textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error),
+              style: textTheme.bodySmall
+                  ?.copyWith(color: Theme.of(context).colorScheme.error),
             ),
           ],
         ],
@@ -353,9 +360,15 @@ class _ReputationHistoryCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final isCompact = MediaQuery.of(context).size.width < 600;
-    final points = history?.map((e) => e.totalPoints.toDouble()).toList(growable: false) ?? const <double>[];
-    final accuracy = history?.map((e) => (e.accuracy * 100).clamp(0, 100)).toList(growable: false) ?? const <double>[];
-    final lastEntry = history != null && history!.isNotEmpty ? history!.last : null;
+    final points =
+        history?.map((e) => e.totalPoints.toDouble()).toList(growable: false) ??
+            const <double>[];
+    final accuracy = history
+            ?.map((e) => (e.accuracy * 100).clamp(0, 100))
+            .toList(growable: false) ??
+        const <double>[];
+    final lastEntry =
+        history != null && history!.isNotEmpty ? history!.last : null;
     final dimmed = (lastEntry?.predictionsCount ?? 0) < 6;
 
     return PrimaryCard(
@@ -371,7 +384,8 @@ class _ReputationHistoryCard extends StatelessWidget {
           const SizedBox(height: AppTokens.s8),
           Text(
             VenialCopy.reputationHelper,
-            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: textTheme.bodyMedium
+                ?.copyWith(color: colorScheme.onSurfaceVariant),
           ),
           SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
           if (isLoading)
@@ -388,7 +402,8 @@ class _ReputationHistoryCard extends StatelessWidget {
                 const SizedBox(width: AppTokens.s8),
                 Text(
                   VenialCopy.profileHistoryLoading,
-                  style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: textTheme.bodySmall
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ],
             )
@@ -398,7 +413,8 @@ class _ReputationHistoryCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     error!,
-                    style: textTheme.bodySmall?.copyWith(color: colorScheme.error),
+                    style:
+                        textTheme.bodySmall?.copyWith(color: colorScheme.error),
                   ),
                 ),
                 TextButton(
@@ -445,7 +461,8 @@ class _ReputationHistoryCard extends StatelessWidget {
               const SizedBox(height: AppTokens.s8),
               Text(
                 VenialCopy.trendLowDataHelper,
-                style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                style: textTheme.bodySmall
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
               ),
             ],
           ],
@@ -491,7 +508,8 @@ class _MiniTrendTile extends StatelessWidget {
         const SizedBox(height: AppTokens.s8),
         Text(
           caption,
-          style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+          style: textTheme.bodySmall
+              ?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
       ],
     );

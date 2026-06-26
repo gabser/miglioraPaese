@@ -37,8 +37,10 @@ class _WaxSealPainter extends CustomPainter {
       ..color = color.withOpacity(0.3)
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.5), size.width * 0.45, base);
-    canvas.drawCircle(Offset(size.width * 0.35, size.height * 0.4), size.width * 0.28, mid);
+    canvas.drawCircle(
+        Offset(size.width * 0.5, size.height * 0.5), size.width * 0.45, base);
+    canvas.drawCircle(
+        Offset(size.width * 0.35, size.height * 0.4), size.width * 0.28, mid);
   }
 
   @override

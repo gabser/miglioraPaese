@@ -53,7 +53,8 @@ class AppPrefs extends ChangeNotifier {
   }
 
   /// Indica se l'utente ha completato l'onboarding "cinico".
-  bool get hasSeenCynicOnboarding => _prefs.getBool(_cynicOnboardingKey) ?? false;
+  bool get hasSeenCynicOnboarding =>
+      _prefs.getBool(_cynicOnboardingKey) ?? false;
 
   /// Aggiorna il flag di completamento dell'onboarding "cinico".
   Future<void> setHasSeenCynicOnboarding(bool value) async {
@@ -136,7 +137,8 @@ class AppPrefs extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final encoded = signatures.entries.map((e) => '${e.key}|${e.value}').join(';');
+    final encoded =
+        signatures.entries.map((e) => '${e.key}|${e.value}').join(';');
     await _prefs.setString(_insightSignaturesKey, encoded);
     notifyListeners();
   }

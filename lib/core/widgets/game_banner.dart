@@ -62,52 +62,52 @@ class GameBanner extends StatelessWidget {
                   ),
                 ),
               ),
-            if (shimmer)
-              Positioned.fill(
-                child: _ShimmerOverlay(),
+              if (shimmer)
+                Positioned.fill(
+                  child: _ShimmerOverlay(),
+                ),
+              Positioned(
+                left: -20,
+                top: -20,
+                child: _CornerDecor(
+                  color: VintagePaper.inkSoft(colorScheme).withOpacity(0.12),
+                  size: 70,
+                ),
               ),
-            Positioned(
-              left: -20,
-              top: -20,
-              child: _CornerDecor(
-                color: VintagePaper.inkSoft(colorScheme).withOpacity(0.12),
-                size: 70,
-              ),
-            ),
-            Positioned(
-              right: -24,
-              bottom: -24,
-              child: _CornerDecor(
-                color: VintagePaper.inkSoft(colorScheme).withOpacity(0.1),
-                size: 90,
-              ),
-            ),
-            Positioned(
-              right: 24,
-              top: 20,
-              child: _CornerDecor(
-                color: VintagePaper.inkSoft(colorScheme).withOpacity(0.08),
-                size: 36,
-              ),
-            ),
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _InkFlourishPainter(
+              Positioned(
+                right: -24,
+                bottom: -24,
+                child: _CornerDecor(
                   color: VintagePaper.inkSoft(colorScheme).withOpacity(0.1),
+                  size: 90,
                 ),
               ),
-            ),
-            if (image == null)
-              const Positioned.fill(
-                child: _BannerPlaceholder(),
-              )
-            else
+              Positioned(
+                right: 24,
+                top: 20,
+                child: _CornerDecor(
+                  color: VintagePaper.inkSoft(colorScheme).withOpacity(0.08),
+                  size: 36,
+                ),
+              ),
               Positioned.fill(
-                child: Opacity(
-                  opacity: 0.85,
-                  child: image!,
+                child: CustomPaint(
+                  painter: _InkFlourishPainter(
+                    color: VintagePaper.inkSoft(colorScheme).withOpacity(0.1),
+                  ),
                 ),
               ),
+              if (image == null)
+                const Positioned.fill(
+                  child: _BannerPlaceholder(),
+                )
+              else
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: 0.85,
+                    child: image!,
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.all(AppTokens.s16),
                 child: Column(
@@ -307,7 +307,8 @@ class _BannerRoadPainter extends CustomPainter {
       ..color = accent.withOpacity(0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
-    canvas.drawCircle(Offset(size.width * 0.62, size.height * 0.28), 12, ringPaint);
+    canvas.drawCircle(
+        Offset(size.width * 0.62, size.height * 0.28), 12, ringPaint);
     canvas.drawLine(
       Offset(size.width * 0.69, size.height * 0.36),
       Offset(size.width * 0.74, size.height * 0.42),
@@ -328,7 +329,8 @@ class _ShimmerOverlay extends StatefulWidget {
   State<_ShimmerOverlay> createState() => _ShimmerOverlayState();
 }
 
-class _ShimmerOverlayState extends State<_ShimmerOverlay> with SingleTickerProviderStateMixin {
+class _ShimmerOverlayState extends State<_ShimmerOverlay>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override

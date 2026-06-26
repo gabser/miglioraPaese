@@ -106,9 +106,11 @@ class _InsightCardState extends State<InsightCard> {
       return PredictionChoice.stable;
     }
 
-    return widget.insight.choiceDistribution.entries.reduce(
-      (a, b) => a.value >= b.value ? a : b,
-    ).key;
+    return widget.insight.choiceDistribution.entries
+        .reduce(
+          (a, b) => a.value >= b.value ? a : b,
+        )
+        .key;
   }
 
   List<MotivationKey> _topMotivations() {
@@ -125,7 +127,8 @@ class _InsightCardState extends State<InsightCard> {
     }
 
     final choice = _primaryChoice();
-    final percentage = widget.insight.percentageForChoice(choice).clamp(0, 100).round();
+    final percentage =
+        widget.insight.percentageForChoice(choice).clamp(0, 100).round();
     final verb = switch (choice) {
       PredictionChoice.improve => 'la situazione migliorera\'',
       PredictionChoice.stable => 'la situazione restera\' piu\' o meno uguale',
@@ -154,9 +157,11 @@ class _InsightCardState extends State<InsightCard> {
     final history = widget.history;
     if (history == null || history.snapshots.isEmpty) return _primaryChoice();
 
-    return history.snapshots.last.choiceDistribution.entries.reduce(
-      (a, b) => a.value >= b.value ? a : b,
-    ).key;
+    return history.snapshots.last.choiceDistribution.entries
+        .reduce(
+          (a, b) => a.value >= b.value ? a : b,
+        )
+        .key;
   }
 
   List<double>? _historyValuesFor(PredictionChoice choice) {
@@ -247,7 +252,8 @@ class _InsightCardState extends State<InsightCard> {
           );
         },
         child: Container(
-          key: ValueKey('insight-surface-${widget.insight.totalPredictions}-${widget.userChoice?.name ?? 'none'}'),
+          key: ValueKey(
+              'insight-surface-${widget.insight.totalPredictions}-${widget.userChoice?.name ?? 'none'}'),
           padding: const EdgeInsets.all(AppTokens.s16),
           decoration: VintagePaper.surfaceDecoration(
             colorScheme,
@@ -300,7 +306,8 @@ class _InsightCardState extends State<InsightCard> {
                           padding: const EdgeInsets.all(AppTokens.s8),
                           decoration: BoxDecoration(
                             color: colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(AppTokens.radius),
+                            borderRadius:
+                                BorderRadius.circular(AppTokens.radius),
                           ),
                           child: Icon(
                             Icons.style_outlined,
@@ -359,7 +366,8 @@ class _InsightCardState extends State<InsightCard> {
                         curve: AppMotion.standard,
                         child: _showHistory
                             ? Padding(
-                                padding: const EdgeInsets.only(top: AppTokens.s8),
+                                padding:
+                                    const EdgeInsets.only(top: AppTokens.s8),
                                 child: _HistoryTrend(
                                   history: widget.history,
                                   values: historyValues,
@@ -506,7 +514,8 @@ class _HistoryTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final label = isOpen ? VenialCopy.insightHistoryHide : VenialCopy.insightHistoryShow;
+    final label =
+        isOpen ? VenialCopy.insightHistoryHide : VenialCopy.insightHistoryShow;
     final icon = isOpen ? Icons.expand_less : Icons.show_chart;
 
     return InkWell(
@@ -617,7 +626,8 @@ class _HistoryTrend extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final snapshotCount = history?.snapshots.length ?? 6;
     final turns = snapshotCount == 0 ? 6 : snapshotCount;
-    final heading = VenialCopy.trendHeadingTemplate.replaceAll('{turns}', '$turns');
+    final heading =
+        VenialCopy.trendHeadingTemplate.replaceAll('{turns}', '$turns');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,7 +636,8 @@ class _HistoryTrend extends StatelessWidget {
           children: [
             Text(
               heading,
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+              style:
+                  textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const Spacer(),
             if (dimmed)
@@ -641,7 +652,8 @@ class _HistoryTrend extends StatelessWidget {
                 ),
                 child: Text(
                   VenialCopy.trendLowDataLabel,
-                  style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: textTheme.labelSmall
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ),
           ],
@@ -661,14 +673,16 @@ class _HistoryTrend extends StatelessWidget {
               const SizedBox(width: AppTokens.s8),
               Text(
                 VenialCopy.insightHistoryLoading,
-                style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                style: textTheme.bodySmall
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
               ),
             ],
           )
         else if (history == null)
           Text(
             VenialCopy.insightHistoryPrompt,
-            style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: textTheme.bodySmall
+                ?.copyWith(color: colorScheme.onSurfaceVariant),
           )
         else ...[
           TrendSparkline(
@@ -688,7 +702,8 @@ class _HistoryTrend extends StatelessWidget {
             const SizedBox(height: AppTokens.s8 / 2),
             Text(
               VenialCopy.trendLowDataHelper,
-              style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: textTheme.bodySmall
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
             ),
           ],
         ],
@@ -714,9 +729,18 @@ class _ChoiceDistribution extends StatelessWidget {
       children: PredictionChoice.values.map((choice) {
         final percentage = insight.percentageForChoice(choice).clamp(0, 100);
         final (label, color) = switch (choice) {
-          PredictionChoice.improve => ('Situazione in miglioramento', colorScheme.primary),
-          PredictionChoice.stable => ('Situazione stabile', colorScheme.tertiary),
-          PredictionChoice.worsen => ('Possibile peggioramento', colorScheme.error),
+          PredictionChoice.improve => (
+              'Situazione in miglioramento',
+              colorScheme.primary
+            ),
+          PredictionChoice.stable => (
+              'Situazione stabile',
+              colorScheme.tertiary
+            ),
+          PredictionChoice.worsen => (
+              'Possibile peggioramento',
+              colorScheme.error
+            ),
         };
 
         return Padding(
@@ -776,7 +800,8 @@ class _ChoiceBar extends StatelessWidget {
         const SizedBox(height: AppTokens.s8 / 2),
         LayoutBuilder(
           builder: (context, constraints) {
-            final barWidth = constraints.maxWidth * (percentage / 100).clamp(0, 1);
+            final barWidth =
+                constraints.maxWidth * (percentage / 100).clamp(0, 1);
             return Stack(
               children: [
                 Container(

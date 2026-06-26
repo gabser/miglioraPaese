@@ -24,7 +24,8 @@ class StickerBadge extends StatefulWidget {
   State<StickerBadge> createState() => _StickerBadgeState();
 }
 
-class _StickerBadgeState extends State<StickerBadge> with SingleTickerProviderStateMixin {
+class _StickerBadgeState extends State<StickerBadge>
+    with SingleTickerProviderStateMixin {
   AnimationController? _controller;
   late Animation<double> _wobble;
   late Animation<double> _pulse;
@@ -53,8 +54,10 @@ class _StickerBadgeState extends State<StickerBadge> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final background = widget.backgroundColor ?? VintagePaper.paperWarm(colorScheme);
-    final foreground = widget.foregroundColor ?? VintagePaper.inkStamp(colorScheme);
+    final background =
+        widget.backgroundColor ?? VintagePaper.paperWarm(colorScheme);
+    final foreground =
+        widget.foregroundColor ?? VintagePaper.inkStamp(colorScheme);
     final scale = _pressed ? 0.98 : (_pulse.value);
 
     final badge = Transform.rotate(
@@ -71,7 +74,8 @@ class _StickerBadgeState extends State<StickerBadge> with SingleTickerProviderSt
           decoration: BoxDecoration(
             color: background,
             borderRadius: BorderRadius.circular(AppTokens.radius),
-            border: Border.all(color: VintagePaper.inkStamp(colorScheme), width: 2),
+            border:
+                Border.all(color: VintagePaper.inkStamp(colorScheme), width: 2),
             boxShadow: [
               BoxShadow(
                 color: colorScheme.shadow.withOpacity(0.15),

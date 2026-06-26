@@ -12,6 +12,7 @@ class Prediction extends Equatable {
 
   /// Motivazioni opzionali (max 2). Non influenzano punteggio.
   final List<MotivationKey> motivations;
+
   /// Livello di convinzione associato alla previsione.
   final HypothesisConfidence? confidence;
 

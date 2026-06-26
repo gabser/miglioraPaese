@@ -24,9 +24,8 @@ class AppTheme {
       surfaceContainerHighest: paperContainer,
       surfaceVariant: paperContainer,
     );
-    final baseTextTheme = Typography.material2021()
-        .black
-        .apply(bodyColor: colorScheme.onSurface, displayColor: colorScheme.onSurface);
+    final baseTextTheme = Typography.material2021().black.apply(
+        bodyColor: colorScheme.onSurface, displayColor: colorScheme.onSurface);
     final textTheme = baseTextTheme.copyWith(
       headlineSmall: baseTextTheme.headlineSmall?.copyWith(
         fontWeight: FontWeight.w700,
@@ -95,7 +94,7 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       textTheme: textTheme,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTokens.radius),

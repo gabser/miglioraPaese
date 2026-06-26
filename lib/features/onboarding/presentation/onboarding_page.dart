@@ -73,7 +73,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 IconLabel(
                   icon: AppIcons.home,
                   text: VenialCopy.appTitle,
-                  iconSize: textTheme.titleMedium?.fontSize ?? 24 ,
+                  iconSize: textTheme.titleMedium?.fontSize ?? 24,
                 ),
                 const SizedBox(height: AppTokens.s8),
                 Text(
@@ -96,7 +96,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         compact: true,
                         labelRibbon: VenialCopy.onboardingRibbonLabel,
                       ),
-                      SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                      SizedBox(
+                          height: isCompact ? AppTokens.s8 : AppTokens.s12),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppTokens.s12,
@@ -122,12 +123,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       const SizedBox(height: AppTokens.s16),
                       ..._filteredCities.map(
                         (city) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: AppTokens.s8),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: AppTokens.s8),
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(AppTokens.radius),
+                            borderRadius:
+                                BorderRadius.circular(AppTokens.radius),
                             onTap: () => _selectCity(context, city),
                             child: Semantics(
-                              label: VenialCopy.onboardingCitySelectTemplate.replaceAll('{city}', city),
+                              label: VenialCopy.onboardingCitySelectTemplate
+                                  .replaceAll('{city}', city),
                               button: true,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(

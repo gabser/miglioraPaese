@@ -51,7 +51,8 @@ class SuggestedProblem {
       votesUp: votesUp ?? this.votesUp,
       votesDown: votesDown ?? this.votesDown,
       myVote: myVote ?? this.myVote,
-      submittedByDisplayName: submittedByDisplayName ?? this.submittedByDisplayName,
+      submittedByDisplayName:
+          submittedByDisplayName ?? this.submittedByDisplayName,
     );
   }
 }

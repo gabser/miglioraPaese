@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/boot/boot_screen.dart';
@@ -45,7 +44,9 @@ GoRouter buildRouter(AppPrefs appPrefs) {
       }
 
       if (municipalityId == null) {
-        if (infoPaths.contains(location) || location == '/onboarding' || location == '/boot') {
+        if (infoPaths.contains(location) ||
+            location == '/onboarding' ||
+            location == '/boot') {
           return null;
         }
         return '/onboarding';

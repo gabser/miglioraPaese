@@ -41,11 +41,13 @@ class HowItWorksPage extends StatelessWidget {
                           _StepCard(stepNumber: 1, title: 'Scegli il Comune'),
                           _StepCard(
                             stepNumber: 2,
-                            title: 'Fai previsioni: Migliora / Stabile / Peggiora',
+                            title:
+                                'Fai previsioni: Migliora / Stabile / Peggiora',
                           ),
                           _StepCard(
                             stepNumber: 3,
-                            title: 'Guadagna reputazione e confrontati in classifica',
+                            title:
+                                'Guadagna reputazione e confrontati in classifica',
                           ),
                         ],
                       ),

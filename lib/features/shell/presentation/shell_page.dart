@@ -66,7 +66,8 @@ class ShellPage extends StatelessWidget {
                     ),
                   )
                   .toList(),
-              onDestinationSelected: (index) => _onDestinationSelected(context, index),
+              onDestinationSelected: (index) =>
+                  _onDestinationSelected(context, index),
             ),
             const SizedBox(width: AppTokens.s16),
             Expanded(
@@ -84,7 +85,8 @@ class ShellPage extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         destinations: destinations,
-        onDestinationSelected: (index) => _onDestinationSelected(context, index),
+        onDestinationSelected: (index) =>
+            _onDestinationSelected(context, index),
       ),
     );
   }
@@ -103,8 +105,10 @@ class _NavTokenIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final bg = selected ? VintagePaper.paperWarm(scheme) : Colors.transparent;
-    final border = selected ? VintagePaper.inkStamp(scheme) : Colors.transparent;
-    final iconColor = selected ? VintagePaper.inkStamp(scheme) : scheme.onSurfaceVariant;
+    final border =
+        selected ? VintagePaper.inkStamp(scheme) : Colors.transparent;
+    final iconColor =
+        selected ? VintagePaper.inkStamp(scheme) : scheme.onSurfaceVariant;
 
     return Container(
       width: 36,

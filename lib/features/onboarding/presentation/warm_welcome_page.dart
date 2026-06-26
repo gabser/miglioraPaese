@@ -113,51 +113,53 @@ class _WarmWelcomePageState extends State<WarmWelcomePage> {
               elevated: true,
               padding: EdgeInsets.all(padding),
               child: AnimatedSwitcherX(
-                    duration: AppMotion.normal,
-                    switchInCurve: const Interval(0.2, 1, curve: AppMotion.standard),
-                    child: Column(
-                      key: ValueKey('warm-step-${_stepIndex + 1}'),
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TicketProgress(
-                            label: VenialCopy.welcomeProgressLabel.replaceAll('{step}', progressLabel),
-                            currentStep: _stepIndex + 1,
-                            totalSteps: _steps.length,
+                duration: AppMotion.normal,
+                switchInCurve:
+                    const Interval(0.2, 1, curve: AppMotion.standard),
+                child: Column(
+                  key: ValueKey('warm-step-${_stepIndex + 1}'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TicketProgress(
+                        label: VenialCopy.welcomeProgressLabel
+                            .replaceAll('{step}', progressLabel),
+                        currentStep: _stepIndex + 1,
+                        totalSteps: _steps.length,
+                      ),
+                    ),
+                    SizedBox(height: sectionGap),
+                    CardIllustrationSlot(
+                      fallbackIcon: AppIcons.play,
+                      height: 72,
+                      compact: true,
+                    ),
+                    SizedBox(height: sectionGap),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTokens.s12,
+                        vertical: AppTokens.s8 / 2,
+                      ),
+                      decoration: VintagePaper.tapeDecoration(colorScheme),
+                      child: Semantics(
+                        header: true,
+                        child: Text(
+                          step.title,
+                          style: TypographyX.titleMedium(context)?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        SizedBox(height: sectionGap),
-                        CardIllustrationSlot(
-                          fallbackIcon: AppIcons.play,
-                          height: 72,
-                          compact: true,
-                        ),
-                        SizedBox(height: sectionGap),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppTokens.s12,
-                            vertical: AppTokens.s8 / 2,
-                          ),
-                          decoration: VintagePaper.tapeDecoration(colorScheme),
-                        child: Semantics(
-                          header: true,
-                          child: Text(
-                            step.title,
-                            style: TypographyX.titleMedium(context)?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        ),
-                        const SizedBox(height: AppTokens.s8),
-                        Text(
-                          step.subtitle,
-                          style: textTheme.titleMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        SizedBox(height: isCompact ? AppTokens.s16 : AppTokens.s24),
+                      ),
+                    ),
+                    const SizedBox(height: AppTokens.s8),
+                    Text(
+                      step.subtitle,
+                      style: textTheme.titleMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    SizedBox(height: isCompact ? AppTokens.s16 : AppTokens.s24),
                     if (_stepIndex < _steps.length - 1)
                       Align(
                         alignment: Alignment.centerRight,
@@ -171,14 +173,16 @@ class _WarmWelcomePageState extends State<WarmWelcomePage> {
                         spacing: AppTokens.s12,
                         runSpacing: AppTokens.s12,
                         children: [
-                          FilledButton(
-                            onPressed: () => _completeAndGo('/play'),
-                            child: const Text(VenialCopy.welcomeStep3Play),
-                          ),
-                          if (!hasMunicipality)
-                            OutlinedButton(
+                          if (hasMunicipality)
+                            FilledButton(
+                              onPressed: () => _completeAndGo('/play'),
+                              child: const Text(VenialCopy.welcomeStep3Play),
+                            )
+                          else
+                            FilledButton(
                               onPressed: () => _completeAndGo('/onboarding'),
-                              child: const Text(VenialCopy.welcomeStep3Municipality),
+                              child: const Text(
+                                  VenialCopy.welcomeStep3Municipality),
                             ),
                         ],
                       ),

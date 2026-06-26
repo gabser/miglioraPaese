@@ -113,7 +113,8 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
               padding: EdgeInsets.all(padding),
               child: AnimatedSwitcherX(
                 duration: AppMotion.normal,
-                switchInCurve: const Interval(0.2, 1, curve: AppMotion.standard),
+                switchInCurve:
+                    const Interval(0.2, 1, curve: AppMotion.standard),
                 child: Column(
                   key: ValueKey('cynic-step-${_stepIndex + 1}'),
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +122,8 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TicketProgress(
-                        label: VenialCopy.onboardingProgressLabel.replaceAll('{step}', progressLabel),
+                        label: VenialCopy.onboardingProgressLabel
+                            .replaceAll('{step}', progressLabel),
                         currentStep: _stepIndex + 1,
                         totalSteps: _steps.length,
                       ),

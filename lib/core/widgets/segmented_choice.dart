@@ -41,7 +41,8 @@ class SegmentedChoice<T> extends StatelessWidget {
             .map(
               (option) => ButtonSegment<T>(
                 value: option,
-                label: optionBuilder?.call(option, option == value) ?? Text(labelBuilder(option)),
+                label: optionBuilder?.call(option, option == value) ??
+                    Text(labelBuilder(option)),
               ),
             )
             .toList(),
@@ -84,7 +85,9 @@ class SegmentedChoice<T> extends StatelessWidget {
               backgroundColor: colorScheme.surface,
               selectedColor: colorScheme.primaryContainer,
               side: BorderSide(
-                color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.outlineVariant,
               ),
             ),
           );

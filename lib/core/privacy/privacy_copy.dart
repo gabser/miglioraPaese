@@ -6,7 +6,8 @@ class PrivacyCopy {
   static const String appName = 'Fanta Comune';
 
   /// Micropitch breve per spiegare lo scopo del gioco civico.
-  static const String micropitch = 'Il Fantacalcio dei problemi del tuo Comune.';
+  static const String micropitch =
+      'Il Fantacalcio dei problemi del tuo Comune.';
 
   /// Avvertenza che chiarisce il carattere probabilistico e non ufficiale.
   static const String disclaimer =

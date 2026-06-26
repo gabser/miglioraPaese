@@ -68,7 +68,8 @@ class TicketProgress extends StatelessWidget {
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: isActive ? stampColor : scheme.surfaceContainerHigh,
+                      color:
+                          isActive ? stampColor : scheme.surfaceContainerHigh,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: isActive ? stampColor : scheme.outlineVariant,

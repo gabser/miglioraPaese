@@ -6,14 +6,16 @@ class VintagePaper {
   const VintagePaper._();
 
   static Color paperBase(ColorScheme scheme) => scheme.surfaceContainerLowest;
-  static Color paperWarm(ColorScheme scheme) => scheme.secondaryContainer.withOpacity(0.7);
+  static Color paperWarm(ColorScheme scheme) =>
+      scheme.secondaryContainer.withOpacity(0.7);
   static Color paperHigh(ColorScheme scheme) => scheme.surface;
   static Color paperEdge(ColorScheme scheme) => scheme.outlineVariant;
 
   static Color inkMain(ColorScheme scheme) => scheme.onSurface;
   static Color inkSoft(ColorScheme scheme) => scheme.onSurfaceVariant;
   static Color inkStamp(ColorScheme scheme) => scheme.primary.withOpacity(0.7);
-  static Color accentWax(ColorScheme scheme) => scheme.tertiary.withOpacity(0.6);
+  static Color accentWax(ColorScheme scheme) =>
+      scheme.tertiary.withOpacity(0.6);
 
   static List<BoxShadow> paperShadowSoft(ColorScheme scheme) => [
         BoxShadow(

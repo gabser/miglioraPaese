@@ -84,15 +84,20 @@ class BoardPage extends StatelessWidget {
                           final boardFrameHeight = () {
                             if (isWide) return null;
                             final frameWidth = constraints.maxWidth;
-                            final gridWidth = frameWidth - (AppTokens.s16 * 2) - (AppTokens.s8 * 2);
+                            final gridWidth = frameWidth -
+                                (AppTokens.s16 * 2) -
+                                (AppTokens.s8 * 2);
                             final tileWidth = (gridWidth -
                                     (gridCrossAxisCount - 1) * AppTokens.s16) /
                                 gridCrossAxisCount;
                             final tileHeight = tileWidth / 1.08;
-                            final rows = (items.length / gridCrossAxisCount).ceil();
-                            final gridHeight =
-                                (rows * tileHeight) + ((rows - 1) * AppTokens.s16);
-                            return gridHeight + (AppTokens.s16 * 2) + (AppTokens.s8 * 2);
+                            final rows =
+                                (items.length / gridCrossAxisCount).ceil();
+                            final gridHeight = (rows * tileHeight) +
+                                ((rows - 1) * AppTokens.s16);
+                            return gridHeight +
+                                (AppTokens.s16 * 2) +
+                                (AppTokens.s8 * 2);
                           }();
 
                           final mainContent = Column(
@@ -106,7 +111,8 @@ class BoardPage extends StatelessWidget {
                                 Expanded(
                                   child: _BoardFrame(
                                     child: GridView.builder(
-                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
                                         crossAxisCount: gridCrossAxisCount,
                                         crossAxisSpacing: AppTokens.s16,
                                         mainAxisSpacing: AppTokens.s16,
@@ -116,7 +122,9 @@ class BoardPage extends StatelessWidget {
                                       itemBuilder: (context, index) {
                                         return _BoardTile(
                                           problem: items[index],
-                                          prediction: data?.predictionsByProblem[items[index].id],
+                                          prediction:
+                                              data?.predictionsByProblem[
+                                                  items[index].id],
                                         );
                                       },
                                     ),
@@ -128,8 +136,10 @@ class BoardPage extends StatelessWidget {
                                   child: _BoardFrame(
                                     child: GridView.builder(
                                       shrinkWrap: true,
-                                      physics: const NeverScrollableScrollPhysics(),
-                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
                                         crossAxisCount: gridCrossAxisCount,
                                         crossAxisSpacing: AppTokens.s16,
                                         mainAxisSpacing: AppTokens.s16,
@@ -139,7 +149,9 @@ class BoardPage extends StatelessWidget {
                                       itemBuilder: (context, index) {
                                         return _BoardTile(
                                           problem: items[index],
-                                          prediction: data?.predictionsByProblem[items[index].id],
+                                          prediction:
+                                              data?.predictionsByProblem[
+                                                  items[index].id],
                                         );
                                       },
                                     ),
@@ -303,7 +315,8 @@ class _BoardTileState extends State<_BoardTile> {
                       Expanded(
                         child: Text(
                           widget.problem.title,
-                          style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                          style: textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ],
@@ -311,11 +324,13 @@ class _BoardTileState extends State<_BoardTile> {
                   const SizedBox(height: AppTokens.s8),
                   Row(
                     children: [
-                      Icon(AppIcons.forProblemKey(widget.problem.key), size: 18),
+                      Icon(AppIcons.forProblemKey(widget.problem.key),
+                          size: 18),
                       const SizedBox(width: AppTokens.s8),
                       Expanded(
                         child: Text(
-                          widget.problem.zoneName ?? AppIcons.labelForProblemKey(widget.problem.key),
+                          widget.problem.zoneName ??
+                              AppIcons.labelForProblemKey(widget.problem.key),
                           style: textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -449,9 +464,11 @@ Future<_BoardSnapshot> _loadSnapshot({
 
 String _insightSignature(AggregatedInsight insight) {
   if (insight.totalPredictions == 0) return 'none';
-  final primary = insight.choiceDistribution.entries.reduce(
-    (a, b) => a.value >= b.value ? a : b,
-  ).key;
+  final primary = insight.choiceDistribution.entries
+      .reduce(
+        (a, b) => a.value >= b.value ? a : b,
+      )
+      .key;
   final percentage = insight.percentageForChoice(primary).clamp(0, 100).round();
   return '${primary.name}:$percentage:${insight.totalPredictions}';
 }
@@ -496,15 +513,17 @@ class _BoardNewsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          Text(
-            VenialCopy.boardNewsTitle,
-            style: TypographyX.titleMedium(context)?.copyWith(fontWeight: FontWeight.w700),
-          ),
+        Text(
+          VenialCopy.boardNewsTitle,
+          style: TypographyX.titleMedium(context)
+              ?.copyWith(fontWeight: FontWeight.w700),
+        ),
         const SizedBox(height: AppTokens.s8),
         if (items.isEmpty)
           Text(
             VenialCopy.boardNewsEmpty,
-            style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: textTheme.bodySmall
+                ?.copyWith(color: colorScheme.onSurfaceVariant),
           )
         else
           Wrap(
@@ -572,7 +591,8 @@ class _BoardTokensSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    final predictions = snapshot?.predictionsByProblem.values.toList() ?? const <Prediction>[];
+    final predictions =
+        snapshot?.predictionsByProblem.values.toList() ?? const <Prediction>[];
     predictions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final tokens = predictions.take(3).toList(growable: false);
 
@@ -581,13 +601,15 @@ class _BoardTokensSection extends StatelessWidget {
       children: [
         Text(
           VenialCopy.boardTokensTitle,
-          style: TypographyX.titleMedium(context)?.copyWith(fontWeight: FontWeight.w700),
+          style: TypographyX.titleMedium(context)
+              ?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: AppTokens.s8),
         if (tokens.isEmpty)
           Text(
             VenialCopy.boardTokensEmpty,
-            style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: textTheme.bodySmall
+                ?.copyWith(color: colorScheme.onSurfaceVariant),
           )
         else
           Wrap(
@@ -595,13 +617,15 @@ class _BoardTokensSection extends StatelessWidget {
             runSpacing: AppTokens.s8,
             children: tokens.map((prediction) {
               final color = _tokenColor(colorScheme, prediction.choice);
-              return _TokenChip(color: color, label: _choiceLabel(prediction.choice));
+              return _TokenChip(
+                  color: color, label: _choiceLabel(prediction.choice));
             }).toList(growable: false),
           ),
         const SizedBox(height: AppTokens.s8),
         Text(
           VenialCopy.boardTokensCaption,
-          style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+          style: textTheme.labelSmall
+              ?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
       ],
     );
@@ -629,12 +653,14 @@ class _BoardLegend extends StatelessWidget {
               children: [
                 Text(
                   VenialCopy.boardLegendLabel,
-                  style: textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+                  style: textTheme.labelSmall
+                      ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: AppTokens.s4),
                 Text(
                   VenialCopy.boardLegendBody,
-                  style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: textTheme.labelSmall
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -737,7 +763,8 @@ class _TokenChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppTokens.s12, vertical: AppTokens.s8 / 2),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppTokens.s12, vertical: AppTokens.s8 / 2),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(AppTokens.radius),

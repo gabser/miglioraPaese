@@ -12,5 +12,4 @@ build/
 flutter_*.png
 generated_plugin_registrant.dart
 macos/Flutter/GeneratedPluginRegistrant.swift
-pubspec.lock
 xcuserdata/

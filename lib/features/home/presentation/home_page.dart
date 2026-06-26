@@ -25,7 +25,8 @@ class HomePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           GameBanner(
-            title: VenialCopy.homeBannerTitle.replaceAll('{app}', VenialCopy.appTitle),
+            title: VenialCopy.homeBannerTitle
+                .replaceAll('{app}', VenialCopy.appTitle),
             subtitle: VenialCopy.homeBannerSubtitle,
             shimmer: false,
             stickerLabel: VenialCopy.homeBannerSticker,
@@ -46,7 +47,8 @@ class HomePage extends StatelessWidget {
           SizedBox(height: headerGap),
           IconLabel(
             icon: AppIcons.home,
-            text: VenialCopy.homeWelcomeTitle.replaceAll('{app}', VenialCopy.appTitle),
+            text: VenialCopy.homeWelcomeTitle
+                .replaceAll('{app}', VenialCopy.appTitle),
           ),
           SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
           Wrap(
@@ -67,7 +69,8 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: AppTokens.s12),
                       Text(
                         VenialCopy.homeCardTitle,
-                        style: TypographyX.titleMedium(context)?.copyWith(fontWeight: FontWeight.w700),
+                        style: TypographyX.titleMedium(context)
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: AppTokens.s4),
                       Text(
@@ -102,7 +105,8 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: AppTokens.s12),
                       Text(
                         VenialCopy.homePlayCardTitle,
-                        style: TypographyX.titleMedium(context)?.copyWith(fontWeight: FontWeight.w700),
+                        style: TypographyX.titleMedium(context)
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: AppTokens.s4),
                       Text(

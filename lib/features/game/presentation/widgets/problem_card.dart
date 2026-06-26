@@ -159,7 +159,8 @@ class _ProblemCardState extends State<ProblemCard> {
     final trendPrefix = isPositive ? '↑' : '↓';
     final trendColor = isPositive ? colorScheme.primary : colorScheme.error;
     final trendText = '$trendPrefix${trend.abs()}%';
-    final updatedHours = DateTime.now().difference(widget.problem.updatedAt).inHours;
+    final updatedHours =
+        DateTime.now().difference(widget.problem.updatedAt).inHours;
     final statusColor = switch (widget.problem.status) {
       ProblemStatus.improving => colorScheme.primary,
       ProblemStatus.stable => colorScheme.tertiary,
@@ -183,7 +184,9 @@ class _ProblemCardState extends State<ProblemCard> {
     final sectionGap = isCompact ? AppTokens.s8 : AppTokens.s12;
     final borderColor = _justRevealed
         ? colorScheme.primary.withOpacity(0.8)
-        : (hasResult ? colorScheme.primary.withOpacity(0.45) : colorScheme.outlineVariant);
+        : (hasResult
+            ? colorScheme.primary.withOpacity(0.45)
+            : colorScheme.outlineVariant);
 
     return Semantics(
       label: 'Problema ${widget.problem.title}, stato $statusLabel',
@@ -212,7 +215,8 @@ class _ProblemCardState extends State<ProblemCard> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.shadow.withOpacity(_isPressed ? 0.04 : (_isHovered ? 0.16 : 0.12)),
+                    color: colorScheme.shadow.withOpacity(
+                        _isPressed ? 0.04 : (_isHovered ? 0.16 : 0.12)),
                     blurRadius: _isPressed ? 6 : (_isHovered ? 20 : 16),
                     offset: Offset(0, _isPressed ? 2 : (_isHovered ? 10 : 8)),
                   ),
@@ -231,7 +235,8 @@ class _ProblemCardState extends State<ProblemCard> {
                     child: Container(
                       margin: const EdgeInsets.all(3),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppTokens.radius - 3),
+                        borderRadius:
+                            BorderRadius.circular(AppTokens.radius - 3),
                         border: Border.all(
                           color: colorScheme.outlineVariant.withOpacity(0.6),
                         ),
@@ -254,8 +259,10 @@ class _ProblemCardState extends State<ProblemCard> {
                         curve: Curves.easeOutBack,
                         scale: _justRevealed ? 1.12 : 1,
                         child: _TokenSpot(
-                          color: tokenColor ?? VintagePaper.accentWax(colorScheme),
-                          highlightColor: tokenColor ?? VintagePaper.accentWax(colorScheme),
+                          color:
+                              tokenColor ?? VintagePaper.accentWax(colorScheme),
+                          highlightColor:
+                              tokenColor ?? VintagePaper.accentWax(colorScheme),
                           hasResult: hasResult,
                         ),
                       ),
@@ -286,7 +293,8 @@ class _ProblemCardState extends State<ProblemCard> {
                       children: [
                         if (!isCompact) ...[
                           CardIllustrationSlot(
-                            fallbackIcon: AppIcons.forProblemKey(widget.problem.key),
+                            fallbackIcon:
+                                AppIcons.forProblemKey(widget.problem.key),
                             labelRibbon: widget.problem.zoneName ??
                                 AppIcons.labelForProblemKey(widget.problem.key),
                             height: 90,
@@ -299,9 +307,11 @@ class _ProblemCardState extends State<ProblemCard> {
                           children: [
                             if (isCompact) ...[
                               CardIllustrationSlot(
-                                fallbackIcon: AppIcons.forProblemKey(widget.problem.key),
+                                fallbackIcon:
+                                    AppIcons.forProblemKey(widget.problem.key),
                                 labelRibbon: widget.problem.zoneName ??
-                                    AppIcons.labelForProblemKey(widget.problem.key),
+                                    AppIcons.labelForProblemKey(
+                                        widget.problem.key),
                                 height: 56,
                                 compact: true,
                                 problemKey: widget.problem.key,
@@ -312,7 +322,8 @@ class _ProblemCardState extends State<ProblemCard> {
                               padding: const EdgeInsets.all(AppTokens.s12),
                               decoration: BoxDecoration(
                                 color: trendColor.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(AppTokens.radius),
+                                borderRadius:
+                                    BorderRadius.circular(AppTokens.radius),
                               ),
                               child: Icon(
                                 AppIcons.forProblemKey(widget.problem.key),
@@ -333,7 +344,8 @@ class _ProblemCardState extends State<ProblemCard> {
                                   ),
                                   if (widget.problem.zoneName != null)
                                     Padding(
-                                      padding: const EdgeInsets.only(top: AppTokens.s8),
+                                      padding: const EdgeInsets.only(
+                                          top: AppTokens.s8),
                                       child: Text(
                                         widget.problem.zoneName!,
                                         style: textTheme.bodySmall?.copyWith(
@@ -355,16 +367,17 @@ class _ProblemCardState extends State<ProblemCard> {
                               padding: const EdgeInsets.all(AppTokens.s8),
                               decoration: BoxDecoration(
                                 color: statusColor.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(AppTokens.radius),
+                                borderRadius:
+                                    BorderRadius.circular(AppTokens.radius),
                               ),
                               child: Icon(
                                 statusIcon,
                                 size: 28,
                                 color: statusColor,
                               ),
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
                         SizedBox(height: sectionGap),
                         Row(
                           children: [
@@ -375,7 +388,8 @@ class _ProblemCardState extends State<ProblemCard> {
                               ),
                               decoration: BoxDecoration(
                                 color: colorScheme.surfaceContainerHigh,
-                                borderRadius: BorderRadius.circular(AppTokens.radius),
+                                borderRadius:
+                                    BorderRadius.circular(AppTokens.radius),
                               ),
                               child: Text(
                                 VenialCopy.boardTileLabel,
@@ -400,7 +414,8 @@ class _ProblemCardState extends State<ProblemCard> {
                           child: hasResult
                               ? _ResultBadge(result: widget.result!)
                               : _ChoiceSection(
-                                  key: ValueKey('choice-${widget.problem.id}-primary'),
+                                  key: ValueKey(
+                                      'choice-${widget.problem.id}-primary'),
                                   selectedChoice: widget.selectedChoice,
                                   colorScheme: colorScheme,
                                   hasResult: false,
@@ -411,16 +426,20 @@ class _ProblemCardState extends State<ProblemCard> {
                           SizedBox(height: sectionGap),
                           AnimatedSwitcherX(
                             duration: AppMotion.normal,
-                            switchInCurve: const Interval(0.2, 1, curve: AppMotion.standard),
+                            switchInCurve: const Interval(0.2, 1,
+                                curve: AppMotion.standard),
                             child: widget.insight != null
                                 ? InsightCard(
-                                    key: ValueKey('insight-${widget.problem.id}-${widget.insight?.totalPredictions}'),
+                                    key: ValueKey(
+                                        'insight-${widget.problem.id}-${widget.insight?.totalPredictions}'),
                                     insight: widget.insight!,
                                     userChoice: widget.selectedChoice,
                                     problemTitle: widget.problem.title,
                                     criticalInsights: widget.criticalInsights,
-                                    isCriticalInsightsLoading: widget.isCriticalInsightsLoading,
-                                    onLoadCriticalInsights: widget.onLoadCriticalInsights,
+                                    isCriticalInsightsLoading:
+                                        widget.isCriticalInsightsLoading,
+                                    onLoadCriticalInsights:
+                                        widget.onLoadCriticalInsights,
                                     history: widget.history,
                                     isHistoryLoading: widget.isHistoryLoading,
                                     onLoadHistory: widget.onLoadHistory,
@@ -434,9 +453,12 @@ class _ProblemCardState extends State<ProblemCard> {
                             duration: AppMotion.fast,
                             child: widget.selectedChoice != null
                                 ? _ConfidenceSection(
-                                    key: ValueKey('confidence-${widget.problem.id}-${widget.selectedChoice?.name}'),
-                                    selectedConfidence: widget.selectedConfidence,
-                                    onSelectConfidence: widget.onSelectConfidence,
+                                    key: ValueKey(
+                                        'confidence-${widget.problem.id}-${widget.selectedChoice?.name}'),
+                                    selectedConfidence:
+                                        widget.selectedConfidence,
+                                    onSelectConfidence:
+                                        widget.onSelectConfidence,
                                   )
                                 : const SizedBox.shrink(),
                           ),
@@ -447,9 +469,12 @@ class _ProblemCardState extends State<ProblemCard> {
                             duration: AppMotion.fast,
                             child: widget.selectedChoice != null
                                 ? _MotivationSection(
-                                    key: ValueKey('motivation-${widget.problem.id}-${widget.selectedChoice?.name}'),
-                                    selectedMotivations: widget.selectedMotivations,
-                                    onSelectMotivations: widget.onSelectMotivations,
+                                    key: ValueKey(
+                                        'motivation-${widget.problem.id}-${widget.selectedChoice?.name}'),
+                                    selectedMotivations:
+                                        widget.selectedMotivations,
+                                    onSelectMotivations:
+                                        widget.onSelectMotivations,
                                   )
                                 : const SizedBox.shrink(),
                           ),
@@ -460,7 +485,8 @@ class _ProblemCardState extends State<ProblemCard> {
                           SizedBox(height: sectionGap),
                           _ReflectionSection(
                             question: widget.reflectionQuestion!,
-                            selectedOptionIndex: widget.selectedReflectionAnswer,
+                            selectedOptionIndex:
+                                widget.selectedReflectionAnswer,
                             onSelectOption: widget.onSelectReflectionAnswer,
                           ),
                         ],
@@ -469,7 +495,8 @@ class _ProblemCardState extends State<ProblemCard> {
                           duration: AppMotion.fast,
                           child: hasResult
                               ? _ChoiceSection(
-                                  key: ValueKey('choice-${widget.problem.id}-resolved'),
+                                  key: ValueKey(
+                                      'choice-${widget.problem.id}-resolved'),
                                   selectedChoice: widget.selectedChoice,
                                   colorScheme: colorScheme,
                                   hasResult: true,
@@ -493,7 +520,8 @@ class _ProblemCardState extends State<ProblemCard> {
                                   updatedHours: updatedHours,
                                   subdued: true,
                                 )
-                              : _SelectionHint(selectedChoice: widget.selectedChoice),
+                              : _SelectionHint(
+                                  selectedChoice: widget.selectedChoice),
                         ),
                       ],
                     ),
@@ -556,7 +584,8 @@ class _TokenSpot extends StatelessWidget {
           decoration: BoxDecoration(
             color: hasResult ? colorScheme.primaryContainer : color,
             shape: BoxShape.circle,
-            border: Border.all(color: VintagePaper.inkStamp(colorScheme), width: 2),
+            border:
+                Border.all(color: VintagePaper.inkStamp(colorScheme), width: 2),
             boxShadow: [
               BoxShadow(
                 color: colorScheme.shadow.withOpacity(0.2),
@@ -568,7 +597,9 @@ class _TokenSpot extends StatelessWidget {
           child: Icon(
             hasResult ? Icons.check_circle_outline : Icons.circle,
             size: 14,
-            color: hasResult ? colorScheme.onPrimaryContainer : colorScheme.surface,
+            color: hasResult
+                ? colorScheme.onPrimaryContainer
+                : colorScheme.surface,
           ),
         ),
       ],
@@ -661,13 +692,15 @@ class _StatusRow extends StatelessWidget {
             key: ValueKey(trendText),
             style: textTheme.titleMedium?.copyWith(
               color: subdued ? colorScheme.onSurfaceVariant : trendColor,
-              fontWeight: subdued ? FontWeight.w600 : textTheme.titleMedium?.fontWeight,
+              fontWeight:
+                  subdued ? FontWeight.w600 : textTheme.titleMedium?.fontWeight,
             ),
           ),
         ),
         const Spacer(),
         Text(
-          VenialCopy.problemUpdatedTemplate.replaceAll('{hours}', '$updatedHours'),
+          VenialCopy.problemUpdatedTemplate
+              .replaceAll('{hours}', '$updatedHours'),
           style: textTheme.bodySmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
@@ -853,7 +886,8 @@ class _ReflectionSectionState extends State<_ReflectionSection> {
                     Wrap(
                       spacing: AppTokens.s8,
                       runSpacing: AppTokens.s8,
-                      children: List.generate(widget.question.options.length, (index) {
+                      children: List.generate(widget.question.options.length,
+                          (index) {
                         final option = widget.question.options[index];
                         final isSelected = widget.selectedOptionIndex == index;
                         return ChoiceChip(
@@ -949,9 +983,15 @@ class _ChoiceSection extends StatelessWidget {
             },
             optionBuilder: (choice, isSelected) {
               final (icon, color) = switch (choice) {
-                PredictionChoice.improve => (AppIcons.spark, colorScheme.primary),
+                PredictionChoice.improve => (
+                    AppIcons.spark,
+                    colorScheme.primary
+                  ),
                 PredictionChoice.stable => (Icons.remove, colorScheme.tertiary),
-                PredictionChoice.worsen => (AppIcons.trendingDown, colorScheme.error),
+                PredictionChoice.worsen => (
+                    AppIcons.trendingDown,
+                    colorScheme.error
+                  ),
               };
 
               return Row(
@@ -966,7 +1006,8 @@ class _ChoiceSection extends StatelessWidget {
                   Flexible(
                     child: Text(
                       switch (choice) {
-                        PredictionChoice.improve => VenialCopy.choiceImproveLabel,
+                        PredictionChoice.improve =>
+                          VenialCopy.choiceImproveLabel,
                         PredictionChoice.stable => VenialCopy.choiceStableLabel,
                         PredictionChoice.worsen => VenialCopy.choiceWorsenLabel,
                       },
@@ -1035,10 +1076,26 @@ class _ResultBadge extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     final (text, color, textColor) = switch (result) {
-      PredictionResult.correct => (VenialCopy.resultCorrect, colorScheme.primaryContainer, colorScheme.onPrimaryContainer),
-      PredictionResult.partial => (VenialCopy.resultPartial, colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
-      PredictionResult.wrong => (VenialCopy.resultWrong, colorScheme.errorContainer, colorScheme.onErrorContainer),
-      PredictionResult.pending => (VenialCopy.resultPending, colorScheme.surfaceContainerHigh, colorScheme.onSurfaceVariant),
+      PredictionResult.correct => (
+          VenialCopy.resultCorrect,
+          colorScheme.primaryContainer,
+          colorScheme.onPrimaryContainer
+        ),
+      PredictionResult.partial => (
+          VenialCopy.resultPartial,
+          colorScheme.tertiaryContainer,
+          colorScheme.onTertiaryContainer
+        ),
+      PredictionResult.wrong => (
+          VenialCopy.resultWrong,
+          colorScheme.errorContainer,
+          colorScheme.onErrorContainer
+        ),
+      PredictionResult.pending => (
+          VenialCopy.resultPending,
+          colorScheme.surfaceContainerHigh,
+          colorScheme.onSurfaceVariant
+        ),
     };
 
     return AnimatedSwitcher(

@@ -45,7 +45,8 @@ class _BootScreenState extends State<BootScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final isCompact = MediaQuery.of(context).size.width < 600;
     final sectionGap = isCompact ? AppTokens.s12 : AppTokens.s16;
-    final cardPadding = EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16);
+    final cardPadding =
+        EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16);
     final appPrefs = context.read<AppPrefs>();
     final nextLocation = appPrefs.hasSeenWarmWelcome
         ? (appPrefs.municipalityId == null ? '/onboarding' : '/play')
@@ -239,55 +240,66 @@ class _BootScreenState extends State<BootScreen> {
                           style: TypographyX.titleLarge(context),
                         ),
                         const SizedBox(height: AppTokens.s12),
-                        SwitchListTile.adaptive(
-                          contentPadding: EdgeInsets.zero,
-                          value: _showMotionDetails,
-                          activeColor: colorScheme.primary,
-                          title: Text(
-                            VenialCopy.bootMotionToggle,
-                            style: textTheme.titleMedium,
+                        Material(
+                          type: MaterialType.transparency,
+                          child: SwitchListTile.adaptive(
+                            contentPadding: EdgeInsets.zero,
+                            value: _showMotionDetails,
+                            activeColor: colorScheme.primary,
+                            title: Text(
+                              VenialCopy.bootMotionToggle,
+                              style: textTheme.titleMedium,
+                            ),
+                            subtitle: Text(
+                              VenialCopy.bootMotionSubtitle,
+                              style: textTheme.bodyMedium,
+                            ),
+                            onChanged: (value) async {
+                              setState(() {
+                                _showMotionDetails = value;
+                              });
+                              await appPrefs.setMotionDemoEnabled(value);
+                            },
                           ),
-                          subtitle: Text(
-                            VenialCopy.bootMotionSubtitle,
-                            style: textTheme.bodyMedium,
-                          ),
-                          onChanged: (value) async {
-                            setState(() {
-                              _showMotionDetails = value;
-                            });
-                            await appPrefs.setMotionDemoEnabled(value);
-                          },
                         ),
                         AnimatedSwitcherX(
                           child: _showMotionDetails
                               ? AnimatedSizeX(
                                   child: Padding(
-                                    padding: const EdgeInsets.only(top: AppTokens.s12),
+                                    padding: const EdgeInsets.only(
+                                        top: AppTokens.s12),
                                     child: Container(
                                       width: double.infinity,
-                                      padding: const EdgeInsets.all(AppTokens.s12),
+                                      padding:
+                                          const EdgeInsets.all(AppTokens.s12),
                                       decoration: BoxDecoration(
                                         color: colorScheme.primaryContainer,
-                                        borderRadius: BorderRadius.circular(AppTokens.radius),
+                                        borderRadius: BorderRadius.circular(
+                                            AppTokens.radius),
                                         border: Border.all(
                                           color: colorScheme.outlineVariant,
                                         ),
                                       ),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Micro-animazioni coordinate',
-                                            style: textTheme.titleMedium?.copyWith(
-                                              color: colorScheme.onPrimaryContainer,
+                                            style:
+                                                textTheme.titleMedium?.copyWith(
+                                              color: colorScheme
+                                                  .onPrimaryContainer,
                                             ),
                                           ),
                                           const SizedBox(height: AppTokens.s8),
                                           Text(
                                             'Ingressi morbidi con fade + slide per comunicare cambi di stato senza distrazioni. '
                                             'Le durate e le curve derivano da AppMotion per un feeling premium su Web.',
-                                            style: textTheme.bodyMedium?.copyWith(
-                                              color: colorScheme.onPrimaryContainer,
+                                            style:
+                                                textTheme.bodyMedium?.copyWith(
+                                              color: colorScheme
+                                                  .onPrimaryContainer,
                                             ),
                                           ),
                                         ],

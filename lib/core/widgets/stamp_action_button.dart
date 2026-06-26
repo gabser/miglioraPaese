@@ -45,10 +45,14 @@ class _StampActionButtonState extends State<StampActionButton> {
           vertical: AppTokens.s12,
         ),
         decoration: BoxDecoration(
-          color: enabled ? VintagePaper.paperWarm(scheme) : scheme.surfaceContainerHigh,
+          color: enabled
+              ? VintagePaper.paperWarm(scheme)
+              : scheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(AppTokens.radius),
           border: Border.all(color: ink, width: 2),
-          boxShadow: _pressed ? VintagePaper.paperShadowSoft(scheme) : VintagePaper.paperShadowLifted(scheme),
+          boxShadow: _pressed
+              ? VintagePaper.paperShadowSoft(scheme)
+              : VintagePaper.paperShadowLifted(scheme),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

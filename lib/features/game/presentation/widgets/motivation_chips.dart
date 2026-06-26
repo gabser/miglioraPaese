@@ -24,7 +24,8 @@ class MotivationChips extends StatefulWidget {
   State<MotivationChips> createState() => _MotivationChipsState();
 }
 
-class _MotivationChipsState extends State<MotivationChips> with SingleTickerProviderStateMixin {
+class _MotivationChipsState extends State<MotivationChips>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override
@@ -83,8 +84,12 @@ class _MotivationChipsState extends State<MotivationChips> with SingleTickerProv
         runSpacing: AppTokens.s8,
         children: MotivationKey.values.map((motivation) {
           final isSelected = widget.selected.contains(motivation);
-          final background = isSelected ? colorScheme.surfaceContainerHighest : colorScheme.surfaceContainerLow;
-          final borderColor = isSelected ? colorScheme.primary.withOpacity(0.4) : colorScheme.outlineVariant;
+          final background = isSelected
+              ? colorScheme.surfaceContainerHighest
+              : colorScheme.surfaceContainerLow;
+          final borderColor = isSelected
+              ? colorScheme.primary.withOpacity(0.4)
+              : colorScheme.outlineVariant;
 
           return Semantics(
             label: 'Motivazione: ${motivation.label}',
@@ -112,14 +117,20 @@ class _MotivationChipsState extends State<MotivationChips> with SingleTickerProv
                       Icon(
                         motivation.icon,
                         size: 18,
-                        color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                        color: isSelected
+                            ? colorScheme.primary
+                            : colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: AppTokens.s8),
                       Text(
                         motivation.label,
                         style: textTheme.bodyMedium?.copyWith(
-                          color: isSelected ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
-                          fontWeight: isSelected ? FontWeight.w600 : textTheme.bodyMedium?.fontWeight,
+                          color: isSelected
+                              ? colorScheme.onSurface
+                              : colorScheme.onSurfaceVariant,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : textTheme.bodyMedium?.fontWeight,
                         ),
                       ),
                       if (isSelected) ...[

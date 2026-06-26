@@ -57,8 +57,8 @@ class CardIllustrationSlot extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final resolvedWidth =
-            width ?? (constraints.maxWidth.isFinite ? constraints.maxWidth : height);
+        final resolvedWidth = width ??
+            (constraints.maxWidth.isFinite ? constraints.maxWidth : height);
         return SizedBox(
           width: resolvedWidth,
           height: height,
@@ -77,7 +77,8 @@ class CardIllustrationSlot extends StatelessWidget {
                 Positioned.fill(
                   child: CustomPaint(
                     painter: PaperTexture(
-                      color: VintagePaper.inkSoft(colorScheme).withOpacity(0.08),
+                      color:
+                          VintagePaper.inkSoft(colorScheme).withOpacity(0.08),
                       variant: PaperTextureVariant.dotted,
                       intensity: 0.5,
                     ),
@@ -89,7 +90,8 @@ class CardIllustrationSlot extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AppTokens.radius - 3),
                       border: Border.all(
-                        color: VintagePaper.paperEdge(colorScheme).withOpacity(0.6),
+                        color: VintagePaper.paperEdge(colorScheme)
+                            .withOpacity(0.6),
                       ),
                     ),
                   ),
@@ -103,14 +105,16 @@ class CardIllustrationSlot extends StatelessWidget {
                               Positioned.fill(
                                 child: _MapMotif(
                                   accent: accent,
-                                  ink: VintagePaper.inkSoft(colorScheme).withOpacity(0.55),
+                                  ink: VintagePaper.inkSoft(colorScheme)
+                                      .withOpacity(0.55),
                                   variant: resolvedVariant,
                                 ),
                               ),
                             Positioned.fill(
                               child: CustomPaint(
                                 painter: _IllustrationPainter(
-                                  color: VintagePaper.inkSoft(colorScheme).withOpacity(0.45),
+                                  color: VintagePaper.inkSoft(colorScheme)
+                                      .withOpacity(0.45),
                                   variant: resolvedVariant,
                                 ),
                               ),
@@ -119,7 +123,8 @@ class CardIllustrationSlot extends StatelessWidget {
                               child: Icon(
                                 icon,
                                 size: compact ? 24 : 36,
-                                color: VintagePaper.inkSoft(colorScheme).withOpacity(0.6),
+                                color: VintagePaper.inkSoft(colorScheme)
+                                    .withOpacity(0.6),
                               ),
                             ),
                             Positioned(
@@ -141,7 +146,8 @@ class CardIllustrationSlot extends StatelessWidget {
                         decoration: VintagePaper.tapeDecoration(colorScheme),
                         child: CustomPaint(
                           foregroundPainter: _RibbonStitchPainter(
-                            color: VintagePaper.inkSoft(colorScheme).withOpacity(0.5),
+                            color: VintagePaper.inkSoft(colorScheme)
+                                .withOpacity(0.5),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -150,7 +156,10 @@ class CardIllustrationSlot extends StatelessWidget {
                             ),
                             child: Text(
                               labelRibbon!,
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: VintagePaper.inkSoft(colorScheme),
                                     letterSpacing: 0.4,
@@ -249,7 +258,8 @@ class _IllustrationPainter extends CustomPainter {
 
   void _drawRoads(Canvas canvas, Size size, Paint paint) {
     final midY = size.height * 0.65;
-    canvas.drawLine(Offset(size.width * 0.15, midY), Offset(size.width * 0.85, midY), paint);
+    canvas.drawLine(Offset(size.width * 0.15, midY),
+        Offset(size.width * 0.85, midY), paint);
     for (double x = size.width * 0.2; x < size.width * 0.8; x += 12) {
       canvas.drawLine(Offset(x, midY - 6), Offset(x + 6, midY - 6), paint);
     }
@@ -262,7 +272,8 @@ class _IllustrationPainter extends CustomPainter {
   void _drawWaste(Canvas canvas, Size size, Paint paint) {
     final bin = Rect.fromLTWH(size.width * 0.35, size.height * 0.25, 30, 40);
     canvas.drawRect(bin, paint);
-    canvas.drawLine(Offset(bin.left, bin.top), Offset(bin.right, bin.top), paint);
+    canvas.drawLine(
+        Offset(bin.left, bin.top), Offset(bin.right, bin.top), paint);
     canvas.drawCircle(Offset(size.width * 0.3, size.height * 0.7), 6, paint);
     canvas.drawCircle(Offset(size.width * 0.6, size.height * 0.65), 4, paint);
   }
@@ -295,8 +306,10 @@ class _IllustrationPainter extends CustomPainter {
   void _drawSafety(Canvas canvas, Size size, Paint paint) {
     final center = Offset(size.width * 0.5, size.height * 0.5);
     canvas.drawCircle(center, 16, paint);
-    canvas.drawLine(Offset(center.dx, center.dy - 16), Offset(center.dx, center.dy + 16), paint);
-    canvas.drawLine(Offset(center.dx - 16, center.dy), Offset(center.dx + 16, center.dy), paint);
+    canvas.drawLine(Offset(center.dx, center.dy - 16),
+        Offset(center.dx, center.dy + 16), paint);
+    canvas.drawLine(Offset(center.dx - 16, center.dy),
+        Offset(center.dx + 16, center.dy), paint);
   }
 
   void _drawGreen(Canvas canvas, Size size, Paint paint) {
@@ -488,7 +501,8 @@ class _RoadSplitPainter extends CustomPainter {
         ..color = accent.withOpacity(0.5)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2;
-      canvas.drawCircle(Offset(size.width * 0.72, size.height * 0.32), 10, ringPaint);
+      canvas.drawCircle(
+          Offset(size.width * 0.72, size.height * 0.32), 10, ringPaint);
       canvas.drawLine(
         Offset(size.width * 0.78, size.height * 0.4),
         Offset(size.width * 0.84, size.height * 0.46),

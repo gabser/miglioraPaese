@@ -81,7 +81,8 @@ abstract class GameRepository {
   Future<InsightHistory> getInsightHistory(String problemId);
 
   /// Restituisce lo storico delle reputazioni per il comune indicato.
-  Future<List<ReputationScore>> getReputationHistory({required String municipalityId});
+  Future<List<ReputationScore>> getReputationHistory(
+      {required String municipalityId});
 
   /// Restituisce un set di insight critici aggregati post-risoluzione.
   Future<List<CriticalInsight>> getCriticalInsights({
