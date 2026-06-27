@@ -4,10 +4,8 @@ import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_motion.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
-import 'package:fanta_comune/core/theme/vintage_paper.dart';
 import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
-import 'package:fanta_comune/core/widgets/paper_texture.dart';
 import 'package:fanta_comune/core/widgets/pinned_note.dart';
 import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/theme/typography_x.dart';
@@ -17,20 +15,55 @@ import 'package:fanta_comune/features/game/domain/problem.dart';
 import 'package:fanta_comune/features/game/domain/problem_status.dart';
 import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-class BoardPage extends StatelessWidget {
+class BoardPage extends StatefulWidget {
   const BoardPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final repository = context.read<GameRepository>();
+  State<BoardPage> createState() => _BoardPageState();
+}
+
+class _BoardPageState extends State<BoardPage> {
+  Future<_BoardSnapshot>? _snapshotFuture;
+  String? _loadedMunicipalityId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     final prefs = context.read<AppPrefs>();
     final municipalityId = prefs.municipalityId ?? 'demo';
+    if (_snapshotFuture != null && _loadedMunicipalityId == municipalityId) {
+      return;
+    }
+
+    _loadedMunicipalityId = municipalityId;
+    _snapshotFuture = _loadSnapshot(
+      repository: context.read<GameRepository>(),
+      prefs: prefs,
+      municipalityId: municipalityId,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isCompact = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            final navigator = Navigator.of(context);
+            if (navigator.canPop()) {
+              navigator.pop();
+            } else {
+              context.go('/play');
+            }
+          },
+        ),
         title: const Text(VenialCopy.boardTitle),
       ),
       body: SafeArea(
@@ -49,11 +82,7 @@ class BoardPage extends StatelessWidget {
                 const SizedBox(height: AppTokens.s16),
                 Expanded(
                   child: FutureBuilder<_BoardSnapshot>(
-                    future: _loadSnapshot(
-                      repository: repository,
-                      prefs: prefs,
-                      municipalityId: municipalityId,
-                    ),
+                    future: _snapshotFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
@@ -69,36 +98,26 @@ class BoardPage extends StatelessWidget {
                       final data = snapshot.data;
                       final items = data?.problems ?? const <Problem>[];
                       if (items.isEmpty) {
-                        return Center(
-                          child: Text(
-                            VenialCopy.boardEmpty,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
+                        return const SingleChildScrollView(
+                          child: _BoardActivationEmpty(),
                         );
                       }
 
                       return LayoutBuilder(
                         builder: (context, constraints) {
                           final isWide = constraints.maxWidth >= 1000;
-                          final gridCrossAxisCount = isWide ? 3 : 2;
-                          final boardFrameHeight = () {
-                            if (isWide) return null;
-                            final frameWidth = constraints.maxWidth;
-                            final gridWidth = frameWidth -
-                                (AppTokens.s16 * 2) -
-                                (AppTokens.s8 * 2);
-                            final tileWidth = (gridWidth -
-                                    (gridCrossAxisCount - 1) * AppTokens.s16) /
-                                gridCrossAxisCount;
-                            final tileHeight = tileWidth / 1.08;
-                            final rows =
-                                (items.length / gridCrossAxisCount).ceil();
-                            final gridHeight = (rows * tileHeight) +
-                                ((rows - 1) * AppTokens.s16);
-                            return gridHeight +
-                                (AppTokens.s16 * 2) +
-                                (AppTokens.s8 * 2);
-                          }();
+                          final gridCrossAxisCount = isWide
+                              ? 3
+                              : constraints.maxWidth < 430
+                                  ? 1
+                                  : 2;
+                          final tileExtent = isWide ? 216.0 : 208.0;
+                          final rows =
+                              (items.length / gridCrossAxisCount).ceil();
+                          final boardFrameHeight = (rows * tileExtent) +
+                              ((rows - 1) * AppTokens.s16) +
+                              (AppTokens.s16 * 2) +
+                              (AppTokens.s8 * 2);
 
                           final mainContent = Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +135,7 @@ class BoardPage extends StatelessWidget {
                                         crossAxisCount: gridCrossAxisCount,
                                         crossAxisSpacing: AppTokens.s16,
                                         mainAxisSpacing: AppTokens.s16,
-                                        childAspectRatio: 1.08,
+                                        mainAxisExtent: tileExtent,
                                       ),
                                       itemCount: items.length,
                                       itemBuilder: (context, index) {
@@ -143,7 +162,7 @@ class BoardPage extends StatelessWidget {
                                         crossAxisCount: gridCrossAxisCount,
                                         crossAxisSpacing: AppTokens.s16,
                                         mainAxisSpacing: AppTokens.s16,
-                                        childAspectRatio: 1.08,
+                                        mainAxisExtent: tileExtent,
                                       ),
                                       itemCount: items.length,
                                       itemBuilder: (context, index) {
@@ -168,16 +187,18 @@ class BoardPage extends StatelessWidget {
                                 children: [
                                   mainContent,
                                   const SizedBox(height: AppTokens.s16),
-                                  const _BoardSideCard(
+                                  _BoardSideCard(
                                     title: VenialCopy.boardCardOfDayTitle,
                                     body: VenialCopy.boardCardOfDayBody,
                                     icon: Icons.auto_awesome_outlined,
+                                    onTap: () => context.go('/play'),
                                   ),
                                   const SizedBox(height: AppTokens.s16),
-                                  const _BoardSideCard(
+                                  _BoardSideCard(
                                     title: VenialCopy.boardShowcaseTitle,
                                     body: VenialCopy.boardShowcaseBody,
                                     icon: Icons.style_outlined,
+                                    onTap: () => context.go('/next-problems'),
                                   ),
                                 ],
                               ),
@@ -192,17 +213,19 @@ class BoardPage extends StatelessWidget {
                               SizedBox(
                                 width: 280,
                                 child: Column(
-                                  children: const [
+                                  children: [
                                     _BoardSideCard(
                                       title: VenialCopy.boardCardOfDayTitle,
                                       body: VenialCopy.boardCardOfDayBody,
                                       icon: Icons.auto_awesome_outlined,
+                                      onTap: () => context.go('/play'),
                                     ),
-                                    SizedBox(height: AppTokens.s16),
+                                    const SizedBox(height: AppTokens.s16),
                                     _BoardSideCard(
                                       title: VenialCopy.boardShowcaseTitle,
                                       body: VenialCopy.boardShowcaseBody,
                                       icon: Icons.style_outlined,
+                                      onTap: () => context.go('/next-problems'),
                                     ),
                                   ],
                                 ),
@@ -218,6 +241,64 @@ class BoardPage extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _BoardActivationEmpty extends StatelessWidget {
+  const _BoardActivationEmpty();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+
+    return PrimaryCard(
+      padding: const EdgeInsets.all(AppTokens.s20),
+      elevated: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CardIllustrationSlot(
+            fallbackIcon: AppIcons.board,
+            height: 72,
+            compact: true,
+            labelRibbon: VenialCopy.activationTitle,
+          ),
+          const SizedBox(height: AppTokens.s12),
+          Text(
+            VenialCopy.boardActivationEmpty,
+            style: textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: AppTokens.s8),
+          Text(
+            VenialCopy.activationOfficialHint,
+            style: textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: AppTokens.s16),
+          Wrap(
+            spacing: AppTokens.s12,
+            runSpacing: AppTokens.s8,
+            children: [
+              FilledButton.icon(
+                onPressed: () => context.go('/suggest-problem'),
+                icon: const Icon(AppIcons.play),
+                label: const Text(VenialCopy.activationPrimaryCta),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => context.go('/next-problems'),
+                icon: const Icon(AppIcons.board),
+                label: const Text(VenialCopy.activationSecondaryCta),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -296,7 +377,7 @@ class _BoardTileState extends State<_BoardTile> {
                 children: [
                   CardIllustrationSlot(
                     fallbackIcon: AppIcons.forProblemKey(widget.problem.key),
-                    height: 56,
+                    height: 48,
                     compact: true,
                     problemKey: widget.problem.key,
                   ),
@@ -309,12 +390,14 @@ class _BoardTileState extends State<_BoardTile> {
                           color: statusColor.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(AppTokens.radius),
                         ),
-                        child: Icon(statusIcon, color: statusColor),
+                        child: Icon(statusIcon, color: statusColor, size: 20),
                       ),
                       const SizedBox(width: AppTokens.s8),
                       Expanded(
                         child: Text(
                           widget.problem.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
@@ -331,6 +414,8 @@ class _BoardTileState extends State<_BoardTile> {
                         child: Text(
                           widget.problem.zoneName ??
                               AppIcons.labelForProblemKey(widget.problem.key),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -339,11 +424,14 @@ class _BoardTileState extends State<_BoardTile> {
                     ],
                   ),
                   const Spacer(),
-                  Row(
+                  Wrap(
+                    spacing: AppTokens.s8,
+                    runSpacing: AppTokens.s4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppTokens.s12,
+                          horizontal: AppTokens.s8,
                           vertical: AppTokens.s8 / 2,
                         ),
                         decoration: BoxDecoration(
@@ -358,11 +446,15 @@ class _BoardTileState extends State<_BoardTile> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: AppTokens.s8),
-                      Text(
-                        '${VenialCopy.boardZoneLabel}: ${widget.problem.zoneName ?? AppIcons.labelForProblemKey(widget.problem.key)}',
-                        style: textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 150),
+                        child: Text(
+                          '${VenialCopy.boardZoneLabel}: ${widget.problem.zoneName ?? AppIcons.labelForProblemKey(widget.problem.key)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.labelSmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ],
@@ -490,6 +582,7 @@ class _BoardNewsSection extends StatelessWidget {
           icon: Icons.style_outlined,
           title: VenialCopy.boardNewsPendingTurn,
           body: VenialCopy.boardNewsPendingTurnBody,
+          onTap: () => context.go('/play'),
         ),
       );
     }
@@ -499,6 +592,7 @@ class _BoardNewsSection extends StatelessWidget {
           icon: Icons.bolt_outlined,
           title: VenialCopy.boardNewsShifted,
           body: VenialCopy.boardNewsShiftedBody,
+          onTap: () => context.go('/play'),
         ),
       );
     }
@@ -507,6 +601,7 @@ class _BoardNewsSection extends StatelessWidget {
         icon: Icons.add_circle_outline,
         title: VenialCopy.boardNewsProposals,
         body: VenialCopy.boardNewsProposalsBody,
+        onTap: () => context.go('/next-problems'),
       ),
     );
 
@@ -541,42 +636,43 @@ class _BoardNewsCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.body,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String body;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
+    return SizedBox(
       width: 240,
-      padding: const EdgeInsets.all(AppTokens.s12),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: colorScheme.primary),
-          const SizedBox(height: AppTokens.s8),
-          Text(
-            title,
-            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: AppTokens.s4),
-          Text(
-            body,
-            style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+      child: PrimaryCard(
+        padding: const EdgeInsets.all(AppTokens.s12),
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: colorScheme.primary),
+            const SizedBox(height: AppTokens.s8),
+            Text(
+              title,
+              style:
+                  textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
-          ),
-        ],
+            const SizedBox(height: AppTokens.s4),
+            Text(
+              body,
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -638,40 +734,69 @@ class _BoardLegend extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     return PinnedNote(
-      angle: VintagePaper.noteTiltMedium,
-      child: Row(
-        children: [
-          CardIllustrationSlot(
-            fallbackIcon: AppIcons.board,
-            height: 46,
-            compact: true,
-          ),
-          const SizedBox(width: AppTokens.s12),
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final tokens = Wrap(
+            spacing: AppTokens.s4,
+            runSpacing: AppTokens.s4,
+            children: [
+              _TokenChip(color: colorScheme.primary),
+              _TokenChip(color: colorScheme.tertiary),
+              _TokenChip(color: colorScheme.error),
+            ],
+          );
+          final copy = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                VenialCopy.boardLegendLabel,
+                style:
+                    textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: AppTokens.s4),
+              Text(
+                VenialCopy.boardLegendBody,
+                style: textTheme.labelSmall
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
+              ),
+            ],
+          );
+
+          if (constraints.maxWidth < 360) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  VenialCopy.boardLegendLabel,
-                  style: textTheme.labelSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                Row(
+                  children: [
+                    CardIllustrationSlot(
+                      fallbackIcon: AppIcons.board,
+                      height: 46,
+                      compact: true,
+                    ),
+                    const SizedBox(width: AppTokens.s12),
+                    Expanded(child: copy),
+                  ],
                 ),
-                const SizedBox(height: AppTokens.s4),
-                Text(
-                  VenialCopy.boardLegendBody,
-                  style: textTheme.labelSmall
-                      ?.copyWith(color: colorScheme.onSurfaceVariant),
-                ),
+                const SizedBox(height: AppTokens.s8),
+                tokens,
               ],
-            ),
-          ),
-          const SizedBox(width: AppTokens.s8),
-          _TokenChip(color: colorScheme.primary),
-          const SizedBox(width: AppTokens.s4),
-          _TokenChip(color: colorScheme.tertiary),
-          const SizedBox(width: AppTokens.s4),
-          _TokenChip(color: colorScheme.error),
-        ],
+            );
+          }
+
+          return Row(
+            children: [
+              CardIllustrationSlot(
+                fallbackIcon: AppIcons.board,
+                height: 46,
+                compact: true,
+              ),
+              const SizedBox(width: AppTokens.s12),
+              Expanded(child: copy),
+              const SizedBox(width: AppTokens.s8),
+              tokens,
+            ],
+          );
+        },
       ),
     );
   }
@@ -687,29 +812,34 @@ class _BoardFrame extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppTokens.s16),
-      decoration: VintagePaper.surfaceDecoration(
-        colorScheme,
-        radius: AppTokens.radius,
-        elevated: true,
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        border: Border.all(color: colorScheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withOpacity(0.08),
+            blurRadius: 28,
+            offset: const Offset(0, 16),
+          ),
+        ],
       ),
       child: Stack(
         children: [
           Positioned.fill(
-            child: CustomPaint(
-              painter: PaperTexture(
-                color: VintagePaper.inkSoft(colorScheme).withOpacity(0.08),
-                variant: PaperTextureVariant.hatch,
-                intensity: 0.5,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer.withOpacity(0.22),
+                borderRadius: BorderRadius.circular(AppTokens.radius),
               ),
             ),
           ),
           Positioned.fill(
             child: Container(
               margin: const EdgeInsets.all(4),
-              decoration: VintagePaper.doubleBorder(
-                colorScheme,
-                radius: AppTokens.radius - 4,
-                outer: VintagePaper.paperEdge(colorScheme).withOpacity(0.6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppTokens.radius - 4),
+                border: Border.all(color: colorScheme.outlineVariant),
               ),
             ),
           ),
@@ -796,18 +926,20 @@ class _BoardSideCard extends StatelessWidget {
     required this.title,
     required this.body,
     required this.icon,
+    this.onTap,
   });
 
   final String title;
   final String body;
   final IconData icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return PinnedNote(
+    final note = PinnedNote(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -829,6 +961,17 @@ class _BoardSideCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+
+    if (onTap == null) return note;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        child: note,
       ),
     );
   }

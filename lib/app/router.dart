@@ -18,41 +18,15 @@ import 'package:fanta_comune/features/shell/presentation/shell_page.dart';
 /// Costruisce la configurazione di routing dichiarativo usando [GoRouter].
 GoRouter buildRouter(AppPrefs appPrefs) {
   return GoRouter(
-    initialLocation: '/boot',
+    initialLocation: '/welcome',
     refreshListenable: appPrefs,
     redirect: (context, state) {
       final municipalityId = appPrefs.municipalityId;
-      final hasSeenWarmWelcome = appPrefs.hasSeenWarmWelcome;
       final location = state.matchedLocation.isNotEmpty
           ? state.matchedLocation
           : state.uri.path;
-      const infoPaths = {
-        '/boot',
-        '/how-it-works',
-        '/privacy',
-      };
 
-      if (!hasSeenWarmWelcome) {
-        if (location == '/welcome' || infoPaths.contains(location)) {
-          return null;
-        }
-        return '/welcome';
-      }
-
-      if (location == '/welcome') {
-        return null;
-      }
-
-      if (municipalityId == null) {
-        if (infoPaths.contains(location) ||
-            location == '/onboarding' ||
-            location == '/boot') {
-          return null;
-        }
-        return '/onboarding';
-      }
-
-      if (location == '/onboarding') {
+      if (municipalityId != null && location == '/onboarding') {
         return '/home';
       }
 

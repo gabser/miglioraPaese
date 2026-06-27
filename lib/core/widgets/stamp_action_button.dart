@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fanta_comune/core/theme/app_motion.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
-import 'package:fanta_comune/core/theme/vintage_paper.dart';
 
-/// Bottone principale con look da timbro cartaceo.
+/// CTA primaria compatibile con la vecchia API dei bottoni "stamp".
 class StampActionButton extends StatefulWidget {
   const StampActionButton({
     super.key,
@@ -32,7 +31,6 @@ class _StampActionButtonState extends State<StampActionButton> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final enabled = widget.onPressed != null;
-    final ink = VintagePaper.inkStamp(scheme);
 
     final content = AnimatedScale(
       duration: AppMotion.fast,
@@ -45,28 +43,34 @@ class _StampActionButtonState extends State<StampActionButton> {
           vertical: AppTokens.s12,
         ),
         decoration: BoxDecoration(
-          color: enabled
-              ? VintagePaper.paperWarm(scheme)
-              : scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(AppTokens.radius),
-          border: Border.all(color: ink, width: 2),
-          boxShadow: _pressed
-              ? VintagePaper.paperShadowSoft(scheme)
-              : VintagePaper.paperShadowLifted(scheme),
+          color: enabled ? scheme.primary : scheme.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: scheme.primary.withOpacity(_pressed ? 0.14 : 0.22),
+                    blurRadius: _pressed ? 8 : 18,
+                    offset: Offset(0, _pressed ? 4 : 10),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (widget.icon != null) ...[
-              Icon(widget.icon, size: 18, color: ink),
+              Icon(
+                widget.icon,
+                size: 18,
+                color: enabled ? scheme.onPrimary : scheme.onSurfaceVariant,
+              ),
               const SizedBox(width: AppTokens.s8),
             ],
             Text(
               widget.label.toUpperCase(),
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: ink,
+                    color: enabled ? scheme.onPrimary : scheme.onSurfaceVariant,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
                   ),
             ),
           ],
@@ -84,9 +88,9 @@ class _StampActionButtonState extends State<StampActionButton> {
           onTapDown: enabled ? (_) => _setPressed(true) : null,
           onTapCancel: enabled ? () => _setPressed(false) : null,
           onTapUp: enabled ? (_) => _setPressed(false) : null,
-          borderRadius: BorderRadius.circular(AppTokens.radius),
-          focusColor: VintagePaper.inkSoft(scheme).withOpacity(0.1),
-          hoverColor: VintagePaper.inkSoft(scheme).withOpacity(0.08),
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+          focusColor: scheme.primary.withOpacity(0.12),
+          hoverColor: scheme.primary.withOpacity(0.08),
           child: content,
         ),
       ),

@@ -34,41 +34,23 @@ class SegmentedChoice<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    if (Theme.of(context).useMaterial3) {
-      return SegmentedButton<T>(
-        emptySelectionAllowed: true,
-        segments: options
-            .map(
-              (option) => ButtonSegment<T>(
-                value: option,
-                label: optionBuilder?.call(option, option == value) ??
-                    Text(labelBuilder(option)),
-              ),
-            )
-            .toList(),
-        selected: value == null ? <T>{} : {value!},
-        onSelectionChanged: (newSelection) {
-          if (newSelection.isNotEmpty) {
-            onChanged(newSelection.first);
-          }
-        },
-      );
-    }
-
     return focusGroup(
-      child: Wrap(
-        spacing: AppTokens.s8,
-        runSpacing: AppTokens.s8,
-        children: options.map((option) {
-          final isSelected = value != null && option == value;
-          final label = labelBuilder(option);
-          final labelKey = '$label$isSelected';
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final useColumns = constraints.maxWidth >= 360 && options.length <= 3;
+          final itemWidth = useColumns
+              ? (constraints.maxWidth - AppTokens.s8 * (options.length - 1)) /
+                  options.length
+              : null;
 
-          return Semantics(
-            button: true,
-            label: 'Seleziona $label',
-            child: ChoiceChip(
-              label: AnimatedSwitcherX(
+          return Wrap(
+            spacing: AppTokens.s8,
+            runSpacing: AppTokens.s8,
+            children: options.map((option) {
+              final isSelected = value != null && option == value;
+              final label = labelBuilder(option);
+              final labelKey = '$label$isSelected';
+              final content = AnimatedSwitcherX(
                 duration: AppMotion.normal,
                 child: optionBuilder != null
                     ? KeyedSubtree(
@@ -78,20 +60,50 @@ class SegmentedChoice<T> extends StatelessWidget {
                     : Text(
                         label,
                         key: ValueKey(labelKey),
+                        overflow: TextOverflow.visible,
                       ),
-              ),
-              selected: isSelected,
-              onSelected: (_) => onChanged(option),
-              backgroundColor: colorScheme.surface,
-              selectedColor: colorScheme.primaryContainer,
-              side: BorderSide(
-                color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.outlineVariant,
-              ),
-            ),
+              );
+
+              return SizedBox(
+                width: itemWidth,
+                child: Semantics(
+                  button: true,
+                  selected: isSelected,
+                  label: 'Seleziona $label',
+                  child: Material(
+                    color: isSelected
+                        ? colorScheme.primaryContainer
+                        : colorScheme.surface,
+                    borderRadius: BorderRadius.circular(AppTokens.radius),
+                    child: InkWell(
+                      onTap: () => onChanged(option),
+                      borderRadius: BorderRadius.circular(AppTokens.radius),
+                      child: AnimatedContainer(
+                        duration: AppMotion.fast,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTokens.s12,
+                          vertical: AppTokens.s8,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(AppTokens.radius),
+                          border: Border.all(
+                            color: isSelected
+                                ? colorScheme.primary
+                                : colorScheme.outlineVariant,
+                          ),
+                        ),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: content,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           );
-        }).toList(),
+        },
       ),
     );
   }

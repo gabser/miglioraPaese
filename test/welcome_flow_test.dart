@@ -1,33 +1,37 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:fanta_comune/core/copy/venial_copy.dart';
 
 import 'helpers/test_app.dart';
 
 void main() {
-  testWidgets(
-      'welcome sends users without a municipality to municipality onboarding',
+  testWidgets('municipality onboarding is optional and returns home',
       (tester) async {
     final prefs = await createTestPrefs({});
 
     await tester.pumpWidget(buildTestApp(prefs));
     await pumpRoutingFrame(tester);
 
-    await tester.tap(find.text(VenialCopy.bootPrimaryCta.toUpperCase()));
+    expect(find.text(VenialCopy.welcomeEnterTitle), findsOneWidget);
+    await tester.tap(find.text(VenialCopy.welcomeEnterTitle));
     await pumpRoutingFrame(tester);
-    expect(find.text(VenialCopy.welcomeStep1Title), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
 
-    await tester.tap(find.text(VenialCopy.welcomeStep1Cta));
-    await pumpRoutingFrame(tester);
-    await tester.tap(find.text(VenialCopy.welcomeStep2Cta));
-    await pumpRoutingFrame(tester);
+    expect(find.text('Gioca il turno'), findsOneWidget);
+    expect(find.text(VenialCopy.welcomeStep1Title), findsNothing);
 
-    expect(find.text(VenialCopy.welcomeStep3Municipality), findsOneWidget);
-    expect(find.text(VenialCopy.welcomeStep3Play), findsNothing);
-
-    await tester.tap(find.text(VenialCopy.welcomeStep3Municipality));
+    final context = tester.element(find.text('Gioca il turno'));
+    GoRouter.of(context).go('/onboarding');
     await pumpRoutingFrame(tester);
 
     expect(find.text('Milano'), findsOneWidget);
+
+    await tester.tap(find.text('Milano'));
+    await pumpRoutingFrame(tester);
+    await tester.pump(const Duration(seconds: 2));
+
+    expect(prefs.municipalityId, 'comune:Milano');
+    expect(find.text('Gioca il turno'), findsOneWidget);
   });
 }

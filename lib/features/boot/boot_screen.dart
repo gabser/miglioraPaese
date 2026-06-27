@@ -48,9 +48,7 @@ class _BootScreenState extends State<BootScreen> {
     final cardPadding =
         EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16);
     final appPrefs = context.read<AppPrefs>();
-    final nextLocation = appPrefs.hasSeenWarmWelcome
-        ? (appPrefs.municipalityId == null ? '/onboarding' : '/play')
-        : '/welcome';
+    const nextLocation = '/home';
 
     return Scaffold(
       appBar: AppBar(

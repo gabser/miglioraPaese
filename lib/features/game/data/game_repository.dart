@@ -1,4 +1,5 @@
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
+import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/features/game/domain/critical_insight.dart';
 import 'package:fanta_comune/features/game/domain/hypothesis_confidence.dart';
 import 'package:fanta_comune/features/game/domain/insight_history.dart';
@@ -19,6 +20,11 @@ abstract class GameRepository {
 
   /// Restituisce il turno corrente per il [municipalityId].
   Future<Turn> getCurrentTurn(String municipalityId);
+
+  /// Indica se il Comune ha gia' dati di gioco o va attivato.
+  Future<MunicipalityActivationState> getMunicipalityActivationState(
+    String municipalityId,
+  );
 
   /// Elenca i problemi attivi per il [municipalityId].
   Future<List<Problem>> listProblems(String municipalityId);

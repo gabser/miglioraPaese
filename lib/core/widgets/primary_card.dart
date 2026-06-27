@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
-import 'package:fanta_comune/core/theme/vintage_paper.dart';
-import 'package:fanta_comune/core/widgets/paper_texture.dart';
 
 /// Card primaria riutilizzabile con padding e raggio coerenti al tema.
 class PrimaryCard extends StatelessWidget {
@@ -32,33 +30,37 @@ class PrimaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final ink = VintagePaper.inkSoft(colorScheme).withOpacity(0.08);
-    final content = Stack(
-      children: [
-        if (textured)
-          Positioned.fill(
-            child: RepaintBoundary(
-              child: CustomPaint(
-                painter: PaperTexture(
-                  color: VintagePaper.inkSoft(colorScheme).withOpacity(0.08),
-                  variant: PaperTextureVariant.fiber,
-                  intensity: 0.35,
-                ),
-              ),
-            ),
-          ),
-        Padding(
-          padding: padding,
-          child: child,
-        ),
-      ],
+    final ink = colorScheme.primary.withOpacity(0.08);
+    final radius = BorderRadius.circular(AppTokens.radius);
+    final content = Padding(
+      padding: padding,
+      child: child,
     );
 
-    final card = Container(
-      decoration: VintagePaper.surfaceDecoration(
-        colorScheme,
-        radius: AppTokens.radius,
-        elevated: elevated,
+    final card = AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: radius,
+        border: Border.all(color: colorScheme.outlineVariant),
+        gradient: textured
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  colorScheme.surface,
+                  colorScheme.primaryContainer.withOpacity(0.34),
+                ],
+              )
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withOpacity(elevated ? 0.11 : 0.06),
+            blurRadius: elevated ? 24 : 14,
+            offset: Offset(0, elevated ? 14 : 8),
+          ),
+        ],
       ),
       child: content,
     );
@@ -71,7 +73,7 @@ class PrimaryCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTokens.radius),
+        borderRadius: radius,
         hoverColor: ink,
         focusColor: ink,
         highlightColor: ink.withOpacity(0.12),

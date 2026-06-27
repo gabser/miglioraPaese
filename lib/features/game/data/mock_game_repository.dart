@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
@@ -30,6 +31,12 @@ class MockGameRepository implements GameRepository {
     id: 'turn-2024-09',
     startAt: DateTime.now().subtract(const Duration(days: 5)),
     endAt: DateTime.now().add(const Duration(days: 2)),
+    state: TurnState.open,
+  );
+  final Turn _activationTurn = Turn(
+    id: 'turn-activation',
+    startAt: DateTime.now(),
+    endAt: DateTime.now().add(const Duration(days: 7)),
     state: TurnState.open,
   );
 
@@ -727,17 +734,41 @@ class MockGameRepository implements GameRepository {
 
   @override
   Future<Turn> getCurrentTurn(String municipalityId) {
-    return _withDelay(() => _currentTurn);
+    return _withDelay(() {
+      if (MunicipalityCatalog.isActiveMunicipality(municipalityId)) {
+        return _currentTurn;
+      }
+      return _activationTurn;
+    });
+  }
+
+  @override
+  Future<MunicipalityActivationState> getMunicipalityActivationState(
+    String municipalityId,
+  ) {
+    return _withDelay(
+      () => MunicipalityCatalog.activationStateFor(municipalityId),
+    );
   }
 
   @override
   Future<List<Problem>> listProblems(String municipalityId) {
-    return _withDelay(() => List<Problem>.unmodifiable(_problems));
+    return _withDelay(() {
+      if (!MunicipalityCatalog.isActiveMunicipality(municipalityId)) {
+        return const <Problem>[];
+      }
+      return List<Problem>.unmodifiable(_problems);
+    });
   }
 
   @override
   Future<Map<String, Prediction>> getMyPredictions(String turnId) {
-    return _withDelay(() => Map<String, Prediction>.unmodifiable(_predictions));
+    return _withDelay(() {
+      if (turnId == _activationTurn.id) {
+        return const <String, Prediction>{};
+      }
+      return Map<String, Prediction>.unmodifiable(_predictions);
+    });
   }
 
   @override
@@ -843,6 +874,9 @@ class MockGameRepository implements GameRepository {
     String? leagueId,
   }) {
     return _withDelay(() {
+      if (!MunicipalityCatalog.isActiveMunicipality(municipalityId)) {
+        return const <LeaderboardEntry>[];
+      }
       final selfEntry = LeaderboardEntry(
         userId: _currentUserId,
         displayName: 'Tu',
@@ -872,7 +906,16 @@ class MockGameRepository implements GameRepository {
 
   @override
   Future<ReputationScore> getReputationScore(String turnId) {
-    return _withDelay(() => _reputation);
+    return _withDelay(() {
+      if (turnId == _activationTurn.id) {
+        return const ReputationScore(
+          totalPoints: 0,
+          accuracy: 0,
+          predictionsCount: 0,
+        );
+      }
+      return _reputation;
+    });
   }
 
   @override
@@ -925,6 +968,9 @@ class MockGameRepository implements GameRepository {
   Future<List<ReputationScore>> getReputationHistory(
       {required String municipalityId}) {
     return _withDelay(() {
+      if (!MunicipalityCatalog.isActiveMunicipality(municipalityId)) {
+        return const <ReputationScore>[];
+      }
       final cached = _reputationHistoryCache;
       if (cached != null) return cached;
 

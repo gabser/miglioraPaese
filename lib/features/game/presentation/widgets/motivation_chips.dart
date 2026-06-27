@@ -4,18 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:fanta_comune/core/theme/app_motion.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
+import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
 
 /// Set di chip selezionabili che permette di scegliere fino a due motivazioni.
 class MotivationChips extends StatefulWidget {
   /// Crea un gruppo di chip coerente con il design di Fanta Comune.
   const MotivationChips({
     required this.selected,
+    required this.choice,
     required this.onChanged,
     super.key,
   });
 
   /// Motivazioni attualmente selezionate.
   final List<MotivationKey> selected;
+
+  /// Previsione scelta: determina quali motivazioni hanno senso.
+  final PredictionChoice choice;
 
   /// Callback invocata quando la selezione cambia.
   final ValueChanged<List<MotivationKey>> onChanged;
@@ -69,6 +74,7 @@ class _MotivationChipsState extends State<MotivationChips>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final options = _motivationOptionsForChoice(widget.choice);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -82,7 +88,7 @@ class _MotivationChipsState extends State<MotivationChips>
       child: Wrap(
         spacing: AppTokens.s8,
         runSpacing: AppTokens.s8,
-        children: MotivationKey.values.map((motivation) {
+        children: options.map((motivation) {
           final isSelected = widget.selected.contains(motivation);
           final background = isSelected
               ? colorScheme.surfaceContainerHighest
@@ -122,15 +128,20 @@ class _MotivationChipsState extends State<MotivationChips>
                             : colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: AppTokens.s8),
-                      Text(
-                        motivation.label,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: isSelected
-                              ? colorScheme.onSurface
-                              : colorScheme.onSurfaceVariant,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : textTheme.bodyMedium?.fontWeight,
+                      Flexible(
+                        child: Text(
+                          _motivationLabelForChoice(
+                            motivation,
+                            widget.choice,
+                          ),
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: isSelected
+                                ? colorScheme.onSurface
+                                : colorScheme.onSurfaceVariant,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : textTheme.bodyMedium?.fontWeight,
+                          ),
                         ),
                       ),
                       if (isSelected) ...[
@@ -151,4 +162,49 @@ class _MotivationChipsState extends State<MotivationChips>
       ),
     );
   }
+}
+
+List<MotivationKey> _motivationOptionsForChoice(PredictionChoice choice) {
+  return switch (choice) {
+    PredictionChoice.improve => const [
+        MotivationKey.visibleActions,
+        MotivationKey.seasonality,
+        MotivationKey.personalExperience,
+      ],
+    PredictionChoice.stable => const [
+        MotivationKey.personalExperience,
+        MotivationKey.seasonality,
+        MotivationKey.unmetPromises,
+      ],
+    PredictionChoice.worsen => const [
+        MotivationKey.recentDecline,
+        MotivationKey.unmetPromises,
+        MotivationKey.personalExperience,
+      ],
+  };
+}
+
+String _motivationLabelForChoice(
+  MotivationKey motivation,
+  PredictionChoice choice,
+) {
+  return switch ((choice, motivation)) {
+    (PredictionChoice.improve, MotivationKey.visibleActions) =>
+      'Ho visto interventi',
+    (PredictionChoice.improve, MotivationKey.seasonality) =>
+      'Periodo favorevole',
+    (PredictionChoice.improve, MotivationKey.personalExperience) =>
+      'Dal vivo sembra meglio',
+    (PredictionChoice.stable, MotivationKey.personalExperience) =>
+      'Lo vedo uguale',
+    (PredictionChoice.stable, MotivationKey.seasonality) =>
+      'Succede spesso cosi',
+    (PredictionChoice.stable, MotivationKey.unmetPromises) =>
+      'Non vedo segnali nuovi',
+    (PredictionChoice.worsen, MotivationKey.recentDecline) => 'Sta peggiorando',
+    (PredictionChoice.worsen, MotivationKey.unmetPromises) => 'Promesse ferme',
+    (PredictionChoice.worsen, MotivationKey.personalExperience) =>
+      'Dal vivo sembra peggio',
+    _ => motivation.label,
+  };
 }

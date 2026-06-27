@@ -105,80 +105,84 @@ class _ProfilePageState extends State<ProfilePage> {
   void _showPerspectivePicker(AppPrefs prefs, PerspectiveRole? active) {
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       builder: (context) {
         final textTheme = Theme.of(context).textTheme;
         final colorScheme = Theme.of(context).colorScheme;
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTokens.s16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  VenialCopy.lensPickerTitle,
-                  style: textTheme.titleLarge,
-                ),
-                const SizedBox(height: AppTokens.s8),
-                Text(
-                  VenialCopy.lensPickerSubtitle,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(AppTokens.s16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    VenialCopy.lensPickerTitle,
+                    style: textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: AppTokens.s12),
-                ...PerspectiveRole.values.map(
-                  (role) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppTokens.s12),
-                    child: PrimaryCard(
-                      textured: true,
-                      onTap: () async {
-                        await prefs.setActivePerspective(role);
-                        await prefs.incrementPerspectiveChangesCount();
-                        if (!mounted) return;
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text(VenialCopy.lensChangedSnack)),
-                        );
-                      },
-                      child: Row(
-                        children: [
-                          CardIllustrationSlot(
-                            fallbackIcon: role.icon,
-                            height: 56,
-                            compact: true,
-                            labelRibbon: role.label,
-                          ),
-                          const SizedBox(width: AppTokens.s12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  role.label,
-                                  style: textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                const SizedBox(height: AppTokens.s4),
-                                Text(
-                                  role.shortDescription,
-                                  style: textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
+                  const SizedBox(height: AppTokens.s8),
+                  Text(
+                    VenialCopy.lensPickerSubtitle,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: AppTokens.s12),
+                  ...PerspectiveRole.values.map(
+                    (role) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppTokens.s12),
+                      child: PrimaryCard(
+                        textured: true,
+                        onTap: () async {
+                          await prefs.setActivePerspective(role);
+                          await prefs.incrementPerspectiveChangesCount();
+                          if (!context.mounted) return;
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(VenialCopy.lensChangedSnack),
                             ),
-                          ),
-                          if (active == role)
-                            const Icon(Icons.check_circle_outline),
-                        ],
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            CardIllustrationSlot(
+                              fallbackIcon: role.icon,
+                              height: 56,
+                              compact: true,
+                              labelRibbon: role.label,
+                            ),
+                            const SizedBox(width: AppTokens.s12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    role.label,
+                                    style: textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppTokens.s4),
+                                  Text(
+                                    role.shortDescription,
+                                    style: textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (active == role)
+                              const Icon(Icons.check_circle_outline),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -194,7 +198,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final changesCount = prefs.perspectiveChangesCount;
     final isCompact = MediaQuery.of(context).size.width < 600;
 
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

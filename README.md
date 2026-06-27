@@ -56,6 +56,13 @@ flutter test
 
 La CI GitHub esegue gli stessi passaggi su ogni push e pull request verso `main`. Il gate analyzer iniziale fallisce sugli errori; warning e info restano visibili e andranno ridotti progressivamente.
 
+## Design
+
+La reference del nuovo mockup e il piano di migrazione UI sono in:
+
+- `docs/design/fanta-comune-standalone.html`
+- `docs/design/mockup_implementation_plan.md`
+
 ## Struttura
 
 ```text

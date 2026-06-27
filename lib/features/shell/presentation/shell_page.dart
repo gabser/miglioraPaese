@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
-import 'package:fanta_comune/core/theme/vintage_paper.dart';
-import 'package:fanta_comune/core/widgets/max_width_container.dart';
-import 'package:fanta_comune/core/copy/venial_copy.dart';
 
-/// Shell responsiva che gestisce NavigationRail su desktop e BottomNavigationBar su mobile.
+/// Shell responsiva con sidebar desktop e bottom navigation mobile.
 class ShellPage extends StatelessWidget {
   const ShellPage({
     super.key,
@@ -24,58 +22,31 @@ class ShellPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final isWide = mediaQuery.size.width >= 900;
+    final width = MediaQuery.of(context).size.width;
+    final isWide = width >= AppTokens.desktopBreakpoint;
     final currentIndex = navigationShell.currentIndex;
-    final destinations = [
-      NavigationDestination(
-        icon: _NavTokenIcon(icon: AppIcons.home, selected: false),
-        selectedIcon: _NavTokenIcon(icon: AppIcons.home, selected: true),
-        label: VenialCopy.navHome,
-      ),
-      NavigationDestination(
-        icon: _NavTokenIcon(icon: AppIcons.play, selected: false),
-        selectedIcon: _NavTokenIcon(icon: AppIcons.play, selected: true),
-        label: VenialCopy.navPlay,
-      ),
-      NavigationDestination(
-        icon: _NavTokenIcon(icon: AppIcons.leaderboard, selected: false),
-        selectedIcon: _NavTokenIcon(icon: AppIcons.leaderboard, selected: true),
-        label: VenialCopy.navLeaderboard,
-      ),
-      NavigationDestination(
-        icon: _NavTokenIcon(icon: AppIcons.profile, selected: false),
-        selectedIcon: _NavTokenIcon(icon: AppIcons.profile, selected: true),
-        label: VenialCopy.navProfile,
-      ),
-    ];
+    final destinations = _destinations;
 
     if (isWide) {
       return Scaffold(
-        body: Row(
-          children: [
-            NavigationRail(
-              selectedIndex: currentIndex,
-              labelType: NavigationRailLabelType.all,
-              destinations: destinations
-                  .map(
-                    (destination) => NavigationRailDestination(
-                      icon: destination.icon,
-                      selectedIcon: destination.selectedIcon,
-                      label: Text(destination.label),
-                    ),
-                  )
-                  .toList(),
-              onDestinationSelected: (index) =>
-                  _onDestinationSelected(context, index),
-            ),
-            const SizedBox(width: AppTokens.s16),
-            Expanded(
-              child: MaxWidthContainer(
-                child: navigationShell,
+        body: SafeArea(
+          child: Row(
+            children: [
+              _Sidebar(
+                currentIndex: currentIndex,
+                destinations: destinations,
+                onSelect: (index) => _onDestinationSelected(context, index),
               ),
-            ),
-          ],
+              Expanded(
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    color: AppTokens.appBackground,
+                  ),
+                  child: navigationShell,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -84,7 +55,15 @@ class ShellPage extends StatelessWidget {
       body: SafeArea(child: navigationShell),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
-        destinations: destinations,
+        destinations: destinations
+            .map(
+              (destination) => NavigationDestination(
+                icon: Icon(destination.icon),
+                selectedIcon: Icon(destination.selectedIcon),
+                label: destination.label,
+              ),
+            )
+            .toList(),
         onDestinationSelected: (index) =>
             _onDestinationSelected(context, index),
       ),
@@ -92,33 +71,225 @@ class ShellPage extends StatelessWidget {
   }
 }
 
-class _NavTokenIcon extends StatelessWidget {
-  const _NavTokenIcon({
+const _destinations = [
+  _ShellDestination(
+    icon: AppIcons.home,
+    selectedIcon: Icons.home,
+    label: VenialCopy.navHome,
+  ),
+  _ShellDestination(
+    icon: AppIcons.play,
+    selectedIcon: Icons.play_circle,
+    label: VenialCopy.navPlay,
+  ),
+  _ShellDestination(
+    icon: AppIcons.leaderboard,
+    selectedIcon: Icons.leaderboard,
+    label: VenialCopy.navLeaderboard,
+  ),
+  _ShellDestination(
+    icon: AppIcons.profile,
+    selectedIcon: Icons.person,
+    label: VenialCopy.navProfile,
+  ),
+];
+
+class _ShellDestination {
+  const _ShellDestination({
     required this.icon,
-    required this.selected,
+    required this.selectedIcon,
+    required this.label,
   });
 
   final IconData icon;
-  final bool selected;
+  final IconData selectedIcon;
+  final String label;
+}
+
+class _Sidebar extends StatelessWidget {
+  const _Sidebar({
+    required this.currentIndex,
+    required this.destinations,
+    required this.onSelect,
+  });
+
+  final int currentIndex;
+  final List<_ShellDestination> destinations;
+  final ValueChanged<int> onSelect;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final bg = selected ? VintagePaper.paperWarm(scheme) : Colors.transparent;
-    final border =
-        selected ? VintagePaper.inkStamp(scheme) : Colors.transparent;
-    final iconColor =
-        selected ? VintagePaper.inkStamp(scheme) : scheme.onSurfaceVariant;
+    final textTheme = Theme.of(context).textTheme;
 
     return Container(
-      width: 36,
-      height: 36,
+      width: AppTokens.sidebarWidth,
       decoration: BoxDecoration(
-        color: bg,
-        shape: BoxShape.circle,
-        border: Border.all(color: border, width: 1.5),
+        color: scheme.surface,
+        border: Border(
+          right: BorderSide(color: scheme.outlineVariant),
+        ),
       ),
-      child: Icon(icon, size: 20, color: iconColor),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTokens.s20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppTokens.blue, AppTokens.navy],
+                    ),
+                    borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'FC',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppTokens.s12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        VenialCopy.appTitle,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        'Bologna',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTokens.s24),
+            ...destinations.indexed.map(
+              (entry) {
+                final index = entry.$1;
+                final destination = entry.$2;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppTokens.s8),
+                  child: _SidebarItem(
+                    destination: destination,
+                    selected: index == currentIndex,
+                    onTap: () => onSelect(index),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: AppTokens.s16),
+            OutlinedButton.icon(
+              onPressed: () => context.go('/board'),
+              icon: const Icon(AppIcons.board),
+              label: const Text(VenialCopy.boardTitle),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.all(AppTokens.s16),
+              decoration: BoxDecoration(
+                color: AppTokens.navy,
+                borderRadius: BorderRadius.circular(AppTokens.radius),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Turno di oggi',
+                    style: textTheme.labelMedium?.copyWith(
+                      color: Colors.white.withOpacity(0.68),
+                    ),
+                  ),
+                  const SizedBox(height: AppTokens.s8),
+                  Text(
+                    '5 problemi attivi',
+                    style: textTheme.titleSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: AppTokens.s12),
+                  LinearProgressIndicator(
+                    value: 0.62,
+                    minHeight: 7,
+                    borderRadius: BorderRadius.circular(999),
+                    backgroundColor: Colors.white.withOpacity(0.15),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppTokens.success),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarItem extends StatelessWidget {
+  const _SidebarItem({
+    required this.destination,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final _ShellDestination destination;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: selected ? scheme.primaryContainer : Colors.transparent,
+      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTokens.s12,
+            vertical: AppTokens.s12,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                selected ? destination.selectedIcon : destination.icon,
+                color: selected ? scheme.primary : scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: AppTokens.s12),
+              Expanded(
+                child: Text(
+                  destination.label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color:
+                            selected ? scheme.primary : scheme.onSurfaceVariant,
+                        fontWeight:
+                            selected ? FontWeight.w800 : FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

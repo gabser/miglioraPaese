@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
@@ -22,17 +23,6 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage> {
   final TextEditingController _controller = TextEditingController();
 
-  static const _cities = [
-    'Milano',
-    'Roma',
-    'Torino',
-    'Bologna',
-    'Napoli',
-    'Palermo',
-    'Firenze',
-    'Genova',
-  ];
-
   @override
   void dispose() {
     _controller.dispose();
@@ -41,15 +31,26 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   List<String> get _filteredCities {
     final query = _controller.text.toLowerCase().trim();
-    if (query.isEmpty) return _cities;
-    return _cities.where((city) => city.toLowerCase().contains(query)).toList();
+    if (query.isEmpty) return MunicipalityCatalog.activeCities;
+    return MunicipalityCatalog.activeCities
+        .where((city) => city.toLowerCase().contains(query))
+        .toList();
+  }
+
+  String? get _customCity {
+    final value = _controller.text.trim();
+    if (value.length < 2) return null;
+    final alreadyListed = MunicipalityCatalog.activeCities.any(
+      (city) => city.toLowerCase() == value.toLowerCase(),
+    );
+    return alreadyListed ? null : value;
   }
 
   Future<void> _selectCity(BuildContext context, String city) async {
     final prefs = context.read<AppPrefs>();
-    await prefs.setMunicipalityId('comune:$city');
-    if (!mounted) return;
-    context.go('/play');
+    await prefs.setMunicipalityId(MunicipalityCatalog.idForCity(city));
+    if (!context.mounted) return;
+    context.go('/home');
   }
 
   @override
@@ -121,7 +122,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: AppTokens.s16),
-                      ..._filteredCities.map(
+                      ...[
+                        ..._filteredCities,
+                        if (_customCity != null) _customCity!,
+                      ].map(
                         (city) => Padding(
                           padding: const EdgeInsets.symmetric(
                               vertical: AppTokens.s8),
@@ -144,7 +148,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                     const SizedBox(width: AppTokens.s12),
                                     Expanded(
                                       child: Text(
-                                        city,
+                                        MunicipalityCatalog.activeCities
+                                                .contains(city)
+                                            ? city
+                                            : 'Attiva $city',
                                         style: textTheme.titleMedium,
                                       ),
                                     ),

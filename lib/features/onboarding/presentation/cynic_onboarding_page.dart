@@ -55,9 +55,8 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
   Future<void> _completeOnboarding(BuildContext context) async {
     final prefs = context.read<AppPrefs>();
     await prefs.setHasSeenCynicOnboarding(true);
-    if (!mounted) return;
-    final next = prefs.municipalityId == null ? '/onboarding' : '/play';
-    context.go(next);
+    if (!context.mounted) return;
+    context.go('/home');
   }
 
   void _nextStep() {

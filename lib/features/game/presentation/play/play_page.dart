@@ -7,18 +7,14 @@ import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_motion.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/game_banner.dart';
-import 'package:fanta_comune/core/widgets/icon_label.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
-import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/widgets/pinned_note.dart';
-import 'package:fanta_comune/core/widgets/stamp_action_button.dart';
 import 'package:fanta_comune/core/widgets/sticker_badge.dart';
-import 'package:fanta_comune/core/theme/typography_x.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
-import 'package:fanta_comune/features/game/domain/reputation_score.dart';
 import 'package:fanta_comune/features/game/domain/hypothesis_confidence.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
 import 'package:fanta_comune/features/game/logic/play_cubit.dart';
@@ -103,37 +99,12 @@ class _PlayView extends StatelessWidget {
                               SizedBox(
                                   height:
                                       isCompact ? AppTokens.s8 : AppTokens.s12),
-                              const IconLabel(
-                                  icon: AppIcons.play,
-                                  text: VenialCopy.playTabLabel),
-                              SizedBox(
-                                  height: isCompact
-                                      ? AppTokens.s12
-                                      : AppTokens.s16),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    VenialCopy.playHeader,
-                                    style: TypographyX.titleLarge(context),
-                                  ),
-                                  if (state.currentTurn != null)
-                                    Text(
-                                      _countdownLabel(state),
-                                      style: textTheme.bodyMedium?.copyWith(
-                                        color: colorScheme.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                ],
-                              ),
                               SizedBox(height: sectionGap),
-                              Text(
-                                VenialCopy.playIntro,
-                                style: textTheme.bodyMedium?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
+                              _TurnActionStrip(
+                                countdownLabel: _countdownLabel(state),
+                                predictionCount: state.myPredictions.length,
+                                enabled: state.myPredictions.isNotEmpty,
+                                onResolveTurn: cubit.resolveTurn,
                               ),
                               if (state.hasPendingInsights ||
                                   state.hasChangedPerception) ...[
@@ -148,89 +119,13 @@ class _PlayView extends StatelessWidget {
                                   ),
                                 ),
                               ],
-                              SizedBox(height: sectionGap),
-                              _ReputationCard(reputation: state.reputation),
-                              SizedBox(height: sectionGap),
-                              _ResolveTurnCard(
-                                enabled: state.myPredictions.isNotEmpty,
-                                onResolveTurn: cubit.resolveTurn,
-                              ),
-                              if (state.myPredictions.isEmpty) ...[
-                                SizedBox(
-                                    height: isCompact
-                                        ? AppTokens.s8
-                                        : AppTokens.s12),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Text(
-                                    VenialCopy.playResolveDisabledHint,
-                                    style: textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ),
-                              ],
                               SizedBox(
                                   height: isCompact
                                       ? AppTokens.s12
                                       : AppTokens.s16),
-                              PrimaryCard(
-                                padding: EdgeInsets.all(
-                                    isCompact ? AppTokens.s12 : AppTokens.s16),
-                                textured: true,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      VenialCopy.playNextProblemsTitle,
-                                      style: textTheme.titleMedium,
-                                    ),
-                                    const SizedBox(height: AppTokens.s8),
-                                    Text(
-                                      VenialCopy.playNextProblemsBody,
-                                      style: textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                    SizedBox(
-                                        height: isCompact
-                                            ? AppTokens.s8
-                                            : AppTokens.s12),
-                                    Wrap(
-                                      spacing: AppTokens.s12,
-                                      runSpacing: AppTokens.s8,
-                                      children: [
-                                        OutlinedButton(
-                                          onPressed: () =>
-                                              context.go('/suggest-problem'),
-                                          child: const Text(
-                                              VenialCopy.playSuggestCta),
-                                        ),
-                                        FilledButton(
-                                          onPressed: () =>
-                                              context.go('/next-problems'),
-                                          child: const Text(
-                                              VenialCopy.playVoteCta),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              _CardsSectionHeader(count: problems.length),
                               if (!hasProblems)
-                                Center(
-                                  child: Padding(
-                                    padding:
-                                        const EdgeInsets.all(AppTokens.s24),
-                                    child: Text(
-                                      VenialCopy.playEmpty,
-                                      style: textTheme.bodyMedium?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                )
+                                const _ActivationEmptyTurn()
                               else
                                 SizedBox(
                                     height: isCompact
@@ -440,6 +335,80 @@ class _PlayView extends StatelessWidget {
   }
 }
 
+class _ActivationEmptyTurn extends StatelessWidget {
+  const _ActivationEmptyTurn();
+
+  static const _missions = [
+    (Icons.car_repair, VenialCopy.activationMissionPotholes),
+    (Icons.lightbulb_outline, VenialCopy.activationMissionLighting),
+    (Icons.delete_outline, VenialCopy.activationMissionWaste),
+    (Icons.park_outlined, VenialCopy.activationMissionGreen),
+    (Icons.shield_outlined, VenialCopy.activationMissionSafety),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppTokens.s12),
+      child: FcPanel(
+        tint: AppTokens.blue,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              VenialCopy.activationTitle,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: AppTokens.s8),
+            Text(
+              VenialCopy.activationSubtitle,
+              style: textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: AppTokens.s12),
+            Wrap(
+              spacing: AppTokens.s8,
+              runSpacing: AppTokens.s8,
+              children: _missions
+                  .map(
+                    (mission) => Chip(
+                      avatar: Icon(mission.$1, size: 18),
+                      label: Text(mission.$2),
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+            const SizedBox(height: AppTokens.s16),
+            Wrap(
+              spacing: AppTokens.s12,
+              runSpacing: AppTokens.s8,
+              children: [
+                FilledButton.icon(
+                  onPressed: () => context.go('/suggest-problem'),
+                  icon: const Icon(AppIcons.play),
+                  label: const Text(VenialCopy.activationPrimaryCta),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => context.go('/next-problems'),
+                  icon: const Icon(AppIcons.board),
+                  label: const Text(VenialCopy.activationSecondaryCta),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _BoardHeader extends StatelessWidget {
   const _BoardHeader({
     required this.onOpenBoard,
@@ -546,6 +515,108 @@ class _ProblemTile extends StatelessWidget {
   }
 }
 
+class _TurnActionStrip extends StatelessWidget {
+  const _TurnActionStrip({
+    required this.countdownLabel,
+    required this.predictionCount,
+    required this.enabled,
+    required this.onResolveTurn,
+  });
+
+  final String countdownLabel;
+  final int predictionCount;
+  final bool enabled;
+  final VoidCallback onResolveTurn;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+
+    return FcPanel(
+      padding: const EdgeInsets.all(AppTokens.s14),
+      tint: AppTokens.blue,
+      child: Wrap(
+        spacing: AppTokens.s12,
+        runSpacing: AppTokens.s12,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        alignment: WrapAlignment.spaceBetween,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  VenialCopy.playHeader,
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: AppTokens.s4),
+                Text(
+                  predictionCount == 0
+                      ? VenialCopy.playResolveDisabledHint
+                      : '$predictionCount carte giocate. Puoi scoprire gli esiti mock.',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                if (countdownLabel.isNotEmpty) ...[
+                  const SizedBox(height: AppTokens.s4),
+                  Text(
+                    countdownLabel,
+                    style: textTheme.labelMedium?.copyWith(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          FilledButton.icon(
+            onPressed: enabled ? onResolveTurn : null,
+            icon: const Icon(AppIcons.play),
+            label: const Text(VenialCopy.playResolveCta),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CardsSectionHeader extends StatelessWidget {
+  const _CardsSectionHeader({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          VenialCopy.playCardsTitle,
+          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: AppTokens.s4),
+        Text(
+          count == 0
+              ? VenialCopy.playEmpty
+              : VenialCopy.playCardsSubtitle.replaceAll('{count}', '$count'),
+          style: textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _RetentionHintCard extends StatelessWidget {
   const _RetentionHintCard({
     required this.isChanged,
@@ -600,172 +671,6 @@ class _RetentionHintCard extends StatelessWidget {
               onPressed: onTap,
               child: const Text(VenialCopy.retentionCta),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ResolveTurnCard extends StatelessWidget {
-  const _ResolveTurnCard({
-    required this.enabled,
-    required this.onResolveTurn,
-  });
-
-  final bool enabled;
-  final VoidCallback onResolveTurn;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return PrimaryCard(
-      padding: const EdgeInsets.all(AppTokens.s16),
-      textured: true,
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppTokens.s8),
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(AppTokens.radius),
-            ),
-            child: Icon(
-              AppIcons.play,
-              color: colorScheme.onPrimaryContainer,
-            ),
-          ),
-          const SizedBox(width: AppTokens.s12),
-          Expanded(
-            child: Text(
-              VenialCopy.playResolveCardTitle,
-              style: textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: colorScheme.onSurface,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppTokens.s12),
-          StampActionButton(
-            label: VenialCopy.playResolveCta,
-            icon: AppIcons.play,
-            onPressed: enabled ? onResolveTurn : null,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ReputationCard extends StatelessWidget {
-  const _ReputationCard({required this.reputation});
-
-  final ReputationScore reputation;
-
-  String _accuracyLabel() {
-    if (reputation.predictionsCount == 0) return '0%';
-    return '${(reputation.accuracy * 100).clamp(0, 100).toStringAsFixed(0)}%';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return PrimaryCard(
-      padding: const EdgeInsets.all(AppTokens.s16),
-      textured: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            VenialCopy.reputationTitle,
-            style: textTheme.titleMedium,
-          ),
-          const SizedBox(height: AppTokens.s8),
-          Row(
-            children: [
-              _Metric(
-                label: VenialCopy.reputationPointsLabel,
-                value: reputation.totalPoints.toString(),
-                icon: AppIcons.spark,
-                color: colorScheme.primary,
-              ),
-              const SizedBox(width: AppTokens.s12),
-              _Metric(
-                label: VenialCopy.reputationAccuracyLabel,
-                value: _accuracyLabel(),
-                icon: Icons.adjust,
-                color: colorScheme.tertiary,
-              ),
-              const SizedBox(width: AppTokens.s12),
-              _Metric(
-                label: VenialCopy.reputationPredictionsLabel,
-                value: reputation.predictionsCount.toString(),
-                icon: Icons.query_stats,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTokens.s8),
-          Text(
-            VenialCopy.reputationHelper,
-            style: textTheme.bodySmall
-                ?.copyWith(color: colorScheme.onSurfaceVariant),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Metric extends StatelessWidget {
-  const _Metric({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Expanded(
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppTokens.s8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppTokens.radius),
-            ),
-            child: Icon(icon, color: color),
-          ),
-          const SizedBox(width: AppTokens.s8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: textTheme.bodySmall,
-              ),
-              AnimatedSwitcherX(
-                duration: AppMotion.fast,
-                child: Text(
-                  value,
-                  key: ValueKey(value),
-                  style: textTheme.titleMedium?.copyWith(color: color),
-                ),
-              ),
-            ],
           ),
         ],
       ),

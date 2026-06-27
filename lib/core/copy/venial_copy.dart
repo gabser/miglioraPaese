@@ -41,6 +41,17 @@ class VenialCopy {
   static const welcomeSkip = 'Salta';
   static const onboardingSkip = 'Salta';
   static const welcomeProgressLabel = 'Passo {step}';
+  static const welcomeLandingTitle = 'Fanta Comune';
+  static const welcomeLandingSubtitle =
+      'Gioca un turno civico in due minuti: scegli, confronta, rientra quando vuoi.';
+  static const welcomeEnterTitle = 'Entra nel turno';
+  static const welcomeEnterSubtitle = 'Vai subito alle carte mock di oggi.';
+  static const welcomeTutorialTitle = 'Mini tutorial';
+  static const welcomeTutorialSubtitle =
+      'Quattro schermate leggere per capire il gioco.';
+  static const welcomeProfileTitle = 'Crea profilo';
+  static const welcomeProfileSubtitle =
+      'Mock profilo locale, reputazione e preferenze.';
 
   static const onboardingStep1Title = 'Niente di complicato.';
   static const onboardingStep1Subtitle = 'Davvero.';
@@ -67,20 +78,39 @@ class VenialCopy {
   static const onboardingRibbonLabel = 'Comune';
   static const onboardingCityTitle = 'Scegli il tuo Comune';
 
-  static const playHeader = 'Vediamo come va?';
-  static const playIntro = 'Scegli a pelle, poi si vede com\'e\' andata.';
-  static const playBoardHeaderTitle = 'Il tabellone del Comune';
+  static const playHeader = 'Gioca le carte del turno';
+  static const playIntro =
+      'Scegli una carta, fai una previsione e indica perche.';
+  static const playCardsTitle = 'Carte da giocare';
+  static const playCardsSubtitle =
+      '{count} situazioni aperte: scegli se migliorano, restano stabili o peggiorano.';
+  static const playBoardHeaderTitle = 'Turno di oggi';
   static const playBoardHeaderSubtitle =
-      'Ogni casella e\' un dubbio da esplorare.';
+      'Le carte sono problemi civici mock. Fai una scommessa leggera, poi confronti gli esiti.';
   static const playBoardCta = 'Vedi tabellone';
   static const bannerNewsLabel = 'Nuove carte';
   static const bannerTurnOpenLabel = 'Turno aperto';
-  static const playResolveCardTitle = 'Azione di turno';
-  static const playResolveCta = 'Pesca le carte del turno';
+  static const playResolveCardTitle = 'Esiti del turno';
+  static const playResolveCta = 'Scopri esiti';
   static const playResolveDisabledHint =
-      'Scegli almeno una situazione e poi guardiamo.';
+      'Gioca almeno una carta per sbloccare gli esiti mock.';
   static const playEmpty =
       'Per ora niente di urgente. Se ti va, torna piu\' tardi.';
+  static const activationTitle = 'Comune in attivazione';
+  static const activationSubtitle =
+      'Qui non ci sono ancora carte civiche. Possiamo iniziare dai primi segnali del posto.';
+  static const activationGoal =
+      'Obiettivo leggero: 5 contributi per aprire il primo turno civico.';
+  static const activationPrimaryCta = 'Proponi il primo tema';
+  static const activationSecondaryCta = 'Vedi temi proposti';
+  static const activationOfficialHint =
+      'Non e\' una segnalazione ufficiale al Comune: e\' una mappa civica in costruzione.';
+  static const activationMissionsTitle = 'Prime cose da osservare';
+  static const activationMissionPotholes = 'Buche o marciapiedi rovinati';
+  static const activationMissionLighting = 'Zone buie o lampioni spenti';
+  static const activationMissionWaste = 'Rifiuti abbandonati';
+  static const activationMissionGreen = 'Verde pubblico trascurato';
+  static const activationMissionSafety = 'Attraversamenti poco sicuri';
   static const playNextProblemsTitle = 'Hai un\'altra idea in mente?';
   static const playNextProblemsBody =
       'Non risolviamo nulla, ma scegliamo cosa tenere d\'occhio.';
@@ -186,6 +216,8 @@ class VenialCopy {
       'Non e\' una segnalazione ufficiale. E\' una lista leggera di cose da tenere d\'occhio.';
   static const nextProblemsEmpty =
       'Per ora niente proposte. Va bene cosi\', o magari non c\'era voglia.';
+  static const nextProblemsActivationEmpty =
+      'Ancora nessuna proposta qui. Il primo tema serve a far partire la mappa del Comune.';
   static const nextProblemsStatusPending = 'In valutazione';
   static const nextProblemsStatusApproved = 'In lista';
   static const nextProblemsStatusRejected = 'Non ora';
@@ -260,6 +292,8 @@ class VenialCopy {
   static const boardTitle = 'Tabellone';
   static const boardSubtitle = 'Una vista d\'insieme, senza fretta.';
   static const boardEmpty = 'Per ora il tabellone e\' tranquillo.';
+  static const boardActivationEmpty =
+      'Il tabellone e\' ancora da costruire: parti da un tema che vedi davvero nel tuo Comune.';
   static const boardNewsTitle = 'Novita\' sul tabellone';
   static const boardNewsEmpty = 'Nessuna novita\' urgente. Si gioca piano.';
   static const boardNewsPendingTurn = 'Esiti da rivedere';

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="230" viewBox="0 0 300 230">
+<defs><linearGradient id="e3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6452f" stop-opacity=".18"></stop><stop offset="1" stop-color="#d6452f" stop-opacity="0"></stop></linearGradient></defs>
+<rect width="300" height="230" rx="20" fill="#eef3fb"></rect>
+<rect x="34" y="52" width="232" height="138" rx="16" fill="#ffffff" stroke="#e6ebf3" stroke-width="2"></rect>
+<rect x="52" y="72" width="80" height="9" rx="4.5" fill="#dbe3ef"></rect>
+<polyline points="52,160 88,164 124,140 160,150 196,118 232,128 248,96" fill="none" stroke="#d6452f" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+<polygon points="52,160 88,164 124,140 160,150 196,118 232,128 248,96 248,172 52,172" fill="url(#e3)"></polygon>
+<circle cx="248" cy="96" r="4.5" fill="#d6452f"></circle>
+<circle cx="252" cy="58" r="24" fill="#1f9d6b"></circle><circle cx="252" cy="58" r="30" fill="none" stroke="#1f9d6b" stroke-opacity=".3" stroke-width="3"></circle>
+<path d="M243 58l6 6 12-12" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/features/next_problems/data/next_problems_repository.dart';
 import 'package:fanta_comune/features/next_problems/domain/suggested_problem.dart';
@@ -130,6 +131,10 @@ class MockNextProblemsRepository implements NextProblemsRepository {
   }
 
   List<SuggestedProblem> _seedProblems(String municipalityId) {
+    if (!MunicipalityCatalog.isActiveMunicipality(municipalityId)) {
+      return <SuggestedProblem>[];
+    }
+
     final random = Random(municipalityId.hashCode);
     final baseDate = DateTime(2024, 1, 6);
     final seeds = <(String, String, ProblemKey)>[

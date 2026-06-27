@@ -220,15 +220,10 @@ class _Content extends StatelessWidget {
             ),
           );
         } else if (state.items.isEmpty) {
-          child = Center(
+          child = _NextProblemsEmpty(
             key: const ValueKey('next-problems-empty'),
-            child: Text(
-              VenialCopy.nextProblemsEmpty,
-              style: textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            isFiltered:
+                state.query.trim().isNotEmpty || state.filterStatus != null,
           );
         } else {
           child = ListView.separated(
@@ -246,6 +241,68 @@ class _Content extends StatelessWidget {
           child: child,
         );
       },
+    );
+  }
+}
+
+class _NextProblemsEmpty extends StatelessWidget {
+  const _NextProblemsEmpty({
+    super.key,
+    required this.isFiltered,
+  });
+
+  final bool isFiltered;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final body = isFiltered
+        ? VenialCopy.nextProblemsEmpty
+        : VenialCopy.nextProblemsActivationEmpty;
+
+    return Center(
+      child: SingleChildScrollView(
+        child: PrimaryCard(
+          padding: const EdgeInsets.all(AppTokens.s20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CardIllustrationSlot(
+                fallbackIcon: AppIcons.play,
+                height: 48,
+                compact: true,
+                labelRibbon: VenialCopy.activationTitle,
+              ),
+              const SizedBox(height: AppTokens.s12),
+              Text(
+                body,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.4,
+                ),
+              ),
+              if (!isFiltered) ...[
+                const SizedBox(height: AppTokens.s12),
+                Text(
+                  VenialCopy.activationGoal,
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppTokens.s16),
+              FilledButton.icon(
+                onPressed: () => context.go('/suggest-problem'),
+                icon: const Icon(AppIcons.play),
+                label: const Text(VenialCopy.activationPrimaryCta),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
