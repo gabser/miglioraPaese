@@ -6,11 +6,8 @@ import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
-import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
-import 'package:fanta_comune/core/widgets/primary_card.dart';
-import 'package:fanta_comune/core/widgets/pinned_note.dart';
-import 'package:fanta_comune/core/widgets/stamp_action_button.dart';
 import 'package:fanta_comune/core/theme/typography_x.dart';
 import 'package:fanta_comune/features/next_problems/data/next_problems_repository.dart';
 import 'package:fanta_comune/features/next_problems/logic/next_problems_cubit.dart';
@@ -112,6 +109,11 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => context.go('/next-problems'),
+          tooltip: 'Torna ai temi',
+          icon: const Icon(AppIcons.back),
+        ),
         title: const Text(VenialCopy.appTitle),
       ),
       body: SafeArea(
@@ -120,19 +122,21 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
             padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
             child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              child: PrimaryCard(
-                textured: true,
+              child: FcPanel(
+                tint: AppTokens.blue,
                 elevated: true,
                 child: BlocBuilder<NextProblemsCubit, NextProblemsState>(
                   builder: (context, state) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        CardIllustrationSlot(
-                          fallbackIcon: AppIcons.play,
-                          height: 72,
-                          compact: true,
-                          labelRibbon: VenialCopy.suggestRibbonLabel,
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: FcStatusChip(
+                            label: VenialCopy.suggestRibbonLabel,
+                            color: AppTokens.blue,
+                            icon: AppIcons.play,
+                          ),
                         ),
                         SizedBox(
                             height: isCompact ? AppTokens.s8 : AppTokens.s12),
@@ -148,8 +152,17 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                           ),
                         ),
                         const SizedBox(height: AppTokens.s8),
-                        PinnedNote(
-                          angle: -0.02,
+                        Container(
+                          padding: const EdgeInsets.all(AppTokens.s12),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(
+                              AppTokens.radiusSmall,
+                            ),
+                            border: Border.all(
+                              color: colorScheme.outlineVariant,
+                            ),
+                          ),
                           child: Text(
                             VenialCopy.suggestOfficialHint,
                             style: textTheme.bodySmall?.copyWith(
@@ -232,10 +245,10 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                                 ),
                                 const SizedBox(width: AppTokens.s8),
                               ],
-                              StampActionButton(
-                                label: VenialCopy.suggestSubmit,
-                                icon: AppIcons.play,
+                              FilledButton.icon(
                                 onPressed: state.submitting ? null : _submit,
+                                icon: const Icon(AppIcons.play),
+                                label: const Text(VenialCopy.suggestSubmit),
                               ),
                             ],
                           ),

@@ -9,11 +9,9 @@ import 'package:fanta_comune/core/theme/app_motion.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/animated_size_x.dart';
 import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
-import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
-import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/widgets/segmented_choice.dart';
-import 'package:fanta_comune/core/widgets/stamp_badge.dart';
 import 'package:fanta_comune/core/theme/typography_x.dart';
 import 'package:fanta_comune/features/next_problems/data/next_problems_repository.dart';
 import 'package:fanta_comune/features/next_problems/domain/suggested_problem.dart';
@@ -47,6 +45,11 @@ class _NextProblemsView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => context.go('/home'),
+          tooltip: 'Torna alla home',
+          icon: const Icon(AppIcons.back),
+        ),
         title: const Text(VenialCopy.appTitle),
         actions: [
           TextButton(
@@ -263,17 +266,17 @@ class _NextProblemsEmpty extends StatelessWidget {
 
     return Center(
       child: SingleChildScrollView(
-        child: PrimaryCard(
+        child: FcPanel(
           padding: const EdgeInsets.all(AppTokens.s20),
+          tint: AppTokens.blue,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CardIllustrationSlot(
-                fallbackIcon: AppIcons.play,
-                height: 48,
-                compact: true,
-                labelRibbon: VenialCopy.activationTitle,
+              const FcStatusChip(
+                label: VenialCopy.activationTitle,
+                color: AppTokens.blue,
+                icon: AppIcons.play,
               ),
               const SizedBox(height: AppTokens.s12),
               Text(
@@ -322,25 +325,27 @@ class _ProblemCard extends StatelessWidget {
       (cubit) => cubit.state.votingProblemIds.contains(problem.id),
     );
 
-    return PrimaryCard(
+    return FcPanel(
       padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
-      textured: true,
+      elevated: problem.myVote != VoteChoice.none,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CardIllustrationSlot(
-            fallbackIcon: AppIcons.forProblemKey(problem.category),
-            height: 72,
-            compact: true,
-            labelRibbon: AppIcons.labelForProblemKey(problem.category),
-            problemKey: problem.category,
-          ),
-          const SizedBox(height: AppTokens.s12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(AppIcons.forProblemKey(problem.category),
-                  color: colorScheme.primary),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                ),
+                child: Icon(
+                  AppIcons.forProblemKey(problem.category),
+                  color: colorScheme.primary,
+                ),
+              ),
               const SizedBox(width: AppTokens.s12),
               Expanded(
                 child: Column(
@@ -388,6 +393,8 @@ class _ProblemCard extends StatelessWidget {
                   )
                 : const SizedBox.shrink(),
           ),
+          SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+          _PromotionRuleBlock(problem: problem),
           SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
           Row(
             children: [
@@ -438,6 +445,87 @@ class _ProblemCard extends StatelessWidget {
   }
 }
 
+class _PromotionRuleBlock extends StatelessWidget {
+  const _PromotionRuleBlock({required this.problem});
+
+  final SuggestedProblem problem;
+
+  String _progressText() {
+    if (problem.approvalsNeeded == 0) {
+      return VenialCopy.nextProblemsPromotionComplete;
+    }
+    if (problem.approvalsNeeded == 1) {
+      return VenialCopy.nextProblemsPromotionMissingSingular;
+    }
+    return VenialCopy.nextProblemsPromotionMissingPlural.replaceAll(
+      '{count}',
+      '${problem.approvalsNeeded}',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppTokens.s12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHigh.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.rule_outlined, size: 18),
+              const SizedBox(width: AppTokens.s8),
+              Expanded(
+                child: Text(
+                  VenialCopy.nextProblemsPromotionTitle,
+                  style: textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                '${problem.score.clamp(0, problem.promotionRule.threshold)} / ${problem.promotionRule.threshold}',
+                style: textTheme.labelLarge?.copyWith(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTokens.s8),
+          LinearProgressIndicator(
+            value: problem.promotionProgress,
+            minHeight: 7,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          const SizedBox(height: AppTokens.s8),
+          Text(
+            _progressText(),
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppTokens.s4),
+          Text(
+            '${problem.promotionRule.scopeLabel}. ${problem.promotionRule.reason}',
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StampVoteButton extends StatelessWidget {
   const _StampVoteButton({
     required this.label,
@@ -453,9 +541,16 @@ class _StampVoteButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final foreground =
+        selected ? colorScheme.primary : colorScheme.onSurfaceVariant;
+    final background =
+        selected ? colorScheme.primaryContainer : colorScheme.surface;
+
     return InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(AppTokens.radius),
+      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       focusColor:
           Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.08),
       hoverColor:
@@ -464,13 +559,47 @@ class _StampVoteButton extends StatelessWidget {
         opacity: onPressed == null ? 0.5 : (selected ? 1 : 0.7),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 44, minWidth: 80),
-          child: Center(
-            child: StampBadge(
-              label: label,
-              caption: count.toString(),
-              icon:
-                  selected ? Icons.check_circle_outline : Icons.circle_outlined,
-              angle: selected ? -0.04 : -0.02,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+              border: Border.all(
+                color: selected ? colorScheme.primary : colorScheme.outline,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTokens.s12,
+                vertical: AppTokens.s8,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    selected
+                        ? Icons.check_circle_outline
+                        : Icons.circle_outlined,
+                    size: 18,
+                    color: foreground,
+                  ),
+                  const SizedBox(width: AppTokens.s8),
+                  Text(
+                    label,
+                    style: textTheme.labelMedium?.copyWith(
+                      color: foreground,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(width: AppTokens.s8),
+                  Text(
+                    count.toString(),
+                    style: textTheme.labelMedium?.copyWith(
+                      color: foreground,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

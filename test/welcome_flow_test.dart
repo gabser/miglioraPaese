@@ -34,4 +34,30 @@ void main() {
     expect(prefs.municipalityId, 'comune:Milano');
     expect(find.text('Gioca il turno'), findsOneWidget);
   });
+
+  testWidgets('profile can reopen municipality selection after onboarding',
+      (tester) async {
+    final prefs = await createTestPrefs({
+      'municipality_id': 'comune:Milano',
+    });
+
+    await tester.pumpWidget(buildTestApp(prefs));
+    await pumpRoutingFrame(tester);
+
+    await tester.tap(find.text(VenialCopy.welcomeEnterTitle));
+    await pumpRoutingFrame(tester);
+    await tester.pump(const Duration(seconds: 2));
+
+    final context = tester.element(find.text('Gioca il turno'));
+    GoRouter.of(context).go('/profile');
+    await pumpRoutingFrame(tester);
+
+    expect(find.text('Cambia Comune'), findsOneWidget);
+
+    await tester.tap(find.text('Cambia Comune'));
+    await pumpRoutingFrame(tester);
+
+    expect(find.text('Milano'), findsOneWidget);
+    expect(find.text('Roma'), findsOneWidget);
+  });
 }

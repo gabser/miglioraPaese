@@ -8,6 +8,7 @@ import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/game_banner.dart';
+import 'package:fanta_comune/features/civic_loop/domain/civic_loop_summary.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/prediction.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
@@ -60,7 +61,8 @@ class HomePage extends StatelessWidget {
                     child: Text(
                       'Impossibile caricare la dashboard: ${snapshot.error}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.error),
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                     ),
                   )
                 else if (data != null)
@@ -89,8 +91,9 @@ class _HomeDashboard extends StatelessWidget {
     }
 
     final topProblems = data.problems.take(5).toList(growable: false);
-    final myRank =
-        data.leaderboard.where((entry) => entry.userId == data.currentUserId);
+    final myRank = data.leaderboard.where(
+      (entry) => entry.userId == data.currentUserId,
+    );
     final rankLabel = myRank.isEmpty ? 'n/d' : '#${myRank.first.rank}';
     final accuracy = data.reputation.predictionsCount == 0
         ? '0%'
@@ -152,14 +155,9 @@ class _HomeDashboard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _ProblemsPanel(problems: topProblems),
-              ),
+              Expanded(child: _ProblemsPanel(problems: topProblems)),
               const SizedBox(width: AppTokens.s16),
-              SizedBox(
-                width: 330,
-                child: _RightRail(data: data),
-              ),
+              SizedBox(width: 330, child: _RightRail(data: data)),
             ],
           )
         else ...[
@@ -300,8 +298,9 @@ class _ActivationMissionsPanel extends StatelessWidget {
                     height: 38,
                     decoration: BoxDecoration(
                       color: scheme.primaryContainer.withOpacity(0.55),
-                      borderRadius:
-                          BorderRadius.circular(AppTokens.radiusSmall),
+                      borderRadius: BorderRadius.circular(
+                        AppTokens.radiusSmall,
+                      ),
                     ),
                     child: Icon(mission.$1, color: scheme.primary, size: 20),
                   ),
@@ -339,9 +338,7 @@ class _ActivationTrustPanel extends StatelessWidget {
         children: [
           Text(
             'Cosa succede dopo',
-            style: textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w900,
-            ),
+            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: AppTokens.s8),
           Text(
@@ -444,10 +441,7 @@ class _ProblemRow extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        problem.title,
-                        style: textTheme.titleMedium,
-                      ),
+                      child: Text(problem.title, style: textTheme.titleMedium),
                     ),
                     FcStatusChip(
                       label: status.label,
@@ -543,8 +537,9 @@ class _RightRail extends StatelessWidget {
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(999),
                 backgroundColor: Colors.white.withOpacity(0.15),
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(AppTokens.success),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppTokens.success,
+                ),
               ),
             ],
           ),
@@ -575,7 +570,7 @@ class _RightRail extends StatelessWidget {
         FcPanel(
           tint: AppTokens.blue,
           child: Text(
-            'Insight del giorno: chi prevede bene sulla mobilita\' tende a leggere meglio anche i problemi di ambiente.',
+            _summaryLine(data.civicSummary),
             style: textTheme.bodyMedium?.copyWith(
               color: scheme.onSurface,
               height: 1.42,
@@ -588,10 +583,7 @@ class _RightRail extends StatelessWidget {
 }
 
 class _LeaderboardLine extends StatelessWidget {
-  const _LeaderboardLine({
-    required this.entry,
-    required this.isMe,
-  });
+  const _LeaderboardLine({required this.entry, required this.isMe});
 
   final LeaderboardEntry entry;
   final bool isMe;
@@ -716,6 +708,7 @@ class _HomeSnapshot {
     required this.reputation,
     required this.leaderboard,
     required this.currentUserId,
+    required this.civicSummary,
   });
 
   final Turn turn;
@@ -726,6 +719,7 @@ class _HomeSnapshot {
   final ReputationScore reputation;
   final List<LeaderboardEntry> leaderboard;
   final String currentUserId;
+  final CivicLoopSummary civicSummary;
 }
 
 Future<_HomeSnapshot> _loadHomeSnapshot(
@@ -733,13 +727,16 @@ Future<_HomeSnapshot> _loadHomeSnapshot(
   String municipalityId,
 ) async {
   final turn = await repository.getCurrentTurn(municipalityId);
-  final activationState =
-      await repository.getMunicipalityActivationState(municipalityId);
+  final activationState = await repository.getMunicipalityActivationState(
+    municipalityId,
+  );
   final problems = await repository.listProblems(municipalityId);
   final predictions = await repository.getMyPredictions(turn.id);
   final reputation = await repository.getReputationScore(turn.id);
-  final leaderboard =
-      await repository.getLeaderboard(municipalityId: municipalityId);
+  final civicSummary = await repository.getCivicLoopSummary(municipalityId);
+  final leaderboard = await repository.getLeaderboard(
+    municipalityId: municipalityId,
+  );
 
   return _HomeSnapshot(
     turn: turn,
@@ -750,5 +747,13 @@ Future<_HomeSnapshot> _loadHomeSnapshot(
     reputation: reputation,
     leaderboard: leaderboard,
     currentUserId: repository.currentUserId,
+    civicSummary: civicSummary,
   );
+}
+
+String _summaryLine(CivicLoopSummary summary) {
+  final topTheme = summary.topThemeTitle ?? 'nessuna carta promossa';
+  return 'Riepilogo Comune: ${summary.proposedThemes} proposte, '
+      '${summary.confirmedThemes} confermate, ${summary.cardsInTurn} carte del turno. '
+      'Tema principale: $topTheme. Reputazione: ${summary.reputationPoints} pt.';
 }

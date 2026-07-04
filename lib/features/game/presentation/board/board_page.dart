@@ -4,10 +4,8 @@ import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_motion.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
-import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
-import 'package:fanta_comune/core/widgets/pinned_note.dart';
-import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/theme/typography_x.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
@@ -254,17 +252,17 @@ class _BoardActivationEmpty extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
 
-    return PrimaryCard(
+    return FcPanel(
       padding: const EdgeInsets.all(AppTokens.s20),
       elevated: true,
+      tint: AppTokens.blue,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CardIllustrationSlot(
-            fallbackIcon: AppIcons.board,
-            height: 72,
-            compact: true,
-            labelRibbon: VenialCopy.activationTitle,
+          const FcStatusChip(
+            label: VenialCopy.activationTitle,
+            color: AppTokens.blue,
+            icon: AppIcons.board,
           ),
           const SizedBox(height: AppTokens.s12),
           Text(
@@ -355,9 +353,8 @@ class _BoardTileState extends State<_BoardTile> {
         onTapDown: (_) => _setPressed(true),
         onTapUp: (_) => _setPressed(false),
         onTapCancel: () => _setPressed(false),
-        child: PrimaryCard(
+        child: FcPanel(
           padding: const EdgeInsets.all(AppTokens.s12),
-          textured: true,
           elevated: true,
           child: Stack(
             children: [
@@ -375,11 +372,19 @@ class _BoardTileState extends State<_BoardTile> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CardIllustrationSlot(
-                    fallbackIcon: AppIcons.forProblemKey(widget.problem.key),
-                    height: 48,
-                    compact: true,
-                    problemKey: widget.problem.key,
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(
+                        AppTokens.radiusSmall,
+                      ),
+                    ),
+                    child: Icon(
+                      AppIcons.forProblemKey(widget.problem.key),
+                      color: statusColor,
+                    ),
                   ),
                   const SizedBox(height: AppTokens.s8),
                   Row(
@@ -651,7 +656,7 @@ class _BoardNewsCard extends StatelessWidget {
 
     return SizedBox(
       width: 240,
-      child: PrimaryCard(
+      child: FcPanel(
         padding: const EdgeInsets.all(AppTokens.s12),
         onTap: onTap,
         child: Column(
@@ -733,7 +738,9 @@ class _BoardLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    return PinnedNote(
+    return FcPanel(
+      padding: const EdgeInsets.all(AppTokens.s12),
+      tint: AppTokens.blue,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final tokens = Wrap(
@@ -768,10 +775,9 @@ class _BoardLegend extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    CardIllustrationSlot(
-                      fallbackIcon: AppIcons.board,
-                      height: 46,
-                      compact: true,
+                    _BoardIconBadge(
+                      icon: AppIcons.board,
+                      color: colorScheme.primary,
                     ),
                     const SizedBox(width: AppTokens.s12),
                     Expanded(child: copy),
@@ -785,10 +791,9 @@ class _BoardLegend extends StatelessWidget {
 
           return Row(
             children: [
-              CardIllustrationSlot(
-                fallbackIcon: AppIcons.board,
-                height: 46,
-                compact: true,
+              _BoardIconBadge(
+                icon: AppIcons.board,
+                color: colorScheme.primary,
               ),
               const SizedBox(width: AppTokens.s12),
               Expanded(child: copy),
@@ -939,14 +944,15 @@ class _BoardSideCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    final note = PinnedNote(
+    final note = FcPanel(
+      padding: const EdgeInsets.all(AppTokens.s12),
+      tint: AppTokens.blue,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CardIllustrationSlot(
-            fallbackIcon: icon,
-            height: 64,
-            compact: true,
+          _BoardIconBadge(
+            icon: icon,
+            color: colorScheme.primary,
           ),
           const SizedBox(height: AppTokens.s12),
           Text(
@@ -973,6 +979,29 @@ class _BoardSideCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTokens.radius),
         child: note,
       ),
+    );
+  }
+}
+
+class _BoardIconBadge extends StatelessWidget {
+  const _BoardIconBadge({
+    required this.icon,
+    required this.color,
+  });
+
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      ),
+      child: Icon(icon, color: color),
     );
   }
 }

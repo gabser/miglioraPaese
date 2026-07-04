@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:fanta_comune/features/civic_loop/domain/civic_loop_summary.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
 import 'package:fanta_comune/features/game/domain/critical_insight.dart';
 import 'package:fanta_comune/features/game/domain/hypothesis_confidence.dart';
@@ -18,6 +19,7 @@ class PlayState extends Equatable {
   const PlayState({
     this.isLoading = false,
     this.currentTurn,
+    this.civicSummary,
     this.problems = const <Problem>[],
     this.myPredictions = const <String, PredictionChoice>{},
     this.motivations = const <String, List<MotivationKey>>{},
@@ -49,6 +51,9 @@ class PlayState extends Equatable {
 
   /// Turno corrente recuperato dal repository.
   final Turn? currentTurn;
+
+  /// Riepilogo del ciclo civico reale per il Comune selezionato.
+  final CivicLoopSummary? civicSummary;
 
   /// Lista di problemi attivi per il turno.
   final List<Problem> problems;
@@ -114,6 +119,7 @@ class PlayState extends Equatable {
   PlayState copyWith({
     bool? isLoading,
     Turn? currentTurn,
+    CivicLoopSummary? civicSummary,
     List<Problem>? problems,
     Map<String, PredictionChoice>? myPredictions,
     Map<String, List<MotivationKey>>? motivations,
@@ -138,6 +144,7 @@ class PlayState extends Equatable {
     return PlayState(
       isLoading: isLoading ?? this.isLoading,
       currentTurn: currentTurn ?? this.currentTurn,
+      civicSummary: civicSummary ?? this.civicSummary,
       problems: problems ?? this.problems,
       myPredictions: myPredictions ?? this.myPredictions,
       motivations: motivations ?? this.motivations,
@@ -168,6 +175,7 @@ class PlayState extends Equatable {
   List<Object?> get props => [
         isLoading,
         currentTurn,
+        civicSummary,
         problems,
         myPredictions,
         motivations,

@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/models/problem_key.dart';
+import 'package:fanta_comune/features/civic_loop/data/civic_loop_store.dart';
+import 'package:fanta_comune/features/civic_loop/domain/civic_loop_summary.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
 import 'package:fanta_comune/features/game/domain/critical_insight.dart';
@@ -23,10 +25,13 @@ import 'package:fanta_comune/features/leaderboard/domain/leaderboard_entry.dart'
 /// Implementazione mock in-memory del [GameRepository] per testare la UI senza backend.
 class MockGameRepository implements GameRepository {
   /// Crea un repository mock con dati fittizi.
-  MockGameRepository();
+  MockGameRepository({CivicLoopStore? civicLoopStore})
+      : _civicLoopStore =
+            civicLoopStore ?? CivicLoopStore(currentUserId: _currentUserId);
 
   static const _latency = Duration(milliseconds: 250);
   static const _currentUserId = 'user:self';
+  final CivicLoopStore _civicLoopStore;
   final Turn _currentTurn = Turn(
     id: 'turn-2024-09',
     startAt: DateTime.now().subtract(const Duration(days: 5)),
@@ -97,22 +102,7 @@ class MockGameRepository implements GameRepository {
     ),
   ];
 
-  final Map<String, Prediction> _predictions = {
-    'problem-2': Prediction(
-      turnId: 'turn-2024-09',
-      problemId: 'problem-2',
-      choice: PredictionChoice.stable,
-      createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-      motivations: const [],
-    ),
-    'problem-3': Prediction(
-      turnId: 'turn-2024-09',
-      problemId: 'problem-3',
-      choice: PredictionChoice.improve,
-      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      motivations: const [],
-    ),
-  };
+  final Map<String, Prediction> _predictions = {};
 
   final Map<String, PredictionResult> _results = {};
   ReputationScore _reputation = const ReputationScore(
@@ -171,7 +161,9 @@ class MockGameRepository implements GameRepository {
   }
 
   PredictionResult _evaluatePrediction(
-      ProblemStatus status, PredictionChoice choice) {
+    ProblemStatus status,
+    PredictionChoice choice,
+  ) {
     switch (status) {
       case ProblemStatus.improving:
         return switch (choice) {
@@ -557,12 +549,18 @@ class MockGameRepository implements GameRepository {
         normalizedWeights[entry.key] =
             (entry.value + trendFactor + noise).clamp(0.14, 0.7);
       }
-      final totalWeight =
-          normalizedWeights.values.fold<double>(0, (sum, value) => sum + value);
-      final weights = normalizedWeights
-          .map((key, value) => MapEntry(key, value / totalWeight));
+      final totalWeight = normalizedWeights.values.fold<double>(
+        0,
+        (sum, value) => sum + value,
+      );
+      final weights = normalizedWeights.map(
+        (key, value) => MapEntry(key, value / totalWeight),
+      );
       final choiceDistribution = _weightedChoiceDistribution(
-          totalPredictions, weights, Random(problem.id.hashCode ^ i));
+        totalPredictions,
+        weights,
+        Random(problem.id.hashCode ^ i),
+      );
       final motivationDistribution = _weightedMotivationDistribution(
         max(totalPredictions - 2, 6),
         motivationWeights,
@@ -591,7 +589,7 @@ class MockGameRepository implements GameRepository {
   }
 
   InsightHistory _buildInsightHistory(String problemId) {
-    final problem = _problems.firstWhere((problem) => problem.id == problemId);
+    final problem = _problemById(problemId);
     final snapshots = _buildSnapshotsForProblem(problem);
     return InsightHistory(
       problemId: problemId,
@@ -630,8 +628,37 @@ class MockGameRepository implements GameRepository {
     return List<ReputationScore>.unmodifiable(history);
   }
 
+  bool _hasActiveTurn(String municipalityId) {
+    return MunicipalityCatalog.isActiveMunicipality(municipalityId) ||
+        _civicLoopStore.hasPromotedCards(municipalityId);
+  }
+
+  List<Problem> _turnProblems(String municipalityId) {
+    if (!_hasActiveTurn(municipalityId)) {
+      return const <Problem>[];
+    }
+    final promoted = _civicLoopStore.promotedProblems(municipalityId);
+    final seeded = MunicipalityCatalog.isActiveMunicipality(municipalityId)
+        ? _problems
+        : const <Problem>[];
+    return List<Problem>.unmodifiable([...promoted, ...seeded]);
+  }
+
+  Problem _problemById(String problemId) {
+    for (final problem in _problems) {
+      if (problem.id == problemId) {
+        return problem;
+      }
+    }
+    final promoted = _civicLoopStore.problemByCardId(problemId);
+    if (promoted != null) {
+      return promoted;
+    }
+    throw StateError('Problem not found.');
+  }
+
   AggregatedInsight _syntheticInsight(String problemId) {
-    final problem = _problems.firstWhere((p) => p.id == problemId);
+    final problem = _problemById(problemId);
     final random = Random(problemId.hashCode ^ 42);
     final baseTotal = 6 + random.nextInt(12);
     final choiceWeights = switch (problem.status) {
@@ -676,8 +703,11 @@ class MockGameRepository implements GameRepository {
         },
     };
 
-    final choiceDistribution =
-        _weightedChoiceDistribution(baseTotal, choiceWeights, random);
+    final choiceDistribution = _weightedChoiceDistribution(
+      baseTotal,
+      choiceWeights,
+      random,
+    );
     final motivationDistribution = _weightedMotivationDistribution(
       max(baseTotal - 1, 6),
       motivationWeights,
@@ -693,10 +723,12 @@ class MockGameRepository implements GameRepository {
 
   AggregatedInsight _buildAggregatedInsight(String problemId) {
     final baseInsight = _syntheticInsight(problemId);
-    final choiceDistribution =
-        Map<PredictionChoice, int>.from(baseInsight.choiceDistribution);
-    final motivationDistribution =
-        Map<MotivationKey, int>.from(baseInsight.motivationDistribution);
+    final choiceDistribution = Map<PredictionChoice, int>.from(
+      baseInsight.choiceDistribution,
+    );
+    final motivationDistribution = Map<MotivationKey, int>.from(
+      baseInsight.motivationDistribution,
+    );
 
     final existing = _predictions[problemId];
     if (existing != null) {
@@ -708,8 +740,10 @@ class MockGameRepository implements GameRepository {
       }
     }
 
-    final totalPredictions =
-        choiceDistribution.values.fold<int>(0, (sum, value) => sum + value);
+    final totalPredictions = choiceDistribution.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    );
 
     return AggregatedInsight(
       problemId: problemId,
@@ -735,7 +769,7 @@ class MockGameRepository implements GameRepository {
   @override
   Future<Turn> getCurrentTurn(String municipalityId) {
     return _withDelay(() {
-      if (MunicipalityCatalog.isActiveMunicipality(municipalityId)) {
+      if (_hasActiveTurn(municipalityId)) {
         return _currentTurn;
       }
       return _activationTurn;
@@ -746,19 +780,33 @@ class MockGameRepository implements GameRepository {
   Future<MunicipalityActivationState> getMunicipalityActivationState(
     String municipalityId,
   ) {
-    return _withDelay(
-      () => MunicipalityCatalog.activationStateFor(municipalityId),
-    );
+    return _withDelay(() {
+      if (_hasActiveTurn(municipalityId)) {
+        return MunicipalityActivationState.active;
+      }
+      return MunicipalityCatalog.activationStateFor(municipalityId);
+    });
+  }
+
+  @override
+  Future<CivicLoopSummary> getCivicLoopSummary(String municipalityId) {
+    return _withDelay(() {
+      return CivicLoopSummary(
+        municipalityName: MunicipalityCatalog.displayNameFromId(municipalityId),
+        proposedThemes: _civicLoopStore.proposedCount(municipalityId),
+        confirmedThemes: _civicLoopStore.confirmedThemes(municipalityId).length,
+        cardsInTurn: _civicLoopStore.promotedProblems(municipalityId).length,
+        predictions: _predictions.length,
+        outcomes: _results.length,
+        reputationPoints: _reputation.totalPoints,
+        topThemeTitle: _civicLoopStore.topThemeTitle(municipalityId),
+      );
+    });
   }
 
   @override
   Future<List<Problem>> listProblems(String municipalityId) {
-    return _withDelay(() {
-      if (!MunicipalityCatalog.isActiveMunicipality(municipalityId)) {
-        return const <Problem>[];
-      }
-      return List<Problem>.unmodifiable(_problems);
-    });
+    return _withDelay(() => _turnProblems(municipalityId));
   }
 
   @override
@@ -780,6 +828,10 @@ class MockGameRepository implements GameRepository {
     HypothesisConfidence? confidence,
   }) {
     return _withDelay(() {
+      final existing = _predictions[problemId];
+      if (existing != null && existing.choice != choice) {
+        throw StateError('Prediction already cast for this turn.');
+      }
       _predictions[problemId] = Prediction(
         turnId: turnId,
         problemId: problemId,
@@ -819,8 +871,7 @@ class MockGameRepository implements GameRepository {
     required PredictionChoice choice,
   }) {
     return _withDelay(() {
-      final problem =
-          _problems.firstWhere((problem) => problem.id == problemId);
+      final problem = _problemById(problemId);
       final result = _evaluatePrediction(problem.status, choice);
       _results[problemId] = result;
       _reputation = _calculateReputation();
@@ -830,22 +881,16 @@ class MockGameRepository implements GameRepository {
   }
 
   @override
-  Future<void> tapSignal({
-    required String problemId,
-    required bool resolved,
-  }) {
+  Future<void> tapSignal({required String problemId, required bool resolved}) {
     return _withDelay(() {
-      _updateProblem(
-        problemId,
-        (problem) {
-          final nextStatus = _nextStatus(problem.status, resolved);
-          return problem.copyWith(
-            status: nextStatus,
-            trendPercent: _trendForStatus(nextStatus),
-            updatedAt: DateTime.now(),
-          );
-        },
-      );
+      _updateProblem(problemId, (problem) {
+        final nextStatus = _nextStatus(problem.status, resolved);
+        return problem.copyWith(
+          status: nextStatus,
+          trendPercent: _trendForStatus(nextStatus),
+          updatedAt: DateTime.now(),
+        );
+      });
     });
   }
 
@@ -864,7 +909,7 @@ class MockGameRepository implements GameRepository {
   @override
   Future<Problem> getProblemById(String problemId) {
     return _withDelay(() {
-      return _problems.firstWhere((problem) => problem.id == problemId);
+      return _problemById(problemId);
     });
   }
 
@@ -874,7 +919,7 @@ class MockGameRepository implements GameRepository {
     String? leagueId,
   }) {
     return _withDelay(() {
-      if (!MunicipalityCatalog.isActiveMunicipality(municipalityId)) {
+      if (!_hasActiveTurn(municipalityId)) {
         return const <LeaderboardEntry>[];
       }
       final selfEntry = LeaderboardEntry(
@@ -883,10 +928,7 @@ class MockGameRepository implements GameRepository {
         points: 900 + _reputation.totalPoints,
         rank: 0,
       );
-      final combined = <LeaderboardEntry>[
-        ..._leaderboardBase,
-        selfEntry,
-      ];
+      final combined = <LeaderboardEntry>[..._leaderboardBase, selfEntry];
       combined.sort((a, b) => b.points.compareTo(a.points));
 
       final ranked = <LeaderboardEntry>[];
@@ -901,7 +943,8 @@ class MockGameRepository implements GameRepository {
   @override
   Future<Map<String, PredictionResult>> getPredictionResults(String turnId) {
     return _withDelay(
-        () => Map<String, PredictionResult>.unmodifiable(_results));
+      () => Map<String, PredictionResult>.unmodifiable(_results),
+    );
   }
 
   @override
@@ -965,10 +1008,11 @@ class MockGameRepository implements GameRepository {
   }
 
   @override
-  Future<List<ReputationScore>> getReputationHistory(
-      {required String municipalityId}) {
+  Future<List<ReputationScore>> getReputationHistory({
+    required String municipalityId,
+  }) {
     return _withDelay(() {
-      if (!MunicipalityCatalog.isActiveMunicipality(municipalityId)) {
+      if (!_hasActiveTurn(municipalityId)) {
         return const <ReputationScore>[];
       }
       final cached = _reputationHistoryCache;

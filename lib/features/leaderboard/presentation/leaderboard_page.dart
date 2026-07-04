@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
-import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/leaderboard/domain/leaderboard_entry.dart';
 
@@ -28,8 +28,9 @@ class LeaderboardPage extends StatelessWidget {
           const IconLabel(
               icon: AppIcons.leaderboard, text: 'Classifica locale'),
           const SizedBox(height: AppTokens.s12),
-          PrimaryCard(
+          FcPanel(
             padding: const EdgeInsets.all(AppTokens.s16),
+            tint: AppTokens.blue,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

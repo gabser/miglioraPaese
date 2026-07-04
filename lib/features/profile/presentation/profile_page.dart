@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
-import 'package:fanta_comune/core/widgets/primary_card.dart';
-import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
-import 'package:fanta_comune/core/widgets/stamp_badge.dart';
-import 'package:fanta_comune/core/widgets/stamp_action_button.dart';
 import 'package:fanta_comune/core/theme/typography_x.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/hypothesis_confidence.dart';
@@ -132,8 +130,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ...PerspectiveRole.values.map(
                     (role) => Padding(
                       padding: const EdgeInsets.only(bottom: AppTokens.s12),
-                      child: PrimaryCard(
-                        textured: true,
+                      child: FcPanel(
                         onTap: () async {
                           await prefs.setActivePerspective(role);
                           await prefs.incrementPerspectiveChangesCount();
@@ -147,11 +144,19 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                         child: Row(
                           children: [
-                            CardIllustrationSlot(
-                              fallbackIcon: role.icon,
-                              height: 56,
-                              compact: true,
-                              labelRibbon: role.label,
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(
+                                  AppTokens.radiusSmall,
+                                ),
+                              ),
+                              child: Icon(
+                                role.icon,
+                                color: colorScheme.primary,
+                              ),
                             ),
                             const SizedBox(width: AppTokens.s12),
                             Expanded(
@@ -197,6 +202,9 @@ class _ProfilePageState extends State<ProfilePage> {
     final activePerspective = prefs.getActivePerspective();
     final changesCount = prefs.perspectiveChangesCount;
     final isCompact = MediaQuery.of(context).size.width < 600;
+    final municipalityName = MunicipalityCatalog.displayNameFromId(
+      prefs.municipalityId ?? 'demo',
+    );
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
@@ -206,9 +214,46 @@ class _ProfilePageState extends State<ProfilePage> {
           const IconLabel(
               icon: AppIcons.profile, text: VenialCopy.profileTitle),
           SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-          PrimaryCard(
+          FcPanel(
             padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
-            textured: true,
+            tint: AppTokens.blue,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Comune',
+                  style: TypographyX.titleLarge(context),
+                ),
+                const SizedBox(height: AppTokens.s8),
+                Text(
+                  municipalityName,
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: AppTokens.s4),
+                Text(
+                  'Cambia Comune per testare o seguire un altro territorio.',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppTokens.s12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.go('/change-municipality'),
+                    icon: const Icon(AppIcons.home),
+                    label: const Text('Cambia Comune'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+          FcPanel(
+            padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
+            tint: AppTokens.success,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -227,10 +272,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (activePerspective != null)
                   Row(
                     children: [
-                      StampBadge(
+                      FcStatusChip(
                         label: activePerspective.label,
+                        color: AppTokens.blue,
                         icon: activePerspective.icon,
-                        angle: -0.04,
                       ),
                       const SizedBox(width: AppTokens.s8),
                       Expanded(
@@ -265,11 +310,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: StampActionButton(
+                  child: FilledButton.icon(
                     onPressed: () =>
                         _showPerspectivePicker(prefs, activePerspective),
-                    label: VenialCopy.lensChangeCta,
-                    icon: AppIcons.profile,
+                    icon: const Icon(AppIcons.profile),
+                    label: const Text(VenialCopy.lensChangeCta),
                   ),
                 ),
                 if (changesCount > 0) ...[
@@ -293,9 +338,8 @@ class _ProfilePageState extends State<ProfilePage> {
             onRetry: _loadHistory,
           ),
           SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-          PrimaryCard(
+          FcPanel(
             padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
-            textured: true,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -375,9 +419,9 @@ class _ReputationHistoryCard extends StatelessWidget {
         history != null && history!.isNotEmpty ? history!.last : null;
     final dimmed = (lastEntry?.predictionsCount ?? 0) < 6;
 
-    return PrimaryCard(
+    return FcPanel(
       padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
-      textured: true,
+      tint: AppTokens.blue,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

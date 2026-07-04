@@ -4,10 +4,7 @@ import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/widgets/animated_size_x.dart';
 import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
-import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
-import 'package:fanta_comune/core/widgets/paper_texture.dart';
-import 'package:fanta_comune/core/widgets/stamp_badge.dart';
-import 'package:fanta_comune/core/theme/vintage_paper.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
 import 'package:fanta_comune/features/game/domain/critical_insight.dart';
 import 'package:fanta_comune/features/game/domain/insight_history.dart';
@@ -251,151 +248,107 @@ class _InsightCardState extends State<InsightCard> {
             ),
           );
         },
-        child: Container(
+        child: FcPanel(
           key: ValueKey(
               'insight-surface-${widget.insight.totalPredictions}-${widget.userChoice?.name ?? 'none'}'),
           padding: const EdgeInsets.all(AppTokens.s16),
-          decoration: VintagePaper.surfaceDecoration(
-            colorScheme,
-            radius: AppTokens.radius,
-            elevated: true,
-          ),
-          child: Stack(
+          tint: AppTokens.blue,
+          elevated: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: PaperTexture(
-                    color: VintagePaper.inkSoft(colorScheme).withOpacity(0.08),
-                    variant: PaperTextureVariant.plain,
-                    intensity: 0.4,
-                  ),
-                ),
-              ),
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _FormLinesPainter(
-                    color: VintagePaper.inkSoft(colorScheme).withOpacity(0.06),
-                  ),
-                ),
-              ),
-              Positioned.fill(
-                child: Container(
-                  margin: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppTokens.radius - 3),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant.withOpacity(0.6),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppTokens.s8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(AppTokens.radius),
+                    ),
+                    child: Icon(
+                      Icons.style_outlined,
+                      color: colorScheme.onPrimaryContainer,
                     ),
                   ),
+                  const SizedBox(width: AppTokens.s8),
+                  Expanded(
+                    child: Text(
+                      VenialCopy.insightCardTitle,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: sectionGap),
+              Text(
+                _headline(),
+                style: textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(AppTokens.s4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CardIllustrationSlot(
-                      fallbackIcon: Icons.style_outlined,
-                      height: 64,
-                      compact: true,
-                    ),
-                    SizedBox(height: sectionGap),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppTokens.s8),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primaryContainer,
-                            borderRadius:
-                                BorderRadius.circular(AppTokens.radius),
+              const SizedBox(height: AppTokens.s8),
+              Text(
+                _motivationLine(),
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppTokens.s8),
+              Text(
+                VenialCopy.insightDisclaimer,
+                style: textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (_hasSignals) ...[
+                SizedBox(height: sectionGap),
+                _ChoiceDistribution(
+                  insight: widget.insight,
+                  colorScheme: colorScheme,
+                  textTheme: textTheme,
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: _HistoryTab(
+                    isOpen: _showHistory,
+                    onTap: _toggleHistory,
+                  ),
+                ),
+                AnimatedSizeX(
+                  duration: AppMotion.fast,
+                  curve: AppMotion.standard,
+                  child: _showHistory
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: AppTokens.s8),
+                          child: _HistoryTrend(
+                            history: widget.history,
+                            values: historyValues,
+                            color: historyColor,
+                            trendCopy: trendCopy,
+                            isLoading: widget.isHistoryLoading,
+                            dimmed: _historyDimmed,
                           ),
-                          child: Icon(
-                            Icons.style_outlined,
-                            color: colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                        const SizedBox(width: AppTokens.s8),
-                        Expanded(
-                          child: Text(
-                            VenialCopy.insightCardTitle,
-                            style: textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: sectionGap),
-                    Text(
-                      _headline(),
-                      style: textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurface,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: AppTokens.s8),
-                    Text(
-                      _motivationLine(),
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: AppTokens.s8),
-                    Text(
-                      VenialCopy.insightDisclaimer,
-                      style: textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    if (_hasSignals) ...[
-                      SizedBox(height: sectionGap),
-                      _ChoiceDistribution(
-                        insight: widget.insight,
-                        colorScheme: colorScheme,
-                        textTheme: textTheme,
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: _HistoryTab(
-                          isOpen: _showHistory,
-                          onTap: _toggleHistory,
-                        ),
-                      ),
-                      AnimatedSizeX(
-                        duration: AppMotion.fast,
-                        curve: AppMotion.standard,
-                        child: _showHistory
-                            ? Padding(
-                                padding:
-                                    const EdgeInsets.only(top: AppTokens.s8),
-                                child: _HistoryTrend(
-                                  history: widget.history,
-                                  values: historyValues,
-                                  color: historyColor,
-                                  trendCopy: trendCopy,
-                                  isLoading: widget.isHistoryLoading,
-                                  dimmed: _historyDimmed,
-                                ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                      const SizedBox(height: AppTokens.s8),
-                    ],
-                    _CriticalInsightsSection(
-                      isOpen: _showCritical,
-                      onToggle: _toggleCriticalInsights,
-                      insights: widget.criticalInsights,
-                      isLoading: widget.isCriticalInsightsLoading,
-                    ),
-                    SizedBox(height: sectionGap),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: StampBadge(
-                        label: VenialCopy.stampPerceptionsLabel,
-                        icon: Icons.visibility_outlined,
-                      ),
-                    ),
-                  ],
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                const SizedBox(height: AppTokens.s8),
+              ],
+              _CriticalInsightsSection(
+                isOpen: _showCritical,
+                onToggle: _toggleCriticalInsights,
+                insights: widget.criticalInsights,
+                isLoading: widget.isCriticalInsightsLoading,
+              ),
+              SizedBox(height: sectionGap),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FcStatusChip(
+                  label: VenialCopy.stampPerceptionsLabel,
+                  color: AppTokens.blue,
+                  icon: Icons.visibility_outlined,
                 ),
               ),
             ],
@@ -526,16 +479,20 @@ class _HistoryTab extends StatelessWidget {
           horizontal: AppTokens.s12,
           vertical: AppTokens.s8 / 2,
         ),
-        decoration: VintagePaper.tapeDecoration(colorScheme),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+          border: Border.all(color: colorScheme.outlineVariant),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: VintagePaper.inkSoft(colorScheme)),
+            Icon(icon, size: 18, color: colorScheme.primary),
             const SizedBox(width: AppTokens.s8),
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: VintagePaper.inkSoft(colorScheme),
+                    color: colorScheme.primary,
                     fontWeight: FontWeight.w700,
                   ),
             ),
@@ -827,28 +784,5 @@ class _ChoiceBar extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-class _FormLinesPainter extends CustomPainter {
-  _FormLinesPainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    const spacing = 28.0;
-    for (double y = spacing; y < size.height; y += spacing) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _FormLinesPainter oldDelegate) {
-    return oldDelegate.color != color;
   }
 }

@@ -6,15 +6,18 @@ import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
-import 'package:fanta_comune/core/theme/vintage_paper.dart';
 import 'package:fanta_comune/core/theme/typography_x.dart';
-import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
-import 'package:fanta_comune/core/widgets/primary_card.dart';
 
 /// Schermata di onboarding per scegliere il Comune di riferimento.
 class OnboardingPage extends StatefulWidget {
-  const OnboardingPage({super.key});
+  const OnboardingPage({
+    this.afterSelectionRoute = '/home',
+    super.key,
+  });
+
+  final String afterSelectionRoute;
 
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
@@ -50,7 +53,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final prefs = context.read<AppPrefs>();
     await prefs.setMunicipalityId(MunicipalityCatalog.idForCity(city));
     if (!context.mounted) return;
-    context.go('/home');
+    context.go(widget.afterSelectionRoute);
   }
 
   @override
@@ -84,32 +87,24 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   ),
                 ),
                 SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
-                PrimaryCard(
-                  textured: true,
+                FcPanel(
+                  tint: AppTokens.blue,
                   elevated: true,
                   padding: EdgeInsets.all(padding),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CardIllustrationSlot(
-                        fallbackIcon: AppIcons.home,
-                        height: 72,
-                        compact: true,
-                        labelRibbon: VenialCopy.onboardingRibbonLabel,
+                      const FcStatusChip(
+                        label: VenialCopy.onboardingRibbonLabel,
+                        color: AppTokens.blue,
+                        icon: AppIcons.home,
                       ),
                       SizedBox(
                           height: isCompact ? AppTokens.s8 : AppTokens.s12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTokens.s12,
-                          vertical: AppTokens.s8 / 2,
-                        ),
-                        decoration: VintagePaper.tapeDecoration(colorScheme),
-                        child: Text(
-                          VenialCopy.onboardingCityTitle,
-                          style: TypographyX.titleMedium(context)?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                      Text(
+                        VenialCopy.onboardingCityTitle,
+                        style: TypographyX.titleMedium(context)?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(height: AppTokens.s12),

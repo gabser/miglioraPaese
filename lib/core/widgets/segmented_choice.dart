@@ -28,7 +28,7 @@ class SegmentedChoice<T> extends StatelessWidget {
   final Widget Function(T option, bool isSelected)? optionBuilder;
 
   /// Callback chiamata al cambio di selezione.
-  final ValueChanged<T> onChanged;
+  final ValueChanged<T>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +48,7 @@ class SegmentedChoice<T> extends StatelessWidget {
             runSpacing: AppTokens.s8,
             children: options.map((option) {
               final isSelected = value != null && option == value;
+              final isEnabled = onChanged != null;
               final label = labelBuilder(option);
               final labelKey = '$label$isSelected';
               final content = AnimatedSwitcherX(
@@ -69,6 +70,7 @@ class SegmentedChoice<T> extends StatelessWidget {
                 child: Semantics(
                   button: true,
                   selected: isSelected,
+                  enabled: isEnabled,
                   label: 'Seleziona $label',
                   child: Material(
                     color: isSelected
@@ -76,7 +78,7 @@ class SegmentedChoice<T> extends StatelessWidget {
                         : colorScheme.surface,
                     borderRadius: BorderRadius.circular(AppTokens.radius),
                     child: InkWell(
-                      onTap: () => onChanged(option),
+                      onTap: isEnabled ? () => onChanged!(option) : null,
                       borderRadius: BorderRadius.circular(AppTokens.radius),
                       child: AnimatedContainer(
                         duration: AppMotion.fast,
@@ -92,9 +94,12 @@ class SegmentedChoice<T> extends StatelessWidget {
                                 : colorScheme.outlineVariant,
                           ),
                         ),
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: content,
+                        child: Opacity(
+                          opacity: isEnabled || isSelected ? 1 : 0.55,
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: content,
+                          ),
                         ),
                       ),
                     ),

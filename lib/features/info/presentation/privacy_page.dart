@@ -3,9 +3,9 @@ import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/privacy/privacy_copy.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
-import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -35,7 +35,8 @@ class PrivacyPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                PrimaryCard(
+                FcPanel(
+                  tint: AppTokens.blue,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -57,7 +58,7 @@ class PrivacyPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppTokens.s16),
-                PrimaryCard(
+                FcPanel(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

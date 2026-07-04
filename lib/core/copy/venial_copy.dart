@@ -157,6 +157,9 @@ class VenialCopy {
   static const retentionStickerChanged = 'Spostamento lento';
 
   static const predictionPrompt = 'Se dovessi azzardare...';
+  static const predictionLockedTitle = 'Carta giocata';
+  static const predictionLockedBody =
+      'Hai registrato il voto per questo turno. La previsione non si cambia.';
   static const motivationPrompt = 'Cosa ti fa pensare cosi\'?';
   static const motivationHelper = 'Due parole, se ti va. Anche a pelle.';
   static const choiceImproveLabel = 'Migliora';
@@ -231,6 +234,13 @@ class VenialCopy {
   static const nextProblemsSortSplit = 'Divisivi';
   static const nextProblemsPendingHelper =
       'In valutazione: vediamo se entra in gioco.';
+  static const nextProblemsPromotionTitle = 'Regola di ingresso';
+  static const nextProblemsPromotionComplete =
+      'Soglia raggiunta: puo\' entrare nelle carte del turno.';
+  static const nextProblemsPromotionMissingSingular =
+      'Manca 1 approvazione netta per entrare in lista.';
+  static const nextProblemsPromotionMissingPlural =
+      'Mancano {count} approvazioni nette per entrare in lista.';
   static const nextProblemsProposedBy = 'Proposto da';
   static const nextProblemsVotedSnack = 'Segnato.';
 

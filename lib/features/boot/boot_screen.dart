@@ -8,14 +8,10 @@ import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/animated_size_x.dart';
 import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
-import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
-import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/widgets/segmented_choice.dart';
-import 'package:fanta_comune/core/widgets/status_pill.dart';
-import 'package:fanta_comune/core/widgets/stamp_action_button.dart';
-import 'package:fanta_comune/core/widgets/sticker_badge.dart';
 import 'package:fanta_comune/core/theme/typography_x.dart';
 import 'package:fanta_comune/core/privacy/privacy_copy.dart';
 import 'package:go_router/go_router.dart';
@@ -62,23 +58,33 @@ class _BootScreenState extends State<BootScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  PrimaryCard(
-                    textured: true,
+                  FcPanel(
+                    tint: AppTokens.blue,
                     elevated: true,
                     padding: cardPadding,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        StickerBadge(
+                        const FcStatusChip(
                           label: VenialCopy.bootStickerLabel,
-                          animate: true,
+                          color: AppTokens.blue,
+                          icon: AppIcons.board,
                         ),
                         const SizedBox(height: AppTokens.s12),
-                        CardIllustrationSlot(
-                          fallbackIcon: AppIcons.board,
-                          height: 90,
-                          compact: true,
-                          labelRibbon: VenialCopy.bootHeroRibbon,
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(
+                              AppTokens.radiusSmall,
+                            ),
+                          ),
+                          child: Icon(
+                            AppIcons.board,
+                            color: colorScheme.primary,
+                            size: 34,
+                          ),
                         ),
                         const SizedBox(height: AppTokens.s12),
                         Text(
@@ -101,16 +107,15 @@ class _BootScreenState extends State<BootScreen> {
                     ),
                   ),
                   SizedBox(height: sectionGap),
-                  PrimaryCard(
-                    textured: true,
+                  FcPanel(
                     padding: cardPadding,
                     child: Wrap(
                       spacing: AppTokens.s12,
                       runSpacing: AppTokens.s12,
                       children: [
-                        StampActionButton(
-                          icon: AppIcons.play,
-                          label: VenialCopy.bootPrimaryCta,
+                        FilledButton.icon(
+                          icon: const Icon(AppIcons.play),
+                          label: const Text(VenialCopy.bootPrimaryCta),
                           onPressed: () => context.go(nextLocation),
                         ),
                         OutlinedButton.icon(
@@ -126,8 +131,7 @@ class _BootScreenState extends State<BootScreen> {
                     ),
                   ),
                   SizedBox(height: sectionGap),
-                  PrimaryCard(
-                    textured: true,
+                  FcPanel(
                     padding: cardPadding,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,8 +166,7 @@ class _BootScreenState extends State<BootScreen> {
                     ),
                   ),
                   SizedBox(height: sectionGap),
-                  PrimaryCard(
-                    textured: true,
+                  FcPanel(
                     padding: cardPadding,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,8 +230,7 @@ class _BootScreenState extends State<BootScreen> {
                     ),
                   ),
                   SizedBox(height: sectionGap),
-                  PrimaryCard(
-                    textured: true,
+                  FcPanel(
                     padding: cardPadding,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,7 +313,7 @@ class _BootScreenState extends State<BootScreen> {
                     ),
                   ),
                   const SizedBox(height: AppTokens.s16),
-                  PrimaryCard(
+                  FcPanel(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -324,9 +326,21 @@ class _BootScreenState extends State<BootScreen> {
                           spacing: AppTokens.s12,
                           runSpacing: AppTokens.s12,
                           children: const [
-                            StatusPill(status: ProblemStatus.improving),
-                            StatusPill(status: ProblemStatus.stable),
-                            StatusPill(status: ProblemStatus.worsening),
+                            FcStatusChip(
+                              label: 'Migliora',
+                              color: AppTokens.success,
+                              icon: Icons.trending_up,
+                            ),
+                            FcStatusChip(
+                              label: 'Stabile',
+                              color: AppTokens.warning,
+                              icon: Icons.drag_handle,
+                            ),
+                            FcStatusChip(
+                              label: 'Peggiora',
+                              color: AppTokens.danger,
+                              icon: Icons.trending_down,
+                            ),
                           ],
                         ),
                         const SizedBox(height: AppTokens.s12),

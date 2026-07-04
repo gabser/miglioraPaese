@@ -73,6 +73,7 @@ class ProblemCard extends StatelessWidget {
     final updatedHours = DateTime.now().difference(problem.updatedAt).inHours;
     final trendLabel =
         '${problem.trendPercent >= 0 ? '+' : ''}${problem.trendPercent}%';
+    final isPredictionLocked = selectedChoice != null;
 
     return RepaintBoundary(
       child: FcPanel(
@@ -180,9 +181,23 @@ class ProblemCard extends StatelessWidget {
               _ResultBanner(result: result!),
             ],
             const SizedBox(height: AppTokens.s16),
-            Text(
-              VenialCopy.predictionPrompt,
-              style: textTheme.titleSmall,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    isPredictionLocked
+                        ? VenialCopy.predictionLockedTitle
+                        : VenialCopy.predictionPrompt,
+                    style: textTheme.titleSmall,
+                  ),
+                ),
+                if (isPredictionLocked)
+                  FcStatusChip(
+                    label: _choiceLabel(selectedChoice!),
+                    color: _choiceColor(selectedChoice!),
+                    icon: Icons.how_to_vote_outlined,
+                  ),
+              ],
             ),
             const SizedBox(height: AppTokens.s8),
             SegmentedChoice<PredictionChoice>(
@@ -208,8 +223,17 @@ class ProblemCard extends StatelessWidget {
                   ],
                 );
               },
-              onChanged: onSelectChoice,
+              onChanged: isPredictionLocked ? null : onSelectChoice,
             ),
+            if (isPredictionLocked) ...[
+              const SizedBox(height: AppTokens.s8),
+              Text(
+                VenialCopy.predictionLockedBody,
+                style: textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             if (selectedChoice != null) ...[
               const SizedBox(height: AppTokens.s16),
               Text(

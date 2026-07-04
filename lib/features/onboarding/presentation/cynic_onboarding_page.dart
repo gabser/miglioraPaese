@@ -6,13 +6,10 @@ import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_motion.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
-import 'package:fanta_comune/core/widgets/card_illustration_slot.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
-import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:fanta_comune/core/widgets/ticket_progress.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
-import 'package:fanta_comune/core/theme/vintage_paper.dart';
-import 'package:fanta_comune/core/widgets/stamp_badge.dart';
 import 'package:fanta_comune/core/theme/typography_x.dart';
 
 class CynicOnboardingPage extends StatefulWidget {
@@ -85,19 +82,9 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: AppTokens.s12),
-            child: InkWell(
-              onTap: () => _completeOnboarding(context),
-              borderRadius: BorderRadius.circular(AppTokens.radius),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: 44),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppTokens.s8),
-                  child: StampBadge(
-                    label: VenialCopy.onboardingSkip,
-                    angle: -0.04,
-                  ),
-                ),
-              ),
+            child: TextButton(
+              onPressed: () => _completeOnboarding(context),
+              child: const Text(VenialCopy.onboardingSkip),
             ),
           ),
         ],
@@ -106,8 +93,8 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
         child: MaxWidthContainer(
           child: Padding(
             padding: EdgeInsets.all(padding),
-            child: PrimaryCard(
-              textured: true,
+            child: FcPanel(
+              tint: AppTokens.blue,
               elevated: true,
               padding: EdgeInsets.all(padding),
               child: AnimatedSwitcherX(
@@ -128,25 +115,27 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
                       ),
                     ),
                     SizedBox(height: sectionGap),
-                    CardIllustrationSlot(
-                      fallbackIcon: AppIcons.play,
-                      height: 72,
-                      compact: true,
+                    Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(
+                          AppTokens.radiusSmall,
+                        ),
+                      ),
+                      child: Icon(
+                        AppIcons.play,
+                        color: colorScheme.primary,
+                      ),
                     ),
                     SizedBox(height: sectionGap),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTokens.s12,
-                        vertical: AppTokens.s8 / 2,
-                      ),
-                      decoration: VintagePaper.tapeDecoration(colorScheme),
-                      child: Semantics(
-                        header: true,
-                        child: Text(
-                          step.title,
-                          style: TypographyX.titleMedium(context)?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        step.title,
+                        style: TypographyX.titleMedium(context)?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),

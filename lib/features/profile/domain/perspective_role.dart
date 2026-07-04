@@ -129,5 +129,9 @@ PerspectiveRole suggestPerspectiveRole({
     return PerspectiveRole.optimist;
   }
 
+  if (considered >= 2) {
+    return PerspectiveRole.observer;
+  }
+
   return PerspectiveRole.observer;
 }

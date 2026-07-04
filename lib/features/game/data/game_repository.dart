@@ -1,5 +1,6 @@
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
+import 'package:fanta_comune/features/civic_loop/domain/civic_loop_summary.dart';
 import 'package:fanta_comune/features/game/domain/critical_insight.dart';
 import 'package:fanta_comune/features/game/domain/hypothesis_confidence.dart';
 import 'package:fanta_comune/features/game/domain/insight_history.dart';
@@ -25,6 +26,9 @@ abstract class GameRepository {
   Future<MunicipalityActivationState> getMunicipalityActivationState(
     String municipalityId,
   );
+
+  /// Restituisce il riepilogo del loop civico reale per il Comune.
+  Future<CivicLoopSummary> getCivicLoopSummary(String municipalityId);
 
   /// Elenca i problemi attivi per il [municipalityId].
   Future<List<Problem>> listProblems(String municipalityId);
@@ -60,10 +64,7 @@ abstract class GameRepository {
   });
 
   /// Segnala se il problema è stato risolto o peggiorato, aggiornandone lo stato.
-  Future<void> tapSignal({
-    required String problemId,
-    required bool resolved,
-  });
+  Future<void> tapSignal({required String problemId, required bool resolved});
 
   /// Restituisce l'insight aggregato (mock) per il problema indicato.
   Future<AggregatedInsight> getAggregatedInsight(String problemId);
@@ -87,8 +88,9 @@ abstract class GameRepository {
   Future<InsightHistory> getInsightHistory(String problemId);
 
   /// Restituisce lo storico delle reputazioni per il comune indicato.
-  Future<List<ReputationScore>> getReputationHistory(
-      {required String municipalityId});
+  Future<List<ReputationScore>> getReputationHistory({
+    required String municipalityId,
+  });
 
   /// Restituisce un set di insight critici aggregati post-risoluzione.
   Future<List<CriticalInsight>> getCriticalInsights({

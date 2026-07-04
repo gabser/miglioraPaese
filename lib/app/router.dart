@@ -50,6 +50,12 @@ GoRouter buildRouter(AppPrefs appPrefs) {
         builder: (context, state) => const OnboardingPage(),
       ),
       GoRoute(
+        path: '/change-municipality',
+        builder: (context, state) => const OnboardingPage(
+          afterSelectionRoute: '/profile',
+        ),
+      ),
+      GoRoute(
         path: '/next-problems',
         builder: (context, state) => const NextProblemsPage(),
       ),

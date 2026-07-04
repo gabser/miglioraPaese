@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fanta_comune/core/privacy/privacy_copy.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
-import 'package:fanta_comune/core/widgets/primary_card.dart';
 import 'package:go_router/go_router.dart';
 
 /// Pagina informativa che spiega in breve le regole di gioco e rimanda alla privacy.
@@ -25,7 +25,8 @@ class HowItWorksPage extends StatelessWidget {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                PrimaryCard(
+                FcPanel(
+                  tint: AppTokens.blue,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -103,7 +104,7 @@ class _StepCard extends StatelessWidget {
 
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 260),
-      child: PrimaryCard(
+      child: FcPanel(
         padding: const EdgeInsets.all(AppTokens.s12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

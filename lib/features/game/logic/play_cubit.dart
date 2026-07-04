@@ -19,10 +19,8 @@ import 'package:fanta_comune/features/game/domain/turn_state.dart';
 /// Gestisce il flusso di gioco "Gioca": carica turno, problemi e previsioni.
 class PlayCubit extends Cubit<PlayState> {
   /// Crea il cubit con le dipendenze necessarie.
-  PlayCubit({
-    required this.repository,
-    required this.prefs,
-  }) : super(const PlayState(isLoading: true));
+  PlayCubit({required this.repository, required this.prefs})
+      : super(const PlayState(isLoading: true));
 
   final GameRepository repository;
   final AppPrefs prefs;
@@ -48,8 +46,9 @@ class PlayCubit extends Cubit<PlayState> {
   ) async {
     final targets = problemIds.toSet();
     final preserved = Map<String, ReflectionQuestion>.fromEntries(
-      state.reflectionQuestions.entries
-          .where((entry) => targets.contains(entry.key)),
+      state.reflectionQuestions.entries.where(
+        (entry) => targets.contains(entry.key),
+      ),
     );
 
     for (final id in targets) {
@@ -75,9 +74,7 @@ class PlayCubit extends Cubit<PlayState> {
   String _insightSignature(AggregatedInsight insight) {
     if (insight.totalPredictions == 0) return 'none';
     final primary = insight.choiceDistribution.entries
-        .reduce(
-          (a, b) => a.value >= b.value ? a : b,
-        )
+        .reduce((a, b) => a.value >= b.value ? a : b)
         .key;
     final percentage =
         insight.percentageForChoice(primary).clamp(0, 100).round();
@@ -85,7 +82,8 @@ class PlayCubit extends Cubit<PlayState> {
   }
 
   Map<String, String> _buildInsightSignatures(
-      Map<String, AggregatedInsight> insights) {
+    Map<String, AggregatedInsight> insights,
+  ) {
     return {
       for (final entry in insights.entries)
         entry.key: _insightSignature(entry.value),
@@ -118,9 +116,9 @@ class PlayCubit extends Cubit<PlayState> {
 
     try {
       final history = await repository.getInsightHistory(problemId);
-      final updatedHistories =
-          Map<String, InsightHistory>.from(state.insightHistories)
-            ..[problemId] = history;
+      final updatedHistories = Map<String, InsightHistory>.from(
+        state.insightHistories,
+      )..[problemId] = history;
       loading.remove(problemId);
       emit(
         state.copyWith(
@@ -131,21 +129,25 @@ class PlayCubit extends Cubit<PlayState> {
       );
     } catch (e) {
       loading.remove(problemId);
-      emit(state.copyWith(
-          loadingInsightHistories: loading, error: e.toString()));
+      emit(
+        state.copyWith(loadingInsightHistories: loading, error: e.toString()),
+      );
     }
   }
 
   /// Recupera lo storico reputazione e lo mantiene in cache locale.
   Future<void> loadReputationHistory() async {
-    if (state.reputationHistory.isNotEmpty || state.isReputationHistoryLoading)
+    if (state.reputationHistory.isNotEmpty ||
+        state.isReputationHistoryLoading) {
       return;
+    }
 
     emit(state.copyWith(isReputationHistoryLoading: true, error: null));
     try {
       final municipalityId = prefs.municipalityId ?? 'demo';
-      final history =
-          await repository.getReputationHistory(municipalityId: municipalityId);
+      final history = await repository.getReputationHistory(
+        municipalityId: municipalityId,
+      );
       emit(
         state.copyWith(
           reputationHistory: history,
@@ -154,8 +156,9 @@ class PlayCubit extends Cubit<PlayState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(
-          isReputationHistoryLoading: false, error: e.toString()));
+      emit(
+        state.copyWith(isReputationHistoryLoading: false, error: e.toString()),
+      );
     }
   }
 
@@ -169,6 +172,7 @@ class PlayCubit extends Cubit<PlayState> {
       final predictions = await repository.getMyPredictions(turn.id);
       final results = await repository.getPredictionResults(turn.id);
       final reputation = await repository.getReputationScore(turn.id);
+      final civicSummary = await repository.getCivicLoopSummary(municipalityId);
       final insights = results.isNotEmpty
           ? await _loadInsightsForProblems(results.keys)
           : const <String, AggregatedInsight>{};
@@ -199,6 +203,7 @@ class PlayCubit extends Cubit<PlayState> {
         state.copyWith(
           isLoading: false,
           currentTurn: turn,
+          civicSummary: civicSummary,
           problems: problems,
           myPredictions: predictions.map(
             (key, value) => MapEntry(key, value.choice),
@@ -237,23 +242,29 @@ class PlayCubit extends Cubit<PlayState> {
     final turnId = state.currentTurn?.id;
     if (turnId == null) return;
     final previousChoice = state.myPredictions[problemId];
-
-    final updatedPredictions =
-        Map<String, PredictionChoice>.from(state.myPredictions)
-          ..[problemId] = choice;
-    final updatedMotivations =
-        Map<String, List<MotivationKey>>.from(state.motivations);
-    final updatedConfidences =
-        Map<String, HypothesisConfidence>.from(state.confidences);
-    if (previousChoice != null && previousChoice != choice) {
-      updatedMotivations.remove(problemId);
-      updatedConfidences.remove(problemId);
+    if (previousChoice != null) {
+      emit(state.copyWith(error: 'Questa carta e\' gia\' stata giocata.'));
+      return;
     }
+
+    final updatedPredictions = Map<String, PredictionChoice>.from(
+      state.myPredictions,
+    )..[problemId] = choice;
+    final updatedMotivations = Map<String, List<MotivationKey>>.from(
+      state.motivations,
+    );
+    final updatedConfidences = Map<String, HypothesisConfidence>.from(
+      state.confidences,
+    );
     final updatedResults = Map<String, PredictionResult>.from(state.results)
       ..remove(problemId);
     final hasUnresolvedTurn = state.currentTurn?.state == TurnState.open &&
         updatedResults.isEmpty &&
         updatedPredictions.isNotEmpty;
+    final civicSummary = state.civicSummary?.copyWith(
+      predictions: updatedPredictions.length,
+      outcomes: updatedResults.length,
+    );
     emit(
       state.copyWith(
         myPredictions: updatedPredictions,
@@ -266,6 +277,7 @@ class PlayCubit extends Cubit<PlayState> {
         hasUnresolvedTurn: hasUnresolvedTurn,
         error: null,
         results: updatedResults,
+        civicSummary: civicSummary,
       ),
     );
 
@@ -292,14 +304,15 @@ class PlayCubit extends Cubit<PlayState> {
     if (turnId == null || prediction == null) return;
 
     final limited = motivations.take(2).toList(growable: false);
-    final updatedMotivations =
-        Map<String, List<MotivationKey>>.from(state.motivations)
-          ..[problemId] = limited;
+    final updatedMotivations = Map<String, List<MotivationKey>>.from(
+      state.motivations,
+    )..[problemId] = limited;
     emit(
       state.copyWith(
         motivations: updatedMotivations,
-        suggestedPerspective:
-            _suggestPerspectiveRole(motivations: updatedMotivations),
+        suggestedPerspective: _suggestPerspectiveRole(
+          motivations: updatedMotivations,
+        ),
         error: null,
       ),
     );
@@ -392,12 +405,14 @@ class PlayCubit extends Cubit<PlayState> {
 
       final resolved = await repository.getPredictionResults(turnId);
       final reputation = await repository.getReputationScore(turnId);
+      final municipalityId = prefs.municipalityId ?? 'demo';
+      final civicSummary = await repository.getCivicLoopSummary(municipalityId);
       final insights = await _loadInsightsForProblems(resolved.keys);
       List<ReputationScore>? reputationHistory;
       if (state.reputationHistory.isNotEmpty) {
-        final municipalityId = prefs.municipalityId ?? 'demo';
         reputationHistory = await repository.getReputationHistory(
-            municipalityId: municipalityId);
+          municipalityId: municipalityId,
+        );
       }
       final suggestedPerspective = _suggestPerspectiveRole();
       final lastSeenTurnId = prefs.getLastSeenTurnId();
@@ -411,6 +426,7 @@ class PlayCubit extends Cubit<PlayState> {
         state.copyWith(
           isLoading: false,
           results: resolved,
+          civicSummary: civicSummary,
           insights: insights,
           suggestedPerspective: suggestedPerspective,
           hasPendingInsights: hasPendingInsights,
@@ -444,9 +460,9 @@ class PlayCubit extends Cubit<PlayState> {
         userConfidence: state.confidences[problemId],
         userReflectionIndex: state.reflectionAnswers[problemId],
       );
-      final updated =
-          Map<String, List<CriticalInsight>>.from(state.criticalInsights)
-            ..[problemId] = insights;
+      final updated = Map<String, List<CriticalInsight>>.from(
+        state.criticalInsights,
+      )..[problemId] = insights;
       loading.remove(problemId);
       emit(
         state.copyWith(
@@ -457,8 +473,9 @@ class PlayCubit extends Cubit<PlayState> {
       );
     } catch (e) {
       loading.remove(problemId);
-      emit(state.copyWith(
-          loadingCriticalInsights: loading, error: e.toString()));
+      emit(
+        state.copyWith(loadingCriticalInsights: loading, error: e.toString()),
+      );
     }
   }
 
@@ -470,10 +487,7 @@ class PlayCubit extends Cubit<PlayState> {
     await prefs.setLastSeenTurnId(turnId);
     await prefs.setInsightSignatures(signatures);
     emit(
-      state.copyWith(
-        hasPendingInsights: false,
-        hasChangedPerception: false,
-      ),
+      state.copyWith(hasPendingInsights: false, hasChangedPerception: false),
     );
   }
 }
