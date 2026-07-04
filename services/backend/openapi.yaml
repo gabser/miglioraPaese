@@ -1,0 +1,245 @@
+openapi: 3.1.0
+info:
+  title: Migliora Paese API
+  version: 0.1.0
+  description: Initial API contract for replacing Flutter in-memory repositories.
+servers:
+  - url: http://127.0.0.1:8787
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Backend is reachable.
+  /v1/municipalities/{municipalityId}/activation:
+    get:
+      summary: Get municipality activation state
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      responses:
+        "200":
+          description: Activation state.
+  /v1/municipalities/{municipalityId}/summary:
+    get:
+      summary: Get civic loop summary
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      responses:
+        "200":
+          description: Civic loop summary.
+  /v1/municipalities/{municipalityId}/turn:
+    get:
+      summary: Get current turn
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      responses:
+        "200":
+          description: Current turn.
+  /v1/municipalities/{municipalityId}/problems:
+    get:
+      summary: List active problems
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      responses:
+        "200":
+          description: Problems for the current turn.
+  /v1/municipalities/{municipalityId}/leaderboard:
+    get:
+      summary: List leaderboard entries
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      responses:
+        "200":
+          description: Leaderboard entries.
+  /v1/municipalities/{municipalityId}/next-problems:
+    get:
+      summary: List suggested next problems
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/SuggestedProblemStatus"
+        - name: query
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Suggested problems.
+    post:
+      summary: Submit a suggested problem
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitSuggestedProblemRequest"
+      responses:
+        "201":
+          description: Created suggested problem.
+  /v1/municipalities/{municipalityId}/next-problems/{problemId}/votes:
+    post:
+      summary: Vote on a suggested problem
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+        - $ref: "#/components/parameters/ProblemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoteSuggestedProblemRequest"
+      responses:
+        "200":
+          description: Updated suggested problem.
+  /v1/turns/{turnId}/predictions:
+    get:
+      summary: List predictions for the current user
+      parameters:
+        - $ref: "#/components/parameters/TurnId"
+        - name: userId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User predictions.
+  /v1/turns/{turnId}/predictions/{problemId}:
+    put:
+      summary: Create or update a prediction
+      parameters:
+        - $ref: "#/components/parameters/TurnId"
+        - $ref: "#/components/parameters/ProblemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertPredictionRequest"
+      responses:
+        "200":
+          description: Saved prediction.
+  /v1/problems/{problemId}/resolve:
+    post:
+      summary: Resolve a prediction against the current problem status
+      parameters:
+        - $ref: "#/components/parameters/ProblemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolvePredictionRequest"
+      responses:
+        "200":
+          description: Prediction result.
+components:
+  parameters:
+    MunicipalityId:
+      name: municipalityId
+      in: path
+      required: true
+      schema:
+        type: string
+    ProblemId:
+      name: problemId
+      in: path
+      required: true
+      schema:
+        type: string
+    TurnId:
+      name: turnId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    ProblemKey:
+      type: string
+      enum:
+        - lighting
+        - potholes
+        - waste
+        - cleanliness
+        - green
+        - signage
+        - transport
+        - parking
+        - decor
+        - noise
+        - safety
+        - construction
+        - queues
+    PredictionChoice:
+      type: string
+      enum:
+        - improve
+        - stable
+        - worsen
+    HypothesisConfidence:
+      type: string
+      enum:
+        - gutFeeling
+        - considered
+        - convinced
+    VoteChoice:
+      type: string
+      enum:
+        - up
+        - down
+    SuggestedProblemStatus:
+      type: string
+      enum:
+        - pending
+        - approved
+        - rejected
+    SubmitSuggestedProblemRequest:
+      type: object
+      required:
+        - title
+        - description
+        - category
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: "#/components/schemas/ProblemKey"
+        userId:
+          type: string
+    VoteSuggestedProblemRequest:
+      type: object
+      required:
+        - vote
+      properties:
+        vote:
+          $ref: "#/components/schemas/VoteChoice"
+        userId:
+          type: string
+    UpsertPredictionRequest:
+      type: object
+      required:
+        - choice
+      properties:
+        choice:
+          $ref: "#/components/schemas/PredictionChoice"
+        motivations:
+          type: array
+          items:
+            type: string
+        confidence:
+          $ref: "#/components/schemas/HypothesisConfidence"
+        userId:
+          type: string
+    ResolvePredictionRequest:
+      type: object
+      required:
+        - choice
+      properties:
+        choice:
+          $ref: "#/components/schemas/PredictionChoice"

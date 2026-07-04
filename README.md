@@ -12,6 +12,7 @@ Il repository e' ancora basato su dati mock in-memory: non c'e' un backend reale
 - `provider` per dependency injection semplice
 - `shared_preferences` per preferenze locali
 - design system locale in `lib/core/theme` e `lib/core/widgets`
+- backend HTTP iniziale in `services/backend`
 
 ## Funzionalita'
 
@@ -62,10 +63,30 @@ La reference del nuovo mockup e il piano di migrazione UI sono in:
 
 - `docs/design/fanta-comune-standalone.html`
 - `docs/design/mockup_implementation_plan.md`
+- `docs/design/ux_ui_alignment_plan.md`
+
+## Backend
+
+La fondazione backend vive in:
+
+- `docs/backend/backend_foundation_plan.md`
+- `services/backend`
+
+Per provarla localmente:
+
+```bash
+cd services/backend
+npm test
+npm run dev
+```
+
+Richiede Node.js 20 o superiore.
 
 ## Struttura
 
 ```text
+.github/workflows/          CI Flutter e backend
+docs/                       piani tecnici e design reference
 lib/app/                    router e shell applicativa
 lib/core/                   tema, copy, preferenze e widget condivisi
 lib/features/boot/          schermata iniziale
@@ -75,6 +96,7 @@ lib/features/next_problems/ proposta e voto prossimi problemi
 lib/features/profile/       profilo e reputazione
 lib/features/leaderboard/   classifica mock
 lib/features/info/          come funziona e privacy
+services/backend/           API HTTP iniziale e contratto OpenAPI
 test/                       widget e routing smoke test
 ```
 
