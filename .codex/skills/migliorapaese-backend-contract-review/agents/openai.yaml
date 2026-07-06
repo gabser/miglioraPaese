@@ -1,0 +1,4 @@
+interface:
+  display_name: "MiglioraPaese Backend Contract Review"
+  short_description: "Review backend contract consistency"
+  default_prompt: "Use $migliorapaese-backend-contract-review to review a backend API contract change before merge."
