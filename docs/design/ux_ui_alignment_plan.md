@@ -1,16 +1,21 @@
 # Fanta Comune UX/UI alignment plan
 
-## Stato di partenza
+## Stato aggiornato (11 luglio 2026)
 
-Questo piano parte dal nuovo mockup v2 e dal baseline Flutter gia' introdotto nella PR #19, che ha portato nel codice:
+Questo piano parte dal nuovo mockup v2 e dal baseline Flutter introdotto nella PR #19. La PR #21 ha poi integrato selettivamente il primo loop civico e ha superato la PR #20, che non deve essere riaperta o unita integralmente.
+
+Il codice corrente include:
 
 - palette civic game moderna blu/navy con superfici chiare;
 - token e tema centralizzati in `lib/core/theme`;
 - componenti condivisi `Fc*` in `lib/core/widgets`;
 - shell, home, board, profilo e `ProblemCard` gia' parzialmente riallineati;
 - riferimento visuale in `docs/design/fanta-comune-standalone.html`.
+- stati operativi per Comune nuovo in Home, Play, Board e proposte;
+- primo loop mock proposta -> approvazione -> carta del turno;
+- scaffold HTTP locale e contratto OpenAPI in `services/backend`.
 
-Resta aperta la PR #20 sul primo loop civico. Prima di modificare in modo profondo `PlayPage`, onboarding o flussi di attivazione e' opportuno decidere se mergearla o ribasare il lavoro successivo su quella branch.
+Il mockup HTML e' una reference statica: non contiene runtime, font incorporati o richieste di rete.
 
 ## Obiettivo
 
@@ -137,6 +142,8 @@ Per le PR con UI rilevante:
 
 ## Priorita' immediata
 
-1. Chiudere o integrare PR #20.
-2. Fare PR A/B se il baseline non e' ancora abbastanza stabile.
-3. Portare subito Home in attivazione, Play vuota e Board vuota a livello mockup, perche' sono i punti UX piu' deboli e piu' importanti per il lancio in piccoli comuni.
+1. Consolidare il pilot API per proposte e voto dietro configurazione esplicita, mantenendo il gioco mock come default.
+2. Chiudere i mismatch tra OpenAPI, backend locale e modelli Flutter prima di introdurre `ApiGameRepository`.
+3. Eliminare dati demo presentati come reali e mantenere visibile la natura non ufficiale del prototipo.
+4. Estendere i test di Cubit, mapping HTTP, errori e viewport prima di collegare persistenza o identita' reali.
+5. Pubblicare la demo web solo con dati mock; backend, moderazione, privacy remota e persistenza restano prerequisiti separati per un servizio pubblico.

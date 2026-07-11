@@ -1,0 +1,53 @@
+name: Segnalazione bug
+description: Segnala un comportamento riproducibile del prototipo.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Non includere dati personali, credenziali o segnalazioni civiche reali.
+        Per vulnerabilità usa il canale privato indicato in SECURITY.md.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Verifiche preliminari
+      options:
+        - label: Ho cercato tra le issue esistenti.
+          required: true
+        - label: Ho rimosso dati personali e credenziali da testo, log e immagini.
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrizione
+      description: Cosa è successo e quale comportamento ti aspettavi?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passi per riprodurre
+      placeholder: |
+        1. Apri...
+        2. Seleziona...
+        3. Osserva...
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Ambiente
+      description: Sistema operativo, browser e versione Flutter se rilevante.
+      placeholder: macOS 15, Chrome 140, Flutter 3.44.2
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log o screenshot sanitizzati
+      description: Allegali solo se necessari e senza informazioni sensibili.

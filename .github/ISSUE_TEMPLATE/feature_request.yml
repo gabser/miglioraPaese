@@ -1,0 +1,38 @@
+name: Proposta tecnica
+description: Proponi un miglioramento circoscritto del prototipo.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Questo spazio riguarda il software, non segnalazioni civiche o richieste ai Comuni.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema da risolvere
+      description: Descrivi il bisogno senza includere dati personali o casi reali identificabili.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Soluzione proposta
+      description: Spiega comportamento desiderato, perimetro e criteri di accettazione.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative considerate
+      description: Indica eventuali compromessi o soluzioni già valutate.
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Conferme
+      options:
+        - label: La proposta non contiene dati personali o segnalazioni civiche reali.
+          required: true

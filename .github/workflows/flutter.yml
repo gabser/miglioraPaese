@@ -16,9 +16,17 @@ on:
       - ".github/workflows/backend.yml"
       - "README.md"
 
+permissions:
+  contents: read
+
+concurrency:
+  group: flutter-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  analyze-and-test:
+  quality-gate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -27,11 +35,11 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: "3.44.2"
           cache: true
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Check formatting
         run: dart format --set-exit-if-changed .
@@ -41,3 +49,6 @@ jobs:
 
       - name: Test
         run: flutter test
+
+      - name: Build web release
+        run: flutter build web --release

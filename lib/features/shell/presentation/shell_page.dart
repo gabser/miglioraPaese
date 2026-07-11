@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
+import 'package:fanta_comune/core/models/municipality_catalog.dart';
+import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 
@@ -26,6 +29,10 @@ class ShellPage extends StatelessWidget {
     final isWide = width >= AppTokens.desktopBreakpoint;
     final currentIndex = navigationShell.currentIndex;
     final destinations = _destinations;
+    final municipalityId = context.watch<AppPrefs>().municipalityId ?? 'demo';
+    final municipalityName = MunicipalityCatalog.displayNameFromId(
+      municipalityId,
+    );
 
     if (isWide) {
       return Scaffold(
@@ -35,6 +42,7 @@ class ShellPage extends StatelessWidget {
               _Sidebar(
                 currentIndex: currentIndex,
                 destinations: destinations,
+                municipalityName: municipalityName,
                 onSelect: (index) => _onDestinationSelected(context, index),
               ),
               Expanded(
@@ -110,11 +118,13 @@ class _Sidebar extends StatelessWidget {
   const _Sidebar({
     required this.currentIndex,
     required this.destinations,
+    required this.municipalityName,
     required this.onSelect,
   });
 
   final int currentIndex;
   final List<_ShellDestination> destinations;
+  final String municipalityName;
   final ValueChanged<int> onSelect;
 
   @override
@@ -168,7 +178,7 @@ class _Sidebar extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Bologna',
+                        municipalityName,
                         style: textTheme.bodySmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
@@ -210,27 +220,26 @@ class _Sidebar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Turno di oggi',
+                    'Modalità demo',
                     style: textTheme.labelMedium?.copyWith(
-                      color: Colors.white.withOpacity(0.68),
+                      color: Colors.white.withValues(alpha: 0.68),
                     ),
                   ),
                   const SizedBox(height: AppTokens.s8),
                   Text(
-                    '5 problemi attivi',
+                    'Dati di gioco mock locali',
                     style: textTheme.titleSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: AppTokens.s12),
-                  LinearProgressIndicator(
-                    value: 0.62,
-                    minHeight: 7,
-                    borderRadius: BorderRadius.circular(999),
-                    backgroundColor: Colors.white.withOpacity(0.15),
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(AppTokens.success),
+                  Text(
+                    'Nessuna segnalazione ufficiale viene inviata.',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.76),
+                      height: 1.35,
+                    ),
                   ),
                 ],
               ),

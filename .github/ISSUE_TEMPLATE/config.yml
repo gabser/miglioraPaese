@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Segnalazione privata di sicurezza
+    url: https://github.com/gabser/miglioraPaese/security/advisories/new
+    about: Non pubblicare vulnerabilità o credenziali in una issue.
+  - name: Guida al supporto
+    url: https://github.com/gabser/miglioraPaese/blob/main/SUPPORT.md
+    about: Verifica ambito e informazioni richieste prima di aprire una issue.

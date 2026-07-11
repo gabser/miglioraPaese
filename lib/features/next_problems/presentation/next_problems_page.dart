@@ -203,9 +203,6 @@ class _Content extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
     return BlocBuilder<NextProblemsCubit, NextProblemsState>(
       builder: (context, state) {
         Widget child;
@@ -215,12 +212,10 @@ class _Content extends StatelessWidget {
             child: CircularProgressIndicator(),
           );
         } else if (state.error != null) {
-          child = Center(
+          child = _NextProblemsError(
             key: const ValueKey('next-problems-error'),
-            child: Text(
-              state.error!,
-              style: textTheme.bodySmall?.copyWith(color: colorScheme.error),
-            ),
+            message: state.error!,
+            onRetry: context.read<NextProblemsCubit>().refresh,
           );
         } else if (state.items.isEmpty) {
           child = _NextProblemsEmpty(
@@ -244,6 +239,64 @@ class _Content extends StatelessWidget {
           child: child,
         );
       },
+    );
+  }
+}
+
+class _NextProblemsError extends StatelessWidget {
+  const _NextProblemsError({
+    super.key,
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String message;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: SingleChildScrollView(
+        child: FcPanel(
+          tint: AppTokens.danger,
+          padding: const EdgeInsets.all(AppTokens.s20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.cloud_off_outlined,
+                color: colorScheme.error,
+                size: 32,
+              ),
+              const SizedBox(height: AppTokens.s12),
+              Text(
+                'Temi non disponibili',
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: AppTokens.s8),
+              Text(
+                message,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppTokens.s16),
+              FilledButton.icon(
+                key: const ValueKey('next-problems-retry'),
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Riprova'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

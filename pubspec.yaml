@@ -1,9 +1,11 @@
 name: fanta_comune
-description: "App Flutter 'Fanta Comune' con preferenze locali e motion system."
+description: "Migliora Paese: prototipo Flutter web di gioco civico locale."
+version: 0.1.0+1
 publish_to: "none"
 
 environment:
-  sdk: ">=3.3.0 <4.0.0"
+  sdk: ">=3.12.0 <4.0.0"
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
@@ -13,6 +15,7 @@ dependencies:
   equatable: ^2.0.5
   shared_preferences: ^2.2.3
   go_router: ^14.2.8
+  http: ^1.6.0
   provider: ^6.1.2
   flutter_svg: ^2.3.0
 

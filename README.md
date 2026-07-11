@@ -1,112 +1,155 @@
-# Fanta Comune
+# Migliora Paese · Fanta Comune
 
-Fanta Comune e' un prototipo Flutter di gioco civico locale. L'utente sceglie un Comune, osserva problemi urbani in forma di carte, fa previsioni leggere su come evolveranno, poi vede esiti, reputazione e percezioni aggregate.
+[![Flutter](https://github.com/gabser/miglioraPaese/actions/workflows/flutter.yml/badge.svg)](https://github.com/gabser/miglioraPaese/actions/workflows/flutter.yml)
+[![Backend](https://github.com/gabser/miglioraPaese/actions/workflows/backend.yml/badge.svg)](https://github.com/gabser/miglioraPaese/actions/workflows/backend.yml)
+[![License: GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue.svg)](LICENSE)
 
-Il repository e' ancora basato su dati mock in-memory: non c'e' un backend reale e non vengono inviate segnalazioni ufficiali.
+Migliora Paese è un prototipo Flutter web di gioco civico locale. L'app, il cui
+nome corrente nell'interfaccia è **Fanta Comune**, permette di scegliere un
+Comune, osservare temi urbani in forma di carte, fare previsioni leggere e
+confrontare esiti e percezioni aggregate.
 
-## Stack
+> **Stato: prototipo v0.1.0.** La demo pubblica usa dati mock locali, non invia
+> segnalazioni ufficiali e non certifica la realtà. Il backend è uno scaffold
+> in-memory per sviluppo: non è autorizzato per un deploy pubblico o per dati
+> reali.
 
-- Flutter / Dart
-- `go_router` per routing dichiarativo
-- `flutter_bloc` per Cubit e stato UI
-- `provider` per dependency injection semplice
-- `shared_preferences` per preferenze locali
-- design system locale in `lib/core/theme` e `lib/core/widgets`
-- backend HTTP iniziale in `services/backend`
+## Funzionalità
 
-## Funzionalita'
+- onboarding leggero e scelta del Comune;
+- shell responsive per mobile e desktop;
+- turno di gioco con previsioni, motivazioni e confidence;
+- tabellone, insight, reputazione e classifica mock;
+- flusso per proporre e votare i temi del prossimo turno;
+- stati operativi per Comuni nuovi o senza dati;
+- privacy e reset della demo locale;
+- pilot API opt-in per sole proposte e voti.
 
-- boot screen e onboarding leggero
-- scelta Comune locale
-- tab shell responsive
-- play loop con previsioni, motivazioni e confidence
-- tabellone dei problemi
-- insight aggregati e trend mock
-- reputazione e classifica mock
-- proposta e voto dei prossimi problemi
-- pagine info/privacy con reset locale
+## Stack e struttura
 
-## Setup
+- Flutter 3.44.2 / Dart 3.12;
+- go_router, flutter_bloc, provider e shared_preferences;
+- design system locale in **lib/core/theme** e **lib/core/widgets**;
+- API HTTP Node.js 24 zero-dependency in **services/backend**;
+- contratto OpenAPI e test Node integrati;
+- CI Flutter/backend e deploy della demo mock su GitHub Pages.
 
-```bash
+~~~text
+.github/                    workflow e configurazione GitHub
+docs/                       piani di design, backend e rilascio
+lib/app/                    bootstrap, dipendenze e router
+lib/core/                   config, rete, tema, copy e preferenze
+lib/features/               dominio, repository, logica e UI
+services/backend/           scaffold API locale e OpenAPI
+test/                       test unit, repository, Cubit e widget
+web/                        shell PWA Flutter
+~~~
+
+## Avvio rapido
+
+Il repository versiona solo la piattaforma web. Usa [FVM](https://fvm.app/) o
+un'installazione Flutter esattamente alla versione indicata in **.fvmrc**.
+
+~~~bash
+fvm flutter pub get
+fvm flutter run -d chrome
+~~~
+
+Senza FVM:
+
+~~~bash
 flutter pub get
-```
-
-Per avviare su web:
-
-```bash
 flutter run -d chrome
-```
+~~~
 
-Per avviare su un device/emulatore:
+## Pilot API per proposte e voto
 
-```bash
-flutter devices
-flutter run -d <device-id>
-```
+Il gioco resta mock. Solo NextProblemsRepository può usare il backend, e
+soltanto quando viene attivato esplicitamente.
 
-## Qualita'
+Avvia lo scaffold locale:
 
-I check minimi attesi prima di una PR sono:
-
-```bash
-dart format --set-exit-if-changed .
-flutter analyze --no-fatal-infos --no-fatal-warnings
-flutter test
-```
-
-La CI GitHub esegue gli stessi passaggi su ogni push e pull request verso `main`. Il gate analyzer iniziale fallisce sugli errori; warning e info restano visibili e andranno ridotti progressivamente.
-
-## Design
-
-La reference del nuovo mockup e il piano di migrazione UI sono in:
-
-- `docs/design/fanta-comune-standalone.html`
-- `docs/design/mockup_implementation_plan.md`
-- `docs/design/ux_ui_alignment_plan.md`
-
-## Backend
-
-La fondazione backend vive in:
-
-- `docs/backend/backend_foundation_plan.md`
-- `services/backend`
-
-Per provarla localmente:
-
-```bash
+~~~bash
 cd services/backend
 npm test
 npm run dev
-```
+~~~
 
-Richiede Node.js 20 o superiore.
+Poi avvia Flutter con:
 
-## Struttura
+~~~bash
+fvm flutter run -d chrome \
+  --dart-define=NEXT_PROBLEMS_DATA_SOURCE=api \
+  --dart-define=API_BASE_URL=http://127.0.0.1:8787
+~~~
 
-```text
-.github/workflows/          CI Flutter e backend
-docs/                       piani tecnici e design reference
-lib/app/                    router e shell applicativa
-lib/core/                   tema, copy, preferenze e widget condivisi
-lib/features/boot/          schermata iniziale
-lib/features/onboarding/    welcome e scelta Comune
-lib/features/game/          dominio, repository mock, Cubit e UI di gioco
-lib/features/next_problems/ proposta e voto prossimi problemi
-lib/features/profile/       profilo e reputazione
-lib/features/leaderboard/   classifica mock
-lib/features/info/          come funziona e privacy
-services/backend/           API HTTP iniziale e contratto OpenAPI
-test/                       widget e routing smoke test
-```
+La modalità API supporta al momento gli ID canonici **bologna** e
+**castel-bolognese**, con mapping esplicito dagli ID Flutter corrispondenti.
+Qualunque altro Comune produce un errore controllato e non ricade
+silenziosamente sui dati di un'altra città.
 
-## Note di prodotto
+Il parametro userId del pilot è ancora controllato dal client. Non usare
+questa modalità per utenti o contributi reali.
 
-Questa app non sostituisce canali ufficiali del Comune. E' un'esperienza giocosa per raccogliere percezioni, previsioni e priorita' leggere.
+## Quality gate
 
-## Roadmap tecnica breve
+~~~bash
+dart format --set-exit-if-changed .
+flutter analyze --no-fatal-infos --no-fatal-warnings
+flutter test
+flutter build web --release
+~~~
 
-- aumentare copertura dei Cubit
-- aggiungere integration test del flusso onboarding -> play
-- isolare e testare `ProblemCard` e `InsightCard`
-- preparare repository reali dietro le interfacce esistenti
+Per il backend:
+
+~~~bash
+cd services/backend
+npm test
+~~~
+
+La CI esegue gli stessi gate con Flutter 3.44.2 e Node.js 24.
+
+## Demo web
+
+Il workflow **.github/workflows/pages.yml** costruisce esclusivamente la demo
+mock con base path **/miglioraPaese/**. Dopo aver selezionato **GitHub Actions**
+come sorgente Pages, l'URL previsto è:
+
+<https://gabser.github.io/miglioraPaese/>
+
+Il workflow Pages non avvia e non espone **services/backend**.
+
+## Documentazione
+
+- [Piano di rilascio pubblico](docs/public_release_plan.md)
+- [Fondazione backend](docs/backend/backend_foundation_plan.md)
+- [Piano UX/UI](docs/design/ux_ui_alignment_plan.md)
+- [Reference statica del mockup](docs/design/fanta-comune-standalone.html)
+
+## Limiti noti
+
+- dati di gioco e preferenze sono locali o in-memory;
+- nessuna autenticazione, persistenza server, moderazione o rate limiting;
+- nessun canale ufficiale con i Comuni;
+- ApiGameRepository non è ancora implementato perché il contratto non copre
+  risultati, reputazione e insight;
+- il lancio di un servizio reale richiede una privacy policy completa,
+  cancellazione remota, protezioni anti-abuso, staging e osservabilità.
+
+## Contribuire e sicurezza
+
+Leggi [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+e [SECURITY.md](SECURITY.md). Non inserire segnalazioni civiche reali, dati
+personali o credenziali in issue, fixture, log e screenshot.
+
+## Licenza e rilascio
+
+Il codice sorgente è distribuito con licenza
+[GPL-3.0-only](LICENSE). Prima del cambio di visibilità il proprietario deve
+confermare la provenienza e i diritti di distribuzione degli asset grafici,
+come indicato nel [piano di rilascio](docs/public_release_plan.md).
+
+La cronologia privata contiene metadati personali e operativi: la strategia
+raccomandata è pubblicare uno snapshot bonificato e mantenere l'attuale
+repository privato come archivio. Nessuna riscrittura della storia o creazione
+di un nuovo repository deve avvenire senza approvazione esplicita.

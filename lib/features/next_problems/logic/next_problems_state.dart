@@ -8,6 +8,8 @@ enum NextProblemsSortMode {
   controversial,
 }
 
+const _filterStatusNotProvided = Object();
+
 class NextProblemsState extends Equatable {
   const NextProblemsState({
     this.isLoading = false,
@@ -34,7 +36,7 @@ class NextProblemsState extends Equatable {
     String? error,
     List<SuggestedProblem>? items,
     String? query,
-    SuggestedProblemStatus? filterStatus,
+    Object? filterStatus = _filterStatusNotProvided,
     NextProblemsSortMode? sortMode,
     bool? submitting,
     Set<String>? votingProblemIds,
@@ -44,7 +46,9 @@ class NextProblemsState extends Equatable {
       error: error,
       items: items ?? this.items,
       query: query ?? this.query,
-      filterStatus: filterStatus ?? this.filterStatus,
+      filterStatus: identical(filterStatus, _filterStatusNotProvided)
+          ? this.filterStatus
+          : filterStatus as SuggestedProblemStatus?,
       sortMode: sortMode ?? this.sortMode,
       submitting: submitting ?? this.submitting,
       votingProblemIds: votingProblemIds ?? this.votingProblemIds,

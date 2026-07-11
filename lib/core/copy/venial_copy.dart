@@ -11,7 +11,7 @@ class VenialCopy {
   static const bootHeroSubtitle = 'Gioco civico leggero, carta e timbri.';
   static const bootHeroNote = 'Bootstrap completato. Pronto per iniziare.';
   static const bootPrimaryCta = 'Vai al tabellone';
-  static const bootResetCta = 'Reset dati locali';
+  static const bootResetCta = 'Reset preferenze';
   static const bootInfoTitle = 'Info & privacy';
   static const bootInfoCtaHow = 'Come funziona';
   static const bootInfoCtaPrivacy = 'Privacy';

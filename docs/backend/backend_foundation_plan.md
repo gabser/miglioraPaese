@@ -1,5 +1,17 @@
 # Backend foundation plan
 
+## Stato aggiornato (11 luglio 2026)
+
+La fase 1 locale è completata come scaffold contrattuale: avvio reale, store
+in-memory, validazione, CORS loopback, OpenAPI 0.2.0 e test di contratto. Il
+primo consumer HTTP è `ApiNextProblemsRepository`, attivabile solo con
+configurazione ambiente; `GameRepository` resta mock finché risultati,
+reputazione e insight non avranno contratti server completi.
+
+Lo scaffold non è un servizio pubblico: `userId` è controllato dal client e
+mancano persistenza, autenticazione, moderazione, rate limiting e cancellazione
+remota.
+
 ## Decisione
 
 Il backend nasce nello stesso repository del client Flutter, dentro `services/backend`.
@@ -60,7 +72,7 @@ I nomi enum restano allineati al Flutter:
 ## Roadmap
 
 1. Fondazione backend in-memory e contratto OpenAPI.
-2. `ApiGameRepository` e `ApiNextProblemsRepository` nel client Flutter, dietro feature flag o configurazione ambiente.
+2. `ApiNextProblemsRepository` nel client Flutter dietro configurazione ambiente; `ApiGameRepository` solo dopo il completamento del contratto di gioco.
 3. Persistenza reale con migrazioni.
 4. Identita' utente anonima stabile e poi auth opzionale.
 5. Deploy preview e ambiente staging.
@@ -72,3 +84,12 @@ I nomi enum restano allineati al Flutter:
 - `/health` risponde `ok`.
 - Gli endpoint principali restituiscono JSON compatibile con i repository Flutter.
 - Il piano e il contratto API sono versionati nel repo.
+
+## Criteri per iniziare la fase pubblica del backend
+
+- identità anonima emessa e verificata dal server;
+- persistenza con migrazioni, vincoli, backup e cancellazione;
+- moderazione dei testi e protezioni anti-abuso;
+- contratto completo per risultati, reputazione e insight;
+- staging, osservabilità e test end-to-end;
+- privacy policy coerente con i dati remoti.

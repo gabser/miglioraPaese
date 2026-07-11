@@ -75,7 +75,7 @@ class PrivacyPage extends StatelessWidget {
                       FilledButton.icon(
                         onPressed: () => _clearDataAndRestart(context),
                         icon: const Icon(AppIcons.privacy),
-                        label: const Text('Elimina dati locali e riparti'),
+                        label: const Text('Azzera preferenze e riparti'),
                       ),
                     ],
                   ),
