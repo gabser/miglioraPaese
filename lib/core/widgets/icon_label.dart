@@ -28,15 +28,9 @@ class IconLabel extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: iconSize,
-          ),
+          Icon(icon, size: iconSize),
           const SizedBox(width: AppTokens.s8),
-          Text(
-            text,
-            style: textTheme.bodyMedium,
-          ),
+          Text(text, style: textTheme.bodyMedium),
         ],
       ),
     );

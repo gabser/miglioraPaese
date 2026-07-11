@@ -32,10 +32,7 @@ class PrimaryCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final ink = colorScheme.primary.withOpacity(0.08);
     final radius = BorderRadius.circular(AppTokens.radius);
-    final content = Padding(
-      padding: padding,
-      child: child,
-    );
+    final content = Padding(padding: padding, child: child);
 
     final card = AnimatedContainer(
       duration: const Duration(milliseconds: 160),

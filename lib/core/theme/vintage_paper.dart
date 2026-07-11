@@ -18,28 +18,28 @@ class VintagePaper {
       scheme.tertiary.withOpacity(0.6);
 
   static List<BoxShadow> paperShadowSoft(ColorScheme scheme) => [
-        BoxShadow(
-          color: scheme.shadow.withOpacity(0.08),
-          blurRadius: 10,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: scheme.shadow.withOpacity(0.08),
+      blurRadius: 10,
+      offset: const Offset(0, 4),
+    ),
+  ];
 
   static List<BoxShadow> paperShadowLifted(ColorScheme scheme) => [
-        BoxShadow(
-          color: scheme.shadow.withOpacity(0.14),
-          blurRadius: 18,
-          offset: const Offset(0, 8),
-        ),
-      ];
+    BoxShadow(
+      color: scheme.shadow.withOpacity(0.14),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
+    ),
+  ];
 
   static List<BoxShadow> pinShadow(ColorScheme scheme) => [
-        BoxShadow(
-          color: scheme.shadow.withOpacity(0.2),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
-        ),
-      ];
+    BoxShadow(
+      color: scheme.shadow.withOpacity(0.2),
+      blurRadius: 6,
+      offset: const Offset(0, 2),
+    ),
+  ];
 
   static BoxDecoration surfaceDecoration(
     ColorScheme scheme, {

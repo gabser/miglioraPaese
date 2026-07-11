@@ -4,10 +4,7 @@ import 'package:fanta_comune/features/game/domain/insight_snapshot.dart';
 /// Contenitore ordinato degli snapshot di percezione per un problema.
 class InsightHistory extends Equatable {
   /// Crea una storia mock per il [problemId] con snapshot in ordine cronologico.
-  const InsightHistory({
-    required this.problemId,
-    required this.snapshots,
-  });
+  const InsightHistory({required this.problemId, required this.snapshots});
 
   /// Identificativo del problema a cui si riferisce lo storico.
   final String problemId;

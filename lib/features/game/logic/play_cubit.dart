@@ -20,7 +20,7 @@ import 'package:fanta_comune/features/game/domain/turn_state.dart';
 class PlayCubit extends Cubit<PlayState> {
   /// Crea il cubit con le dipendenze necessarie.
   PlayCubit({required this.repository, required this.prefs})
-      : super(const PlayState(isLoading: true));
+    : super(const PlayState(isLoading: true));
 
   final GameRepository repository;
   final AppPrefs prefs;
@@ -76,8 +76,10 @@ class PlayCubit extends Cubit<PlayState> {
     final primary = insight.choiceDistribution.entries
         .reduce((a, b) => a.value >= b.value ? a : b)
         .key;
-    final percentage =
-        insight.percentageForChoice(primary).clamp(0, 100).round();
+    final percentage = insight
+        .percentageForChoice(primary)
+        .clamp(0, 100)
+        .round();
     return '${primary.name}:$percentage:${insight.totalPredictions}';
   }
 
@@ -195,7 +197,8 @@ class PlayCubit extends Cubit<PlayState> {
           results.isNotEmpty && lastSeenTurnId != turn.id;
       final hasChangedPerception =
           results.isNotEmpty && _hasInsightChanges(insights, storedSignatures);
-      final hasUnresolvedTurn = turn.state == TurnState.open &&
+      final hasUnresolvedTurn =
+          turn.state == TurnState.open &&
           results.isEmpty &&
           predictions.isNotEmpty;
 
@@ -258,7 +261,8 @@ class PlayCubit extends Cubit<PlayState> {
     );
     final updatedResults = Map<String, PredictionResult>.from(state.results)
       ..remove(problemId);
-    final hasUnresolvedTurn = state.currentTurn?.state == TurnState.open &&
+    final hasUnresolvedTurn =
+        state.currentTurn?.state == TurnState.open &&
         updatedResults.isEmpty &&
         updatedPredictions.isNotEmpty;
     final civicSummary = state.civicSummary?.copyWith(

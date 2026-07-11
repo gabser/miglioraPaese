@@ -6,8 +6,9 @@ import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'helpers/test_app.dart';
 
 void main() {
-  testWidgets('municipality onboarding is optional and returns home',
-      (tester) async {
+  testWidgets('municipality onboarding is optional and returns home', (
+    tester,
+  ) async {
     final prefs = await createTestPrefs({});
 
     await tester.pumpWidget(buildTestApp(prefs));
@@ -35,11 +36,10 @@ void main() {
     expect(find.text('Gioca il turno'), findsOneWidget);
   });
 
-  testWidgets('profile can reopen municipality selection after onboarding',
-      (tester) async {
-    final prefs = await createTestPrefs({
-      'municipality_id': 'comune:Milano',
-    });
+  testWidgets('profile can reopen municipality selection after onboarding', (
+    tester,
+  ) async {
+    final prefs = await createTestPrefs({'municipality_id': 'comune:Milano'});
 
     await tester.pumpWidget(buildTestApp(prefs));
     await pumpRoutingFrame(tester);

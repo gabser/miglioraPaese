@@ -74,8 +74,8 @@ class _BoardPageState extends State<BoardPage> {
                 Text(
                   VenialCopy.boardSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: AppTokens.s16),
                 Expanded(
@@ -107,12 +107,13 @@ class _BoardPageState extends State<BoardPage> {
                           final gridCrossAxisCount = isWide
                               ? 3
                               : constraints.maxWidth < 430
-                                  ? 1
-                                  : 2;
+                              ? 1
+                              : 2;
                           final tileExtent = isWide ? 216.0 : 208.0;
-                          final rows =
-                              (items.length / gridCrossAxisCount).ceil();
-                          final boardFrameHeight = (rows * tileExtent) +
+                          final rows = (items.length / gridCrossAxisCount)
+                              .ceil();
+                          final boardFrameHeight =
+                              (rows * tileExtent) +
                               ((rows - 1) * AppTokens.s16) +
                               (AppTokens.s16 * 2) +
                               (AppTokens.s8 * 2);
@@ -130,18 +131,18 @@ class _BoardPageState extends State<BoardPage> {
                                     child: GridView.builder(
                                       gridDelegate:
                                           SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: gridCrossAxisCount,
-                                        crossAxisSpacing: AppTokens.s16,
-                                        mainAxisSpacing: AppTokens.s16,
-                                        mainAxisExtent: tileExtent,
-                                      ),
+                                            crossAxisCount: gridCrossAxisCount,
+                                            crossAxisSpacing: AppTokens.s16,
+                                            mainAxisSpacing: AppTokens.s16,
+                                            mainAxisExtent: tileExtent,
+                                          ),
                                       itemCount: items.length,
                                       itemBuilder: (context, index) {
                                         return _BoardTile(
                                           problem: items[index],
                                           prediction:
-                                              data?.predictionsByProblem[
-                                                  items[index].id],
+                                              data?.predictionsByProblem[items[index]
+                                                  .id],
                                         );
                                       },
                                     ),
@@ -157,18 +158,18 @@ class _BoardPageState extends State<BoardPage> {
                                           const NeverScrollableScrollPhysics(),
                                       gridDelegate:
                                           SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: gridCrossAxisCount,
-                                        crossAxisSpacing: AppTokens.s16,
-                                        mainAxisSpacing: AppTokens.s16,
-                                        mainAxisExtent: tileExtent,
-                                      ),
+                                            crossAxisCount: gridCrossAxisCount,
+                                            crossAxisSpacing: AppTokens.s16,
+                                            mainAxisSpacing: AppTokens.s16,
+                                            mainAxisExtent: tileExtent,
+                                          ),
                                       itemCount: items.length,
                                       itemBuilder: (context, index) {
                                         return _BoardTile(
                                           problem: items[index],
                                           prediction:
-                                              data?.predictionsByProblem[
-                                                  items[index].id],
+                                              data?.predictionsByProblem[items[index]
+                                                  .id],
                                         );
                                       },
                                     ),
@@ -267,9 +268,7 @@ class _BoardActivationEmpty extends StatelessWidget {
           const SizedBox(height: AppTokens.s12),
           Text(
             VenialCopy.boardActivationEmpty,
-            style: textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w900,
-            ),
+            style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: AppTokens.s8),
           Text(
@@ -303,10 +302,7 @@ class _BoardActivationEmpty extends StatelessWidget {
 }
 
 class _BoardTile extends StatefulWidget {
-  const _BoardTile({
-    required this.problem,
-    required this.prediction,
-  });
+  const _BoardTile({required this.problem, required this.prediction});
 
   final Problem problem;
   final Prediction? prediction;
@@ -403,8 +399,9 @@ class _BoardTileState extends State<_BoardTile> {
                           widget.problem.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
@@ -412,8 +409,10 @@ class _BoardTileState extends State<_BoardTile> {
                   const SizedBox(height: AppTokens.s8),
                   Row(
                     children: [
-                      Icon(AppIcons.forProblemKey(widget.problem.key),
-                          size: 18),
+                      Icon(
+                        AppIcons.forProblemKey(widget.problem.key),
+                        size: 18,
+                      ),
                       const SizedBox(width: AppTokens.s8),
                       Expanded(
                         child: Text(
@@ -562,9 +561,7 @@ Future<_BoardSnapshot> _loadSnapshot({
 String _insightSignature(AggregatedInsight insight) {
   if (insight.totalPredictions == 0) return 'none';
   final primary = insight.choiceDistribution.entries
-      .reduce(
-        (a, b) => a.value >= b.value ? a : b,
-      )
+      .reduce((a, b) => a.value >= b.value ? a : b)
       .key;
   final percentage = insight.percentageForChoice(primary).clamp(0, 100).round();
   return '${primary.name}:$percentage:${insight.totalPredictions}';
@@ -615,15 +612,17 @@ class _BoardNewsSection extends StatelessWidget {
       children: [
         Text(
           VenialCopy.boardNewsTitle,
-          style: TypographyX.titleMedium(context)
-              ?.copyWith(fontWeight: FontWeight.w700),
+          style: TypographyX.titleMedium(
+            context,
+          )?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: AppTokens.s8),
         if (items.isEmpty)
           Text(
             VenialCopy.boardNewsEmpty,
-            style: textTheme.bodySmall
-                ?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           )
         else
           Wrap(
@@ -666,8 +665,9 @@ class _BoardNewsCard extends StatelessWidget {
             const SizedBox(height: AppTokens.s8),
             Text(
               title,
-              style:
-                  textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: AppTokens.s4),
             Text(
@@ -702,31 +702,38 @@ class _BoardTokensSection extends StatelessWidget {
       children: [
         Text(
           VenialCopy.boardTokensTitle,
-          style: TypographyX.titleMedium(context)
-              ?.copyWith(fontWeight: FontWeight.w700),
+          style: TypographyX.titleMedium(
+            context,
+          )?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: AppTokens.s8),
         if (tokens.isEmpty)
           Text(
             VenialCopy.boardTokensEmpty,
-            style: textTheme.bodySmall
-                ?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           )
         else
           Wrap(
             spacing: AppTokens.s12,
             runSpacing: AppTokens.s8,
-            children: tokens.map((prediction) {
-              final color = _tokenColor(colorScheme, prediction.choice);
-              return _TokenChip(
-                  color: color, label: _choiceLabel(prediction.choice));
-            }).toList(growable: false),
+            children: tokens
+                .map((prediction) {
+                  final color = _tokenColor(colorScheme, prediction.choice);
+                  return _TokenChip(
+                    color: color,
+                    label: _choiceLabel(prediction.choice),
+                  );
+                })
+                .toList(growable: false),
           ),
         const SizedBox(height: AppTokens.s8),
         Text(
           VenialCopy.boardTokensCaption,
-          style: textTheme.labelSmall
-              ?.copyWith(color: colorScheme.onSurfaceVariant),
+          style: textTheme.labelSmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -757,14 +764,16 @@ class _BoardLegend extends StatelessWidget {
             children: [
               Text(
                 VenialCopy.boardLegendLabel,
-                style:
-                    textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+                style: textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppTokens.s4),
               Text(
                 VenialCopy.boardLegendBody,
-                style: textTheme.labelSmall
-                    ?.copyWith(color: colorScheme.onSurfaceVariant),
+                style: textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           );
@@ -791,10 +800,7 @@ class _BoardLegend extends StatelessWidget {
 
           return Row(
             children: [
-              _BoardIconBadge(
-                icon: AppIcons.board,
-                color: colorScheme.primary,
-              ),
+              _BoardIconBadge(icon: AppIcons.board, color: colorScheme.primary),
               const SizedBox(width: AppTokens.s12),
               Expanded(child: copy),
               const SizedBox(width: AppTokens.s8),
@@ -880,10 +886,7 @@ class _CornerChip extends StatelessWidget {
     return Container(
       width: 24,
       height: 24,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
@@ -899,7 +902,9 @@ class _TokenChip extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: AppTokens.s12, vertical: AppTokens.s8 / 2),
+        horizontal: AppTokens.s12,
+        vertical: AppTokens.s8 / 2,
+      ),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(AppTokens.radius),
@@ -915,10 +920,7 @@ class _TokenChip extends StatelessWidget {
           ),
           if (label != null) ...[
             const SizedBox(width: AppTokens.s8),
-            Text(
-              label!,
-              style: textTheme.labelSmall,
-            ),
+            Text(label!, style: textTheme.labelSmall),
           ],
         ],
       ),
@@ -950,10 +952,7 @@ class _BoardSideCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _BoardIconBadge(
-            icon: icon,
-            color: colorScheme.primary,
-          ),
+          _BoardIconBadge(icon: icon, color: colorScheme.primary),
           const SizedBox(height: AppTokens.s12),
           Text(
             title,
@@ -984,10 +983,7 @@ class _BoardSideCard extends StatelessWidget {
 }
 
 class _BoardIconBadge extends StatelessWidget {
-  const _BoardIconBadge({
-    required this.icon,
-    required this.color,
-  });
+  const _BoardIconBadge({required this.icon, required this.color});
 
   final IconData icon;
   final Color color;

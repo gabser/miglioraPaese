@@ -10,8 +10,8 @@ class ApiClient {
     required Uri baseUrl,
     required http.Client client,
     this.timeout = const Duration(seconds: 8),
-  })  : _baseUrl = baseUrl,
-        _client = client;
+  }) : _baseUrl = baseUrl,
+       _client = client;
 
   final Uri _baseUrl;
   final http.Client _client;
@@ -108,9 +108,7 @@ class ApiClient {
 
   Object? _decodeJson(http.Response response) {
     if (response.body.trim().isEmpty) {
-      throw ApiException.invalidPayload(
-        'La risposta JSON e\' vuota.',
-      );
+      throw ApiException.invalidPayload('La risposta JSON e\' vuota.');
     }
     try {
       return jsonDecode(response.body);

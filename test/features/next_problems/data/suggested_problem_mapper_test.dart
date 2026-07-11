@@ -59,9 +59,7 @@ void main() {
       throwsA(isA<ApiException>()),
     );
     expect(
-      () => SuggestedProblemMapper.fromResponse(
-        _payload()..['votesUp'] = 1.0,
-      ),
+      () => SuggestedProblemMapper.fromResponse(_payload()..['votesUp'] = 1.0),
       throwsA(isA<ApiException>()),
     );
   });

@@ -1,7 +1,4 @@
-enum NextProblemsDataSource {
-  mock,
-  api,
-}
+enum NextProblemsDataSource { mock, api }
 
 class AppConfig {
   AppConfig({
@@ -34,10 +31,10 @@ class AppConfig {
       'mock' => NextProblemsDataSource.mock,
       'api' => NextProblemsDataSource.api,
       final value => throw ArgumentError.value(
-          value,
-          'nextProblemsDataSource',
-          'Valori supportati: mock, api.',
-        ),
+        value,
+        'nextProblemsDataSource',
+        'Valori supportati: mock, api.',
+      ),
     };
     return AppConfig(
       nextProblemsDataSource: source,

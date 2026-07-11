@@ -104,9 +104,7 @@ class _InsightCardState extends State<InsightCard> {
     }
 
     return widget.insight.choiceDistribution.entries
-        .reduce(
-          (a, b) => a.value >= b.value ? a : b,
-        )
+        .reduce((a, b) => a.value >= b.value ? a : b)
         .key;
   }
 
@@ -124,8 +122,10 @@ class _InsightCardState extends State<InsightCard> {
     }
 
     final choice = _primaryChoice();
-    final percentage =
-        widget.insight.percentageForChoice(choice).clamp(0, 100).round();
+    final percentage = widget.insight
+        .percentageForChoice(choice)
+        .clamp(0, 100)
+        .round();
     final verb = switch (choice) {
       PredictionChoice.improve => 'la situazione migliorera\'',
       PredictionChoice.stable => 'la situazione restera\' piu\' o meno uguale',
@@ -155,9 +155,7 @@ class _InsightCardState extends State<InsightCard> {
     if (history == null || history.snapshots.isEmpty) return _primaryChoice();
 
     return history.snapshots.last.choiceDistribution.entries
-        .reduce(
-          (a, b) => a.value >= b.value ? a : b,
-        )
+        .reduce((a, b) => a.value >= b.value ? a : b)
         .key;
   }
 
@@ -165,10 +163,12 @@ class _InsightCardState extends State<InsightCard> {
     final history = widget.history;
     if (history == null) return const [];
 
-    return history.snapshots.map((snapshot) {
-      final v = snapshot.pct(choice).toDouble();
-      return v.clamp(0.0, 100.0).toDouble();
-    }).toList(growable: false);
+    return history.snapshots
+        .map((snapshot) {
+          final v = snapshot.pct(choice).toDouble();
+          return v.clamp(0.0, 100.0).toDouble();
+        })
+        .toList(growable: false);
   }
 
   String _trendCopy(PredictionChoice choice, List<double> values) {
@@ -232,10 +232,7 @@ class _InsightCardState extends State<InsightCard> {
         switchOutCurve: AppMotion.standard,
         transitionBuilder: (child, animation) {
           final slide = animation.drive(
-            Tween<Offset>(
-              begin: const Offset(0, 0.06),
-              end: Offset.zero,
-            ),
+            Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero),
           );
           final scale = Tween<double>(begin: 0.96, end: 1).animate(
             CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
@@ -250,7 +247,8 @@ class _InsightCardState extends State<InsightCard> {
         },
         child: FcPanel(
           key: ValueKey(
-              'insight-surface-${widget.insight.totalPredictions}-${widget.userChoice?.name ?? 'none'}'),
+            'insight-surface-${widget.insight.totalPredictions}-${widget.userChoice?.name ?? 'none'}',
+          ),
           padding: const EdgeInsets.all(AppTokens.s16),
           tint: AppTokens.blue,
           elevated: true,
@@ -456,10 +454,7 @@ class _CriticalInsightsSection extends StatelessWidget {
 }
 
 class _HistoryTab extends StatelessWidget {
-  const _HistoryTab({
-    required this.isOpen,
-    required this.onTap,
-  });
+  const _HistoryTab({required this.isOpen, required this.onTap});
 
   final bool isOpen;
   final VoidCallback onTap;
@@ -467,8 +462,9 @@ class _HistoryTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final label =
-        isOpen ? VenialCopy.insightHistoryHide : VenialCopy.insightHistoryShow;
+    final label = isOpen
+        ? VenialCopy.insightHistoryHide
+        : VenialCopy.insightHistoryShow;
     final icon = isOpen ? Icons.expand_less : Icons.show_chart;
 
     return InkWell(
@@ -492,9 +488,9 @@ class _HistoryTab extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
         ),
@@ -524,38 +520,40 @@ class _CriticalInsightsList extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: insights.map((insight) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppTokens.s8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                insight.headline,
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: AppTokens.s4),
-              Text(
-                insight.supporting,
-                style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              if (insight.note != null && insight.note!.isNotEmpty) ...[
-                const SizedBox(height: AppTokens.s4),
-                Text(
-                  insight.note!,
-                  style: textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+      children: insights
+          .map((insight) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppTokens.s8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    insight.headline,
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-              ],
-            ],
-          ),
-        );
-      }).toList(growable: false),
+                  const SizedBox(height: AppTokens.s4),
+                  Text(
+                    insight.supporting,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  if (insight.note != null && insight.note!.isNotEmpty) ...[
+                    const SizedBox(height: AppTokens.s4),
+                    Text(
+                      insight.note!,
+                      style: textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          })
+          .toList(growable: false),
     );
   }
 }
@@ -583,8 +581,10 @@ class _HistoryTrend extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final snapshotCount = history?.snapshots.length ?? 6;
     final turns = snapshotCount == 0 ? 6 : snapshotCount;
-    final heading =
-        VenialCopy.trendHeadingTemplate.replaceAll('{turns}', '$turns');
+    final heading = VenialCopy.trendHeadingTemplate.replaceAll(
+      '{turns}',
+      '$turns',
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -593,8 +593,9 @@ class _HistoryTrend extends StatelessWidget {
           children: [
             Text(
               heading,
-              style:
-                  textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const Spacer(),
             if (dimmed)
@@ -609,8 +610,9 @@ class _HistoryTrend extends StatelessWidget {
                 ),
                 child: Text(
                   VenialCopy.trendLowDataLabel,
-                  style: textTheme.labelSmall
-                      ?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
           ],
@@ -630,23 +632,21 @@ class _HistoryTrend extends StatelessWidget {
               const SizedBox(width: AppTokens.s8),
               Text(
                 VenialCopy.insightHistoryLoading,
-                style: textTheme.bodySmall
-                    ?.copyWith(color: colorScheme.onSurfaceVariant),
+                style: textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           )
         else if (history == null)
           Text(
             VenialCopy.insightHistoryPrompt,
-            style: textTheme.bodySmall
-                ?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           )
         else ...[
-          TrendSparkline(
-            values: values,
-            color: color,
-            dimmed: dimmed,
-          ),
+          TrendSparkline(values: values, color: color, dimmed: dimmed),
           const SizedBox(height: AppTokens.s8),
           Text(
             trendCopy,
@@ -659,8 +659,9 @@ class _HistoryTrend extends StatelessWidget {
             const SizedBox(height: AppTokens.s8 / 2),
             Text(
               VenialCopy.trendLowDataHelper,
-              style: textTheme.bodySmall
-                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ],
@@ -683,34 +684,38 @@ class _ChoiceDistribution extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: PredictionChoice.values.map((choice) {
-        final percentage = insight.percentageForChoice(choice).clamp(0, 100);
-        final (label, color) = switch (choice) {
-          PredictionChoice.improve => (
-              'Situazione in miglioramento',
-              colorScheme.primary
-            ),
-          PredictionChoice.stable => (
-              'Situazione stabile',
-              colorScheme.tertiary
-            ),
-          PredictionChoice.worsen => (
-              'Possibile peggioramento',
-              colorScheme.error
-            ),
-        };
+      children: PredictionChoice.values
+          .map((choice) {
+            final percentage = insight
+                .percentageForChoice(choice)
+                .clamp(0, 100);
+            final (label, color) = switch (choice) {
+              PredictionChoice.improve => (
+                'Situazione in miglioramento',
+                colorScheme.primary,
+              ),
+              PredictionChoice.stable => (
+                'Situazione stabile',
+                colorScheme.tertiary,
+              ),
+              PredictionChoice.worsen => (
+                'Possibile peggioramento',
+                colorScheme.error,
+              ),
+            };
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppTokens.s8),
-          child: _ChoiceBar(
-            label: label,
-            percentage: percentage.toDouble(),
-            color: color,
-            textTheme: textTheme,
-            colorScheme: colorScheme,
-          ),
-        );
-      }).toList(growable: false),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppTokens.s8),
+              child: _ChoiceBar(
+                label: label,
+                percentage: percentage.toDouble(),
+                color: color,
+                textTheme: textTheme,
+                colorScheme: colorScheme,
+              ),
+            );
+          })
+          .toList(growable: false),
     );
   }
 }

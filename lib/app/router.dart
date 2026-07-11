@@ -33,10 +33,7 @@ GoRouter buildRouter(AppPrefs appPrefs) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/boot',
-        builder: (context, state) => const BootScreen(),
-      ),
+      GoRoute(path: '/boot', builder: (context, state) => const BootScreen()),
       GoRoute(
         path: '/welcome',
         builder: (context, state) => const WarmWelcomePage(),
@@ -51,9 +48,8 @@ GoRouter buildRouter(AppPrefs appPrefs) {
       ),
       GoRoute(
         path: '/change-municipality',
-        builder: (context, state) => const OnboardingPage(
-          afterSelectionRoute: '/profile',
-        ),
+        builder: (context, state) =>
+            const OnboardingPage(afterSelectionRoute: '/profile'),
       ),
       GoRoute(
         path: '/next-problems',
@@ -63,10 +59,7 @@ GoRouter buildRouter(AppPrefs appPrefs) {
         path: '/suggest-problem',
         builder: (context, state) => const SuggestProblemPage(),
       ),
-      GoRoute(
-        path: '/board',
-        builder: (context, state) => const BoardPage(),
-      ),
+      GoRoute(path: '/board', builder: (context, state) => const BoardPage()),
       GoRoute(
         path: '/how-it-works',
         builder: (context, state) => const HowItWorksPage(),
@@ -77,9 +70,7 @@ GoRouter buildRouter(AppPrefs appPrefs) {
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return ShellPage(
-            navigationShell: navigationShell,
-          );
+          return ShellPage(navigationShell: navigationShell);
         },
         branches: [
           StatefulShellBranch(

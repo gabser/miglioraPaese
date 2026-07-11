@@ -40,7 +40,7 @@ class SegmentedChoice<T> extends StatelessWidget {
           final useColumns = constraints.maxWidth >= 360 && options.length <= 3;
           final itemWidth = useColumns
               ? (constraints.maxWidth - AppTokens.s8 * (options.length - 1)) /
-                  options.length
+                    options.length
               : null;
 
           return Wrap(

@@ -37,10 +37,10 @@ class InsightSnapshot extends Equatable {
 
   @override
   List<Object?> get props => [
-        turnId,
-        at,
-        totalPredictions,
-        choiceDistribution,
-        motivationTop,
-      ];
+    turnId,
+    at,
+    totalPredictions,
+    choiceDistribution,
+    motivationTop,
+  ];
 }

@@ -30,9 +30,8 @@ class AppDependencies extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<AppPrefs>.value(value: appPrefs),
         Provider<CivicLoopStore>(
-          create: (context) => CivicLoopStore(
-            currentUserId: context.read<AppPrefs>().userId,
-          ),
+          create: (context) =>
+              CivicLoopStore(currentUserId: context.read<AppPrefs>().userId),
         ),
         Provider<GameRepository>(
           create: (context) => MockGameRepository(
@@ -57,8 +56,8 @@ class AppDependencies extends StatelessWidget {
             mockStore: context.read<CivicLoopStore>(),
             apiClient:
                 config.nextProblemsDataSource == NextProblemsDataSource.api
-                    ? context.read<ApiClient>()
-                    : null,
+                ? context.read<ApiClient>()
+                : null,
           ),
         ),
       ],
@@ -75,12 +74,12 @@ NextProblemsRepository createNextProblemsRepository({
 }) {
   return switch (config.nextProblemsDataSource) {
     NextProblemsDataSource.mock => MockNextProblemsRepository(
-        currentUserId: currentUserId,
-        store: mockStore,
-      ),
+      currentUserId: currentUserId,
+      store: mockStore,
+    ),
     NextProblemsDataSource.api => ApiNextProblemsRepository(
-        client: apiClient ?? (throw ArgumentError.notNull('apiClient')),
-        userId: currentUserId,
-      ),
+      client: apiClient ?? (throw ArgumentError.notNull('apiClient')),
+      userId: currentUserId,
+    ),
   };
 }

@@ -1,5 +1,1 @@
-enum VoteChoice {
-  none,
-  up,
-  down,
-}
+enum VoteChoice { none, up, down }

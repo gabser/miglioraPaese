@@ -34,9 +34,9 @@ class TicketProgress extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(width: AppTokens.s12),
           ...List.generate(totalSteps, (index) {

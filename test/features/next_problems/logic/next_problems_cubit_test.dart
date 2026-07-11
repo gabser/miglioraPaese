@@ -51,10 +51,7 @@ void main() {
     final repository = _FakeNextProblemsRepository(
       onList: ({required municipalityId, query, status}) {
         return requests
-            .putIfAbsent(
-              query,
-              Completer<List<SuggestedProblem>>.new,
-            )
+            .putIfAbsent(query, Completer<List<SuggestedProblem>>.new)
             .future;
       },
     );
@@ -87,17 +84,14 @@ void main() {
     final problem = _problem();
     final repository = _FakeNextProblemsRepository(
       onList: ({required municipalityId, query, status}) async => [problem],
-      onVote: ({
-        required municipalityId,
-        required problemId,
-        required vote,
-      }) async {
-        throw const ApiException(
-          kind: ApiExceptionKind.network,
-          code: 'network_error',
-          message: 'socket failed',
-        );
-      },
+      onVote:
+          ({required municipalityId, required problemId, required vote}) async {
+            throw const ApiException(
+              kind: ApiExceptionKind.network,
+              code: 'network_error',
+              message: 'socket failed',
+            );
+          },
     );
     final cubit = NextProblemsCubit(repository: repository, prefs: prefs);
     await cubit.load();
@@ -112,19 +106,20 @@ void main() {
 
   test('uses typed duplicate code for submission feedback', () async {
     final repository = _FakeNextProblemsRepository(
-      onSubmit: ({
-        required municipalityId,
-        required title,
-        required description,
-        required category,
-      }) async {
-        throw const ApiException(
-          kind: ApiExceptionKind.response,
-          code: 'duplicate_title',
-          message: 'Already exists.',
-          statusCode: 409,
-        );
-      },
+      onSubmit:
+          ({
+            required municipalityId,
+            required title,
+            required description,
+            required category,
+          }) async {
+            throw const ApiException(
+              kind: ApiExceptionKind.response,
+              code: 'duplicate_title',
+              message: 'Already exists.',
+              statusCode: 409,
+            );
+          },
     );
     final cubit = NextProblemsCubit(repository: repository, prefs: prefs);
 
@@ -166,31 +161,30 @@ SuggestedProblem _problem({
   );
 }
 
-typedef _ListHandler = Future<List<SuggestedProblem>> Function({
-  required String municipalityId,
-  String? query,
-  SuggestedProblemStatus? status,
-});
+typedef _ListHandler =
+    Future<List<SuggestedProblem>> Function({
+      required String municipalityId,
+      String? query,
+      SuggestedProblemStatus? status,
+    });
 
-typedef _SubmitHandler = Future<SuggestedProblem> Function({
-  required String municipalityId,
-  required String title,
-  required String description,
-  required ProblemKey category,
-});
+typedef _SubmitHandler =
+    Future<SuggestedProblem> Function({
+      required String municipalityId,
+      required String title,
+      required String description,
+      required ProblemKey category,
+    });
 
-typedef _VoteHandler = Future<SuggestedProblem> Function({
-  required String municipalityId,
-  required String problemId,
-  required VoteChoice vote,
-});
+typedef _VoteHandler =
+    Future<SuggestedProblem> Function({
+      required String municipalityId,
+      required String problemId,
+      required VoteChoice vote,
+    });
 
 class _FakeNextProblemsRepository implements NextProblemsRepository {
-  _FakeNextProblemsRepository({
-    this.onList,
-    this.onSubmit,
-    this.onVote,
-  });
+  _FakeNextProblemsRepository({this.onList, this.onSubmit, this.onVote});
 
   final _ListHandler? onList;
   final _SubmitHandler? onSubmit;

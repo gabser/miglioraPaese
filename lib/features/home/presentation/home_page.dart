@@ -61,8 +61,8 @@ class HomePage extends StatelessWidget {
                     child: Text(
                       'Impossibile caricare la dashboard: ${snapshot.error}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                   )
                 else if (data != null)
@@ -557,7 +557,9 @@ class _RightRail extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppTokens.s12),
-              ...data.leaderboard.take(4).map(
+              ...data.leaderboard
+                  .take(4)
+                  .map(
                     (entry) => _LeaderboardLine(
                       entry: entry,
                       isMe: entry.userId == data.currentUserId,
@@ -672,20 +674,20 @@ class _StatusMeta {
 _StatusMeta _statusMeta(ProblemStatus status) {
   return switch (status) {
     ProblemStatus.improving => const _StatusMeta(
-        label: 'Migliora',
-        color: AppTokens.success,
-        icon: Icons.trending_up,
-      ),
+      label: 'Migliora',
+      color: AppTokens.success,
+      icon: Icons.trending_up,
+    ),
     ProblemStatus.stable => const _StatusMeta(
-        label: 'Stabile',
-        color: AppTokens.warning,
-        icon: Icons.drag_handle,
-      ),
+      label: 'Stabile',
+      color: AppTokens.warning,
+      icon: Icons.drag_handle,
+    ),
     ProblemStatus.worsening => const _StatusMeta(
-        label: 'Peggiora',
-        color: AppTokens.danger,
-        icon: Icons.trending_down,
-      ),
+      label: 'Peggiora',
+      color: AppTokens.danger,
+      icon: Icons.trending_down,
+    ),
   };
 }
 

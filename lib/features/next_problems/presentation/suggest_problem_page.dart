@@ -85,9 +85,9 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
       await prefs.setLastSuggestedAt(DateTime.now());
       if (!mounted) return;
       context.go('/next-problems');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(VenialCopy.suggestSuccess)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(VenialCopy.suggestSuccess)));
       return;
     }
     if (error == 'duplicate_title') {
@@ -139,7 +139,8 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                           ),
                         ),
                         SizedBox(
-                            height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                          height: isCompact ? AppTokens.s8 : AppTokens.s12,
+                        ),
                         Text(
                           VenialCopy.suggestTitle,
                           style: TypographyX.titleLarge(context),
@@ -171,7 +172,8 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                           ),
                         ),
                         SizedBox(
-                            height: isCompact ? AppTokens.s12 : AppTokens.s16),
+                          height: isCompact ? AppTokens.s12 : AppTokens.s16,
+                        ),
                         TextField(
                           controller: _titleController,
                           maxLength: 60,
@@ -180,7 +182,8 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                           ),
                         ),
                         SizedBox(
-                            height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                          height: isCompact ? AppTokens.s8 : AppTokens.s12,
+                        ),
                         TextField(
                           controller: _descriptionController,
                           maxLength: 140,
@@ -191,16 +194,15 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                           ),
                         ),
                         SizedBox(
-                            height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                          height: isCompact ? AppTokens.s8 : AppTokens.s12,
+                        ),
                         DropdownButtonFormField<ProblemKey>(
                           value: _category,
                           items: ProblemKey.values
                               .map(
                                 (key) => DropdownMenuItem(
                                   value: key,
-                                  child: Text(
-                                    AppIcons.labelForProblemKey(key),
-                                  ),
+                                  child: Text(AppIcons.labelForProblemKey(key)),
                                 ),
                               )
                               .toList(),
@@ -225,12 +227,14 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                           const SizedBox(height: AppTokens.s8),
                           Text(
                             _error!,
-                            style: textTheme.bodySmall
-                                ?.copyWith(color: colorScheme.error),
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.error,
+                            ),
                           ),
                         ],
                         SizedBox(
-                            height: isCompact ? AppTokens.s12 : AppTokens.s16),
+                          height: isCompact ? AppTokens.s12 : AppTokens.s16,
+                        ),
                         Align(
                           alignment: Alignment.centerRight,
                           child: Row(
@@ -240,8 +244,9 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                                 const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                                 const SizedBox(width: AppTokens.s8),
                               ],

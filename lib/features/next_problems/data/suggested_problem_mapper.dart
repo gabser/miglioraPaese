@@ -16,9 +16,7 @@ class SuggestedProblemMapper {
     }
     return List<SuggestedProblem>.unmodifiable(
       items.indexed.map(
-        (entry) => fromJson(
-          _requireMap(entry.$2, 'items[${entry.$1}]'),
-        ),
+        (entry) => fromJson(_requireMap(entry.$2, 'items[${entry.$1}]')),
       ),
     );
   }
@@ -35,18 +33,11 @@ class SuggestedProblemMapper {
       shortDescription: _requireString(json, 'shortDescription'),
       category: _enumValue(ProblemKey.values, json, 'category'),
       createdAt: _requireDateTime(json, 'createdAt'),
-      status: _enumValue(
-        SuggestedProblemStatus.values,
-        json,
-        'status',
-      ),
+      status: _enumValue(SuggestedProblemStatus.values, json, 'status'),
       votesUp: _requireInt(json, 'votesUp'),
       votesDown: _requireInt(json, 'votesDown'),
       myVote: _enumValue(VoteChoice.values, json, 'myVote'),
-      submittedByDisplayName: _requireString(
-        json,
-        'submittedByDisplayName',
-      ),
+      submittedByDisplayName: _requireString(json, 'submittedByDisplayName'),
       promotionRule: PromotionRule(
         threshold: _requireInt(promotionRule, 'threshold'),
         scopeLabel: _requireString(promotionRule, 'scopeLabel'),
@@ -78,10 +69,7 @@ class SuggestedProblemMapper {
     return value;
   }
 
-  static DateTime _requireDateTime(
-    Map<String, Object?> json,
-    String field,
-  ) {
+  static DateTime _requireDateTime(Map<String, Object?> json, String field) {
     final raw = _requireString(json, field);
     final value = DateTime.tryParse(raw);
     if (value == null) {

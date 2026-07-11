@@ -11,10 +11,6 @@ Future<void> main() async {
   final config = AppConfig.fromEnvironment();
 
   runApp(
-    AppDependencies(
-      appPrefs: appPrefs,
-      config: config,
-      child: const App(),
-    ),
+    AppDependencies(appPrefs: appPrefs, config: config, child: const App()),
   );
 }

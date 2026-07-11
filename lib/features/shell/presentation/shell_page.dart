@@ -9,10 +9,7 @@ import 'package:fanta_comune/core/theme/app_tokens.dart';
 
 /// Shell responsiva con sidebar desktop e bottom navigation mobile.
 class ShellPage extends StatelessWidget {
-  const ShellPage({
-    super.key,
-    required this.navigationShell,
-  });
+  const ShellPage({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
@@ -136,9 +133,7 @@ class _Sidebar extends StatelessWidget {
       width: AppTokens.sidebarWidth,
       decoration: BoxDecoration(
         color: scheme.surface,
-        border: Border(
-          right: BorderSide(color: scheme.outlineVariant),
-        ),
+        border: Border(right: BorderSide(color: scheme.outlineVariant)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppTokens.s20),
@@ -189,20 +184,18 @@ class _Sidebar extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppTokens.s24),
-            ...destinations.indexed.map(
-              (entry) {
-                final index = entry.$1;
-                final destination = entry.$2;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AppTokens.s8),
-                  child: _SidebarItem(
-                    destination: destination,
-                    selected: index == currentIndex,
-                    onTap: () => onSelect(index),
-                  ),
-                );
-              },
-            ),
+            ...destinations.indexed.map((entry) {
+              final index = entry.$1;
+              final destination = entry.$2;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppTokens.s8),
+                child: _SidebarItem(
+                  destination: destination,
+                  selected: index == currentIndex,
+                  onTap: () => onSelect(index),
+                ),
+              );
+            }),
             const SizedBox(height: AppTokens.s16),
             OutlinedButton.icon(
               onPressed: () => context.go('/board'),
@@ -288,11 +281,9 @@ class _SidebarItem extends StatelessWidget {
                 child: Text(
                   destination.label,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color:
-                            selected ? scheme.primary : scheme.onSurfaceVariant,
-                        fontWeight:
-                            selected ? FontWeight.w800 : FontWeight.w600,
-                      ),
+                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  ),
                 ),
               ),
             ],

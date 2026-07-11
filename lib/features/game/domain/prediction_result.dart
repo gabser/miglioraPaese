@@ -2,9 +2,4 @@
 /// Esito di una previsione.
 ///
 /// Enum: NON usare EquatableMixin.
-enum PredictionResult {
-  correct,
-  partial,
-  wrong,
-  pending,
-}
+enum PredictionResult { correct, partial, wrong, pending }

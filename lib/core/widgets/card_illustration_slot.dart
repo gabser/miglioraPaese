@@ -52,7 +52,8 @@ class CardIllustrationSlot extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final resolvedWidth = width ??
+        final resolvedWidth =
+            width ??
             (constraints.maxWidth.isFinite ? constraints.maxWidth : height);
 
         return SizedBox(
@@ -78,7 +79,8 @@ class CardIllustrationSlot extends StatelessWidget {
                     ),
                   ),
                   Positioned.fill(
-                    child: image ??
+                    child:
+                        image ??
                         Center(
                           child: Container(
                             width: compact ? 42 : 56,
@@ -116,17 +118,15 @@ class CardIllustrationSlot extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: colorScheme.surface,
                           borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: colorScheme.outlineVariant,
-                          ),
+                          border: Border.all(color: colorScheme.outlineVariant),
                         ),
                         child: Text(
                           labelRibbon!,
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w800,
+                              ),
                         ),
                       ),
                     ),

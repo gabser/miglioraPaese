@@ -5,10 +5,7 @@ import 'package:fanta_comune/core/theme/app_tokens.dart';
 
 /// Pillola di stato che evidenzia l'andamento di un problema.
 class StatusPill extends StatelessWidget {
-  const StatusPill({
-    required this.status,
-    super.key,
-  });
+  const StatusPill({required this.status, super.key});
 
   /// Stato sintetico da rappresentare.
   final ProblemStatus status;
@@ -18,26 +15,26 @@ class StatusPill extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final (label, emoji, background, border, foreground) = switch (status) {
       ProblemStatus.improving => (
-          'Migliora',
-          '🟢',
-          colorScheme.primaryContainer.withOpacity(0.25),
-          colorScheme.primary.withOpacity(0.4),
-          colorScheme.primary
-        ),
+        'Migliora',
+        '🟢',
+        colorScheme.primaryContainer.withOpacity(0.25),
+        colorScheme.primary.withOpacity(0.4),
+        colorScheme.primary,
+      ),
       ProblemStatus.stable => (
-          'Stabile',
-          '🟡',
-          colorScheme.tertiaryContainer.withOpacity(0.25),
-          colorScheme.tertiary.withOpacity(0.4),
-          colorScheme.tertiary
-        ),
+        'Stabile',
+        '🟡',
+        colorScheme.tertiaryContainer.withOpacity(0.25),
+        colorScheme.tertiary.withOpacity(0.4),
+        colorScheme.tertiary,
+      ),
       ProblemStatus.worsening => (
-          'Peggiora',
-          '🔴',
-          colorScheme.errorContainer.withOpacity(0.25),
-          colorScheme.error.withOpacity(0.4),
-          colorScheme.error
-        ),
+        'Peggiora',
+        '🔴',
+        colorScheme.errorContainer.withOpacity(0.25),
+        colorScheme.error.withOpacity(0.4),
+        colorScheme.error,
+      ),
     };
 
     return Semantics(
@@ -57,17 +54,11 @@ class StatusPill extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              emoji,
-              style: const TextStyle(fontSize: 16),
-            ),
+            Text(emoji, style: const TextStyle(fontSize: 16)),
             const SizedBox(width: AppTokens.s8),
             Text(
               label,
-              style: TextStyle(
-                color: foreground,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(color: foreground, fontWeight: FontWeight.w600),
             ),
           ],
         ),

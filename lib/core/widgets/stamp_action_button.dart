@@ -69,9 +69,9 @@ class _StampActionButtonState extends State<StampActionButton> {
             Text(
               widget.label.toUpperCase(),
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: enabled ? scheme.onPrimary : scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w800,
-                  ),
+                color: enabled ? scheme.onPrimary : scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ],
         ),

@@ -137,8 +137,9 @@ class AppPrefs extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final encoded =
-        signatures.entries.map((e) => '${e.key}|${e.value}').join(';');
+    final encoded = signatures.entries
+        .map((e) => '${e.key}|${e.value}')
+        .join(';');
     await _prefs.setString(_insightSignaturesKey, encoded);
     notifyListeners();
   }

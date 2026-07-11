@@ -1,8 +1,4 @@
-enum MunicipalityActivationState {
-  active,
-  collectingSignals,
-  newMunicipality,
-}
+enum MunicipalityActivationState { active, collectingSignals, newMunicipality }
 
 class MunicipalityCatalog {
   const MunicipalityCatalog._();
@@ -55,9 +51,7 @@ class MunicipalityCatalog {
     return activeCities.any((city) => city.toLowerCase() == normalized);
   }
 
-  static MunicipalityActivationState activationStateFor(
-    String municipalityId,
-  ) {
+  static MunicipalityActivationState activationStateFor(String municipalityId) {
     if (isActiveMunicipality(municipalityId)) {
       return MunicipalityActivationState.active;
     }

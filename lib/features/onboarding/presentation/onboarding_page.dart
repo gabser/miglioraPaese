@@ -12,10 +12,7 @@ import 'package:fanta_comune/core/widgets/icon_label.dart';
 
 /// Schermata di onboarding per scegliere il Comune di riferimento.
 class OnboardingPage extends StatefulWidget {
-  const OnboardingPage({
-    this.afterSelectionRoute = '/home',
-    super.key,
-  });
+  const OnboardingPage({this.afterSelectionRoute = '/home', super.key});
 
   final String afterSelectionRoute;
 
@@ -64,9 +61,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final padding = isCompact ? AppTokens.s12 : AppTokens.s16;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(VenialCopy.onboardingTitle),
-      ),
+      appBar: AppBar(title: const Text(VenialCopy.onboardingTitle)),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -100,12 +95,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         icon: AppIcons.home,
                       ),
                       SizedBox(
-                          height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                        height: isCompact ? AppTokens.s8 : AppTokens.s12,
+                      ),
                       Text(
                         VenialCopy.onboardingCityTitle,
-                        style: TypographyX.titleMedium(context)?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: TypographyX.titleMedium(
+                          context,
+                        )?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: AppTokens.s12),
                       TextField(
@@ -123,10 +119,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       ].map(
                         (city) => Padding(
                           padding: const EdgeInsets.symmetric(
-                              vertical: AppTokens.s8),
+                            vertical: AppTokens.s8,
+                          ),
                           child: InkWell(
-                            borderRadius:
-                                BorderRadius.circular(AppTokens.radius),
+                            borderRadius: BorderRadius.circular(
+                              AppTokens.radius,
+                            ),
                             onTap: () => _selectCity(context, city),
                             child: Semantics(
                               label: VenialCopy.onboardingCitySelectTemplate

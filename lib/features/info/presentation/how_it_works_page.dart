@@ -17,9 +17,7 @@ class HowItWorksPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Come funziona'),
-      ),
+      appBar: AppBar(title: const Text('Come funziona')),
       body: SafeArea(
         child: MaxWidthContainer(
           child: SingleChildScrollView(
@@ -59,9 +57,7 @@ class HowItWorksPage extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: colorScheme.secondaryContainer,
                           borderRadius: BorderRadius.circular(AppTokens.radius),
-                          border: Border.all(
-                            color: colorScheme.outlineVariant,
-                          ),
+                          border: Border.all(color: colorScheme.outlineVariant),
                         ),
                         child: Text(
                           PrivacyCopy.disclaimer,
@@ -120,12 +116,7 @@ class _StepCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppTokens.s12),
-            Expanded(
-              child: Text(
-                title,
-                style: textTheme.titleMedium,
-              ),
-            ),
+            Expanded(child: Text(title, style: textTheme.titleMedium)),
           ],
         ),
       ),

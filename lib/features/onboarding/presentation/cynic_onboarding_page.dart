@@ -23,31 +23,31 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
   int _stepIndex = 0;
 
   List<_OnboardingStep> get _steps => const [
-        _OnboardingStep(
-          title: VenialCopy.onboardingStep1Title,
-          subtitle: VenialCopy.onboardingStep1Subtitle,
-          bullet: VenialCopy.onboardingStep1Bullet,
-          cta: VenialCopy.onboardingStep1Cta,
-        ),
-        _OnboardingStep(
-          title: VenialCopy.onboardingStep2Title,
-          subtitle: VenialCopy.onboardingStep2Subtitle,
-          bullet: VenialCopy.onboardingStep2Bullet,
-          cta: VenialCopy.onboardingStep2Cta,
-        ),
-        _OnboardingStep(
-          title: VenialCopy.onboardingStep3Title,
-          subtitle: VenialCopy.onboardingStep3Subtitle,
-          bullet: VenialCopy.onboardingStep3Bullet,
-          cta: VenialCopy.onboardingStep3Cta,
-        ),
-        _OnboardingStep(
-          title: VenialCopy.onboardingStep4Title,
-          subtitle: VenialCopy.onboardingStep4Subtitle,
-          bullet: VenialCopy.onboardingStep4Bullet,
-          cta: VenialCopy.onboardingStep4Cta,
-        ),
-      ];
+    _OnboardingStep(
+      title: VenialCopy.onboardingStep1Title,
+      subtitle: VenialCopy.onboardingStep1Subtitle,
+      bullet: VenialCopy.onboardingStep1Bullet,
+      cta: VenialCopy.onboardingStep1Cta,
+    ),
+    _OnboardingStep(
+      title: VenialCopy.onboardingStep2Title,
+      subtitle: VenialCopy.onboardingStep2Subtitle,
+      bullet: VenialCopy.onboardingStep2Bullet,
+      cta: VenialCopy.onboardingStep2Cta,
+    ),
+    _OnboardingStep(
+      title: VenialCopy.onboardingStep3Title,
+      subtitle: VenialCopy.onboardingStep3Subtitle,
+      bullet: VenialCopy.onboardingStep3Bullet,
+      cta: VenialCopy.onboardingStep3Cta,
+    ),
+    _OnboardingStep(
+      title: VenialCopy.onboardingStep4Title,
+      subtitle: VenialCopy.onboardingStep4Subtitle,
+      bullet: VenialCopy.onboardingStep4Bullet,
+      cta: VenialCopy.onboardingStep4Cta,
+    ),
+  ];
 
   Future<void> _completeOnboarding(BuildContext context) async {
     final prefs = context.read<AppPrefs>();
@@ -99,8 +99,11 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
               padding: EdgeInsets.all(padding),
               child: AnimatedSwitcherX(
                 duration: AppMotion.normal,
-                switchInCurve:
-                    const Interval(0.2, 1, curve: AppMotion.standard),
+                switchInCurve: const Interval(
+                  0.2,
+                  1,
+                  curve: AppMotion.standard,
+                ),
                 child: Column(
                   key: ValueKey('cynic-step-${_stepIndex + 1}'),
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,8 +111,10 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TicketProgress(
-                        label: VenialCopy.onboardingProgressLabel
-                            .replaceAll('{step}', progressLabel),
+                        label: VenialCopy.onboardingProgressLabel.replaceAll(
+                          '{step}',
+                          progressLabel,
+                        ),
                         currentStep: _stepIndex + 1,
                         totalSteps: _steps.length,
                       ),
@@ -124,19 +129,16 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
                           AppTokens.radiusSmall,
                         ),
                       ),
-                      child: Icon(
-                        AppIcons.play,
-                        color: colorScheme.primary,
-                      ),
+                      child: Icon(AppIcons.play, color: colorScheme.primary),
                     ),
                     SizedBox(height: sectionGap),
                     Semantics(
                       header: true,
                       child: Text(
                         step.title,
-                        style: TypographyX.titleMedium(context)?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: TypographyX.titleMedium(
+                          context,
+                        )?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
                     const SizedBox(height: AppTokens.s8),
@@ -153,10 +155,7 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
                         const Icon(Icons.check_circle_outline, size: 20),
                         const SizedBox(width: AppTokens.s8),
                         Expanded(
-                          child: Text(
-                            step.bullet,
-                            style: textTheme.bodyMedium,
-                          ),
+                          child: Text(step.bullet, style: textTheme.bodyMedium),
                         ),
                       ],
                     ),

@@ -34,10 +34,7 @@ class GameBanner extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppTokens.navy,
-              AppTokens.navyDark,
-            ],
+            colors: [AppTokens.navy, AppTokens.navyDark],
           ),
         ),
         child: Stack(
@@ -62,14 +59,12 @@ class GameBanner extends StatelessWidget {
                 bottom: 8,
                 width: isCompact ? 132 : 190,
                 height: isCompact ? 132 : 190,
-                child: Opacity(
-                  opacity: 0.26,
-                  child: image!,
-                ),
+                child: Opacity(opacity: 0.26, child: image!),
               ),
             Padding(
-              padding:
-                  EdgeInsets.all(isCompact ? AppTokens.s16 : AppTokens.s24),
+              padding: EdgeInsets.all(
+                isCompact ? AppTokens.s16 : AppTokens.s24,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -96,10 +91,7 @@ class GameBanner extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: cta,
-                  ),
+                  Align(alignment: Alignment.centerLeft, child: cta),
                 ],
               ),
             ),
@@ -131,9 +123,9 @@ class _BannerPill extends StatelessWidget {
         child: Text(
           label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-              ),
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
     );
@@ -160,10 +152,7 @@ class _SignalCluster extends StatelessWidget {
 }
 
 class _SignalDot extends StatelessWidget {
-  const _SignalDot({
-    required this.color,
-    required this.active,
-  });
+  const _SignalDot({required this.color, required this.active});
 
   final Color color;
   final bool active;

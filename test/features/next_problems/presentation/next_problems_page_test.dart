@@ -45,7 +45,10 @@ void main() {
     expect(find.text('Riprova'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.byKey(const ValueKey('next-problems-retry')));
+    final retryButton = find.byKey(const ValueKey('next-problems-retry'));
+    await tester.ensureVisible(retryButton);
+    await tester.pumpAndSettle();
+    await tester.tap(retryButton);
     await tester.pumpAndSettle();
 
     expect(repository.calls, 2);

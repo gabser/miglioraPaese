@@ -53,12 +53,7 @@ class AppAssets {
 }
 
 class AppSvg extends StatelessWidget {
-  const AppSvg(
-    this.asset, {
-    super.key,
-    this.size = 24,
-    this.color,
-  });
+  const AppSvg(this.asset, {super.key, this.size = 24, this.color});
 
   final String asset;
   final double size;
@@ -70,8 +65,9 @@ class AppSvg extends StatelessWidget {
       asset,
       width: size,
       height: size,
-      colorFilter:
-          color == null ? null : ColorFilter.mode(color!, BlendMode.srcIn),
+      colorFilter: color == null
+          ? null
+          : ColorFilter.mode(color!, BlendMode.srcIn),
     );
   }
 }

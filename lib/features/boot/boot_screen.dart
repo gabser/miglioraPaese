@@ -41,15 +41,14 @@ class _BootScreenState extends State<BootScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final isCompact = MediaQuery.of(context).size.width < 600;
     final sectionGap = isCompact ? AppTokens.s12 : AppTokens.s16;
-    final cardPadding =
-        EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16);
+    final cardPadding = EdgeInsets.all(
+      isCompact ? AppTokens.s12 : AppTokens.s16,
+    );
     final appPrefs = context.read<AppPrefs>();
     const nextLocation = '/home';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(VenialCopy.appTitle),
-      ),
+      appBar: AppBar(title: const Text(VenialCopy.appTitle)),
       body: SafeArea(
         child: MaxWidthContainer(
           child: SingleChildScrollView(
@@ -89,9 +88,9 @@ class _BootScreenState extends State<BootScreen> {
                         const SizedBox(height: AppTokens.s12),
                         Text(
                           VenialCopy.bootHeroTitle,
-                          style: TypographyX.headlineSmall(context)?.copyWith(
-                            color: colorScheme.primary,
-                          ),
+                          style: TypographyX.headlineSmall(
+                            context,
+                          )?.copyWith(color: colorScheme.primary),
                         ),
                         const SizedBox(height: AppTokens.s12),
                         Text(
@@ -267,15 +266,18 @@ class _BootScreenState extends State<BootScreen> {
                               ? AnimatedSizeX(
                                   child: Padding(
                                     padding: const EdgeInsets.only(
-                                        top: AppTokens.s12),
+                                      top: AppTokens.s12,
+                                    ),
                                     child: Container(
                                       width: double.infinity,
-                                      padding:
-                                          const EdgeInsets.all(AppTokens.s12),
+                                      padding: const EdgeInsets.all(
+                                        AppTokens.s12,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: colorScheme.primaryContainer,
                                         borderRadius: BorderRadius.circular(
-                                            AppTokens.radius),
+                                          AppTokens.radius,
+                                        ),
                                         border: Border.all(
                                           color: colorScheme.outlineVariant,
                                         ),
@@ -286,21 +288,21 @@ class _BootScreenState extends State<BootScreen> {
                                         children: [
                                           Text(
                                             'Micro-animazioni coordinate',
-                                            style:
-                                                textTheme.titleMedium?.copyWith(
-                                              color: colorScheme
-                                                  .onPrimaryContainer,
-                                            ),
+                                            style: textTheme.titleMedium
+                                                ?.copyWith(
+                                                  color: colorScheme
+                                                      .onPrimaryContainer,
+                                                ),
                                           ),
                                           const SizedBox(height: AppTokens.s8),
                                           Text(
                                             'Ingressi morbidi con fade + slide per comunicare cambi di stato senza distrazioni. '
                                             'Le durate e le curve derivano da AppMotion per un feeling premium su Web.',
-                                            style:
-                                                textTheme.bodyMedium?.copyWith(
-                                              color: colorScheme
-                                                  .onPrimaryContainer,
-                                            ),
+                                            style: textTheme.bodyMedium
+                                                ?.copyWith(
+                                                  color: colorScheme
+                                                      .onPrimaryContainer,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -317,10 +319,7 @@ class _BootScreenState extends State<BootScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Components demo',
-                          style: textTheme.titleLarge,
-                        ),
+                        Text('Components demo', style: textTheme.titleLarge),
                         const SizedBox(height: AppTokens.s12),
                         Wrap(
                           spacing: AppTokens.s12,

@@ -26,8 +26,8 @@ import 'package:fanta_comune/features/leaderboard/domain/leaderboard_entry.dart'
 class MockGameRepository implements GameRepository {
   /// Crea un repository mock con dati fittizi.
   MockGameRepository({CivicLoopStore? civicLoopStore})
-      : _civicLoopStore =
-            civicLoopStore ?? CivicLoopStore(currentUserId: _currentUserId);
+    : _civicLoopStore =
+          civicLoopStore ?? CivicLoopStore(currentUserId: _currentUserId);
 
   static const _latency = Duration(milliseconds: 250);
   static const _currentUserId = 'user:self';
@@ -211,10 +211,12 @@ class MockGameRepository implements GameRepository {
       (sum, result) => sum + _pointsForResult(result),
     );
     final totalResolved = _results.length;
-    final correctCount =
-        _results.values.where((r) => r == PredictionResult.correct).length;
-    final partialCount =
-        _results.values.where((r) => r == PredictionResult.partial).length;
+    final correctCount = _results.values
+        .where((r) => r == PredictionResult.correct)
+        .length;
+    final partialCount = _results.values
+        .where((r) => r == PredictionResult.partial)
+        .length;
     final accuracyScore = (correctCount + (partialCount * 0.5)) / totalResolved;
 
     return ReputationScore(
@@ -241,8 +243,9 @@ class MockGameRepository implements GameRepository {
     var remainder = total - allocated;
     final orderedChoices = weights.keys.toList()
       ..sort((a, b) => weights[b]!.compareTo(weights[a]!));
-    var index =
-        orderedChoices.isEmpty ? 0 : random.nextInt(orderedChoices.length);
+    var index = orderedChoices.isEmpty
+        ? 0
+        : random.nextInt(orderedChoices.length);
     while (remainder > 0) {
       final choice = orderedChoices[index % orderedChoices.length];
       distribution[choice] = (distribution[choice] ?? 0) + 1;
@@ -257,34 +260,35 @@ class MockGameRepository implements GameRepository {
     final random = Random(problemId.hashCode);
     final templates =
         <({String prompt, List<String> options, String followUp})>[
-      (
-        prompt: 'Quando pensi a questo problema, cosa pesa di piu\'?',
-        options: [
-          'Esperienze recenti',
-          'Segnali contrastanti',
-          'Poca visibilita\' dei cambiamenti',
-        ],
-        followUp: 'Ok, segnato. Non e\' un test.',
-      ),
-      (
-        prompt: 'Quale segnale ti farebbe cambiare idea piu\' in fretta?',
-        options: [
-          'Nuove segnalazioni in zona',
-          'Interventi visibili',
-          'Dati o report pubblici',
-        ],
-        followUp: 'Grazie, ci aiuta a capire il tuo punto di vista.',
-      ),
-      (
-        prompt: 'Se dovessi spiegare la tua previsione, da cosa partiresti?',
-        options: [
-          'Da una storia personale',
-          'Da un confronto con altri quartieri',
-          'Da un trend che noto spesso',
-        ],
-        followUp: 'Perfetto, qui non c\'e\' una risposta giusta.',
-      ),
-    ];
+          (
+            prompt: 'Quando pensi a questo problema, cosa pesa di piu\'?',
+            options: [
+              'Esperienze recenti',
+              'Segnali contrastanti',
+              'Poca visibilita\' dei cambiamenti',
+            ],
+            followUp: 'Ok, segnato. Non e\' un test.',
+          ),
+          (
+            prompt: 'Quale segnale ti farebbe cambiare idea piu\' in fretta?',
+            options: [
+              'Nuove segnalazioni in zona',
+              'Interventi visibili',
+              'Dati o report pubblici',
+            ],
+            followUp: 'Grazie, ci aiuta a capire il tuo punto di vista.',
+          ),
+          (
+            prompt:
+                'Se dovessi spiegare la tua previsione, da cosa partiresti?',
+            options: [
+              'Da una storia personale',
+              'Da un confronto con altri quartieri',
+              'Da un trend che noto spesso',
+            ],
+            followUp: 'Perfetto, qui non c\'e\' una risposta giusta.',
+          ),
+        ];
     final template = templates[random.nextInt(templates.length)];
     return ReflectionQuestion(
       id: 'rq_${problemId}_${random.nextInt(9999)}',
@@ -431,8 +435,9 @@ class MockGameRepository implements GameRepository {
     }
 
     final reflectionDist = _mockReflectionDistribution(problemId);
-    final topReflection =
-        reflectionDist.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+    final topReflection = reflectionDist.entries
+        .reduce((a, b) => a.value >= b.value ? a : b)
+        .key;
     final reflectionIndex = userReflectionIndex ?? topReflection;
     if (reflectionIndex == 0) {
       insights.add(
@@ -496,44 +501,44 @@ class MockGameRepository implements GameRepository {
 
     final choiceWeights = switch (problem.status) {
       ProblemStatus.improving => {
-          PredictionChoice.improve: 0.52,
-          PredictionChoice.stable: 0.32,
-          PredictionChoice.worsen: 0.16,
-        },
+        PredictionChoice.improve: 0.52,
+        PredictionChoice.stable: 0.32,
+        PredictionChoice.worsen: 0.16,
+      },
       ProblemStatus.stable => {
-          PredictionChoice.improve: 0.36,
-          PredictionChoice.stable: 0.4,
-          PredictionChoice.worsen: 0.24,
-        },
+        PredictionChoice.improve: 0.36,
+        PredictionChoice.stable: 0.4,
+        PredictionChoice.worsen: 0.24,
+      },
       ProblemStatus.worsening => {
-          PredictionChoice.improve: 0.2,
-          PredictionChoice.stable: 0.32,
-          PredictionChoice.worsen: 0.48,
-        },
+        PredictionChoice.improve: 0.2,
+        PredictionChoice.stable: 0.32,
+        PredictionChoice.worsen: 0.48,
+      },
     };
 
     final motivationWeights = switch (problem.status) {
       ProblemStatus.improving => {
-          MotivationKey.visibleActions: 0.36,
-          MotivationKey.seasonality: 0.22,
-          MotivationKey.personalExperience: 0.18,
-          MotivationKey.unmetPromises: 0.12,
-          MotivationKey.recentDecline: 0.12,
-        },
+        MotivationKey.visibleActions: 0.36,
+        MotivationKey.seasonality: 0.22,
+        MotivationKey.personalExperience: 0.18,
+        MotivationKey.unmetPromises: 0.12,
+        MotivationKey.recentDecline: 0.12,
+      },
       ProblemStatus.stable => {
-          MotivationKey.seasonality: 0.26,
-          MotivationKey.personalExperience: 0.2,
-          MotivationKey.visibleActions: 0.18,
-          MotivationKey.unmetPromises: 0.18,
-          MotivationKey.recentDecline: 0.18,
-        },
+        MotivationKey.seasonality: 0.26,
+        MotivationKey.personalExperience: 0.2,
+        MotivationKey.visibleActions: 0.18,
+        MotivationKey.unmetPromises: 0.18,
+        MotivationKey.recentDecline: 0.18,
+      },
       ProblemStatus.worsening => {
-          MotivationKey.recentDecline: 0.34,
-          MotivationKey.unmetPromises: 0.22,
-          MotivationKey.personalExperience: 0.18,
-          MotivationKey.seasonality: 0.14,
-          MotivationKey.visibleActions: 0.12,
-        },
+        MotivationKey.recentDecline: 0.34,
+        MotivationKey.unmetPromises: 0.22,
+        MotivationKey.personalExperience: 0.18,
+        MotivationKey.seasonality: 0.14,
+        MotivationKey.visibleActions: 0.12,
+      },
     };
 
     for (var i = 0; i < 6; i++) {
@@ -542,12 +547,13 @@ class MockGameRepository implements GameRepository {
       final normalizedWeights = <PredictionChoice, double>{};
       for (final entry in choiceWeights.entries) {
         final noise = (random.nextDouble() * 0.04) - 0.02;
-        final trendFactor = entry.key == PredictionChoice.improve &&
+        final trendFactor =
+            entry.key == PredictionChoice.improve &&
                 problem.status == ProblemStatus.improving
             ? variation.abs()
             : variation;
-        normalizedWeights[entry.key] =
-            (entry.value + trendFactor + noise).clamp(0.14, 0.7);
+        normalizedWeights[entry.key] = (entry.value + trendFactor + noise)
+            .clamp(0.14, 0.7);
       }
       final totalWeight = normalizedWeights.values.fold<double>(
         0,
@@ -663,44 +669,44 @@ class MockGameRepository implements GameRepository {
     final baseTotal = 6 + random.nextInt(12);
     final choiceWeights = switch (problem.status) {
       ProblemStatus.improving => {
-          PredictionChoice.improve: 0.52,
-          PredictionChoice.stable: 0.32,
-          PredictionChoice.worsen: 0.16,
-        },
+        PredictionChoice.improve: 0.52,
+        PredictionChoice.stable: 0.32,
+        PredictionChoice.worsen: 0.16,
+      },
       ProblemStatus.stable => {
-          PredictionChoice.improve: 0.36,
-          PredictionChoice.stable: 0.4,
-          PredictionChoice.worsen: 0.24,
-        },
+        PredictionChoice.improve: 0.36,
+        PredictionChoice.stable: 0.4,
+        PredictionChoice.worsen: 0.24,
+      },
       ProblemStatus.worsening => {
-          PredictionChoice.improve: 0.2,
-          PredictionChoice.stable: 0.32,
-          PredictionChoice.worsen: 0.48,
-        },
+        PredictionChoice.improve: 0.2,
+        PredictionChoice.stable: 0.32,
+        PredictionChoice.worsen: 0.48,
+      },
     };
 
     final motivationWeights = switch (problem.status) {
       ProblemStatus.improving => {
-          MotivationKey.visibleActions: 0.38,
-          MotivationKey.seasonality: 0.22,
-          MotivationKey.personalExperience: 0.16,
-          MotivationKey.unmetPromises: 0.12,
-          MotivationKey.recentDecline: 0.12,
-        },
+        MotivationKey.visibleActions: 0.38,
+        MotivationKey.seasonality: 0.22,
+        MotivationKey.personalExperience: 0.16,
+        MotivationKey.unmetPromises: 0.12,
+        MotivationKey.recentDecline: 0.12,
+      },
       ProblemStatus.stable => {
-          MotivationKey.seasonality: 0.24,
-          MotivationKey.personalExperience: 0.2,
-          MotivationKey.visibleActions: 0.18,
-          MotivationKey.unmetPromises: 0.18,
-          MotivationKey.recentDecline: 0.2,
-        },
+        MotivationKey.seasonality: 0.24,
+        MotivationKey.personalExperience: 0.2,
+        MotivationKey.visibleActions: 0.18,
+        MotivationKey.unmetPromises: 0.18,
+        MotivationKey.recentDecline: 0.2,
+      },
       ProblemStatus.worsening => {
-          MotivationKey.recentDecline: 0.34,
-          MotivationKey.unmetPromises: 0.22,
-          MotivationKey.personalExperience: 0.16,
-          MotivationKey.seasonality: 0.14,
-          MotivationKey.visibleActions: 0.14,
-        },
+        MotivationKey.recentDecline: 0.34,
+        MotivationKey.unmetPromises: 0.22,
+        MotivationKey.personalExperience: 0.16,
+        MotivationKey.seasonality: 0.14,
+        MotivationKey.visibleActions: 0.14,
+      },
     };
 
     final choiceDistribution = _weightedChoiceDistribution(

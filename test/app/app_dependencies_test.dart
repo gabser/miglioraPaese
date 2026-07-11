@@ -16,8 +16,9 @@ void main() {
       NextProblemsDataSource.mock,
     );
     expect(
-      AppConfig.fromValues(nextProblemsDataSource: 'API')
-          .nextProblemsDataSource,
+      AppConfig.fromValues(
+        nextProblemsDataSource: 'API',
+      ).nextProblemsDataSource,
       NextProblemsDataSource.api,
     );
     expect(

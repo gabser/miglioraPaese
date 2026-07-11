@@ -207,8 +207,9 @@ class CivicLoopStore {
     required String municipalityId,
     required ProblemKey category,
   }) {
-    final municipalityName =
-        MunicipalityCatalog.displayNameFromId(municipalityId);
+    final municipalityName = MunicipalityCatalog.displayNameFromId(
+      municipalityId,
+    );
     final categoryName = switch (category) {
       ProblemKey.lighting => 'illuminazione',
       ProblemKey.potholes => 'strade',

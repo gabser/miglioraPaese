@@ -176,16 +176,14 @@ class _Controls extends StatelessWidget {
                           : colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: AppTokens.s8),
-                    Text(
-                      switch (mode) {
-                        NextProblemsSortMode.hot =>
-                          VenialCopy.nextProblemsSortHot,
-                        NextProblemsSortMode.newest =>
-                          VenialCopy.nextProblemsSortNew,
-                        NextProblemsSortMode.controversial =>
-                          VenialCopy.nextProblemsSortSplit,
-                      },
-                    ),
+                    Text(switch (mode) {
+                      NextProblemsSortMode.hot =>
+                        VenialCopy.nextProblemsSortHot,
+                      NextProblemsSortMode.newest =>
+                        VenialCopy.nextProblemsSortNew,
+                      NextProblemsSortMode.controversial =>
+                        VenialCopy.nextProblemsSortSplit,
+                    }),
                   ],
                 );
               },
@@ -234,10 +232,7 @@ class _Content extends StatelessWidget {
           );
         }
 
-        return AnimatedSwitcherX(
-          duration: AppMotion.normal,
-          child: child,
-        );
+        return AnimatedSwitcherX(duration: AppMotion.normal, child: child);
       },
     );
   }
@@ -302,10 +297,7 @@ class _NextProblemsError extends StatelessWidget {
 }
 
 class _NextProblemsEmpty extends StatelessWidget {
-  const _NextProblemsEmpty({
-    super.key,
-    required this.isFiltered,
-  });
+  const _NextProblemsEmpty({super.key, required this.isFiltered});
 
   final bool isFiltered;
 
@@ -404,10 +396,7 @@ class _ProblemCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      problem.title,
-                      style: textTheme.titleMedium,
-                    ),
+                    Text(problem.title, style: textTheme.titleMedium),
                     const SizedBox(height: AppTokens.s4),
                     Text(
                       problem.shortDescription,
@@ -429,8 +418,9 @@ class _ProblemCard extends StatelessWidget {
               _CategoryChip(category: problem.category),
               Text(
                 '${VenialCopy.nextProblemsProposedBy} ${problem.submittedByDisplayName}',
-                style: textTheme.labelSmall
-                    ?.copyWith(color: colorScheme.onSurfaceVariant),
+                style: textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -462,7 +452,8 @@ class _ProblemCard extends StatelessWidget {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text(VenialCopy.nextProblemsVotedSnack)),
+                            content: Text(VenialCopy.nextProblemsVotedSnack),
+                          ),
                         );
                       },
               ),
@@ -478,7 +469,8 @@ class _ProblemCard extends StatelessWidget {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text(VenialCopy.nextProblemsVotedSnack)),
+                            content: Text(VenialCopy.nextProblemsVotedSnack),
+                          ),
                         );
                       },
               ),
@@ -596,18 +588,22 @@ class _StampVoteButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final foreground =
-        selected ? colorScheme.primary : colorScheme.onSurfaceVariant;
-    final background =
-        selected ? colorScheme.primaryContainer : colorScheme.surface;
+    final foreground = selected
+        ? colorScheme.primary
+        : colorScheme.onSurfaceVariant;
+    final background = selected
+        ? colorScheme.primaryContainer
+        : colorScheme.surface;
 
     return InkWell(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-      focusColor:
-          Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.08),
-      hoverColor:
-          Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.06),
+      focusColor: Theme.of(
+        context,
+      ).colorScheme.onSurfaceVariant.withOpacity(0.08),
+      hoverColor: Theme.of(
+        context,
+      ).colorScheme.onSurfaceVariant.withOpacity(0.06),
       child: Opacity(
         opacity: onPressed == null ? 0.5 : (selected ? 1 : 0.7),
         child: ConstrainedBox(
@@ -680,9 +676,9 @@ class _CategoryChip extends StatelessWidget {
       ),
       child: Text(
         AppIcons.labelForProblemKey(category),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
       ),
     );
   }
@@ -698,17 +694,17 @@ class _StatusPill extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final (label, color) = switch (status) {
       SuggestedProblemStatus.pending => (
-          VenialCopy.nextProblemsStatusPending,
-          colorScheme.surfaceContainerHigh
-        ),
+        VenialCopy.nextProblemsStatusPending,
+        colorScheme.surfaceContainerHigh,
+      ),
       SuggestedProblemStatus.approved => (
-          VenialCopy.nextProblemsStatusApproved,
-          colorScheme.primaryContainer
-        ),
+        VenialCopy.nextProblemsStatusApproved,
+        colorScheme.primaryContainer,
+      ),
       SuggestedProblemStatus.rejected => (
-          VenialCopy.nextProblemsStatusRejected,
-          colorScheme.errorContainer
-        ),
+        VenialCopy.nextProblemsStatusRejected,
+        colorScheme.errorContainer,
+      ),
     };
 
     return Container(
@@ -722,9 +718,9 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }

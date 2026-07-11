@@ -44,12 +44,7 @@ class NextProblemsCubit extends Cubit<NextProblemsState> {
       );
     } catch (error) {
       if (isClosed || requestVersion != _loadVersion) return;
-      emit(
-        state.copyWith(
-          isLoading: false,
-          error: _userMessageFor(error),
-        ),
-      );
+      emit(state.copyWith(isLoading: false, error: _userMessageFor(error)));
     }
   }
 
@@ -128,12 +123,7 @@ class NextProblemsCubit extends Cubit<NextProblemsState> {
       return null;
     } catch (error) {
       if (isClosed) return 'generic';
-      emit(
-        state.copyWith(
-          submitting: false,
-          error: _userMessageFor(error),
-        ),
-      );
+      emit(state.copyWith(submitting: false, error: _userMessageFor(error)));
       if (_isDuplicateTitle(error)) {
         return 'duplicate_title';
       }

@@ -1,5 +1,1 @@
-enum SuggestedProblemStatus {
-  pending,
-  approved,
-  rejected,
-}
+enum SuggestedProblemStatus { pending, approved, rejected }

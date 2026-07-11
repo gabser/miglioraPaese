@@ -44,10 +44,7 @@ class FcPanel extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      tint!.withOpacity(0.12),
-                      scheme.surface,
-                    ],
+                    colors: [tint!.withOpacity(0.12), scheme.surface],
                   ),
                 ),
                 child: Padding(padding: padding, child: child),
@@ -59,11 +56,7 @@ class FcPanel extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: radius,
-        child: panel,
-      ),
+      child: InkWell(onTap: onTap, borderRadius: radius, child: panel),
     );
   }
 }
@@ -105,10 +98,7 @@ class FcSectionHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (action != null) ...[
-          const SizedBox(width: AppTokens.s12),
-          action!,
-        ],
+        if (action != null) ...[const SizedBox(width: AppTokens.s12), action!],
       ],
     );
   }
@@ -270,10 +260,7 @@ class FcPredictionBar extends StatelessWidget {
 }
 
 class _Segment extends StatelessWidget {
-  const _Segment({
-    required this.value,
-    required this.color,
-  });
+  const _Segment({required this.value, required this.color});
 
   final double value;
   final Color color;
@@ -310,10 +297,7 @@ class FcPageShell extends StatelessWidget {
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
-        child: Padding(
-          padding: resolvedPadding,
-          child: child,
-        ),
+        child: Padding(padding: resolvedPadding, child: child),
       ),
     );
   }

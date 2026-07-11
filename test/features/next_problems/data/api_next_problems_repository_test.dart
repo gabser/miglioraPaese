@@ -12,38 +12,41 @@ import 'package:fanta_comune/features/next_problems/domain/suggested_problem_sta
 import 'package:fanta_comune/features/next_problems/domain/vote_choice.dart';
 
 void main() {
-  test('lists problems with canonical municipality, query and status',
-      () async {
-    late http.Request captured;
-    final repository = _repository((request) async {
-      captured = request;
-      return http.Response(
+  test(
+    'lists problems with canonical municipality, query and status',
+    () async {
+      late http.Request captured;
+      final repository = _repository((request) async {
+        captured = request;
+        return http.Response(
           jsonEncode({
-            'items': [_payload()]
+            'items': [_payload()],
           }),
-          200);
-    });
+          200,
+        );
+      });
 
-    final items = await repository.listNextProblems(
-      municipalityId: 'comune:Bologna',
-      query: '  parco nord  ',
-      status: SuggestedProblemStatus.pending,
-    );
+      final items = await repository.listNextProblems(
+        municipalityId: 'comune:Bologna',
+        query: '  parco nord  ',
+        status: SuggestedProblemStatus.pending,
+      );
 
-    expect(items, hasLength(1));
-    expect(captured.url.pathSegments, [
-      'root',
-      'v1',
-      'municipalities',
-      'bologna',
-      'next-problems',
-    ]);
-    expect(captured.url.queryParameters, {
-      'query': 'parco nord',
-      'status': 'pending',
-      'userId': 'user:test',
-    });
-  });
+      expect(items, hasLength(1));
+      expect(captured.url.pathSegments, [
+        'root',
+        'v1',
+        'municipalities',
+        'bologna',
+        'next-problems',
+      ]);
+      expect(captured.url.queryParameters, {
+        'query': 'parco nord',
+        'status': 'pending',
+        'userId': 'user:test',
+      });
+    },
+  );
 
   test('submits a problem with transport enum names and user ID', () async {
     late http.Request captured;
@@ -72,10 +75,7 @@ void main() {
     late http.Request captured;
     final repository = _repository((request) async {
       captured = request;
-      return http.Response(
-        jsonEncode(_payload()..['myVote'] = 'up'),
-        200,
-      );
+      return http.Response(jsonEncode(_payload()..['myVote'] = 'up'), 200);
     });
 
     final updated = await repository.voteSuggestedProblem(
@@ -103,9 +103,7 @@ void main() {
     );
 
     expect(
-      () => repository.listNextProblems(
-        municipalityId: 'comune:Milano',
-      ),
+      () => repository.listNextProblems(municipalityId: 'comune:Milano'),
       throwsA(
         isA<ApiException>().having(
           (error) => error.code,

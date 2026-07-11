@@ -59,12 +59,12 @@ class Problem extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        key,
-        title,
-        zoneName,
-        status,
-        trendPercent,
-        updatedAt,
-      ];
+    id,
+    key,
+    title,
+    zoneName,
+    status,
+    trendPercent,
+    updatedAt,
+  ];
 }

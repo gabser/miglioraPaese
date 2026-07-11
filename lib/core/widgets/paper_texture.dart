@@ -2,12 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-enum PaperTextureVariant {
-  plain,
-  dotted,
-  fiber,
-  hatch,
-}
+enum PaperTextureVariant { plain, dotted, fiber, hatch }
 
 /// Painter leggero per texture carta (puntini, fibre, tratteggi).
 class PaperTexture extends CustomPainter {
@@ -63,10 +58,7 @@ class PaperTexture extends CustomPainter {
         final dy = next() * size.height;
         final length = 6 + next() * 10;
         final angle = next() * 3.14;
-        final offset = Offset(
-          length * cos(angle),
-          length * sin(angle),
-        );
+        final offset = Offset(length * cos(angle), length * sin(angle));
         canvas.drawLine(Offset(dx, dy), Offset(dx, dy) + offset, paint);
       }
     }

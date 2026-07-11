@@ -42,10 +42,10 @@ class AppTheme {
       surfaceTint: AppTokens.blue,
     );
     final baseTextTheme = Typography.material2021().black.apply(
-          bodyColor: colorScheme.onSurface,
-          displayColor: colorScheme.onSurface,
-          fontFamily: 'Roboto',
-        );
+      bodyColor: colorScheme.onSurface,
+      displayColor: colorScheme.onSurface,
+      fontFamily: 'Roboto',
+    );
     final textTheme = baseTextTheme.copyWith(
       headlineMedium: baseTextTheme.headlineMedium?.copyWith(
         fontWeight: FontWeight.w800,
@@ -108,9 +108,7 @@ class AppTheme {
         horizontal: AppTokens.s12,
         vertical: AppTokens.s8 / 2,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(999),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       backgroundColor: colorScheme.surface,
       selectedColor: colorScheme.primaryContainer,
       secondarySelectedColor: colorScheme.secondaryContainer,
@@ -179,10 +177,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-          borderSide: BorderSide(
-            color: colorScheme.primary,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         filled: true,
         fillColor: colorScheme.surface,
@@ -291,10 +286,7 @@ class _AppPageTransitionsBuilder extends PageTransitionsBuilder {
 
     return FadeTransition(
       opacity: fadeAnimation,
-      child: SlideTransition(
-        position: offsetAnimation,
-        child: child,
-      ),
+      child: SlideTransition(position: offsetAnimation, child: child),
     );
   }
 }

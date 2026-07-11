@@ -26,9 +26,7 @@ class PrivacyPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Privacy'),
-      ),
+      appBar: AppBar(title: const Text('Privacy')),
       body: SafeArea(
         child: MaxWidthContainer(
           child: SingleChildScrollView(
@@ -40,10 +38,7 @@ class PrivacyPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'In breve',
-                        style: textTheme.titleLarge,
-                      ),
+                      Text('In breve', style: textTheme.titleLarge),
                       const SizedBox(height: AppTokens.s12),
                       ...PrivacyCopy.principles.map(
                         (principle) => Padding(
@@ -62,10 +57,7 @@ class PrivacyPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Controllo dati',
-                        style: textTheme.titleLarge,
-                      ),
+                      Text('Controllo dati', style: textTheme.titleLarge),
                       const SizedBox(height: AppTokens.s12),
                       Text(
                         'Puoi azzerare le preferenze locali e ripartire in qualsiasi momento.',
@@ -87,9 +79,7 @@ class PrivacyPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: colorScheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(AppTokens.radius),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant,
-                    ),
+                    border: Border.all(color: colorScheme.outlineVariant),
                   ),
                   child: Text(
                     PrivacyCopy.disclaimer,

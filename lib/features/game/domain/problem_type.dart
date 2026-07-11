@@ -1,14 +1,7 @@
 import 'package:fanta_comune/core/models/problem_key.dart';
 
 /// Tipologie di problema civico gestite dal dominio di gioco.
-enum ProblemType {
-  lighting,
-  potholes,
-  waste,
-  cleanliness,
-  green,
-  signage,
-}
+enum ProblemType { lighting, potholes, waste, cleanliness, green, signage }
 
 /// Estensioni di utilità per convertire il dominio verso il modello condiviso.
 extension ProblemTypeX on ProblemType {

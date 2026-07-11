@@ -19,8 +19,11 @@ class TypographyX {
     return _compact(base, context, delta: -1);
   }
 
-  static TextStyle? _compact(TextStyle? base, BuildContext context,
-      {required double delta}) {
+  static TextStyle? _compact(
+    TextStyle? base,
+    BuildContext context, {
+    required double delta,
+  }) {
     if (base == null) return null;
     final width = MediaQuery.of(context).size.width;
     if (width >= 420) return base;

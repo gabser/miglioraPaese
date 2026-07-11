@@ -40,9 +40,9 @@ class AggregatedInsight extends Equatable {
 
   @override
   List<Object?> get props => [
-        problemId,
-        totalPredictions,
-        choiceDistribution,
-        motivationDistribution,
-      ];
+    problemId,
+    totalPredictions,
+    choiceDistribution,
+    motivationDistribution,
+  ];
 }

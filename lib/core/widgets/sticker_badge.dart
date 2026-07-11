@@ -32,13 +32,11 @@ class _StickerBadgeState extends State<StickerBadge>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: AppMotion.normal,
-    );
-    _pulse = Tween<double>(begin: 1, end: 1.03).animate(
-      CurvedAnimation(parent: _controller, curve: AppMotion.emphasize),
-    );
+    _controller = AnimationController(vsync: this, duration: AppMotion.normal);
+    _pulse = Tween<double>(
+      begin: 1,
+      end: 1.03,
+    ).animate(CurvedAnimation(parent: _controller, curve: AppMotion.emphasize));
     if (widget.animate) {
       _controller.repeat(reverse: true);
     }
@@ -88,9 +86,9 @@ class _StickerBadgeState extends State<StickerBadge>
         child: Text(
           widget.label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: foreground,
-                fontWeight: FontWeight.w800,
-              ),
+            color: foreground,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
     );

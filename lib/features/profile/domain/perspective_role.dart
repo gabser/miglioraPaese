@@ -4,13 +4,7 @@ import 'package:fanta_comune/features/game/domain/hypothesis_confidence.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 
 /// Lente con cui leggere le situazioni civiche.
-enum PerspectiveRole {
-  observer,
-  realist,
-  caretaker,
-  organizer,
-  optimist,
-}
+enum PerspectiveRole { observer, realist, caretaker, organizer, optimist }
 
 extension PerspectiveRoleX on PerspectiveRole {
   /// Etichetta in italiano.

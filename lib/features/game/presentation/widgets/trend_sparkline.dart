@@ -29,8 +29,9 @@ class TrendSparkline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final entries =
-        values.map((value) => value.toDouble()).toList(growable: false);
+    final entries = values
+        .map((value) => value.toDouble())
+        .toList(growable: false);
     final maxValue = entries.isEmpty
         ? 1.0
         : entries.reduce((a, b) => a > b ? a : b).clamp(1, 100);

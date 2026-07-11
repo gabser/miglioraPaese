@@ -2,11 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:fanta_comune/features/next_problems/domain/suggested_problem.dart';
 import 'package:fanta_comune/features/next_problems/domain/suggested_problem_status.dart';
 
-enum NextProblemsSortMode {
-  hot,
-  newest,
-  controversial,
-}
+enum NextProblemsSortMode { hot, newest, controversial }
 
 const _filterStatusNotProvided = Object();
 
@@ -57,13 +53,13 @@ class NextProblemsState extends Equatable {
 
   @override
   List<Object?> get props => [
-        isLoading,
-        error,
-        items,
-        query,
-        filterStatus,
-        sortMode,
-        submitting,
-        votingProblemIds,
-      ];
+    isLoading,
+    error,
+    items,
+    query,
+    filterStatus,
+    sortMode,
+    submitting,
+    votingProblemIds,
+  ];
 }

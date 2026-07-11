@@ -52,13 +52,13 @@ class CivicLoopSummary extends Equatable {
 
   @override
   List<Object?> get props => [
-        municipalityName,
-        proposedThemes,
-        confirmedThemes,
-        cardsInTurn,
-        predictions,
-        outcomes,
-        reputationPoints,
-        topThemeTitle,
-      ];
+    municipalityName,
+    proposedThemes,
+    confirmedThemes,
+    cardsInTurn,
+    predictions,
+    outcomes,
+    reputationPoints,
+    topThemeTitle,
+  ];
 }

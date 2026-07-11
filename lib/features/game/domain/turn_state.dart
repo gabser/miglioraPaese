@@ -7,5 +7,5 @@ enum TurnState {
   calculating,
 
   /// Il turno è chiuso e non accetta altre modifiche.
-  closed;
+  closed,
 }

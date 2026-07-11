@@ -26,7 +26,9 @@ class LeaderboardPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const IconLabel(
-              icon: AppIcons.leaderboard, text: 'Classifica locale'),
+            icon: AppIcons.leaderboard,
+            text: 'Classifica locale',
+          ),
           const SizedBox(height: AppTokens.s12),
           FcPanel(
             padding: const EdgeInsets.all(AppTokens.s16),
@@ -34,20 +36,19 @@ class LeaderboardPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Top 10 Fanta Comune',
-                  style: textTheme.titleLarge,
-                ),
+                Text('Top 10 Fanta Comune', style: textTheme.titleLarge),
                 const SizedBox(height: AppTokens.s8),
                 Text(
                   'Punteggi e reputazione locale: scopri dove ti posizioni rispetto agli altri cittadini.',
-                  style: textTheme.bodyMedium
-                      ?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: AppTokens.s12),
                 FutureBuilder<List<LeaderboardEntry>>(
-                  future:
-                      repository.getLeaderboard(municipalityId: municipalityId),
+                  future: repository.getLeaderboard(
+                    municipalityId: municipalityId,
+                  ),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Padding(
@@ -57,12 +58,14 @@ class LeaderboardPage extends StatelessWidget {
                     }
                     if (snapshot.hasError) {
                       return Padding(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: AppTokens.s16),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppTokens.s16,
+                        ),
                         child: Text(
                           'Impossibile caricare la classifica: ${snapshot.error}',
-                          style: textTheme.bodyMedium
-                              ?.copyWith(color: colorScheme.error),
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.error,
+                          ),
                         ),
                       );
                     }
@@ -70,8 +73,9 @@ class LeaderboardPage extends StatelessWidget {
                     final entries = snapshot.data ?? [];
                     if (entries.isEmpty) {
                       return Padding(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: AppTokens.s16),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppTokens.s16,
+                        ),
                         child: Text(
                           'Nessuna classifica disponibile per ora.',
                           style: textTheme.bodyMedium,
@@ -102,8 +106,9 @@ class LeaderboardPage extends StatelessWidget {
                               vertical: AppTokens.s8,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTokens.radius),
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radius,
+                              ),
                             ),
                             tileColor: isMe
                                 ? colorScheme.primaryContainer.withOpacity(0.5)
@@ -118,8 +123,9 @@ class LeaderboardPage extends StatelessWidget {
                                   ? '${entry.displayName} (Tu)'
                                   : entry.displayName,
                               style: textTheme.titleMedium?.copyWith(
-                                fontWeight:
-                                    isMe ? FontWeight.w700 : FontWeight.w600,
+                                fontWeight: isMe
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
                               ),
                             ),
                             subtitle: Text(
@@ -130,8 +136,9 @@ class LeaderboardPage extends StatelessWidget {
                             ),
                             trailing: Text(
                               '${entry.points} pt',
-                              style: textTheme.titleMedium
-                                  ?.copyWith(color: rankColor),
+                              style: textTheme.titleMedium?.copyWith(
+                                color: rankColor,
+                              ),
                             ),
                           ),
                         );

@@ -22,24 +22,24 @@ class _WarmWelcomePageState extends State<WarmWelcomePage> {
   int? _stepIndex;
 
   List<_WarmStep> get _steps => const [
-        _WarmStep(
-          title: VenialCopy.welcomeStep1Title,
-          subtitle: VenialCopy.welcomeStep1Subtitle,
-          asset: AppAssets.tutorialComune,
-          cta: VenialCopy.welcomeStep1Cta,
-        ),
-        _WarmStep(
-          title: VenialCopy.welcomeStep2Title,
-          subtitle: VenialCopy.welcomeStep2Subtitle,
-          asset: AppAssets.tutorialPrevedi,
-          cta: VenialCopy.welcomeStep2Cta,
-        ),
-        _WarmStep(
-          title: VenialCopy.welcomeStep3Title,
-          subtitle: VenialCopy.welcomeStep3Subtitle,
-          asset: AppAssets.tutorialReputazione,
-        ),
-      ];
+    _WarmStep(
+      title: VenialCopy.welcomeStep1Title,
+      subtitle: VenialCopy.welcomeStep1Subtitle,
+      asset: AppAssets.tutorialComune,
+      cta: VenialCopy.welcomeStep1Cta,
+    ),
+    _WarmStep(
+      title: VenialCopy.welcomeStep2Title,
+      subtitle: VenialCopy.welcomeStep2Subtitle,
+      asset: AppAssets.tutorialPrevedi,
+      cta: VenialCopy.welcomeStep2Cta,
+    ),
+    _WarmStep(
+      title: VenialCopy.welcomeStep3Title,
+      subtitle: VenialCopy.welcomeStep3Subtitle,
+      asset: AppAssets.tutorialReputazione,
+    ),
+  ];
 
   Future<void> _completeAndGo(String target) async {
     final prefs = context.read<AppPrefs>();
@@ -78,13 +78,12 @@ class _WarmWelcomePageState extends State<WarmWelcomePage> {
     final sectionGap = isCompact ? AppTokens.s12 : AppTokens.s16;
     final stepIndex = _stepIndex;
     final step = stepIndex == null ? null : _steps[stepIndex];
-    final progressLabel =
-        stepIndex == null ? '' : '${stepIndex + 1}/${_steps.length}';
+    final progressLabel = stepIndex == null
+        ? ''
+        : '${stepIndex + 1}/${_steps.length}';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(VenialCopy.appTitle),
-      ),
+      appBar: AppBar(title: const Text(VenialCopy.appTitle)),
       body: SafeArea(
         child: MaxWidthContainer(
           child: Padding(
@@ -95,8 +94,11 @@ class _WarmWelcomePageState extends State<WarmWelcomePage> {
                 padding: EdgeInsets.all(padding),
                 child: AnimatedSwitcherX(
                   duration: AppMotion.normal,
-                  switchInCurve:
-                      const Interval(0.2, 1, curve: AppMotion.standard),
+                  switchInCurve: const Interval(
+                    0.2,
+                    1,
+                    curve: AppMotion.standard,
+                  ),
                   child: step == null
                       ? _WelcomeLanding(
                           onEnter: _skipWelcome,
@@ -152,11 +154,7 @@ class _WelcomeLanding extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-              child: Image.asset(
-                AppAssets.appIcon,
-                width: 54,
-                height: 54,
-              ),
+              child: Image.asset(AppAssets.appIcon, width: 54, height: 54),
             ),
             const SizedBox(width: AppTokens.s12),
             Expanded(
@@ -317,19 +315,16 @@ class _TutorialStepView extends StatelessWidget {
         Align(
           alignment: Alignment.centerRight,
           child: TicketProgress(
-            label: VenialCopy.welcomeProgressLabel
-                .replaceAll('{step}', progressLabel),
+            label: VenialCopy.welcomeProgressLabel.replaceAll(
+              '{step}',
+              progressLabel,
+            ),
             currentStep: stepIndex + 1,
             totalSteps: totalSteps,
           ),
         ),
         SizedBox(height: sectionGap),
-        Center(
-          child: AppSvg(
-            step.asset,
-            size: isCompact ? 150 : 190,
-          ),
-        ),
+        Center(child: AppSvg(step.asset, size: isCompact ? 150 : 190)),
         SizedBox(height: sectionGap),
         Semantics(
           header: true,

@@ -43,11 +43,11 @@ class Prediction extends Equatable {
 
   @override
   List<Object?> get props => [
-        turnId,
-        problemId,
-        choice,
-        createdAt,
-        motivations,
-        confidence,
-      ];
+    turnId,
+    problemId,
+    choice,
+    createdAt,
+    motivations,
+    confidence,
+  ];
 }

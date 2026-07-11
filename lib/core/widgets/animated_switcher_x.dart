@@ -41,18 +41,12 @@ class AnimatedSwitcherX extends StatelessWidget {
       },
       transitionBuilder: (child, animation) {
         final slideAnimation = animation.drive(
-          Tween<Offset>(
-            begin: const Offset(0, 0.04),
-            end: Offset.zero,
-          ),
+          Tween<Offset>(begin: const Offset(0, 0.04), end: Offset.zero),
         );
 
         return FadeTransition(
           opacity: animation,
-          child: SlideTransition(
-            position: slideAnimation,
-            child: child,
-          ),
+          child: SlideTransition(position: slideAnimation, child: child),
         );
       },
       child: child,

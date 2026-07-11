@@ -9,11 +9,9 @@ import 'package:fanta_comune/features/next_problems/domain/suggested_problem_sta
 import 'package:fanta_comune/features/next_problems/domain/vote_choice.dart';
 
 class ApiNextProblemsRepository implements NextProblemsRepository {
-  ApiNextProblemsRepository({
-    required ApiClient client,
-    required String userId,
-  })  : _client = client,
-        _userId = userId;
+  ApiNextProblemsRepository({required ApiClient client, required String userId})
+    : _client = client,
+      _userId = userId;
 
   final ApiClient _client;
   final String _userId;
@@ -67,15 +65,8 @@ class ApiNextProblemsRepository implements NextProblemsRepository {
       );
     }
     final payload = await _client.postJson(
-      [
-        ..._collectionPath(municipalityId),
-        problemId,
-        'votes',
-      ],
-      body: {
-        'vote': vote.name,
-        'userId': _userId,
-      },
+      [..._collectionPath(municipalityId), problemId, 'votes'],
+      body: {'vote': vote.name, 'userId': _userId},
     );
     return SuggestedProblemMapper.fromResponse(payload);
   }

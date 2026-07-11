@@ -93,7 +93,8 @@ class _PlayView extends StatelessWidget {
                           delegate: SliverChildListDelegate([
                             _BoardHeader(
                               onOpenBoard: () => context.go('/board'),
-                              hasNewCards: state.hasPendingInsights ||
+                              hasNewCards:
+                                  state.hasPendingInsights ||
                                   state.hasChangedPerception,
                             ),
                             SizedBox(
@@ -134,8 +135,9 @@ class _PlayView extends StatelessWidget {
                               const _ActivationEmptyTurn()
                             else
                               SizedBox(
-                                height:
-                                    isCompact ? AppTokens.s12 : AppTokens.s16,
+                                height: isCompact
+                                    ? AppTokens.s12
+                                    : AppTokens.s16,
                               ),
                           ]),
                         ),
@@ -159,12 +161,12 @@ class _PlayView extends StatelessWidget {
                                     final leftProblem = problems[leftIndex];
                                     final rightProblem =
                                         rightIndex < problems.length
-                                            ? problems[rightIndex]
-                                            : null;
+                                        ? problems[rightIndex]
+                                        : null;
                                     final bottomPadding =
                                         index == ((problems.length - 1) ~/ 2)
-                                            ? 0.0
-                                            : spacing;
+                                        ? 0.0
+                                        : spacing;
 
                                     return Padding(
                                       padding: EdgeInsets.only(
@@ -180,28 +182,29 @@ class _PlayView extends StatelessWidget {
                                               state: state,
                                               onSelect: (problemId, choice) =>
                                                   cubit.selectPrediction(
-                                                problemId: problemId,
-                                                choice: choice,
-                                              ),
+                                                    problemId: problemId,
+                                                    choice: choice,
+                                                  ),
                                               onSelectMotivations:
                                                   (problemId, motivations) =>
                                                       cubit.setMotivations(
-                                                problemId: problemId,
-                                                motivations: motivations,
-                                              ),
+                                                        problemId: problemId,
+                                                        motivations:
+                                                            motivations,
+                                                      ),
                                               onSelectConfidence:
                                                   (problemId, confidence) =>
                                                       cubit.setConfidence(
-                                                problemId: problemId,
-                                                confidence: confidence,
-                                              ),
+                                                        problemId: problemId,
+                                                        confidence: confidence,
+                                                      ),
                                               onSelectReflectionAnswer:
                                                   (problemId, selectedIndex) =>
                                                       cubit.setReflectionAnswer(
-                                                problemId: problemId,
-                                                selectedOptionIndex:
-                                                    selectedIndex,
-                                              ),
+                                                        problemId: problemId,
+                                                        selectedOptionIndex:
+                                                            selectedIndex,
+                                                      ),
                                               onRefreshProblem:
                                                   cubit.refreshProblem,
                                               onLoadHistory:
@@ -217,40 +220,49 @@ class _PlayView extends StatelessWidget {
                                                 : _ProblemTile(
                                                     problem: rightProblem,
                                                     state: state,
-                                                    onSelect: (
-                                                      problemId,
-                                                      choice,
-                                                    ) =>
-                                                        cubit.selectPrediction(
-                                                      problemId: problemId,
-                                                      choice: choice,
-                                                    ),
-                                                    onSelectMotivations: (
-                                                      problemId,
-                                                      motivations,
-                                                    ) =>
-                                                        cubit.setMotivations(
-                                                      problemId: problemId,
-                                                      motivations: motivations,
-                                                    ),
-                                                    onSelectConfidence: (
-                                                      problemId,
-                                                      confidence,
-                                                    ) =>
-                                                        cubit.setConfidence(
-                                                      problemId: problemId,
-                                                      confidence: confidence,
-                                                    ),
-                                                    onSelectReflectionAnswer: (
-                                                      problemId,
-                                                      selectedIndex,
-                                                    ) =>
-                                                        cubit
-                                                            .setReflectionAnswer(
-                                                      problemId: problemId,
-                                                      selectedOptionIndex:
+                                                    onSelect:
+                                                        (
+                                                          problemId,
+                                                          choice,
+                                                        ) => cubit
+                                                            .selectPrediction(
+                                                              problemId:
+                                                                  problemId,
+                                                              choice: choice,
+                                                            ),
+                                                    onSelectMotivations:
+                                                        (
+                                                          problemId,
+                                                          motivations,
+                                                        ) => cubit
+                                                            .setMotivations(
+                                                              problemId:
+                                                                  problemId,
+                                                              motivations:
+                                                                  motivations,
+                                                            ),
+                                                    onSelectConfidence:
+                                                        (
+                                                          problemId,
+                                                          confidence,
+                                                        ) =>
+                                                            cubit.setConfidence(
+                                                              problemId:
+                                                                  problemId,
+                                                              confidence:
+                                                                  confidence,
+                                                            ),
+                                                    onSelectReflectionAnswer:
+                                                        (
+                                                          problemId,
                                                           selectedIndex,
-                                                    ),
+                                                        ) => cubit
+                                                            .setReflectionAnswer(
+                                                              problemId:
+                                                                  problemId,
+                                                              selectedOptionIndex:
+                                                                  selectedIndex,
+                                                            ),
                                                     onRefreshProblem:
                                                         cubit.refreshProblem,
                                                     onLoadHistory: cubit
@@ -271,8 +283,8 @@ class _PlayView extends StatelessWidget {
                                   ) {
                                     final bottomPadding =
                                         index == problems.length - 1
-                                            ? 0.0
-                                            : spacing;
+                                        ? 0.0
+                                        : spacing;
                                     final problem = problems[index];
 
                                     return Padding(
@@ -284,27 +296,28 @@ class _PlayView extends StatelessWidget {
                                         state: state,
                                         onSelect: (problemId, choice) =>
                                             cubit.selectPrediction(
-                                          problemId: problemId,
-                                          choice: choice,
-                                        ),
+                                              problemId: problemId,
+                                              choice: choice,
+                                            ),
                                         onSelectMotivations:
                                             (problemId, motivations) =>
                                                 cubit.setMotivations(
-                                          problemId: problemId,
-                                          motivations: motivations,
-                                        ),
+                                                  problemId: problemId,
+                                                  motivations: motivations,
+                                                ),
                                         onSelectConfidence:
                                             (problemId, confidence) =>
                                                 cubit.setConfidence(
-                                          problemId: problemId,
-                                          confidence: confidence,
-                                        ),
+                                                  problemId: problemId,
+                                                  confidence: confidence,
+                                                ),
                                         onSelectReflectionAnswer:
                                             (problemId, selectedIndex) =>
                                                 cubit.setReflectionAnswer(
-                                          problemId: problemId,
-                                          selectedOptionIndex: selectedIndex,
-                                        ),
+                                                  problemId: problemId,
+                                                  selectedOptionIndex:
+                                                      selectedIndex,
+                                                ),
                                         onRefreshProblem: cubit.refreshProblem,
                                         onLoadHistory: cubit.loadProblemHistory,
                                         onLoadCriticalInsights:
@@ -465,11 +478,11 @@ class _ProblemTile extends StatelessWidget {
   final PlayState state;
   final void Function(String problemId, PredictionChoice choice) onSelect;
   final void Function(String problemId, List<MotivationKey> motivations)
-      onSelectMotivations;
+  onSelectMotivations;
   final void Function(String problemId, HypothesisConfidence confidence)
-      onSelectConfidence;
+  onSelectConfidence;
   final void Function(String problemId, int selectedIndex)
-      onSelectReflectionAnswer;
+  onSelectReflectionAnswer;
   final void Function(String problemId) onRefreshProblem;
   final void Function(String problemId) onLoadCriticalInsights;
   final void Function(String problemId) onLoadHistory;

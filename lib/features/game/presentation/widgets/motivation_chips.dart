@@ -36,10 +36,7 @@ class _MotivationChipsState extends State<MotivationChips>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: AppMotion.fast,
-    );
+    _controller = AnimationController(vsync: this, duration: AppMotion.fast);
   }
 
   @override
@@ -80,10 +77,7 @@ class _MotivationChipsState extends State<MotivationChips>
       animation: _controller,
       builder: (context, child) {
         final offset = math.sin(_controller.value * math.pi) * 4;
-        return Transform.translate(
-          offset: Offset(offset, 0),
-          child: child,
-        );
+        return Transform.translate(offset: Offset(offset, 0), child: child);
       },
       child: Wrap(
         spacing: AppTokens.s8,
@@ -130,10 +124,7 @@ class _MotivationChipsState extends State<MotivationChips>
                       const SizedBox(width: AppTokens.s8),
                       Flexible(
                         child: Text(
-                          _motivationLabelForChoice(
-                            motivation,
-                            widget.choice,
-                          ),
+                          _motivationLabelForChoice(motivation, widget.choice),
                           style: textTheme.bodyMedium?.copyWith(
                             color: isSelected
                                 ? colorScheme.onSurface
@@ -167,20 +158,20 @@ class _MotivationChipsState extends State<MotivationChips>
 List<MotivationKey> _motivationOptionsForChoice(PredictionChoice choice) {
   return switch (choice) {
     PredictionChoice.improve => const [
-        MotivationKey.visibleActions,
-        MotivationKey.seasonality,
-        MotivationKey.personalExperience,
-      ],
+      MotivationKey.visibleActions,
+      MotivationKey.seasonality,
+      MotivationKey.personalExperience,
+    ],
     PredictionChoice.stable => const [
-        MotivationKey.personalExperience,
-        MotivationKey.seasonality,
-        MotivationKey.unmetPromises,
-      ],
+      MotivationKey.personalExperience,
+      MotivationKey.seasonality,
+      MotivationKey.unmetPromises,
+    ],
     PredictionChoice.worsen => const [
-        MotivationKey.recentDecline,
-        MotivationKey.unmetPromises,
-        MotivationKey.personalExperience,
-      ],
+      MotivationKey.recentDecline,
+      MotivationKey.unmetPromises,
+      MotivationKey.personalExperience,
+    ],
   };
 }
 

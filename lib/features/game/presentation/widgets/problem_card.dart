@@ -146,13 +146,16 @@ class ProblemCard extends StatelessWidget {
             ),
             const SizedBox(height: AppTokens.s16),
             FcPredictionBar(
-              improve: insight?.choiceDistribution[PredictionChoice.improve]
+              improve:
+                  insight?.choiceDistribution[PredictionChoice.improve]
                       ?.toDouble() ??
                   (problem.status == ProblemStatus.improving ? 64 : 28),
-              stable: insight?.choiceDistribution[PredictionChoice.stable]
+              stable:
+                  insight?.choiceDistribution[PredictionChoice.stable]
                       ?.toDouble() ??
                   (problem.status == ProblemStatus.stable ? 52 : 24),
-              worsen: insight?.choiceDistribution[PredictionChoice.worsen]
+              worsen:
+                  insight?.choiceDistribution[PredictionChoice.worsen]
                       ?.toDouble() ??
                   (problem.status == ProblemStatus.worsening ? 56 : 18),
             ),
@@ -247,10 +250,7 @@ class ProblemCard extends StatelessWidget {
                 onChanged: onSelectMotivations,
               ),
               const SizedBox(height: AppTokens.s16),
-              Text(
-                VenialCopy.confidenceTitle,
-                style: textTheme.titleSmall,
-              ),
+              Text(VenialCopy.confidenceTitle, style: textTheme.titleSmall),
               const SizedBox(height: AppTokens.s8),
               SegmentedChoice<HypothesisConfidence>(
                 value: selectedConfidence,
@@ -318,18 +318,18 @@ class _ReflectionBlock extends StatelessWidget {
           Wrap(
             spacing: AppTokens.s8,
             runSpacing: AppTokens.s8,
-            children: question.options.indexed.map(
-              (entry) {
-                final index = entry.$1;
-                final option = entry.$2;
-                final selected = selectedIndex == index;
-                return ChoiceChip(
-                  label: Text(option),
-                  selected: selected,
-                  onSelected: (_) => onSelected(index),
-                );
-              },
-            ).toList(growable: false),
+            children: question.options.indexed
+                .map((entry) {
+                  final index = entry.$1;
+                  final option = entry.$2;
+                  final selected = selectedIndex == index;
+                  return ChoiceChip(
+                    label: Text(option),
+                    selected: selected,
+                    onSelected: (_) => onSelected(index),
+                  );
+                })
+                .toList(growable: false),
           ),
           if (selectedIndex != null) ...[
             const SizedBox(height: AppTokens.s8),
@@ -366,8 +366,8 @@ class _InsightBlock extends StatelessWidget {
     final topChoice = insight.choiceDistribution.entries.isEmpty
         ? PredictionChoice.stable
         : insight.choiceDistribution.entries
-            .reduce((a, b) => a.value >= b.value ? a : b)
-            .key;
+              .reduce((a, b) => a.value >= b.value ? a : b)
+              .key;
 
     return FcPanel(
       padding: const EdgeInsets.all(AppTokens.s14),
@@ -381,13 +381,16 @@ class _InsightBlock extends StatelessWidget {
           ),
           const SizedBox(height: AppTokens.s12),
           FcPredictionBar(
-            improve: insight.choiceDistribution[PredictionChoice.improve]
+            improve:
+                insight.choiceDistribution[PredictionChoice.improve]
                     ?.toDouble() ??
                 0,
-            stable: insight.choiceDistribution[PredictionChoice.stable]
+            stable:
+                insight.choiceDistribution[PredictionChoice.stable]
                     ?.toDouble() ??
                 0,
-            worsen: insight.choiceDistribution[PredictionChoice.worsen]
+            worsen:
+                insight.choiceDistribution[PredictionChoice.worsen]
                     ?.toDouble() ??
                 0,
           ),
@@ -501,25 +504,25 @@ class _ResultBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final (label, color, icon) = switch (result) {
       PredictionResult.correct => (
-          VenialCopy.resultCorrect,
-          AppTokens.success,
-          Icons.check_circle_outline,
-        ),
+        VenialCopy.resultCorrect,
+        AppTokens.success,
+        Icons.check_circle_outline,
+      ),
       PredictionResult.partial => (
-          VenialCopy.resultPartial,
-          AppTokens.warning,
-          Icons.adjust,
-        ),
+        VenialCopy.resultPartial,
+        AppTokens.warning,
+        Icons.adjust,
+      ),
       PredictionResult.wrong => (
-          VenialCopy.resultWrong,
-          AppTokens.danger,
-          Icons.cancel_outlined,
-        ),
+        VenialCopy.resultWrong,
+        AppTokens.danger,
+        Icons.cancel_outlined,
+      ),
       PredictionResult.pending => (
-          VenialCopy.resultPending,
-          AppTokens.blue,
-          Icons.hourglass_empty,
-        ),
+        VenialCopy.resultPending,
+        AppTokens.blue,
+        Icons.hourglass_empty,
+      ),
     };
 
     return FcStatusChip(label: label, color: color, icon: icon);
@@ -541,20 +544,20 @@ class _StatusMeta {
 _StatusMeta _statusMeta(ProblemStatus status) {
   return switch (status) {
     ProblemStatus.improving => const _StatusMeta(
-        label: VenialCopy.choiceImproveLabel,
-        color: AppTokens.success,
-        icon: Icons.trending_up,
-      ),
+      label: VenialCopy.choiceImproveLabel,
+      color: AppTokens.success,
+      icon: Icons.trending_up,
+    ),
     ProblemStatus.stable => const _StatusMeta(
-        label: VenialCopy.choiceStableLabel,
-        color: AppTokens.warning,
-        icon: Icons.drag_handle,
-      ),
+      label: VenialCopy.choiceStableLabel,
+      color: AppTokens.warning,
+      icon: Icons.drag_handle,
+    ),
     ProblemStatus.worsening => const _StatusMeta(
-        label: VenialCopy.choiceWorsenLabel,
-        color: AppTokens.danger,
-        icon: Icons.trending_down,
-      ),
+      label: VenialCopy.choiceWorsenLabel,
+      color: AppTokens.danger,
+      icon: Icons.trending_down,
+    ),
   };
 }
 
