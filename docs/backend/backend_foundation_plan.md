@@ -43,17 +43,25 @@ Sostituire progressivamente i repository mock Flutter con repository HTTP senza 
 - Deploy cloud.
 - Pannello admin Comune.
 
-## Architettura prevista
+## Architettura corrente
 
 ```text
 services/backend/
-  src/server.js        # HTTP API e store in-memory
-  test/server.test.js  # test di contratto minimo
-  openapi.yaml         # contratto iniziale
+  src/application/     # casi d'uso
+  src/config/          # configurazione ambiente validata
+  src/domain/          # enum, factory ed errori condivisi
+  src/http/            # routing e trasporto JSON
+  src/infrastructure/  # MemoryStore sostituibile
+  src/server.js        # composition root e avvio
+  test/                # test di contratto, regressione e configurazione
+  openapi.yaml         # contratto invariato
   package.json
 ```
 
-Il servizio espone JSON versionato sotto `/v1`. Lo store in-memory serve solo a bloccare shape, stati e comportamento dei primi endpoint. La fase successiva sostituira' lo store con persistenza reale mantenendo gli stessi endpoint.
+Il servizio espone JSON versionato sotto `/v1`. Lo store in-memory serve solo a
+bloccare shape, stati e comportamento dei primi endpoint ed e' isolato dietro
+il servizio applicativo. La fase successiva potra' sostituirlo con persistenza
+reale mantenendo gli stessi endpoint.
 
 ## Contratti frontend da rispettare
 
@@ -77,6 +85,12 @@ I nomi enum restano allineati al Flutter:
 4. Identita' utente anonima stabile e poi auth opzionale.
 5. Deploy preview e ambiente staging.
 6. Move Flutter sotto `apps/flutter_app` quando CI backend e client sono gia' separati.
+
+L'esecuzione dettagliata delle fasi successive allo scaffold e' registrata nel
+[backend productization plan](backend_productization_plan.md), organizzato in
+work package avviabili con Ultracode.
+Le scelte accettate, i rinvii e il confine prima dell'avvio sono riassunti nel
+[registro decisioni backend](backend_decision_register.md).
 
 ## Criteri di uscita fase 1
 

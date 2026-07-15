@@ -12,6 +12,8 @@ Richiede Node.js 24 o superiore e non usa dipendenze npm.
 
 Il server usa HOST (default 127.0.0.1) e PORT (default 8787). Il log di avvio
 viene emesso soltanto dopo che la socket è in ascolto.
+PORT, HOST e CORS_ALLOWED_ORIGINS vengono normalizzati e validati prima del
+tentativo di ascolto; una configurazione non valida interrompe l'avvio.
 
     HOST=127.0.0.1 PORT=8787 npm run dev
     curl http://127.0.0.1:8787/health
@@ -29,6 +31,22 @@ sono abilitate. Origin aggiuntive possono essere elencate esplicitamente in
 CORS_ALLOWED_ORIGINS, separate da virgola; il wildcard non è accettato.
 
     CORS_ALLOWED_ORIGINS=https://pilot.example npm run dev
+
+## Architettura
+
+`src/server.js` e' il composition root e conserva gli export pubblici
+`createApp`, `createMemoryStore` e `startServer`. Le responsabilita' sono
+separate per rendere sostituibile lo store senza cambiare il contratto HTTP:
+
+```text
+src/
+  application/     # casi d'uso e response shape applicative
+  config/          # configurazione ambiente validata
+  domain/          # enum, limiti, factory ed errori condivisi
+  http/            # routing, CORS, parsing, validazione e JSON
+  infrastructure/  # adapter MemoryStore
+  server.js        # composizione e avvio del processo
+```
 
 ## Limiti e sicurezza dello scaffold
 

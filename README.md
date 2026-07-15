@@ -123,6 +123,8 @@ Il workflow Pages non avvia e non espone **services/backend**.
 
 - [Piano di rilascio pubblico](docs/public_release_plan.md)
 - [Fondazione backend](docs/backend/backend_foundation_plan.md)
+- [Consolidamento backend e pilot funzionante](docs/backend/backend_productization_plan.md)
+- [Registro decisioni backend](docs/backend/backend_decision_register.md)
 - [Piano UX/UI](docs/design/ux_ui_alignment_plan.md)
 - [Reference statica del mockup](docs/design/fanta-comune-standalone.html)
 

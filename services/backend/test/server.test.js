@@ -3,7 +3,7 @@ import { once } from 'node:events';
 import { Readable } from 'node:stream';
 import { describe, it } from 'node:test';
 
-import { createApp, startServer } from '../src/server.js';
+import { createApp, createMemoryStore, startServer } from '../src/server.js';
 
 describe('backend HTTP contract', () => {
   it('starts a real server on an ephemeral port and serves health', async () => {
@@ -52,6 +52,21 @@ describe('backend HTTP contract', () => {
     assert.equal(typeof response.body.endAt, 'string');
     assert.equal('startsAt' in response.body, false);
     assert.equal('endsAt' in response.body, false);
+  });
+
+  it('preserves the public MemoryStore civic summary surface', () => {
+    const store = createMemoryStore();
+
+    assert.deepEqual(store.getCivicLoopSummary('bologna'), {
+      municipalityName: 'Bologna',
+      proposedThemes: 1,
+      confirmedThemes: 1,
+      cardsInTurn: 2,
+      predictions: 0,
+      outcomes: 0,
+      reputationPoints: 0,
+      topThemeTitle: "Tempi d'attesa all'anagrafe",
+    });
   });
 
   it('promotes an approved suggestion into a card and activates the town', async () => {
@@ -338,6 +353,148 @@ describe('backend HTTP contract', () => {
     assert.equal(duplicate.body.error, 'duplicate_title');
     assert.equal(missing.status, 404);
     assert.equal(missing.body.error, 'municipality_not_found');
+  });
+
+  it('filters suggested problems by positive status and text query', async () => {
+    const app = createApp();
+    await fetchJson('/v1/municipalities/bologna/next-problems', {
+      app,
+      method: 'POST',
+      body: {
+        title: 'Nuova illuminazione in piazza',
+        description: 'Lampioni poco leggibili nelle ore serali.',
+        category: 'lighting',
+      },
+    });
+
+    const approved = await fetchJson(
+      '/v1/municipalities/bologna/next-problems?status=approved',
+      { app },
+    );
+    const matching = await fetchJson(
+      '/v1/municipalities/bologna/next-problems?query=lampioni',
+      { app },
+    );
+
+    assert.deepEqual(
+      approved.body.items.map((item) => item.id),
+      ['suggested-queues-registry'],
+    );
+    assert.deepEqual(
+      matching.body.items.map((item) => item.title),
+      ['Nuova illuminazione in piazza'],
+    );
+  });
+
+  it('preserves vote switching, toggle removal and promotion rollback', async () => {
+    const app = createApp();
+    const created = await fetchJson(
+      '/v1/municipalities/castel-bolognese/next-problems',
+      {
+        app,
+        method: 'POST',
+        body: {
+          title: 'Attraversamento via Roma',
+          description: 'Migliorare visibilità e sicurezza.',
+          category: 'safety',
+          userId: 'user-a',
+        },
+      },
+    );
+    const path =
+      '/v1/municipalities/castel-bolognese/next-problems/' +
+      created.body.id +
+      '/votes';
+
+    const down = await fetchJson(path, {
+      app,
+      method: 'POST',
+      body: { vote: 'down', userId: 'user-a' },
+    });
+    const switched = await fetchJson(path, {
+      app,
+      method: 'POST',
+      body: { vote: 'up', userId: 'user-a' },
+    });
+    const toggledOff = await fetchJson(path, {
+      app,
+      method: 'POST',
+      body: { vote: 'up', userId: 'user-a' },
+    });
+    const activation = await fetchJson(
+      '/v1/municipalities/castel-bolognese/activation',
+      { app },
+    );
+    const problems = await fetchJson(
+      '/v1/municipalities/castel-bolognese/problems',
+      { app },
+    );
+
+    assert.deepEqual(
+      {
+        votesUp: down.body.votesUp,
+        votesDown: down.body.votesDown,
+        score: down.body.score,
+        myVote: down.body.myVote,
+        status: down.body.status,
+      },
+      { votesUp: 0, votesDown: 1, score: -1, myVote: 'down', status: 'pending' },
+    );
+    assert.deepEqual(
+      {
+        votesUp: switched.body.votesUp,
+        votesDown: switched.body.votesDown,
+        myVote: switched.body.myVote,
+        status: switched.body.status,
+      },
+      { votesUp: 1, votesDown: 0, myVote: 'up', status: 'approved' },
+    );
+    assert.deepEqual(
+      {
+        votesUp: toggledOff.body.votesUp,
+        votesDown: toggledOff.body.votesDown,
+        myVote: toggledOff.body.myVote,
+        status: toggledOff.body.status,
+      },
+      { votesUp: 0, votesDown: 0, myVote: 'none', status: 'pending' },
+    );
+    assert.equal(activation.body.state, 'collectingSignals');
+    assert.equal(
+      problems.body.items.some(
+        (item) => item.id === 'proposal_' + created.body.id,
+      ),
+      false,
+    );
+  });
+
+  it('lists only predictions owned by the selected client-provided user id', async () => {
+    const app = createApp();
+    const path =
+      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
+    await fetchJson(path, {
+      app,
+      method: 'PUT',
+      body: { choice: 'improve', userId: 'user-a' },
+    });
+    await fetchJson(path, {
+      app,
+      method: 'PUT',
+      body: { choice: 'stable', userId: 'user-b' },
+    });
+
+    const forA = await fetchJson(
+      '/v1/turns/turn-bologna-today/predictions?userId=user-a',
+      { app },
+    );
+    const forB = await fetchJson(
+      '/v1/turns/turn-bologna-today/predictions?userId=user-b',
+      { app },
+    );
+
+    assert.deepEqual(forA.body.items.map((item) => item.userId), ['user-a']);
+    assert.deepEqual(forB.body.items.map((item) => item.userId), ['user-b']);
+    assert.equal(forA.body.items[0].choice, 'improve');
+    assert.equal(forB.body.items[0].choice, 'stable');
   });
 
   it('keeps the original prediction resolution happy path', async () => {
