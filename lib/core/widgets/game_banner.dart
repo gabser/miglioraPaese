@@ -24,7 +24,7 @@ class GameBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final isCompact = MediaQuery.of(context).size.width < 620;
-    final height = isCompact ? 270.0 : 260.0;
+    final height = isCompact ? 300.0 : 260.0;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppTokens.radiusLarge),

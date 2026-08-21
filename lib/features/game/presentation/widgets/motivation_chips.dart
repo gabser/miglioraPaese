@@ -79,77 +79,88 @@ class _MotivationChipsState extends State<MotivationChips>
         final offset = math.sin(_controller.value * math.pi) * 4;
         return Transform.translate(offset: Offset(offset, 0), child: child);
       },
-      child: Wrap(
-        spacing: AppTokens.s8,
-        runSpacing: AppTokens.s8,
-        children: options.map((motivation) {
-          final isSelected = widget.selected.contains(motivation);
-          final background = isSelected
-              ? colorScheme.surfaceContainerHighest
-              : colorScheme.surfaceContainerLow;
-          final borderColor = isSelected
-              ? colorScheme.primary.withOpacity(0.4)
-              : colorScheme.outlineVariant;
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final useFullWidth = constraints.maxWidth < 360;
+          return Wrap(
+            spacing: AppTokens.s8,
+            runSpacing: AppTokens.s8,
+            children: options.map((motivation) {
+              final isSelected = widget.selected.contains(motivation);
+              final background = isSelected
+                  ? colorScheme.surfaceContainerHighest
+                  : colorScheme.surfaceContainerLow;
+              final borderColor = isSelected
+                  ? colorScheme.primary.withOpacity(0.4)
+                  : colorScheme.outlineVariant;
 
-          return Semantics(
-            label: 'Motivazione: ${motivation.label}',
-            button: true,
-            selected: isSelected,
-            child: FocusableActionDetector(
-              mouseCursor: SystemMouseCursors.click,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(AppTokens.radius),
-                onTap: () => _onToggle(motivation),
-                child: AnimatedContainer(
-                  duration: AppMotion.fast,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTokens.s12,
-                    vertical: AppTokens.s8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: background,
-                    borderRadius: BorderRadius.circular(AppTokens.radius),
-                    border: Border.all(color: borderColor),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        motivation.icon,
-                        size: 18,
-                        color: isSelected
-                            ? colorScheme.primary
-                            : colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: AppTokens.s8),
-                      Flexible(
-                        child: Text(
-                          _motivationLabelForChoice(motivation, widget.choice),
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: isSelected
-                                ? colorScheme.onSurface
-                                : colorScheme.onSurfaceVariant,
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : textTheme.bodyMedium?.fontWeight,
-                          ),
+              return SizedBox(
+                width: useFullWidth ? constraints.maxWidth : null,
+                child: Semantics(
+                  label: 'Motivazione: ${motivation.label}',
+                  button: true,
+                  selected: isSelected,
+                  child: FocusableActionDetector(
+                    mouseCursor: SystemMouseCursors.click,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppTokens.radius),
+                      onTap: () => _onToggle(motivation),
+                      child: AnimatedContainer(
+                        duration: AppMotion.fast,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTokens.s12,
+                          vertical: AppTokens.s8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: background,
+                          borderRadius: BorderRadius.circular(AppTokens.radius),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              motivation.icon,
+                              size: 18,
+                              color: isSelected
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: AppTokens.s8),
+                            Flexible(
+                              child: Text(
+                                _motivationLabelForChoice(
+                                  motivation,
+                                  widget.choice,
+                                ),
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: isSelected
+                                      ? colorScheme.onSurface
+                                      : colorScheme.onSurfaceVariant,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : textTheme.bodyMedium?.fontWeight,
+                                ),
+                              ),
+                            ),
+                            if (isSelected) ...[
+                              const SizedBox(width: AppTokens.s8),
+                              Icon(
+                                Icons.check_circle,
+                                size: 16,
+                                color: colorScheme.primary,
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                      if (isSelected) ...[
-                        const SizedBox(width: AppTokens.s8),
-                        Icon(
-                          Icons.check_circle,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            }).toList(),
           );
-        }).toList(),
+        },
       ),
     );
   }
