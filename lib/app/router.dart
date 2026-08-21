@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/boot/boot_screen.dart';
 import 'package:fanta_comune/features/home/presentation/home_page.dart';
@@ -16,7 +17,7 @@ import 'package:fanta_comune/features/profile/presentation/profile_page.dart';
 import 'package:fanta_comune/features/shell/presentation/shell_page.dart';
 
 /// Costruisce la configurazione di routing dichiarativo usando [GoRouter].
-GoRouter buildRouter(AppPrefs appPrefs) {
+GoRouter buildRouter(AppPrefs appPrefs, AppConfig config) {
   return GoRouter(
     initialLocation: '/welcome',
     refreshListenable: appPrefs,
@@ -28,6 +29,10 @@ GoRouter buildRouter(AppPrefs appPrefs) {
 
       if (municipalityId != null && location == '/onboarding') {
         return '/home';
+      }
+      if (config.pilotMunicipalityId != null &&
+          location == '/change-municipality') {
+        return '/profile';
       }
 
       return null;

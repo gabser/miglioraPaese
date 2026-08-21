@@ -21,12 +21,18 @@ provare la persistenza SQLite:
 
     DATABASE_PATH=./data/pilot.sqlite npm run dev
 
-In produzione sono obbligatori sia `DATABASE_PATH` sia
-`ANON_IDENTITY_SECRET`. Il secret deve contenere almeno 32 byte e deve essere
-fornito dal secret manager dell'ambiente, non committato nel repository.
+In produzione sono obbligatori `DATABASE_PATH`, `ANON_IDENTITY_SECRET`,
+`MODERATION_ADMIN_TOKEN` e `PILOT_MUNICIPALITY_ID`. I due segreti devono essere
+indipendenti, contenere almeno 32 byte e arrivare dal secret manager, non dal
+repository. In alternativa alle variabili dirette si possono usare
+`ANON_IDENTITY_SECRET_FILE` e `MODERATION_ADMIN_TOKEN_FILE`.
 
     DATABASE_PATH=/data/pilot.sqlite \
     ANON_IDENTITY_SECRET=<secret-di-almeno-32-byte> \
+    MODERATION_ADMIN_TOKEN=<token-indipendente-di-almeno-32-byte> \
+    PILOT_MUNICIPALITY_ID=castel-bolognese \
+    MIN_AGGREGATE_SAMPLE_SIZE=3 \
+    CORS_ALLOWED_ORIGINS=https://pilot.example.test \
     npm start
 
 ## Identificativi Comune
@@ -46,7 +52,7 @@ risposte CORS consentono credenziali perché l'identità anonima usa cookie.
 
 ## Persistenza e identita' anonima
 
-La versione 0.4 usa `node:sqlite`, disponibile in Node 24, con foreign key,
+La versione 0.5 usa `node:sqlite`, disponibile in Node 24, con foreign key,
 WAL, timeout sui lock e migrazione iniziale registrata in
 `schema_migrations`. Lo stato del pilot e' salvato atomicamente in uno snapshot
 JSON versionato; la normalizzazione in tabelle di dominio resta un passo
@@ -67,14 +73,38 @@ limitazioni dei cookie di terze parti.
 - Le proposte con link, email, numeri di telefono, caratteri di controllo o
   termini abusivi noti vengono rifiutate con `content_rejected`.
 - Ogni identità anonima può inviare al massimo tre proposte in un'ora.
-- La moderazione automatica e' un primo filtro: il pilot richiede ancora una
-  coda operativa e un responsabile umano per escalation e ricorsi.
+- In produzione i voti non approvano una proposta: un moderatore deve inviare
+  una decisione `approved` o `rejected` all'endpoint amministrativo protetto.
+- La coda operativa è l'elenco `status=pending`; responsabilità, escalation e
+  ricorsi devono essere assegnati prima del go-live.
 
 L'identità anonima non sostituisce autenticazione forte o protezioni anti-abuso
 distribuite. Prima di esposizione pubblica servono proxy trusted, rate limiting
-condiviso, backup, retention/privacy policy e osservabilita'.
+condiviso, retention/privacy policy e una prova operativa di backup/restore.
 
 Il contratto eseguibile è descritto in openapi.yaml.
+
+## Staging e osservabilità
+
+`Dockerfile` e `compose.staging.yaml` preparano un container non-root, con
+filesystem read-only e volumi separati per dati e backup. Il compose collega la
+porta a loopback: TLS e accesso pubblico devono passare da un reverse proxy.
+
+    docker compose --env-file staging.env -f compose.staging.yaml up -d --build
+
+Gli endpoint operativi sono:
+
+- `GET /health` per liveness;
+- `GET /ready` per readiness dello store;
+- `GET /metrics` per metriche Prometheus a cardinalità controllata.
+
+Ogni risposta espone `X-Request-Id`. I log JSON registrano metodo, nome route,
+status e durata, ma non path grezzi, query, cookie, token, body o identità. Le
+metriche devono restare accessibili solo alla rete di monitoraggio.
+
+Gli script `npm run backup`, `npm run verify-database` e `npm run smoke`
+supportano il runbook operativo. Procedura completa, gate e rollback sono in
+[`docs/pilot_runbook.md`](../../docs/pilot_runbook.md).
 
 ## Contratto di gioco
 
@@ -87,6 +117,6 @@ La versione 0.3 ha aggiunto letture coerenti con `GameRepository` per:
 La risoluzione accetta soltanto la scelta già salvata per lo stesso utente e
 salva un esito `correct`, `partial` o `wrong` per la coppia turno/utente.
 Reputazione e riepilogo civico sono calcolati dagli esiti salvati. Gli insight
-aggregano le previsioni di tutti gli utenti del turno; non sono ancora applicate
-soglie minime di anonimizzazione, che fanno parte del lavoro privacy prima del
-pilot pubblico.
+aggregano le previsioni di tutti gli utenti del turno. In produzione conteggio,
+distribuzioni e timestamp restano oscurati finché non viene raggiunta
+`MIN_AGGREGATE_SAMPLE_SIZE`, pari a 3 per default.

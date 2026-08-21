@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:fanta_comune/app/app.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/civic_loop/data/civic_loop_store.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
@@ -16,9 +17,10 @@ Future<AppPrefs> createTestPrefs(Map<String, Object> values) async {
   return AppPrefs.init();
 }
 
-Widget buildTestApp(AppPrefs prefs) {
+Widget buildTestApp(AppPrefs prefs, {AppConfig? config}) {
   return MultiProvider(
     providers: [
+      Provider<AppConfig>.value(value: config ?? AppConfig.fromValues()),
       ChangeNotifierProvider<AppPrefs>.value(value: prefs),
       Provider<CivicLoopStore>(
         create: (context) =>

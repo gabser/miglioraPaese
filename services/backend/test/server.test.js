@@ -3,11 +3,20 @@ import { once } from 'node:events';
 import { Readable } from 'node:stream';
 import { describe, it } from 'node:test';
 
-import { createApp, startServer } from '../src/server.js';
+import {
+  createApp,
+  createMemoryStore,
+  startServer,
+} from '../src/server.js';
 
 describe('backend HTTP contract', () => {
   it('starts a real server on an ephemeral port and serves health', async () => {
-    const server = startServer({ port: 0, host: '127.0.0.1' });
+    const logs = [];
+    const server = startServer({
+      port: 0,
+      host: '127.0.0.1',
+      logger: (line) => logs.push(JSON.parse(line)),
+    });
     try {
       await once(server, 'listening');
       const address = server.address();
@@ -19,6 +28,31 @@ describe('backend HTTP contract', () => {
       assert.equal(response.status, 200);
       assert.match(response.headers.get('content-type'), /^application\/json/);
       assert.deepEqual(await response.json(), { status: 'ok' });
+
+      const ready = await fetch(
+        'http://127.0.0.1:' + address.port + '/ready',
+      );
+      assert.equal(ready.status, 200);
+      assert.deepEqual(await ready.json(), { status: 'ready' });
+
+      const activation = await fetch(
+        'http://127.0.0.1:' +
+          address.port +
+          '/v1/municipalities/bologna/activation?userId=not-logged',
+        { headers: { 'x-request-id': 'contract-check' } },
+      );
+      assert.equal(activation.headers.get('x-request-id'), 'contract-check');
+      await activation.json();
+
+      const metrics = await fetch(
+        'http://127.0.0.1:' + address.port + '/metrics',
+      );
+      assert.match(metrics.headers.get('content-type'), /^text\/plain/);
+      const metricsBody = await metrics.text();
+      assert.match(metricsBody, /migliorapaese_http_requests_total/);
+      assert.match(metricsBody, /route="municipalityActivation"/);
+      assert.equal(logs.some((entry) => entry.route === 'ready'), true);
+      assert.equal(JSON.stringify(logs).includes('not-logged'), false);
     } finally {
       await closeServer(server);
     }
@@ -423,6 +457,79 @@ describe('backend HTTP contract', () => {
     assert.equal(limited.body.error, 'submission_rate_limited');
   });
 
+  it('requires an authorized moderator before promotion in pilot mode', async () => {
+    const moderationAdminToken = 'moderation-test-token-at-least-32-bytes';
+    const store = createMemoryStore({ moderationRequired: true });
+    const app = createApp({ store, moderationAdminToken });
+    const created = await fetchJson(
+      '/v1/municipalities/castel-bolognese/next-problems',
+      {
+        app,
+        method: 'POST',
+        body: {
+          title: 'Passaggio protetto davanti alla scuola',
+          description: 'La proposta attende la verifica del moderatore.',
+          category: 'safety',
+        },
+      },
+    );
+    const voted = await fetchJson(
+      `/v1/municipalities/castel-bolognese/next-problems/${created.body.id}/votes`,
+      { app, method: 'POST', body: { vote: 'up' } },
+    );
+    assert.equal(voted.body.status, 'pending');
+
+    const moderationPath =
+      `/v1/admin/municipalities/castel-bolognese/next-problems/` +
+      `${created.body.id}/moderation`;
+    const unauthorized = await fetchJson(moderationPath, {
+      app,
+      method: 'POST',
+      body: { status: 'approved' },
+    });
+    assert.equal(unauthorized.status, 401);
+
+    const approved = await fetchJson(moderationPath, {
+      app,
+      method: 'POST',
+      headers: { authorization: `Bearer ${moderationAdminToken}` },
+      body: { status: 'approved', reason: 'Verifica operatore completata.' },
+    });
+    assert.equal(approved.status, 200);
+    assert.equal(approved.body.status, 'approved');
+    assert.equal(typeof approved.body.moderatedAt, 'string');
+
+    const problems = await fetchJson(
+      '/v1/municipalities/castel-bolognese/problems',
+      { app },
+    );
+    assert.equal(
+      problems.body.items.some(
+        (problem) => problem.id === `proposal_${created.body.id}`,
+      ),
+      true,
+    );
+  });
+
+  it('limits a configured pilot to one municipality', async () => {
+    const app = createApp({ pilotMunicipalityId: 'castel-bolognese' });
+    const pilot = await fetchJson(
+      '/v1/municipalities/castel-bolognese/activation',
+      { app },
+    );
+    const outside = await fetchJson('/v1/municipalities/bologna/activation', {
+      app,
+    });
+    const outsideProblem = await fetchJson(
+      '/v1/problems/problem-green-margherita/insight',
+      { app },
+    );
+
+    assert.equal(pilot.status, 200);
+    assert.equal(outside.status, 404);
+    assert.equal(outsideProblem.status, 404);
+  });
+
   it('keeps the original prediction resolution happy path', async () => {
     const app = createApp();
     await fetchJson(
@@ -618,6 +725,46 @@ describe('backend HTTP contract', () => {
       'visibleActions',
       'personalExperience',
     ]);
+  });
+
+  it('suppresses aggregates below the configured privacy threshold', () => {
+    const store = createMemoryStore({ minimumAggregateSampleSize: 3 });
+    for (const userId of ['anon:first', 'anon:second']) {
+      store.upsertPrediction({
+        turnId: 'turn-bologna-today',
+        problemId: 'problem-green-margherita',
+        userId,
+        choice: 'improve',
+        motivations: ['visibleActions'],
+        confidence: 'considered',
+      });
+    }
+
+    const suppressed = store.getAggregatedInsight(
+      'problem-green-margherita',
+    );
+    assert.equal(suppressed.totalPredictions, 0);
+    assert.deepEqual(suppressed.choiceDistribution, {
+      improve: 0,
+      stable: 0,
+      worsen: 0,
+    });
+
+    store.upsertPrediction({
+      turnId: 'turn-bologna-today',
+      problemId: 'problem-green-margherita',
+      userId: 'anon:third',
+      choice: 'stable',
+      motivations: ['seasonality'],
+      confidence: 'gutFeeling',
+    });
+    const visible = store.getAggregatedInsight('problem-green-margherita');
+    assert.equal(visible.totalPredictions, 3);
+    assert.deepEqual(visible.choiceDistribution, {
+      improve: 2,
+      stable: 1,
+      worsen: 0,
+    });
   });
 
   it('returns critical insights and validates their optional context', async () => {

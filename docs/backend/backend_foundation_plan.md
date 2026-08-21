@@ -3,7 +3,7 @@
 ## Stato aggiornato (21 agosto 2026)
 
 La fase 1 locale è completata come scaffold contrattuale: avvio reale,
-validazione, CORS loopback, OpenAPI 0.4.0 e test di contratto.
+validazione, CORS loopback, OpenAPI 0.5.0 e test di contratto.
 `ApiNextProblemsRepository` e `ApiGameRepository` sono consumer HTTP opt-in
 attivabili separatamente tramite configurazione ambiente. Il repository di
 gioco copre progressivamente attivazione, turno, problemi, previsioni, esiti,
@@ -11,9 +11,11 @@ reputazione, insight e classifica; reflection resta locale e la mutazione del
 segnale è rifiutata finché manca il relativo endpoint.
 
 Il pilot dispone ora di persistenza SQLite con migrazione, identità anonima
-firmata server-side, moderazione automatica e limite locale degli invii. Non è
-ancora un servizio pubblico: mancano moderazione umana, backup/cancellazione,
-rate limiting distribuito, soglie privacy, staging e osservabilità.
+firmata server-side, moderazione automatica e umana, limite locale degli invii,
+container di staging, backup verificabile, readiness, metriche e log
+strutturati. Non è ancora un servizio pubblico: mancano provider e Comune
+approvati, cancellazione, rate limiting distribuito, policy privacy completa e
+prova operativa del runbook.
 
 ## Decisione
 
@@ -54,6 +56,8 @@ services/backend/
   src/persistence.js   # SQLite e migrazioni
   src/identity.js      # sessione anonima firmata
   src/moderation.js    # policy automatica iniziale
+  src/observability.js # request ID, metriche e log strutturati
+  scripts/             # backup, verifica SQLite e smoke staging
   test/                # contratto e riavvio persistente
   openapi.yaml         # contratto iniziale
   package.json
@@ -84,23 +88,26 @@ I nomi enum restano allineati al Flutter:
 3. Completato per il pilot: persistenza SQLite con migrazione iniziale.
 4. Completato per il pilot: identita' anonima server-side, filtro contenuti e
    limite locale degli invii; auth opzionale resta successiva.
-5. Prossimo: deploy preview e ambiente staging con backup e osservabilita'.
+5. Completato nel repository: candidato staging, backup, smoke e osservabilità;
+   deploy e pilot reale richiedono provider e Comune approvati.
 6. Move Flutter sotto `apps/flutter_app` quando CI backend e client sono gia' separati.
 
 ## Criteri di uscita fase 1
 
 - `npm test` passa in `services/backend`.
-- `/health` risponde `ok`.
+- `/health` risponde `ok` e `/ready` verifica lo store.
 - Gli endpoint principali restituiscono JSON compatibile con i repository Flutter.
 - Il piano e il contratto API sono versionati nel repo.
 
 ## Criteri per iniziare la fase pubblica del backend
 
 - completato: identità anonima emessa e verificata dal server;
-- parziale: persistenza con migrazioni; backup e cancellazione restano aperti;
-- parziale: filtro testi e limite locale; servono revisione umana e protezioni
+- parziale: persistenza con migrazioni e backup verificabile; cancellazione e
+  prova di ripristino restano aperte;
+- parziale: filtro testi, revisione umana e limite locale; servono protezioni
   anti-abuso distribuite;
 - contratto remoto per reflection e mutazione del segnale;
-- soglia minima e regole privacy per gli insight aggregati;
-- staging, osservabilità e test end-to-end;
+- completato: soglia minima configurabile per gli insight aggregati; restano le
+  regole privacy complessive;
+- deploy staging, alert e smoke end-to-end remoto;
 - privacy policy coerente con i dati remoti.

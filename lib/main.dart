@@ -9,6 +9,11 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final appPrefs = await AppPrefs.init();
   final config = AppConfig.fromEnvironment();
+  final pilotMunicipalityId = config.pilotMunicipalityId;
+  if (pilotMunicipalityId != null &&
+      appPrefs.municipalityId != pilotMunicipalityId) {
+    await appPrefs.setMunicipalityId(pilotMunicipalityId);
+  }
 
   runApp(
     AppDependencies(appPrefs: appPrefs, config: config, child: const App()),

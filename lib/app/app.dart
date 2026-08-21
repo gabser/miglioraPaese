@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fanta_comune/app/router.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_theme.dart';
 
@@ -11,11 +12,12 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appPrefs = context.read<AppPrefs>();
+    final config = context.read<AppConfig>();
     return MaterialApp.router(
       title: 'Fanta Comune',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      routerConfig: buildRouter(appPrefs),
+      routerConfig: buildRouter(appPrefs, config),
     );
   }
 }

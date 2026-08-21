@@ -1,3 +1,5 @@
+import 'package:fanta_comune/core/models/municipality_catalog.dart';
+
 enum NextProblemsDataSource { mock, api }
 
 enum GameDataSource { mock, api }
@@ -7,8 +9,10 @@ class AppConfig {
     required this.nextProblemsDataSource,
     required this.gameDataSource,
     required Uri apiBaseUrl,
+    String? pilotMunicipalityId,
     this.apiTimeout = const Duration(seconds: 8),
-  }) : apiBaseUrl = _validateApiBaseUrl(apiBaseUrl);
+  }) : apiBaseUrl = _validateApiBaseUrl(apiBaseUrl),
+       pilotMunicipalityId = _validatePilotMunicipalityId(pilotMunicipalityId);
 
   factory AppConfig.fromEnvironment() {
     const dataSource = String.fromEnvironment(
@@ -23,10 +27,12 @@ class AppConfig {
       'API_BASE_URL',
       defaultValue: 'http://localhost:8787',
     );
+    const pilotMunicipalityId = String.fromEnvironment('PILOT_MUNICIPALITY_ID');
     return AppConfig.fromValues(
       nextProblemsDataSource: dataSource,
       gameDataSource: gameDataSource,
       apiBaseUrl: apiBaseUrl,
+      pilotMunicipalityId: pilotMunicipalityId,
     );
   }
 
@@ -34,6 +40,7 @@ class AppConfig {
     String nextProblemsDataSource = 'mock',
     String gameDataSource = 'mock',
     String apiBaseUrl = 'http://localhost:8787',
+    String? pilotMunicipalityId,
     Duration apiTimeout = const Duration(seconds: 8),
   }) {
     final nextProblemsSource = switch (nextProblemsDataSource
@@ -60,6 +67,7 @@ class AppConfig {
       nextProblemsDataSource: nextProblemsSource,
       gameDataSource: gameSource,
       apiBaseUrl: Uri.parse(apiBaseUrl),
+      pilotMunicipalityId: pilotMunicipalityId,
       apiTimeout: apiTimeout,
     );
   }
@@ -67,6 +75,7 @@ class AppConfig {
   final NextProblemsDataSource nextProblemsDataSource;
   final GameDataSource gameDataSource;
   final Uri apiBaseUrl;
+  final String? pilotMunicipalityId;
   final Duration apiTimeout;
 
   static Uri _validateApiBaseUrl(Uri value) {
@@ -82,5 +91,18 @@ class AppConfig {
       );
     }
     return value;
+  }
+
+  static String? _validatePilotMunicipalityId(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final apiId = MunicipalityCatalog.apiIdFor(value.trim());
+    if (apiId == null) {
+      throw ArgumentError.value(
+        value,
+        'pilotMunicipalityId',
+        'Il Comune pilot deve avere un mapping API esplicito.',
+      );
+    }
+    return apiId;
   }
 }

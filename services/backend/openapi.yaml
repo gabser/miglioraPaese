@@ -1,11 +1,14 @@
 openapi: 3.1.0
 info:
   title: Migliora Paese API
-  version: 0.4.0
+  version: 0.5.0
   description: >-
     Pilot API backed by durable SQLite state. User-specific resources use a
     signed anonymous session issued by the server in an HttpOnly cookie;
-    client-provided userId values are ignored.
+    client-provided userId values are ignored. Staging can be restricted to a
+    single municipality and requires an explicit human moderation decision.
+    Aggregate insight counts and distributions are suppressed below the
+    configured privacy threshold.
 servers:
   - url: http://localhost:8787
 security:
@@ -22,6 +25,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
+  /ready:
+    get:
+      operationId: getReadiness
+      responses:
+        "200":
+          description: Backend and persistent store are ready to serve traffic.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /metrics:
+    get:
+      operationId: getMetrics
+      responses:
+        "200":
+          description: Low-cardinality Prometheus metrics without user data.
+          content:
+            text/plain:
+              schema:
+                type: string
   /v1/municipalities/{municipalityId}/activation:
     get:
       operationId: getMunicipalityActivation
@@ -196,7 +221,9 @@ paths:
               $ref: "#/components/schemas/VoteSuggestedProblemRequest"
       responses:
         "200":
-          description: Updated suggested problem for the voting user.
+          description: >-
+            Updated suggested problem for the voting user. In moderated pilot
+            mode, voting changes the score but cannot approve the proposal.
           content:
             application/json:
               schema:
@@ -211,6 +238,35 @@ paths:
           $ref: "#/components/responses/PayloadTooLarge"
         "500":
           $ref: "#/components/responses/InternalError"
+  /v1/admin/municipalities/{municipalityId}/next-problems/{problemId}/moderation:
+    post:
+      operationId: moderateSuggestedProblem
+      security:
+        - ModeratorToken: []
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+        - $ref: "#/components/parameters/ProblemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModerateSuggestedProblemRequest"
+      responses:
+        "200":
+          description: Moderation decision saved and promotion state updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestedProblem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
   /v1/turns/{turnId}/predictions:
     get:
       operationId: listPredictions
@@ -381,6 +437,11 @@ components:
       description: >-
         Signed opaque identifier issued by the server. Browsers cannot read it
         because the cookie is HttpOnly; credentialed requests send it back.
+    ModeratorToken:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Operator credential supplied by the staging secret manager.
   parameters:
     MunicipalityId:
       name: municipalityId
@@ -410,6 +471,12 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
     Forbidden:
       description: Origin is not allowed by the local CORS policy.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid moderator credential.
       content:
         application/json:
           schema:
@@ -450,6 +517,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    ServiceUnavailable:
+      description: Persistent store is not ready.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
     ErrorResponse:
       type: object
@@ -465,6 +538,12 @@ components:
       properties:
         status:
           const: ok
+    ReadinessResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          const: ready
     ActivationState:
       type: string
       enum: [active, collectingSignals, newMunicipality]
@@ -593,6 +672,12 @@ components:
         submittedByUserId: { type: string }
         submittedByDisplayName: { type: string }
         createdAt: { type: string, format: date-time }
+        moderatedAt:
+          type: [string, "null"]
+          format: date-time
+        moderationReason:
+          type: [string, "null"]
+          maxLength: 500
         promotionRule:
           $ref: "#/components/schemas/PromotionRule"
     SuggestedProblemList:
@@ -617,6 +702,17 @@ components:
       properties:
         vote:
           $ref: "#/components/schemas/VoteChoice"
+    ModerateSuggestedProblemRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected]
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
     PredictionChoice:
       type: string
       enum: [improve, stable, worsen]

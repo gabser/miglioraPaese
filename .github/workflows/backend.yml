@@ -33,3 +33,6 @@ jobs:
       - name: Test backend
         working-directory: services/backend
         run: npm test
+
+      - name: Build staging image
+        run: docker build --tag migliorapaese/backend:ci services/backend

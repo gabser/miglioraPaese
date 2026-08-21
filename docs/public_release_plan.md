@@ -53,25 +53,26 @@ distribuzione sono documentati in [ASSETS.md](../ASSETS.md).
 - abilitare secret scanning e private vulnerability reporting quando disponibili;
 - eseguire uno scanner dedicato della cronologia prima del cambio di visibilita'.
 
-Sul piano GitHub corrente, Pages e l'applicazione effettiva della protezione di
-branch non sono disponibili mentre il repository resta privato; private
-vulnerability reporting e i controlli di pubblicazione saranno abilitati sul
-nuovo repository pubblico subito dopo la creazione dello snapshot.
+Il repository pubblico usa Pages tramite GitHub Actions, protezione di `main`,
+secret scanning e private vulnerability reporting. La cronologia originaria è
+conservata nell'archivio privato separato.
 
 ## Confini di sicurezza
 
 La demo Pages non deve chiamare il backend e non deve inviare contributi reali.
-Il backend pilot dispone di SQLite, identita' anonima firmata, filtro automatico
-e limite locale degli invii, ma non ancora di moderazione umana, backup,
-cancellazione remota, privacy operativa o protezioni anti-abuso distribuite.
-Queste ultime capacita' restano prerequisiti per un'apertura pubblica.
+Il backend pilot dispone di SQLite, identita' anonima firmata, filtro automatico,
+moderazione operatore, limite locale, backup verificabile e osservabilità di
+base. Restano necessari prova di restore, cancellazione remota, privacy
+operativa e protezioni anti-abuso distribuite prima dell'apertura pubblica.
 
 ## Passi successivi al prototipo
 
 1. Completato: contratto per risultati, reputazione e insight.
 2. Completato per il pilot: identita' anonima server-side e persistenza con
    migrazione iniziale.
-3. Parziale: filtro contenuti e limite locale; aggiungere processo umano,
-   backup, cancellazione e policy privacy.
-4. Preparare staging, test end-to-end remoti e osservabilita'.
-5. Eseguire un rollout limitato con un Comune prima di un'apertura generale.
+3. Completato nel codice: filtro contenuti, moderazione umana, limite locale e
+   backup verificabile; cancellazione e policy privacy restano operative.
+4. Completato nel repository: candidato staging, smoke e osservabilità; manca
+   il deploy su un provider approvato.
+5. Prossimo: selezionare il Comune, superare i gate del runbook ed eseguire un
+   rollout limitato prima di un'apertura generale.

@@ -40,6 +40,16 @@ void main() {
       () => AppConfig.fromValues(apiBaseUrl: 'not-an-url'),
       throwsArgumentError,
     );
+    expect(
+      AppConfig.fromValues(
+        pilotMunicipalityId: 'comune:Castel Bolognese',
+      ).pilotMunicipalityId,
+      'castel-bolognese',
+    );
+    expect(
+      () => AppConfig.fromValues(pilotMunicipalityId: 'comune:Roma'),
+      throwsArgumentError,
+    );
   });
 
   test('repository factory keeps mock as the default', () {

@@ -1,0 +1,42 @@
+services:
+  api:
+    build:
+      context: .
+    image: migliorapaese/backend:staging
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    ports:
+      - "${PILOT_BIND_ADDRESS:-127.0.0.1}:${PILOT_PORT:-8787}:8787"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 8787
+      DATABASE_PATH: /data/pilot.sqlite
+      PILOT_MUNICIPALITY_ID: "${PILOT_MUNICIPALITY_ID:?set PILOT_MUNICIPALITY_ID}"
+      CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS:?set CORS_ALLOWED_ORIGINS}"
+      ANON_IDENTITY_SECRET_FILE: /run/secrets/anonymous_identity
+      MODERATION_ADMIN_TOKEN_FILE: /run/secrets/moderation_admin
+      MODERATION_REQUIRED: "true"
+      MIN_AGGREGATE_SAMPLE_SIZE: "${MIN_AGGREGATE_SAMPLE_SIZE:-3}"
+    secrets:
+      - anonymous_identity
+      - moderation_admin
+    volumes:
+      - pilot_data:/data
+      - pilot_backups:/backups
+
+secrets:
+  anonymous_identity:
+    file: "${ANON_IDENTITY_SECRET_SOURCE:?set ANON_IDENTITY_SECRET_SOURCE}"
+  moderation_admin:
+    file: "${MODERATION_ADMIN_TOKEN_SOURCE:?set MODERATION_ADMIN_TOKEN_SOURCE}"
+
+volumes:
+  pilot_data:
+  pilot_backups:
