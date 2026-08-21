@@ -341,14 +341,275 @@ describe('backend HTTP contract', () => {
   });
 
   it('keeps the original prediction resolution happy path', async () => {
+    const app = createApp();
+    await fetchJson(
+      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita',
+      { app, method: 'PUT', body: { choice: 'improve' } },
+    );
     const result = await fetchJson(
       '/v1/problems/problem-green-margherita/resolve',
-      { method: 'POST', body: { choice: 'improve' } },
+      { app, method: 'POST', body: { choice: 'improve' } },
     );
 
     assert.equal(result.status, 200);
     assert.equal(result.body.correct, true);
+    assert.equal(result.body.result, 'correct');
+    assert.equal(result.body.pointsDelta, 10);
     assert.equal(result.body.winningChoice, 'improve');
+  });
+
+  it('stores prediction results and reputation independently by user', async () => {
+    const app = createApp();
+    const predictionPath =
+      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
+    const resolutionPath =
+      '/v1/problems/problem-green-margherita/resolve';
+
+    await fetchJson(predictionPath, {
+      app,
+      method: 'PUT',
+      body: { choice: 'improve', userId: 'user-a' },
+    });
+    await fetchJson(predictionPath, {
+      app,
+      method: 'PUT',
+      body: { choice: 'worsen', userId: 'user-b' },
+    });
+    await fetchJson(resolutionPath, {
+      app,
+      method: 'POST',
+      body: { choice: 'improve', userId: 'user-a' },
+    });
+    await fetchJson(resolutionPath, {
+      app,
+      method: 'POST',
+      body: { choice: 'worsen', userId: 'user-b' },
+    });
+
+    const resultsA = await fetchJson(
+      '/v1/turns/turn-bologna-today/prediction-results?userId=user-a',
+      { app },
+    );
+    const resultsB = await fetchJson(
+      '/v1/turns/turn-bologna-today/prediction-results?userId=user-b',
+      { app },
+    );
+    const reputationA = await fetchJson(
+      '/v1/turns/turn-bologna-today/reputation?userId=user-a',
+      { app },
+    );
+    const reputationB = await fetchJson(
+      '/v1/turns/turn-bologna-today/reputation?userId=user-b',
+      { app },
+    );
+    const summaryA = await fetchJson(
+      '/v1/municipalities/bologna/summary?userId=user-a',
+      { app },
+    );
+
+    assert.deepEqual(resultsA.body.items, [
+      { problemId: 'problem-green-margherita', result: 'correct' },
+    ]);
+    assert.deepEqual(resultsB.body.items, [
+      { problemId: 'problem-green-margherita', result: 'wrong' },
+    ]);
+    assert.deepEqual(reputationA.body, {
+      totalPoints: 10,
+      accuracy: 1,
+      predictionsCount: 1,
+    });
+    assert.deepEqual(reputationB.body, {
+      totalPoints: 0,
+      accuracy: 0,
+      predictionsCount: 1,
+    });
+    assert.equal(summaryA.body.outcomes, 1);
+    assert.equal(summaryA.body.reputationPoints, 10);
+  });
+
+  it('computes partial results and exposes municipality reputation history', async () => {
+    const app = createApp();
+    await fetchJson(
+      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita',
+      {
+        app,
+        method: 'PUT',
+        body: { choice: 'stable', userId: 'user-a' },
+      },
+    );
+    await fetchJson(
+      '/v1/turns/turn-bologna-today/predictions/problem-traffic-indipendenza',
+      {
+        app,
+        method: 'PUT',
+        body: { choice: 'improve', userId: 'user-a' },
+      },
+    );
+    await fetchJson('/v1/problems/problem-green-margherita/resolve', {
+      app,
+      method: 'POST',
+      body: { choice: 'stable', userId: 'user-a' },
+    });
+    await fetchJson('/v1/problems/problem-traffic-indipendenza/resolve', {
+      app,
+      method: 'POST',
+      body: { choice: 'improve', userId: 'user-a' },
+    });
+
+    const results = await fetchJson(
+      '/v1/turns/turn-bologna-today/prediction-results?userId=user-a',
+      { app },
+    );
+    const history = await fetchJson(
+      '/v1/municipalities/bologna/reputation-history?userId=user-a',
+      { app },
+    );
+
+    assert.deepEqual(
+      results.body.items.map((item) => item.result).sort(),
+      ['partial', 'wrong'],
+    );
+    assert.deepEqual(history.body.items, [
+      { totalPoints: 4, accuracy: 0.25, predictionsCount: 2 },
+    ]);
+  });
+
+  it('aggregates predictions into current and historical insights', async () => {
+    const app = createApp();
+    const path =
+      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
+    await fetchJson(path, {
+      app,
+      method: 'PUT',
+      body: {
+        choice: 'improve',
+        motivations: ['visibleActions'],
+        userId: 'user-a',
+      },
+    });
+    await fetchJson(path, {
+      app,
+      method: 'PUT',
+      body: {
+        choice: 'improve',
+        motivations: ['visibleActions', 'seasonality'],
+        userId: 'user-b',
+      },
+    });
+    await fetchJson(path, {
+      app,
+      method: 'PUT',
+      body: {
+        choice: 'stable',
+        motivations: ['personalExperience'],
+        userId: 'user-c',
+      },
+    });
+
+    const insight = await fetchJson(
+      '/v1/problems/problem-green-margherita/insight',
+      { app },
+    );
+    const history = await fetchJson(
+      '/v1/problems/problem-green-margherita/insight-history',
+      { app },
+    );
+
+    assert.equal(insight.body.totalPredictions, 3);
+    assert.deepEqual(insight.body.choiceDistribution, {
+      improve: 2,
+      stable: 1,
+      worsen: 0,
+    });
+    assert.equal(insight.body.motivationDistribution.visibleActions, 2);
+    assert.equal(history.body.snapshots.length, 1);
+    assert.equal(history.body.snapshots[0].turnId, 'turn-bologna-today');
+    assert.deepEqual(history.body.snapshots[0].motivationTop, [
+      'visibleActions',
+      'personalExperience',
+    ]);
+  });
+
+  it('returns critical insights and validates their optional context', async () => {
+    const app = createApp();
+    const empty = await fetchJson(
+      '/v1/problems/problem-green-margherita/critical-insights',
+      { app },
+    );
+    assert.equal(empty.body.items[0].headline, 'Dati in raccolta');
+
+    const predictionPath =
+      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
+    await fetchJson(predictionPath, {
+      app,
+      method: 'PUT',
+      body: { choice: 'improve', userId: 'user-a' },
+    });
+    const contextual = await fetchJson(
+      '/v1/problems/problem-green-margherita/critical-insights' +
+        '?userChoice=improve&userConfidence=considered&userReflectionIndex=1',
+      { app },
+    );
+    const invalid = await fetchJson(
+      '/v1/problems/problem-green-margherita/critical-insights' +
+        '?userReflectionIndex=outside',
+      { app },
+    );
+
+    assert.equal(contextual.status, 200);
+    assert.equal(contextual.body.items.length, 3);
+    assert.match(contextual.body.items[0].supporting, /^100%/);
+    assert.equal(invalid.status, 400);
+    assert.equal(invalid.body.error, 'invalid_field');
+  });
+
+  it('returns stable not-found errors for result and insight resources', async () => {
+    const missingTurnResults = await fetchJson(
+      '/v1/turns/missing/prediction-results',
+    );
+    const missingTurnReputation = await fetchJson(
+      '/v1/turns/missing/reputation',
+    );
+    const missingProblemInsight = await fetchJson(
+      '/v1/problems/missing/insight',
+    );
+
+    assert.equal(missingTurnResults.body.error, 'turn_not_found');
+    assert.equal(missingTurnReputation.body.error, 'turn_not_found');
+    assert.equal(missingProblemInsight.body.error, 'problem_not_found');
+  });
+
+  it('resolves only the prediction saved for the same user and choice', async () => {
+    const app = createApp();
+    const predictionPath =
+      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
+    await fetchJson(predictionPath, {
+      app,
+      method: 'PUT',
+      body: { choice: 'improve', userId: 'user-a' },
+    });
+
+    const missing = await fetchJson(
+      '/v1/problems/problem-green-margherita/resolve',
+      {
+        app,
+        method: 'POST',
+        body: { choice: 'improve', userId: 'user-b' },
+      },
+    );
+    const mismatch = await fetchJson(
+      '/v1/problems/problem-green-margherita/resolve',
+      {
+        app,
+        method: 'POST',
+        body: { choice: 'worsen', userId: 'user-a' },
+      },
+    );
+
+    assert.equal(missing.status, 404);
+    assert.equal(missing.body.error, 'prediction_not_found');
+    assert.equal(mismatch.status, 409);
+    assert.equal(mismatch.body.error, 'prediction_choice_mismatch');
   });
 });
 

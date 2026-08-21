@@ -44,3 +44,18 @@ persistenza, moderazione, rate limiting e garanzie operative. HOST=0.0.0.0 è
 configurabile per test in container, ma non rende lo scaffold production-ready.
 
 Il contratto eseguibile è descritto in openapi.yaml.
+
+## Contratto di gioco
+
+La versione 0.3 aggiunge letture coerenti con `GameRepository` per:
+
+- esiti salvati del turno (`/v1/turns/{turnId}/prediction-results`);
+- reputazione corrente e storico comunale;
+- insight aggregato, storico e critico per problema.
+
+La risoluzione accetta soltanto la scelta già salvata per lo stesso utente e
+salva un esito `correct`, `partial` o `wrong` per la coppia turno/utente.
+Reputazione e riepilogo civico sono calcolati dagli esiti salvati. Gli insight
+aggregano le previsioni in-memory di tutti gli utenti del turno; non sono ancora
+applicate soglie minime di anonimizzazione, che fanno parte del successivo
+lavoro su identità, moderazione e persistenza.

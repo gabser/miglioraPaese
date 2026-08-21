@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Migliora Paese API
-  version: 0.2.0
+  version: 0.3.0
   description: >-
     Local pilot API for replacing Flutter in-memory repositories. The optional
     userId is client-controlled in this scaffold and is not authentication.
@@ -37,6 +37,7 @@ paths:
       operationId: getCivicLoopSummary
       parameters:
         - $ref: "#/components/parameters/MunicipalityId"
+        - $ref: "#/components/parameters/UserIdQuery"
       responses:
         "200":
           description: Civic loop summary.
@@ -98,6 +99,23 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/LeaderboardEntry"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/municipalities/{municipalityId}/reputation-history:
+    get:
+      operationId: getReputationHistory
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+        - $ref: "#/components/parameters/UserIdQuery"
+      responses:
+        "200":
+          description: Reputation snapshots ordered from the oldest turn.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReputationHistory"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
   /v1/municipalities/{municipalityId}/next-problems:
@@ -249,6 +267,40 @@ paths:
           $ref: "#/components/responses/Conflict"
         "413":
           $ref: "#/components/responses/PayloadTooLarge"
+  /v1/turns/{turnId}/prediction-results:
+    get:
+      operationId: getPredictionResults
+      parameters:
+        - $ref: "#/components/parameters/TurnId"
+        - $ref: "#/components/parameters/UserIdQuery"
+      responses:
+        "200":
+          description: Saved outcomes indexed by problem in the client mapper.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictionResultList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/turns/{turnId}/reputation:
+    get:
+      operationId: getReputationScore
+      parameters:
+        - $ref: "#/components/parameters/TurnId"
+        - $ref: "#/components/parameters/UserIdQuery"
+      responses:
+        "200":
+          description: Reputation derived from the user's saved outcomes.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReputationScore"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /v1/problems/{problemId}/resolve:
     post:
       operationId: resolvePrediction
@@ -267,6 +319,66 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PredictionResolution"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /v1/problems/{problemId}/insight:
+    get:
+      operationId: getAggregatedInsight
+      parameters:
+        - $ref: "#/components/parameters/ProblemId"
+      responses:
+        "200":
+          description: Current aggregate of predictions and motivations.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AggregatedInsight"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/problems/{problemId}/insight-history:
+    get:
+      operationId: getInsightHistory
+      parameters:
+        - $ref: "#/components/parameters/ProblemId"
+      responses:
+        "200":
+          description: Aggregate snapshots ordered by turn.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightHistory"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/problems/{problemId}/critical-insights:
+    get:
+      operationId: getCriticalInsights
+      parameters:
+        - $ref: "#/components/parameters/ProblemId"
+        - name: userChoice
+          in: query
+          schema:
+            $ref: "#/components/schemas/PredictionChoice"
+        - name: userConfidence
+          in: query
+          schema:
+            $ref: "#/components/schemas/HypothesisConfidence"
+        - name: userReflectionIndex
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 20
+      responses:
+        "200":
+          description: Lightweight comparison cards for the user's context.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CriticalInsightList"
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":
@@ -292,6 +404,17 @@ components:
       required: true
       schema:
         type: string
+    UserIdQuery:
+      name: userId
+      in: query
+      description: >-
+        Local client identifier. It is client-controlled and must not be
+        treated as authentication.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        default: demo-user
   responses:
     BadRequest:
       description: Invalid JSON, field, enum or query parameter.
@@ -564,21 +687,144 @@ components:
       properties:
         choice:
           $ref: "#/components/schemas/PredictionChoice"
-    PredictionResolution:
+        userId: { type: string, minLength: 1, maxLength: 128 }
+    PredictionResult:
+      type: string
+      enum: [correct, partial, wrong, pending]
+    PredictionResultItem:
+      type: object
+      required: [problemId, result]
+      properties:
+        problemId: { type: string }
+        result:
+          $ref: "#/components/schemas/PredictionResult"
+    PredictionResultList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PredictionResultItem"
+    ReputationScore:
+      type: object
+      required: [totalPoints, accuracy, predictionsCount]
+      properties:
+        totalPoints: { type: integer, minimum: 0 }
+        accuracy: { type: number, minimum: 0, maximum: 1 }
+        predictionsCount: { type: integer, minimum: 0 }
+    ReputationHistory:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReputationScore"
+    ChoiceDistribution:
+      type: object
+      additionalProperties: false
+      required: [improve, stable, worsen]
+      properties:
+        improve: { type: integer, minimum: 0 }
+        stable: { type: integer, minimum: 0 }
+        worsen: { type: integer, minimum: 0 }
+    MotivationDistribution:
+      type: object
+      additionalProperties: false
+      required:
+        - visibleActions
+        - recentDecline
+        - seasonality
+        - unmetPromises
+        - personalExperience
+      properties:
+        visibleActions: { type: integer, minimum: 0 }
+        recentDecline: { type: integer, minimum: 0 }
+        seasonality: { type: integer, minimum: 0 }
+        unmetPromises: { type: integer, minimum: 0 }
+        personalExperience: { type: integer, minimum: 0 }
+    AggregatedInsight:
       type: object
       required:
         - problemId
+        - totalPredictions
+        - choiceDistribution
+        - motivationDistribution
+      properties:
+        problemId: { type: string }
+        totalPredictions: { type: integer, minimum: 0 }
+        choiceDistribution:
+          $ref: "#/components/schemas/ChoiceDistribution"
+        motivationDistribution:
+          $ref: "#/components/schemas/MotivationDistribution"
+    InsightSnapshot:
+      type: object
+      required:
+        - turnId
+        - at
+        - totalPredictions
+        - choiceDistribution
+        - motivationTop
+      properties:
+        turnId: { type: string }
+        at: { type: string, format: date-time }
+        totalPredictions: { type: integer, minimum: 0 }
+        choiceDistribution:
+          $ref: "#/components/schemas/ChoiceDistribution"
+        motivationTop:
+          type: array
+          maxItems: 2
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/MotivationKey"
+    InsightHistory:
+      type: object
+      required: [problemId, snapshots]
+      properties:
+        problemId: { type: string }
+        snapshots:
+          type: array
+          items:
+            $ref: "#/components/schemas/InsightSnapshot"
+    CriticalInsight:
+      type: object
+      required: [headline, supporting, note]
+      properties:
+        headline: { type: string }
+        supporting: { type: string }
+        note:
+          type: [string, "null"]
+    CriticalInsightList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CriticalInsight"
+    PredictionResolution:
+      type: object
+      required:
+        - turnId
+        - problemId
+        - userId
         - choice
         - winningChoice
+        - result
         - correct
         - pointsDelta
         - resolvedAt
       properties:
+        turnId: { type: string }
         problemId: { type: string }
+        userId: { type: string }
         choice:
           $ref: "#/components/schemas/PredictionChoice"
         winningChoice:
           $ref: "#/components/schemas/PredictionChoice"
+        result:
+          $ref: "#/components/schemas/PredictionResult"
         correct: { type: boolean }
         pointsDelta: { type: integer }
         resolvedAt: { type: string, format: date-time }

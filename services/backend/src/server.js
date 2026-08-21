@@ -113,7 +113,15 @@ export function createApp(options = {}) {
         return sendJson(
           res,
           200,
-          store.getCivicLoopSummary(route.params.municipalityId),
+          store.getCivicLoopSummary(
+            route.params.municipalityId,
+            textOrDefault(
+              url.searchParams.get('userId'),
+              'demo-user',
+              'userId',
+              maxUserIdLength,
+            ),
+          ),
           responseHeaders,
         );
       }
@@ -257,13 +265,121 @@ export function createApp(options = {}) {
         return sendJson(res, 200, prediction, responseHeaders);
       }
 
+      if (route.name === 'predictionResults') {
+        return sendJson(
+          res,
+          200,
+          {
+            items: store.getPredictionResults({
+              turnId: route.params.turnId,
+              userId: textOrDefault(
+                url.searchParams.get('userId'),
+                'demo-user',
+                'userId',
+                maxUserIdLength,
+              ),
+            }),
+          },
+          responseHeaders,
+        );
+      }
+
+      if (route.name === 'reputation') {
+        return sendJson(
+          res,
+          200,
+          store.getReputationScore({
+            turnId: route.params.turnId,
+            userId: textOrDefault(
+              url.searchParams.get('userId'),
+              'demo-user',
+              'userId',
+              maxUserIdLength,
+            ),
+          }),
+          responseHeaders,
+        );
+      }
+
+      if (route.name === 'reputationHistory') {
+        return sendJson(
+          res,
+          200,
+          {
+            items: store.getReputationHistory({
+              municipalityId: route.params.municipalityId,
+              userId: textOrDefault(
+                url.searchParams.get('userId'),
+                'demo-user',
+                'userId',
+                maxUserIdLength,
+              ),
+            }),
+          },
+          responseHeaders,
+        );
+      }
+
       if (route.name === 'resolvePrediction') {
         const body = await readJson(req);
         const result = store.resolvePrediction({
           problemId: route.params.problemId,
           choice: requireEnum(body.choice, predictionChoices, 'choice'),
+          userId: textOrDefault(
+            body.userId,
+            'demo-user',
+            'userId',
+            maxUserIdLength,
+          ),
         });
         return sendJson(res, 200, result, responseHeaders);
+      }
+
+      if (route.name === 'aggregatedInsight') {
+        return sendJson(
+          res,
+          200,
+          store.getAggregatedInsight(route.params.problemId),
+          responseHeaders,
+        );
+      }
+
+      if (route.name === 'insightHistory') {
+        return sendJson(
+          res,
+          200,
+          store.getInsightHistory(route.params.problemId),
+          responseHeaders,
+        );
+      }
+
+      if (route.name === 'criticalInsights') {
+        return sendJson(
+          res,
+          200,
+          {
+            items: store.getCriticalInsights({
+              problemId: route.params.problemId,
+              userChoice: optionalEnum(
+                url.searchParams.get('userChoice'),
+                predictionChoices,
+                'userChoice',
+              ),
+              userConfidence: optionalEnum(
+                url.searchParams.get('userConfidence'),
+                confidenceValues,
+                'userConfidence',
+              ),
+              userReflectionIndex: optionalInteger(
+                url.searchParams.get('userReflectionIndex'),
+                'userReflectionIndex',
+                0,
+                20,
+              ),
+            }),
+          },
+          responseHeaders,
+        );
       }
 
       return sendJson(
@@ -402,6 +518,7 @@ export function createMemoryStore() {
 
   const votesByProblem = new Map();
   const predictionsByTurn = new Map();
+  const predictionResultsByTurn = new Map();
   let nextProblemCounter = 200;
 
   function getMunicipality(municipalityId) {
@@ -618,18 +735,227 @@ export function createMemoryStore() {
     return prediction;
   }
 
-  function resolvePrediction({ problemId, choice }) {
-    const problem = findProblem(problemId);
+  function resolvePrediction({ problemId, choice, userId = 'demo-user' }) {
+    const problemRecord = findProblemRecord(problemId);
+    const problem = problemRecord.problem;
+    const turn = turnsByMunicipality.get(problemRecord.municipalityId);
+    const turnPredictions = predictionsByTurn.get(turn.id) ?? new Map();
+    const prediction = turnPredictions.get(
+      turn.id + ':' + problemId + ':' + userId,
+    );
+    if (!prediction) {
+      throw httpError(
+        404,
+        'prediction_not_found',
+        'Prediction not found for this user and turn.',
+      );
+    }
+    if (prediction.choice !== choice) {
+      throw httpError(
+        409,
+        'prediction_choice_mismatch',
+        'Resolution choice does not match the saved prediction.',
+      );
+    }
     const winningChoice = statusToChoice(problem.status);
-    const correct = choice === winningChoice;
-    return {
+    const result = evaluatePrediction(problem.status, choice);
+    const resolution = {
+      turnId: turn.id,
       problemId,
+      userId,
       choice,
       winningChoice,
-      correct,
-      pointsDelta: correct ? 12 : -3,
+      result,
+      correct: result === 'correct',
+      pointsDelta: pointsForResult(result),
       resolvedAt: new Date().toISOString(),
     };
+    const turnResults = predictionResultsByTurn.get(turn.id) ?? new Map();
+    turnResults.set(turn.id + ':' + problemId + ':' + userId, resolution);
+    predictionResultsByTurn.set(turn.id, turnResults);
+    return resolution;
+  }
+
+  function getPredictionResults({ turnId, userId }) {
+    findTurn(turnId);
+    return getResolutionRecords({ turnId, userId }).map((resolution) => ({
+      problemId: resolution.problemId,
+      result: resolution.result,
+    }));
+  }
+
+  function getReputationScore({ turnId, userId }) {
+    findTurn(turnId);
+    const results = getResolutionRecords({ turnId, userId });
+    if (results.length === 0) {
+      return { totalPoints: 0, accuracy: 0, predictionsCount: 0 };
+    }
+    const totalPoints = results.reduce(
+      (sum, resolution) => sum + resolution.pointsDelta,
+      0,
+    );
+    const accuracyUnits = results.reduce((sum, resolution) => {
+      if (resolution.result === 'correct') return sum + 1;
+      if (resolution.result === 'partial') return sum + 0.5;
+      return sum;
+    }, 0);
+    return {
+      totalPoints,
+      accuracy: accuracyUnits / results.length,
+      predictionsCount: results.length,
+    };
+  }
+
+  function getReputationHistory({ municipalityId, userId }) {
+    const municipality = getMunicipality(municipalityId);
+    return [...turnsByMunicipality.values()]
+      .filter((turn) => turn.municipalityId === municipality.id)
+      .sort((a, b) => a.startAt.localeCompare(b.startAt))
+      .map((turn) => getReputationScore({ turnId: turn.id, userId }));
+  }
+
+  function getResolutionRecords({ turnId, userId }) {
+    const turnResults = predictionResultsByTurn.get(turnId) ?? new Map();
+    return [...turnResults.values()].filter(
+      (resolution) => resolution.userId === userId,
+    );
+  }
+
+  function getAggregatedInsight(problemId) {
+    const problemRecord = findProblemRecord(problemId);
+    const turn = turnsByMunicipality.get(problemRecord.municipalityId);
+    return aggregateInsightForTurn(turn, problemId);
+  }
+
+  function aggregateInsightForTurn(turn, problemId) {
+    const turnPredictions = predictionsByTurn.get(turn.id) ?? new Map();
+    const predictions = [...turnPredictions.values()].filter(
+      (prediction) => prediction.problemId === problemId,
+    );
+    const choiceDistribution = Object.fromEntries(
+      [...predictionChoices].map((choice) => [choice, 0]),
+    );
+    const motivationDistribution = Object.fromEntries(
+      [...motivationValues].map((motivation) => [motivation, 0]),
+    );
+    for (const prediction of predictions) {
+      choiceDistribution[prediction.choice] += 1;
+      for (const motivation of prediction.motivations) {
+        motivationDistribution[motivation] += 1;
+      }
+    }
+    return {
+      problemId,
+      totalPredictions: predictions.length,
+      choiceDistribution,
+      motivationDistribution,
+    };
+  }
+
+  function getInsightHistory(problemId) {
+    const problemRecord = findProblemRecord(problemId);
+    const turns = [...turnsByMunicipality.values()]
+      .filter((turn) => turn.municipalityId === problemRecord.municipalityId)
+      .sort((a, b) => a.startAt.localeCompare(b.startAt));
+    return {
+      problemId,
+      snapshots: turns.map((turn) => {
+        const insight = aggregateInsightForTurn(turn, problemId);
+        const turnPredictions = predictionsByTurn.get(turn.id) ?? new Map();
+        const latestAt = [...turnPredictions.values()]
+          .filter((prediction) => prediction.problemId === problemId)
+          .reduce(
+            (latest, prediction) =>
+              prediction.updatedAt > latest ? prediction.updatedAt : latest,
+            turn.startAt,
+          );
+        const motivationTop = Object.entries(insight.motivationDistribution)
+          .filter(([, count]) => count > 0)
+          .sort(([aKey, aCount], [bKey, bCount]) => {
+            const byCount = bCount - aCount;
+            return byCount === 0 ? aKey.localeCompare(bKey) : byCount;
+          })
+          .slice(0, 2)
+          .map(([motivation]) => motivation);
+        return {
+          turnId: turn.id,
+          at: latestAt,
+          totalPredictions: insight.totalPredictions,
+          choiceDistribution: insight.choiceDistribution,
+          motivationTop,
+        };
+      }),
+    };
+  }
+
+  function getCriticalInsights({
+    problemId,
+    userChoice,
+    userConfidence,
+    userReflectionIndex,
+  }) {
+    const insight = getAggregatedInsight(problemId);
+    if (insight.totalPredictions === 0) {
+      return [
+        {
+          headline: 'Dati in raccolta',
+          supporting: 'Non ci sono ancora previsioni aggregate per questo tema.',
+          note: null,
+        },
+      ];
+    }
+
+    const orderedChoices = Object.entries(insight.choiceDistribution).sort(
+      ([aChoice, aCount], [bChoice, bCount]) => {
+        const byCount = bCount - aCount;
+        return byCount === 0 ? aChoice.localeCompare(bChoice) : byCount;
+      },
+    );
+    const [leadingChoice, leadingCount] = orderedChoices[0];
+    const leadingPercentage = Math.round(
+      (leadingCount / insight.totalPredictions) * 100,
+    );
+    const tied = orderedChoices[1]?.[1] === leadingCount;
+    const items = [
+      {
+        headline: 'Percezione prevalente',
+        supporting:
+          leadingPercentage +
+          '% prevede che il problema ' +
+          choiceNarrative(leadingChoice) +
+          '.',
+        note: tied ? 'Opinioni divise.' : null,
+      },
+    ];
+
+    if (userChoice !== null) {
+      items.push({
+        headline:
+          userChoice === leadingChoice
+            ? 'La tua lettura e\' condivisa'
+            : 'La tua lettura e\' minoritaria',
+        supporting:
+          userChoice === leadingChoice
+            ? 'La scelta coincide con la previsione piu\' frequente.'
+            : 'La scelta differisce dalla previsione piu\' frequente.',
+        note:
+          userConfidence === null
+            ? null
+            : 'Convinzione dichiarata: ' + userConfidence + '.',
+      });
+    }
+
+    if (userReflectionIndex !== null) {
+      items.push({
+        headline: 'Riflessione registrata',
+        supporting:
+          'La risposta ' +
+          (userReflectionIndex + 1) +
+          ' contestualizza il confronto aggregato.',
+        note: null,
+      });
+    }
+    return items;
   }
 
   function findProblem(problemId) {
@@ -651,13 +977,15 @@ export function createMemoryStore() {
     throw httpError(404, 'turn_not_found', 'Turn not found.');
   }
 
-  function getCivicLoopSummary(municipalityId) {
+  function getCivicLoopSummary(municipalityId, userId = 'demo-user') {
     const municipality = getMunicipality(municipalityId);
     const turn = getCurrentTurn(municipalityId);
     const predictions = getPredictions({
       turnId: turn.id,
-      userId: 'demo-user',
+      userId,
     });
+    const outcomes = getPredictionResults({ turnId: turn.id, userId });
+    const reputation = getReputationScore({ turnId: turn.id, userId });
     const proposedThemes = listNextProblems({ municipalityId }).length;
     const confirmedThemes = listNextProblems({
       municipalityId,
@@ -673,8 +1001,8 @@ export function createMemoryStore() {
       confirmedThemes,
       cardsInTurn: listProblems(municipalityId).length,
       predictions: predictions.length,
-      outcomes: 0,
-      reputationPoints: 0,
+      outcomes: outcomes.length,
+      reputationPoints: reputation.totalPoints,
       topThemeTitle: confirmedItems[0]?.title ?? null,
     };
   }
@@ -698,6 +1026,12 @@ export function createMemoryStore() {
     getPredictions,
     upsertPrediction,
     resolvePrediction,
+    getPredictionResults,
+    getReputationScore,
+    getReputationHistory,
+    getAggregatedInsight,
+    getInsightHistory,
+    getCriticalInsights,
     getCivicLoopSummary,
     getLeaderboard,
   };
@@ -725,6 +1059,11 @@ function matchRoute(method, pathname) {
     ['GET', /^\/v1\/municipalities\/([^/]+)\/turn$/, 'currentTurn'],
     ['GET', /^\/v1\/municipalities\/([^/]+)\/problems$/, 'problems'],
     ['GET', /^\/v1\/municipalities\/([^/]+)\/leaderboard$/, 'leaderboard'],
+    [
+      'GET',
+      /^\/v1\/municipalities\/([^/]+)\/reputation-history$/,
+      'reputationHistory',
+    ],
     ['GET', /^\/v1\/municipalities\/([^/]+)\/next-problems$/, 'nextProblems'],
     ['POST', /^\/v1\/municipalities\/([^/]+)\/next-problems$/, 'submitNextProblem'],
     [
@@ -734,7 +1073,12 @@ function matchRoute(method, pathname) {
     ],
     ['GET', /^\/v1\/turns\/([^/]+)\/predictions$/, 'predictions'],
     ['PUT', /^\/v1\/turns\/([^/]+)\/predictions\/([^/]+)$/, 'upsertPrediction'],
+    ['GET', /^\/v1\/turns\/([^/]+)\/prediction-results$/, 'predictionResults'],
+    ['GET', /^\/v1\/turns\/([^/]+)\/reputation$/, 'reputation'],
     ['POST', /^\/v1\/problems\/([^/]+)\/resolve$/, 'resolvePrediction'],
+    ['GET', /^\/v1\/problems\/([^/]+)\/insight$/, 'aggregatedInsight'],
+    ['GET', /^\/v1\/problems\/([^/]+)\/insight-history$/, 'insightHistory'],
+    ['GET', /^\/v1\/problems\/([^/]+)\/critical-insights$/, 'criticalInsights'],
   ];
 
   for (const [routeMethod, pattern, name] of patterns) {
@@ -756,6 +1100,7 @@ function routeParams(name, match) {
     name === 'currentTurn' ||
     name === 'problems' ||
     name === 'leaderboard' ||
+    name === 'reputationHistory' ||
     name === 'nextProblems' ||
     name === 'submitNextProblem'
   ) {
@@ -767,7 +1112,11 @@ function routeParams(name, match) {
       problemId: decodeURIComponent(match[2]),
     };
   }
-  if (name === 'predictions') {
+  if (
+    name === 'predictions' ||
+    name === 'predictionResults' ||
+    name === 'reputation'
+  ) {
     return { turnId: decodeURIComponent(match[1]) };
   }
   if (name === 'upsertPrediction') {
@@ -776,7 +1125,12 @@ function routeParams(name, match) {
       problemId: decodeURIComponent(match[2]),
     };
   }
-  if (name === 'resolvePrediction') {
+  if (
+    name === 'resolvePrediction' ||
+    name === 'aggregatedInsight' ||
+    name === 'insightHistory' ||
+    name === 'criticalInsights'
+  ) {
     return { problemId: decodeURIComponent(match[1]) };
   }
   return {};
@@ -941,6 +1295,22 @@ function optionalEnum(value, values, field) {
   return requireEnum(value, values, field);
 }
 
+function optionalInteger(value, field, min, max) {
+  if (value == null) return null;
+  if (!/^-?\d+$/.test(value)) {
+    throw httpError(400, 'invalid_field', `${field} is invalid.`);
+  }
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < min || parsed > max) {
+    throw httpError(
+      400,
+      'invalid_field',
+      `${field} must be between ${min} and ${max}.`,
+    );
+  }
+  return parsed;
+}
+
 function requireEnumArray(value, values, field, maxItems) {
   if (
     !Array.isArray(value) ||
@@ -1021,6 +1391,25 @@ function statusToChoice(status) {
   if (status === 'improving') return 'improve';
   if (status === 'worsening') return 'worsen';
   return 'stable';
+}
+
+function evaluatePrediction(status, choice) {
+  const winningChoice = statusToChoice(status);
+  if (choice === winningChoice) return 'correct';
+  if (choice === 'stable' || winningChoice === 'stable') return 'partial';
+  return 'wrong';
+}
+
+function pointsForResult(result) {
+  if (result === 'correct') return 10;
+  if (result === 'partial') return 4;
+  return 0;
+}
+
+function choiceNarrative(choice) {
+  if (choice === 'improve') return 'migliorera\'';
+  if (choice === 'worsen') return 'peggiorera\'';
+  return 'restera\' stabile';
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
