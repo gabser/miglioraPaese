@@ -1,0 +1,4 @@
+interface:
+  display_name: "MiglioraPaese Flutter Quality Gate"
+  short_description: "Validate Flutter changes before PR"
+  default_prompt: "Use $migliorapaese-flutter-quality-gate to validate a Flutter change before opening or merging a PR."

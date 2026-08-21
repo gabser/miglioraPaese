@@ -1,0 +1,584 @@
+openapi: 3.1.0
+info:
+  title: Migliora Paese API
+  version: 0.2.0
+  description: >-
+    Local pilot API for replacing Flutter in-memory repositories. The optional
+    userId is client-controlled in this scaffold and is not authentication.
+servers:
+  - url: http://127.0.0.1:8787
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      responses:
+        "200":
+          description: Backend is reachable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /v1/municipalities/{municipalityId}/activation:
+    get:
+      operationId: getMunicipalityActivation
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      responses:
+        "200":
+          description: Activation state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/municipalities/{municipalityId}/summary:
+    get:
+      operationId: getCivicLoopSummary
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      responses:
+        "200":
+          description: Civic loop summary.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CivicLoopSummary"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/municipalities/{municipalityId}/turn:
+    get:
+      operationId: getCurrentTurn
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      responses:
+        "200":
+          description: Current turn.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Turn"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/municipalities/{municipalityId}/problems:
+    get:
+      operationId: listProblems
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      responses:
+        "200":
+          description: Problems for the current turn.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Problem"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/municipalities/{municipalityId}/leaderboard:
+    get:
+      operationId: getLeaderboard
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      responses:
+        "200":
+          description: Leaderboard entries.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LeaderboardEntry"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/municipalities/{municipalityId}/next-problems:
+    get:
+      operationId: listNextProblems
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/SuggestedProblemStatus"
+        - name: query
+          in: query
+          schema:
+            type: string
+            maxLength: 120
+        - name: userId
+          in: query
+          description: >-
+            Local client identifier used only to compute myVote. It is
+            client-controlled and must not be treated as authentication.
+          schema:
+            type: string
+            maxLength: 128
+            default: demo-user
+      responses:
+        "200":
+          description: Suggested problems for the selected user view.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestedProblemList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      operationId: submitSuggestedProblem
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitSuggestedProblemRequest"
+      responses:
+        "201":
+          description: Created suggested problem.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestedProblem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /v1/municipalities/{municipalityId}/next-problems/{problemId}/votes:
+    post:
+      operationId: voteSuggestedProblem
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+        - $ref: "#/components/parameters/ProblemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoteSuggestedProblemRequest"
+      responses:
+        "200":
+          description: Updated suggested problem for the voting user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestedProblem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /v1/turns/{turnId}/predictions:
+    get:
+      operationId: listPredictions
+      parameters:
+        - $ref: "#/components/parameters/TurnId"
+        - name: userId
+          in: query
+          schema:
+            type: string
+            maxLength: 128
+            default: demo-user
+      responses:
+        "200":
+          description: User predictions.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Prediction"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/turns/{turnId}/predictions/{problemId}:
+    put:
+      operationId: upsertPrediction
+      parameters:
+        - $ref: "#/components/parameters/TurnId"
+        - $ref: "#/components/parameters/ProblemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertPredictionRequest"
+      responses:
+        "200":
+          description: Saved prediction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prediction"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+  /v1/problems/{problemId}/resolve:
+    post:
+      operationId: resolvePrediction
+      parameters:
+        - $ref: "#/components/parameters/ProblemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolvePredictionRequest"
+      responses:
+        "200":
+          description: Prediction result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictionResolution"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  parameters:
+    MunicipalityId:
+      name: municipalityId
+      in: path
+      required: true
+      description: "Canonical slug; known comune: aliases are accepted for compatibility."
+      schema:
+        type: string
+    ProblemId:
+      name: problemId
+      in: path
+      required: true
+      schema:
+        type: string
+    TurnId:
+      name: turnId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    BadRequest:
+      description: Invalid JSON, field, enum or query parameter.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Origin is not allowed by the local CORS policy.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Requested municipality, turn, problem or route was not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Duplicate or incompatible domain state.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    PayloadTooLarge:
+      description: JSON body exceeds 64 KiB.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalError:
+      description: Unexpected server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          const: ok
+    ActivationState:
+      type: string
+      enum: [active, collectingSignals, newMunicipality]
+    ActivationResponse:
+      type: object
+      required: [municipalityId, state]
+      properties:
+        municipalityId:
+          type: string
+        state:
+          $ref: "#/components/schemas/ActivationState"
+    CivicLoopSummary:
+      type: object
+      required:
+        - municipalityName
+        - proposedThemes
+        - confirmedThemes
+        - cardsInTurn
+        - predictions
+        - outcomes
+        - reputationPoints
+        - topThemeTitle
+      properties:
+        municipalityName: { type: string }
+        proposedThemes: { type: integer, minimum: 0 }
+        confirmedThemes: { type: integer, minimum: 0 }
+        cardsInTurn: { type: integer, minimum: 0 }
+        predictions: { type: integer, minimum: 0 }
+        outcomes: { type: integer, minimum: 0 }
+        reputationPoints: { type: integer }
+        topThemeTitle:
+          type: [string, "null"]
+    Turn:
+      type: object
+      required: [id, municipalityId, state, startAt, endAt]
+      properties:
+        id: { type: string }
+        municipalityId: { type: string }
+        state:
+          type: string
+          enum: [open, calculating, closed]
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
+    ProblemKey:
+      type: string
+      enum:
+        - lighting
+        - potholes
+        - waste
+        - cleanliness
+        - green
+        - signage
+        - transport
+        - parking
+        - decor
+        - noise
+        - safety
+        - construction
+        - queues
+    Problem:
+      type: object
+      required: [id, key, title, zoneName, status, trendPercent, updatedAt]
+      properties:
+        id: { type: string }
+        key:
+          $ref: "#/components/schemas/ProblemKey"
+        title: { type: string }
+        zoneName:
+          type: [string, "null"]
+        status:
+          type: string
+          enum: [improving, stable, worsening]
+        trendPercent: { type: integer }
+        updatedAt: { type: string, format: date-time }
+    LeaderboardEntry:
+      type: object
+      required: [userId, displayName, rank, points]
+      properties:
+        userId: { type: string }
+        displayName: { type: string }
+        rank: { type: integer, minimum: 1 }
+        points: { type: integer }
+    SuggestedProblemStatus:
+      type: string
+      enum: [pending, approved, rejected]
+    VoteChoice:
+      type: string
+      enum: [up, down]
+    PromotionRule:
+      type: object
+      required: [threshold, scopeLabel, reason]
+      properties:
+        threshold: { type: integer, minimum: 1 }
+        scopeLabel: { type: string }
+        reason: { type: string }
+    SuggestedProblem:
+      type: object
+      required:
+        - id
+        - title
+        - shortDescription
+        - category
+        - status
+        - votesUp
+        - votesDown
+        - score
+        - myVote
+        - submittedByUserId
+        - submittedByDisplayName
+        - createdAt
+        - promotionRule
+      properties:
+        id: { type: string }
+        title: { type: string, maxLength: 120 }
+        shortDescription: { type: string, maxLength: 1000 }
+        category:
+          $ref: "#/components/schemas/ProblemKey"
+        status:
+          $ref: "#/components/schemas/SuggestedProblemStatus"
+        votesUp: { type: integer, minimum: 0 }
+        votesDown: { type: integer, minimum: 0 }
+        score: { type: integer }
+        myVote:
+          type: string
+          enum: [none, up, down]
+        submittedByUserId: { type: string }
+        submittedByDisplayName: { type: string }
+        createdAt: { type: string, format: date-time }
+        promotionRule:
+          $ref: "#/components/schemas/PromotionRule"
+    SuggestedProblemList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SuggestedProblem"
+    SubmitSuggestedProblemRequest:
+      type: object
+      required: [title, description, category]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: string, minLength: 1, maxLength: 1000 }
+        category:
+          $ref: "#/components/schemas/ProblemKey"
+        userId: { type: string, minLength: 1, maxLength: 128 }
+    VoteSuggestedProblemRequest:
+      type: object
+      required: [vote]
+      properties:
+        vote:
+          $ref: "#/components/schemas/VoteChoice"
+        userId: { type: string, minLength: 1, maxLength: 128 }
+    PredictionChoice:
+      type: string
+      enum: [improve, stable, worsen]
+    HypothesisConfidence:
+      type: string
+      enum: [gutFeeling, considered, convinced]
+    MotivationKey:
+      type: string
+      enum:
+        - visibleActions
+        - recentDecline
+        - seasonality
+        - unmetPromises
+        - personalExperience
+    UpsertPredictionRequest:
+      type: object
+      required: [choice]
+      properties:
+        choice:
+          $ref: "#/components/schemas/PredictionChoice"
+        motivations:
+          type: array
+          maxItems: 2
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/MotivationKey"
+        confidence:
+          anyOf:
+            - $ref: "#/components/schemas/HypothesisConfidence"
+            - type: "null"
+        userId: { type: string, minLength: 1, maxLength: 128 }
+    Prediction:
+      type: object
+      required:
+        - id
+        - turnId
+        - problemId
+        - userId
+        - choice
+        - motivations
+        - confidence
+        - createdAt
+        - updatedAt
+      properties:
+        id: { type: string }
+        turnId: { type: string }
+        problemId: { type: string }
+        userId: { type: string }
+        choice:
+          $ref: "#/components/schemas/PredictionChoice"
+        motivations:
+          type: array
+          items:
+            $ref: "#/components/schemas/MotivationKey"
+        confidence:
+          anyOf:
+            - $ref: "#/components/schemas/HypothesisConfidence"
+            - type: "null"
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ResolvePredictionRequest:
+      type: object
+      required: [choice]
+      properties:
+        choice:
+          $ref: "#/components/schemas/PredictionChoice"
+    PredictionResolution:
+      type: object
+      required:
+        - problemId
+        - choice
+        - winningChoice
+        - correct
+        - pointsDelta
+        - resolvedAt
+      properties:
+        problemId: { type: string }
+        choice:
+          $ref: "#/components/schemas/PredictionChoice"
+        winningChoice:
+          $ref: "#/components/schemas/PredictionChoice"
+        correct: { type: boolean }
+        pointsDelta: { type: integer }
+        resolvedAt: { type: string, format: date-time }

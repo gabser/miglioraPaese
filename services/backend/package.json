@@ -1,0 +1,14 @@
+{
+  "name": "@migliorapaese/backend",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "NODE_ENV=production node src/server.js",
+    "test": "node --test"
+  }
+}

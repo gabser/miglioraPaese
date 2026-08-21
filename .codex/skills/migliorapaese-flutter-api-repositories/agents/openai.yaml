@@ -1,0 +1,4 @@
+interface:
+  display_name: "MiglioraPaese Flutter API Repositories"
+  short_description: "Wire Flutter repositories to API"
+  default_prompt: "Use $migliorapaese-flutter-api-repositories to replace a mock Flutter repository with an API-backed implementation."

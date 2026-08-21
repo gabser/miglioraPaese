@@ -1,0 +1,4 @@
+interface:
+  display_name: "MiglioraPaese Backend API"
+  short_description: "Add and maintain backend endpoints"
+  default_prompt: "Use $migliorapaese-backend-api to add or modify a backend endpoint for Migliora Paese."

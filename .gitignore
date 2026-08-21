@@ -1,0 +1,44 @@
+# Sistema operativo ed editor
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Configurazione locale e credenziali
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.mobileprovision
+**/android/key.properties
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Dart, Flutter e FVM
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+.fvm/
+build/
+coverage/
+flutter_*.png
+generated_plugin_registrant.dart
+**/doc/api/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+macos/Flutter/GeneratedPluginRegistrant.swift
+xcuserdata/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
