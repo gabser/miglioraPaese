@@ -30,6 +30,7 @@ class AppDependencies extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<AppConfig>.value(value: config),
         ChangeNotifierProvider<AppPrefs>.value(value: appPrefs),
         Provider<CivicLoopStore>(
           create: (context) =>

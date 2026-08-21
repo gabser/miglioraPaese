@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:fanta_comune/core/copy/venial_copy.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
 
 import 'helpers/test_app.dart';
 
@@ -49,7 +50,8 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
 
     final context = tester.element(find.text('Gioca il turno'));
-    GoRouter.of(context).go('/profile');
+    final router = GoRouter.of(context);
+    router.go('/profile');
     await pumpRoutingFrame(tester);
 
     expect(find.text('Cambia Comune'), findsOneWidget);
@@ -59,5 +61,39 @@ void main() {
 
     expect(find.text('Milano'), findsOneWidget);
     expect(find.text('Roma'), findsOneWidget);
+  });
+
+  testWidgets('pilot profile keeps the configured municipality locked', (
+    tester,
+  ) async {
+    final prefs = await createTestPrefs({
+      'municipality_id': 'castel-bolognese',
+    });
+    final config = AppConfig.fromValues(
+      pilotMunicipalityId: 'castel-bolognese',
+    );
+
+    await tester.pumpWidget(buildTestApp(prefs, config: config));
+    await pumpRoutingFrame(tester);
+
+    await tester.tap(find.text(VenialCopy.welcomeEnterTitle));
+    await pumpRoutingFrame(tester);
+    await tester.pump(const Duration(seconds: 2));
+
+    final context = tester.element(find.text('Gioca il turno'));
+    final router = GoRouter.of(context);
+    router.go('/profile');
+    await pumpRoutingFrame(tester);
+
+    expect(find.text('Castel Bolognese'), findsOneWidget);
+    expect(
+      find.text('Questo ambiente è riservato al Comune del pilot.'),
+      findsOneWidget,
+    );
+    expect(find.text('Cambia Comune'), findsNothing);
+
+    router.go('/change-municipality');
+    await pumpRoutingFrame(tester);
+    expect(find.text(VenialCopy.onboardingTitle), findsNothing);
   });
 }

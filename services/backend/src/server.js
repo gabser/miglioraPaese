@@ -1,8 +1,14 @@
 import http from 'node:http';
+import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
+import { isAdminAuthorized, validateAdminToken } from './admin_auth.js';
 import { createAnonymousIdentity } from './identity.js';
 import { moderateSuggestion } from './moderation.js';
+import {
+  createObservability,
+  instrumentResponse,
+} from './observability.js';
 import { createSqliteStateRepository } from './persistence.js';
 
 const problemKeys = new Set([
@@ -25,6 +31,7 @@ const predictionChoices = new Set(['improve', 'stable', 'worsen']);
 const confidenceValues = new Set(['gutFeeling', 'considered', 'convinced']);
 const voteChoices = new Set(['up', 'down']);
 const suggestedProblemStatuses = new Set(['pending', 'approved', 'rejected']);
+const moderationDecisions = new Set(['approved', 'rejected']);
 const motivationValues = new Set([
   'visibleActions',
   'recentDecline',
@@ -36,6 +43,7 @@ const motivationValues = new Set([
 const maxJsonBodyBytes = 64 * 1024;
 const maxTitleLength = 120;
 const maxDescriptionLength = 1000;
+const maxModerationReasonLength = 500;
 const maxQueryLength = 120;
 const submissionWindowMs = 60 * 60 * 1000;
 const maxSubmissionsPerWindow = 3;
@@ -52,6 +60,15 @@ const municipalityAliases = new Map([
 
 export function createApp(options = {}) {
   const store = options.store ?? createMemoryStore();
+  const observability = options.observability ?? createObservability();
+  const pilotMunicipalityId = optionalPilotMunicipalityId(
+    options.pilotMunicipalityId ?? process.env.PILOT_MUNICIPALITY_ID,
+    store,
+  );
+  const moderationAdminToken =
+    options.moderationAdminToken == null
+      ? null
+      : validateAdminToken(options.moderationAdminToken);
   const identity =
     options.identity ??
     createAnonymousIdentity({
@@ -66,6 +83,13 @@ export function createApp(options = {}) {
   );
 
   return async function app(req, res) {
+    let routeName = 'unmatched';
+    instrumentResponse({
+      req,
+      res,
+      observability,
+      routeName: () => routeName,
+    });
     let responseHeaders = {};
     try {
       const url = new URL(req.url ?? '/', 'http://localhost');
@@ -84,6 +108,7 @@ export function createApp(options = {}) {
       }
 
       if ((req.method ?? 'GET') === 'OPTIONS') {
+        routeName = 'corsPreflight';
         const requestedMethod = getHeader(req, 'access-control-request-method');
         if (!cors.origin || !requestedMethod) {
           return sendJson(
@@ -96,7 +121,11 @@ export function createApp(options = {}) {
             responseHeaders,
           );
         }
-        if (!matchRoute(requestedMethod.toUpperCase(), url.pathname)) {
+        const requestedRoute = matchRoute(
+          requestedMethod.toUpperCase(),
+          url.pathname,
+        );
+        if (!requestedRoute) {
           return sendJson(res, 404, { error: 'not_found' }, responseHeaders);
         }
         return sendJson(res, 200, { status: 'ok' }, responseHeaders);
@@ -107,9 +136,55 @@ export function createApp(options = {}) {
       if (!route) {
         return sendJson(res, 404, { error: 'not_found' }, responseHeaders);
       }
+      routeName = route.name;
+
+      if (!routeBelongsToPilot(route, store, pilotMunicipalityId)) {
+        return sendJson(res, 404, { error: 'not_found' }, responseHeaders);
+      }
 
       if (route.name === 'health') {
         return sendJson(res, 200, { status: 'ok' }, responseHeaders);
+      }
+
+      if (route.name === 'ready') {
+        try {
+          if (store.isReady?.() === false) throw new Error('Store is not ready.');
+          return sendJson(res, 200, { status: 'ready' }, responseHeaders);
+        } catch {
+          return sendJson(
+            res,
+            503,
+            { error: 'service_unavailable', message: 'Store is not ready.' },
+            responseHeaders,
+          );
+        }
+      }
+
+      if (route.name === 'metrics') {
+        return sendText(res, 200, observability.metrics(), responseHeaders);
+      }
+
+      if (route.name === 'moderateNextProblem') {
+        if (!isAdminAuthorized(req, moderationAdminToken)) {
+          return sendJson(
+            res,
+            401,
+            { error: 'unauthorized', message: 'Admin authorization is required.' },
+            responseHeaders,
+          );
+        }
+        const body = await readJson(req);
+        const updated = store.moderateNextProblem({
+          municipalityId: route.params.municipalityId,
+          problemId: route.params.problemId,
+          status: requireEnum(body.status, moderationDecisions, 'status'),
+          reason: optionalText(
+            body.reason,
+            'reason',
+            maxModerationReasonLength,
+          ),
+        });
+        return sendJson(res, 200, updated, responseHeaders);
       }
 
       const requestIdentity = identity.resolve(req);
@@ -386,6 +461,11 @@ export function createApp(options = {}) {
 export function createMemoryStore(options = {}) {
   const clock = options.now ?? Date.now;
   const onChange = options.onChange ?? (() => {});
+  const moderationRequired = options.moderationRequired ?? false;
+  const minimumAggregateSampleSize = positiveInteger(
+    options.minimumAggregateSampleSize ?? 1,
+    'minimumAggregateSampleSize',
+  );
   const isoNow = () => new Date(clock()).toISOString();
   const municipalities = new Map([
     [
@@ -716,6 +796,13 @@ export function createMemoryStore(options = {}) {
       submittedByDisplayName: 'Cittadino',
       createdAt: isoNow(),
     });
+    if (moderationRequired) {
+      created.promotionRule = {
+        ...created.promotionRule,
+        reason:
+          'Pilot: i voti ordinano le proposte; la promozione richiede moderazione.',
+      };
+    }
     nextProblemsByMunicipality.set(municipality.id, [created, ...items]);
     persist();
     return withUserVote(created, userId);
@@ -756,8 +843,8 @@ export function createMemoryStore(options = {}) {
       score: votesUp - votesDown,
       myVote: 'none',
       status:
-        current.status === 'rejected'
-          ? 'rejected'
+        moderationRequired || current.status === 'rejected'
+          ? current.status
           : votesUp - votesDown >= 1
             ? 'approved'
             : 'pending',
@@ -766,6 +853,34 @@ export function createMemoryStore(options = {}) {
     syncPromotion(municipality, updated);
     persist();
     return withUserVote(updated, userId);
+  }
+
+  function moderateNextProblem({
+    municipalityId,
+    problemId,
+    status,
+    reason = null,
+  }) {
+    const municipality = getMunicipality(municipalityId);
+    const items = nextProblemsByMunicipality.get(municipality.id) ?? [];
+    const index = items.findIndex((item) => item.id === problemId);
+    if (index === -1) {
+      throw httpError(
+        404,
+        'suggested_problem_not_found',
+        'Suggested problem not found.',
+      );
+    }
+    const updated = {
+      ...items[index],
+      status,
+      moderatedAt: isoNow(),
+      moderationReason: reason,
+    };
+    items[index] = updated;
+    syncPromotion(municipality, updated);
+    persist();
+    return updated;
   }
 
   function withUserVote(problem, userId) {
@@ -974,6 +1089,18 @@ export function createMemoryStore(options = {}) {
         motivationDistribution[motivation] += 1;
       }
     }
+    if (predictions.length < minimumAggregateSampleSize) {
+      return {
+        problemId,
+        totalPredictions: 0,
+        choiceDistribution: Object.fromEntries(
+          [...predictionChoices].map((choice) => [choice, 0]),
+        ),
+        motivationDistribution: Object.fromEntries(
+          [...motivationValues].map((motivation) => [motivation, 0]),
+        ),
+      };
+    }
     return {
       problemId,
       totalPredictions: predictions.length,
@@ -992,13 +1119,18 @@ export function createMemoryStore(options = {}) {
       snapshots: turns.map((turn) => {
         const insight = aggregateInsightForTurn(turn, problemId);
         const turnPredictions = predictionsByTurn.get(turn.id) ?? new Map();
-        const latestAt = [...turnPredictions.values()]
-          .filter((prediction) => prediction.problemId === problemId)
-          .reduce(
-            (latest, prediction) =>
-              prediction.updatedAt > latest ? prediction.updatedAt : latest,
-            turn.startAt,
-          );
+        const latestAt =
+          insight.totalPredictions === 0
+            ? turn.startAt
+            : [...turnPredictions.values()]
+                .filter((prediction) => prediction.problemId === problemId)
+                .reduce(
+                  (latest, prediction) =>
+                    prediction.updatedAt > latest
+                      ? prediction.updatedAt
+                      : latest,
+                  turn.startAt,
+                );
         const motivationTop = Object.entries(insight.motivationDistribution)
           .filter(([, count]) => count > 0)
           .sort(([aKey, aCount], [bKey, bCount]) => {
@@ -1153,6 +1285,7 @@ export function createMemoryStore(options = {}) {
     listNextProblems,
     submitNextProblem,
     voteNextProblem,
+    moderateNextProblem,
     getPredictions,
     upsertPrediction,
     resolvePrediction,
@@ -1165,16 +1298,24 @@ export function createMemoryStore(options = {}) {
     getCivicLoopSummary,
     getLeaderboard,
     exportState,
+    isReady: () => true,
   };
 }
 
-export function createPersistentStore({ databasePath, now } = {}) {
+export function createPersistentStore({
+  databasePath,
+  now,
+  moderationRequired,
+  minimumAggregateSampleSize,
+} = {}) {
   const stateRepository = createSqliteStateRepository({ databasePath });
   try {
     const initialState = stateRepository.load();
     const store = createMemoryStore({
       initialState,
       now,
+      moderationRequired,
+      minimumAggregateSampleSize,
       onChange: stateRepository.save,
     });
     if (initialState === null) {
@@ -1187,6 +1328,7 @@ export function createPersistentStore({ databasePath, now } = {}) {
         path: stateRepository.path,
         schemaVersion: stateRepository.schemaVersion,
       },
+      isReady: stateRepository.isReady,
     };
   } catch (error) {
     stateRepository.close();
@@ -1200,26 +1342,83 @@ export function startServer({
   store,
   allowedOrigins,
   databasePath = process.env.DATABASE_PATH,
-  identitySecret = process.env.ANON_IDENTITY_SECRET,
+  identitySecret,
+  identitySecretFile = process.env.ANON_IDENTITY_SECRET_FILE,
+  moderationAdminToken,
+  moderationAdminTokenFile = process.env.MODERATION_ADMIN_TOKEN_FILE,
+  pilotMunicipalityId = process.env.PILOT_MUNICIPALITY_ID,
+  moderationRequired = optionalBoolean(
+    process.env.MODERATION_REQUIRED,
+    process.env.NODE_ENV === 'production',
+  ),
+  minimumAggregateSampleSize = positiveInteger(
+    process.env.MIN_AGGREGATE_SAMPLE_SIZE ??
+      (process.env.NODE_ENV === 'production' ? 3 : 1),
+    'MIN_AGGREGATE_SAMPLE_SIZE',
+  ),
   secureCookies = process.env.NODE_ENV === 'production',
+  observability,
+  logger = null,
 } = {}) {
+  const resolvedIdentitySecret = resolveSecret({
+    direct: identitySecret ?? process.env.ANON_IDENTITY_SECRET,
+    file: identitySecretFile,
+  });
+  const resolvedModerationAdminToken = resolveSecret({
+    direct: moderationAdminToken ?? process.env.MODERATION_ADMIN_TOKEN,
+    file: moderationAdminTokenFile,
+  });
   if (process.env.NODE_ENV === 'production' && !store && !databasePath) {
     throw new Error('DATABASE_PATH is required in production.');
   }
-  if (process.env.NODE_ENV === 'production' && !identitySecret) {
+  if (process.env.NODE_ENV === 'production' && !resolvedIdentitySecret) {
     throw new Error('ANON_IDENTITY_SECRET is required in production.');
+  }
+  if (process.env.NODE_ENV === 'production' && !resolvedModerationAdminToken) {
+    throw new Error('MODERATION_ADMIN_TOKEN is required in production.');
+  }
+  if (process.env.NODE_ENV === 'production' && !pilotMunicipalityId) {
+    throw new Error('PILOT_MUNICIPALITY_ID is required in production.');
+  }
+  if (process.env.NODE_ENV === 'production' && moderationRequired !== true) {
+    throw new Error('MODERATION_REQUIRED must be true in production.');
+  }
+  if (
+    process.env.NODE_ENV === 'production' &&
+    !(allowedOrigins ?? process.env.CORS_ALLOWED_ORIGINS)
+  ) {
+    throw new Error('CORS_ALLOWED_ORIGINS is required in production.');
   }
   const managedStore =
     store ??
-    (databasePath ? createPersistentStore({ databasePath }) : createMemoryStore());
-  const server = http.createServer(
-    createApp({
+    (databasePath
+      ? createPersistentStore({
+          databasePath,
+          moderationRequired,
+          minimumAggregateSampleSize,
+        })
+      : createMemoryStore({
+          moderationRequired,
+          minimumAggregateSampleSize,
+        }));
+  const managedObservability =
+    observability ?? createObservability({ logger, version: '0.5.0' });
+  let app;
+  try {
+    app = createApp({
       store: managedStore,
       allowedOrigins,
-      identitySecret: identitySecret ?? developmentIdentitySecret,
+      identitySecret: resolvedIdentitySecret ?? developmentIdentitySecret,
+      moderationAdminToken: resolvedModerationAdminToken,
+      pilotMunicipalityId,
       secureCookies,
-    }),
-  );
+      observability: managedObservability,
+    });
+  } catch (error) {
+    if (!store && typeof managedStore.close === 'function') managedStore.close();
+    throw error;
+  }
+  const server = http.createServer(app);
   if (!store && typeof managedStore.close === 'function') {
     server.once('close', managedStore.close);
   }
@@ -1230,6 +1429,12 @@ export function startServer({
 function matchRoute(method, pathname) {
   if (method === 'GET' && pathname === '/health') {
     return { name: 'health', params: {} };
+  }
+  if (method === 'GET' && pathname === '/ready') {
+    return { name: 'ready', params: {} };
+  }
+  if (method === 'GET' && pathname === '/metrics') {
+    return { name: 'metrics', params: {} };
   }
 
   const patterns = [
@@ -1249,6 +1454,11 @@ function matchRoute(method, pathname) {
       'POST',
       /^\/v1\/municipalities\/([^/]+)\/next-problems\/([^/]+)\/votes$/,
       'voteNextProblem',
+    ],
+    [
+      'POST',
+      /^\/v1\/admin\/municipalities\/([^/]+)\/next-problems\/([^/]+)\/moderation$/,
+      'moderateNextProblem',
     ],
     ['GET', /^\/v1\/turns\/([^/]+)\/predictions$/, 'predictions'],
     ['PUT', /^\/v1\/turns\/([^/]+)\/predictions\/([^/]+)$/, 'upsertPrediction'],
@@ -1285,7 +1495,7 @@ function routeParams(name, match) {
   ) {
     return { municipalityId: decodeURIComponent(match[1]) };
   }
-  if (name === 'voteNextProblem') {
+  if (name === 'voteNextProblem' || name === 'moderateNextProblem') {
     return {
       municipalityId: decodeURIComponent(match[1]),
       problemId: decodeURIComponent(match[2]),
@@ -1319,6 +1529,42 @@ function canonicalMunicipalityId(value) {
   if (typeof value !== 'string') return value;
   const normalized = value.trim().toLowerCase();
   return municipalityAliases.get(normalized) ?? normalized;
+}
+
+function optionalPilotMunicipalityId(value, store) {
+  if (value == null || value === '') return null;
+  if (typeof value !== 'string') {
+    throw new TypeError('PILOT_MUNICIPALITY_ID must be a string.');
+  }
+  const canonicalId = canonicalMunicipalityId(value);
+  return store.getMunicipality(canonicalId).id;
+}
+
+function routeBelongsToPilot(route, store, pilotMunicipalityId) {
+  if (pilotMunicipalityId === null) return true;
+  if (
+    route.params.municipalityId !== undefined &&
+    canonicalMunicipalityId(route.params.municipalityId) !== pilotMunicipalityId
+  ) {
+    return false;
+  }
+  if (
+    route.params.turnId !== undefined &&
+    store.getCurrentTurn(pilotMunicipalityId).id !== route.params.turnId
+  ) {
+    return false;
+  }
+  if (
+    route.params.problemId !== undefined &&
+    route.name !== 'voteNextProblem' &&
+    route.name !== 'moderateNextProblem' &&
+    !store
+      .listProblems(pilotMunicipalityId)
+      .some((problem) => problem.id === route.params.problemId)
+  ) {
+    return false;
+  }
+  return true;
 }
 
 function normalizeTitle(value) {
@@ -1399,6 +1645,34 @@ function normalizePort(value) {
   return port;
 }
 
+function optionalBoolean(value, fallback) {
+  if (value == null || value === '') return fallback;
+  if (value === true || value === 'true' || value === '1') return true;
+  if (value === false || value === 'false' || value === '0') return false;
+  throw new TypeError('Boolean configuration must be true, false, 1 or 0.');
+}
+
+function positiveInteger(value, name) {
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 1) {
+    throw new TypeError(`${name} must be a positive integer.`);
+  }
+  return parsed;
+}
+
+function resolveSecret({ direct, file }) {
+  const hasDirect = typeof direct === 'string' && direct.length > 0;
+  const hasFile = typeof file === 'string' && file.length > 0;
+  if (hasDirect && hasFile) {
+    throw new Error('Configure a secret directly or by file, not both.');
+  }
+  if (hasDirect) return direct;
+  if (!hasFile) return null;
+  const value = readFileSync(file, 'utf8').trim();
+  if (value.length === 0) throw new Error('Configured secret file is empty.');
+  return value;
+}
+
 async function readJson(req) {
   const contentLength = Number(getHeader(req, 'content-length'));
   if (Number.isFinite(contentLength) && contentLength > maxJsonBodyBytes) {
@@ -1436,6 +1710,15 @@ function sendJson(res, statusCode, body, headers = {}) {
     'content-length': Buffer.byteLength(payload),
   });
   res.end(payload);
+}
+
+function sendText(res, statusCode, body, headers = {}) {
+  res.writeHead(statusCode, {
+    ...headers,
+    'content-type': 'text/plain; version=0.0.4; charset=utf-8',
+    'content-length': Buffer.byteLength(body),
+  });
+  res.end(body);
 }
 
 function requireText(value, field, maxLength = null) {
@@ -1588,17 +1871,64 @@ function choiceNarrative(choice) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const server = startServer();
+  const log = (entry) => console.log(entry);
+  const server = startServer({ logger: log });
   server.once('listening', () => {
     const address = server.address();
     const location =
       typeof address === 'string'
         ? address
         : 'http://' + address.address + ':' + address.port;
-    console.log('Backend listening on ' + location);
+    log(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: 'info',
+        event: 'server_listening',
+        location,
+        pilotMunicipalityId: process.env.PILOT_MUNICIPALITY_ID ?? null,
+      }),
+    );
   });
   server.once('error', (error) => {
-    console.error('Backend failed to start:', error.message);
+    console.error(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: 'error',
+        event: 'server_error',
+        message: error.message,
+      }),
+    );
     process.exitCode = 1;
   });
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.once(signal, () => {
+      log(
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          level: 'info',
+          event: 'server_shutdown',
+          signal,
+        }),
+      );
+      const forceClose = setTimeout(() => {
+        server.closeAllConnections();
+        process.exitCode = 1;
+      }, 10_000);
+      forceClose.unref();
+      server.close((error) => {
+        clearTimeout(forceClose);
+        if (error) {
+          console.error(
+            JSON.stringify({
+              timestamp: new Date().toISOString(),
+              level: 'error',
+              event: 'server_shutdown_error',
+              message: error.message,
+            }),
+          );
+          process.exitCode = 1;
+        }
+      });
+    });
+  }
 }

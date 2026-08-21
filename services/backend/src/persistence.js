@@ -46,6 +46,9 @@ export function createSqliteStateRepository({ databasePath }) {
     save(state) {
       saveStatement.run(JSON.stringify(state), new Date().toISOString());
     },
+    isReady() {
+      return database.prepare('SELECT 1 AS ready').get().ready === 1;
+    },
     close() {
       if (database.isOpen) database.close();
     },

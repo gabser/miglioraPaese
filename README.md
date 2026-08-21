@@ -11,8 +11,8 @@ confrontare esiti e percezioni aggregate.
 
 > **Stato: prototipo v0.1.0.** La demo pubblica usa dati mock locali, non invia
 > segnalazioni ufficiali e non certifica la realtà. Il backend pilot dispone di
-> persistenza e identità anonima, ma non è ancora autorizzato per contributi
-> pubblici o dati reali.
+> persistenza, identità anonima, moderazione operatore e asset di staging, ma
+> non è ancora autorizzato né distribuito per contributi pubblici o dati reali.
 
 ## Funzionalità
 
@@ -87,7 +87,8 @@ Poi avvia Flutter con:
 fvm flutter run -d chrome \
   --dart-define=NEXT_PROBLEMS_DATA_SOURCE=api \
   --dart-define=GAME_DATA_SOURCE=api \
-  --dart-define=API_BASE_URL=http://localhost:8787
+  --dart-define=API_BASE_URL=http://localhost:8787 \
+  --dart-define=PILOT_MUNICIPALITY_ID=castel-bolognese
 ~~~
 
 In locale usa `localhost` sia per Flutter Web sia per l'API: il cookie
@@ -107,8 +108,10 @@ Qualunque altro Comune produce un errore controllato e non ricade
 silenziosamente sui dati di un'altra città.
 
 Il filtro automatico rifiuta contatti personali, link, caratteri di controllo
-e linguaggio abusivo noto, e limita gli invii ripetuti. Non sostituisce una
-coda di moderazione umana o le garanzie operative richieste per dati reali.
+e linguaggio abusivo noto, e limita gli invii ripetuti. In modalità pilot i voti
+non promuovono contenuti: serve una decisione dell'operatore tramite endpoint
+amministrativo protetto. Gli insight restano oscurati sotto la soglia minima di
+partecipazione configurata.
 
 ## Quality gate
 
@@ -124,6 +127,7 @@ Per il backend:
 ~~~bash
 cd services/backend
 npm test
+docker build --tag migliorapaese/backend:local .
 ~~~
 
 La CI esegue gli stessi gate con Flutter 3.44.2 e Node.js 24.
@@ -142,19 +146,20 @@ Il workflow Pages non avvia e non espone **services/backend**.
 
 - [Piano di rilascio pubblico](docs/public_release_plan.md)
 - [Fondazione backend](docs/backend/backend_foundation_plan.md)
+- [Runbook staging e pilot](docs/pilot_runbook.md)
 - [Piano UX/UI](docs/design/ux_ui_alignment_plan.md)
 - [Reference statica del mockup](docs/design/fanta-comune-standalone.html)
 
 ## Limiti noti
 
 - la demo Pages resta esclusivamente mock; SQLite è opt-in nel backend pilot;
-- identità anonima e moderazione automatica non equivalgono ad autenticazione,
-  revisione umana o protezione anti-abuso distribuita;
+- identità anonima e moderazione operatore non equivalgono ad autenticazione o
+  protezione anti-abuso distribuita;
 - nessun canale ufficiale con i Comuni;
 - il repository di gioco HTTP è opt-in e due capability restano progressive:
   reflection locale e mutazione del segnale non supportata;
-- il lancio di un servizio reale richiede privacy/retention, cancellazione
-  remota, backup, protezioni anti-abuso condivise, staging e osservabilità.
+- il lancio richiede ancora selezione e accordo con un Comune, provider,
+  privacy/retention, cancellazione remota, alert e prova di ripristino.
 
 ## Contribuire e sicurezza
 

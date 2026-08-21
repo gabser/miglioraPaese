@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
@@ -200,6 +201,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final activePerspective = prefs.getActivePerspective();
     final changesCount = prefs.perspectiveChangesCount;
     final isCompact = MediaQuery.of(context).size.width < 600;
+    final pilotLocked = context.read<AppConfig>().pilotMunicipalityId != null;
     final municipalityName = MunicipalityCatalog.displayNameFromId(
       prefs.municipalityId ?? 'demo',
     );
@@ -230,20 +232,24 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: AppTokens.s4),
                 Text(
-                  'Cambia Comune per testare o seguire un altro territorio.',
+                  pilotLocked
+                      ? 'Questo ambiente è riservato al Comune del pilot.'
+                      : 'Cambia Comune per testare o seguire un altro territorio.',
                   style: textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: AppTokens.s12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: OutlinedButton.icon(
-                    onPressed: () => context.go('/change-municipality'),
-                    icon: const Icon(AppIcons.home),
-                    label: const Text('Cambia Comune'),
+                if (!pilotLocked) ...[
+                  const SizedBox(height: AppTokens.s12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.go('/change-municipality'),
+                      icon: const Icon(AppIcons.home),
+                      label: const Text('Cambia Comune'),
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

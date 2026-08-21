@@ -1,0 +1,66 @@
+name: Build staging candidates
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: Same-site public API base URL for staging
+        required: true
+        type: string
+      pilot_municipality_id:
+        description: Municipality enabled in this staging candidate
+        required: true
+        type: choice
+        options:
+          - castel-bolognese
+          - bologna
+
+permissions:
+  contents: read
+
+jobs:
+  flutter-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      API_BASE_URL: ${{ inputs.api_base_url }}
+      PILOT_MUNICIPALITY_ID: ${{ inputs.pilot_municipality_id }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.2"
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Build API-enabled candidate
+        run: >-
+          flutter build web --release
+          --dart-define=NEXT_PROBLEMS_DATA_SOURCE=api
+          --dart-define=GAME_DATA_SOURCE=api
+          --dart-define=API_BASE_URL="$API_BASE_URL"
+          --dart-define=PILOT_MUNICIPALITY_ID="$PILOT_MUNICIPALITY_ID"
+
+      - name: Upload staging artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-web-${{ inputs.pilot_municipality_id }}
+          path: build/web
+          retention-days: 7
+
+  backend-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build staging image
+        run: docker build --tag migliorapaese/backend:staging services/backend
