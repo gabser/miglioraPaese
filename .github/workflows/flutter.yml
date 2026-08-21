@@ -10,11 +10,6 @@ on:
       - "README.md"
   pull_request:
     branches: [main]
-    paths-ignore:
-      - "services/backend/**"
-      - "docs/backend/**"
-      - ".github/workflows/backend.yml"
-      - "README.md"
 
 permissions:
   contents: read
