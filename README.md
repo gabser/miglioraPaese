@@ -23,7 +23,7 @@ confrontare esiti e percezioni aggregate.
 - flusso per proporre e votare i temi del prossimo turno;
 - stati operativi per Comuni nuovi o senza dati;
 - privacy e reset della demo locale;
-- pilot API opt-in per sole proposte e voti.
+- pilot API opt-in per proposte, gioco, esiti, reputazione e insight.
 
 ## Stack e struttura
 
@@ -62,10 +62,11 @@ flutter pub get
 flutter run -d chrome
 ~~~
 
-## Pilot API per proposte e voto
+## Pilot API locale
 
-Il gioco resta mock. Solo NextProblemsRepository può usare il backend, e
-soltanto quando viene attivato esplicitamente.
+La demo e i default restano mock. `NextProblemsRepository` e
+`GameRepository` possono usare il backend soltanto quando vengono attivati
+esplicitamente e in modo indipendente.
 
 Avvia lo scaffold locale:
 
@@ -80,8 +81,16 @@ Poi avvia Flutter con:
 ~~~bash
 fvm flutter run -d chrome \
   --dart-define=NEXT_PROBLEMS_DATA_SOURCE=api \
+  --dart-define=GAME_DATA_SOURCE=api \
   --dart-define=API_BASE_URL=http://127.0.0.1:8787
 ~~~
+
+`ApiGameRepository` usa HTTP per attivazione, riepilogo, turno, problemi,
+previsioni, risultati, reputazione, insight e classifica. In questa fase le
+domande di riflessione restano generate localmente; il segnale che modifica lo
+stato di un problema è rifiutato esplicitamente finché manca il relativo
+endpoint. Il lookup diretto di un problema usa la cache popolata dall'elenco
+del Comune.
 
 La modalità API supporta al momento gli ID canonici **bologna** e
 **castel-bolognese**, con mapping esplicito dagli ID Flutter corrispondenti.
@@ -131,8 +140,8 @@ Il workflow Pages non avvia e non espone **services/backend**.
 - dati di gioco e preferenze sono locali o in-memory;
 - nessuna autenticazione, persistenza server, moderazione o rate limiting;
 - nessun canale ufficiale con i Comuni;
-- ApiGameRepository non è ancora implementato perché il contratto non copre
-  risultati, reputazione e insight;
+- il repository di gioco HTTP è opt-in e due capability restano progressive:
+  reflection locale e mutazione del segnale non supportata;
 - il lancio di un servizio reale richiede una privacy policy completa,
   cancellazione remota, protezioni anti-abuso, staging e osservabilità.
 

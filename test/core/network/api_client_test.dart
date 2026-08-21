@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -54,6 +55,27 @@ void main() {
             .having((error) => error.statusCode, 'statusCode', 409),
       ),
     );
+  });
+
+  test('sends PUT requests as JSON', () async {
+    late http.Request captured;
+    final api = ApiClient(
+      baseUrl: Uri.parse('https://example.test'),
+      client: MockClient((request) async {
+        captured = request;
+        return http.Response('{"status":"ok"}', 200);
+      }),
+    );
+
+    await api.putJson(
+      ['v1', 'items', 'item/with space'],
+      body: const {'choice': 'stable'},
+    );
+
+    expect(captured.method, 'PUT');
+    expect(captured.headers['content-type'], 'application/json');
+    expect(jsonDecode(captured.body), {'choice': 'stable'});
+    expect(captured.url.pathSegments.last, 'item/with space');
   });
 
   test('rejects malformed success JSON', () async {

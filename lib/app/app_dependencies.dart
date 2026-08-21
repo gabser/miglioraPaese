@@ -6,6 +6,7 @@ import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/network/api_client.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/civic_loop/data/civic_loop_store.dart';
+import 'package:fanta_comune/features/game/data/api_game_repository.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/data/mock_game_repository.dart';
 import 'package:fanta_comune/features/next_problems/data/api_next_problems_repository.dart';
@@ -33,11 +34,6 @@ class AppDependencies extends StatelessWidget {
           create: (context) =>
               CivicLoopStore(currentUserId: context.read<AppPrefs>().userId),
         ),
-        Provider<GameRepository>(
-          create: (context) => MockGameRepository(
-            civicLoopStore: context.read<CivicLoopStore>(),
-          ),
-        ),
         Provider<http.Client>(
           create: (_) => http.Client(),
           dispose: (_, client) => client.close(),
@@ -47,6 +43,16 @@ class AppDependencies extends StatelessWidget {
             baseUrl: config.apiBaseUrl,
             client: context.read<http.Client>(),
             timeout: config.apiTimeout,
+          ),
+        ),
+        Provider<GameRepository>(
+          create: (context) => createGameRepository(
+            config: config,
+            currentUserId: context.read<AppPrefs>().userId,
+            mockStore: context.read<CivicLoopStore>(),
+            apiClient: config.gameDataSource == GameDataSource.api
+                ? context.read<ApiClient>()
+                : null,
           ),
         ),
         Provider<NextProblemsRepository>(
@@ -64,6 +70,23 @@ class AppDependencies extends StatelessWidget {
       child: child,
     );
   }
+}
+
+GameRepository createGameRepository({
+  required AppConfig config,
+  required String currentUserId,
+  required CivicLoopStore mockStore,
+  ApiClient? apiClient,
+}) {
+  final localRepository = MockGameRepository(civicLoopStore: mockStore);
+  return switch (config.gameDataSource) {
+    GameDataSource.mock => localRepository,
+    GameDataSource.api => ApiGameRepository(
+      client: apiClient ?? (throw ArgumentError.notNull('apiClient')),
+      userId: currentUserId,
+      localFallback: localRepository,
+    ),
+  };
 }
 
 NextProblemsRepository createNextProblemsRepository({
