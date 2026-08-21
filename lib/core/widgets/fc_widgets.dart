@@ -137,11 +137,15 @@ class FcStatusChip extends StatelessWidget {
             Icon(icon, size: 16, color: color),
             const SizedBox(width: AppTokens.s8),
           ],
-          Text(
-            label,
-            style: textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.labelSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],

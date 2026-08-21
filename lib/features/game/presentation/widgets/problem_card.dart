@@ -315,21 +315,29 @@ class _ReflectionBlock extends StatelessWidget {
         children: [
           Text(question.prompt, style: textTheme.titleSmall),
           const SizedBox(height: AppTokens.s8),
-          Wrap(
-            spacing: AppTokens.s8,
-            runSpacing: AppTokens.s8,
-            children: question.options.indexed
-                .map((entry) {
-                  final index = entry.$1;
-                  final option = entry.$2;
-                  final selected = selectedIndex == index;
-                  return ChoiceChip(
-                    label: Text(option),
-                    selected: selected,
-                    onSelected: (_) => onSelected(index),
-                  );
-                })
-                .toList(growable: false),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final useFullWidth = constraints.maxWidth < 360;
+              return Wrap(
+                spacing: AppTokens.s8,
+                runSpacing: AppTokens.s8,
+                children: question.options.indexed
+                    .map((entry) {
+                      final index = entry.$1;
+                      final option = entry.$2;
+                      final selected = selectedIndex == index;
+                      return SizedBox(
+                        width: useFullWidth ? constraints.maxWidth : null,
+                        child: ChoiceChip(
+                          label: Text(option),
+                          selected: selected,
+                          onSelected: (_) => onSelected(index),
+                        ),
+                      );
+                    })
+                    .toList(growable: false),
+              );
+            },
           ),
           if (selectedIndex != null) ...[
             const SizedBox(height: AppTokens.s8),
