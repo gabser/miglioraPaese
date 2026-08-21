@@ -1,6 +1,10 @@
 import http from 'node:http';
 import { URL } from 'node:url';
 
+import { createAnonymousIdentity } from './identity.js';
+import { moderateSuggestion } from './moderation.js';
+import { createSqliteStateRepository } from './persistence.js';
+
 const problemKeys = new Set([
   'lighting',
   'potholes',
@@ -33,7 +37,10 @@ const maxJsonBodyBytes = 64 * 1024;
 const maxTitleLength = 120;
 const maxDescriptionLength = 1000;
 const maxQueryLength = 120;
-const maxUserIdLength = 128;
+const submissionWindowMs = 60 * 60 * 1000;
+const maxSubmissionsPerWindow = 3;
+const developmentIdentitySecret =
+  'migliora-paese-development-secret-change-before-deploy';
 
 const municipalityAliases = new Map([
   ['bologna', 'bologna'],
@@ -45,6 +52,15 @@ const municipalityAliases = new Map([
 
 export function createApp(options = {}) {
   const store = options.store ?? createMemoryStore();
+  const identity =
+    options.identity ??
+    createAnonymousIdentity({
+      secret:
+        options.identitySecret ??
+        process.env.ANON_IDENTITY_SECRET ??
+        developmentIdentitySecret,
+      secure: options.secureCookies ?? process.env.NODE_ENV === 'production',
+    });
   const allowedOrigins = normalizeAllowedOrigins(
     options.allowedOrigins ?? process.env.CORS_ALLOWED_ORIGINS,
   );
@@ -96,6 +112,10 @@ export function createApp(options = {}) {
         return sendJson(res, 200, { status: 'ok' }, responseHeaders);
       }
 
+      const requestIdentity = identity.resolve(req);
+      const userId = requestIdentity.userId;
+      responseHeaders = { ...responseHeaders, ...requestIdentity.headers };
+
       if (route.name === 'municipalityActivation') {
         const municipality = store.getMunicipality(route.params.municipalityId);
         return sendJson(
@@ -115,12 +135,7 @@ export function createApp(options = {}) {
           200,
           store.getCivicLoopSummary(
             route.params.municipalityId,
-            textOrDefault(
-              url.searchParams.get('userId'),
-              'demo-user',
-              'userId',
-              maxUserIdLength,
-            ),
+            userId,
           ),
           responseHeaders,
         );
@@ -174,12 +189,7 @@ export function createApp(options = {}) {
                 'query',
                 maxQueryLength,
               ),
-              userId: textOrDefault(
-                url.searchParams.get('userId'),
-                'demo-user',
-                'userId',
-                maxUserIdLength,
-              ),
+              userId,
             }),
           },
           responseHeaders,
@@ -188,21 +198,26 @@ export function createApp(options = {}) {
 
       if (route.name === 'submitNextProblem') {
         const body = await readJson(req);
+        const title = requireText(body.title, 'title', maxTitleLength);
+        const description = requireText(
+          body.description,
+          'description',
+          maxDescriptionLength,
+        );
+        const moderation = moderateSuggestion({ title, description });
+        if (!moderation.allowed) {
+          throw httpError(
+            422,
+            'content_rejected',
+            'The suggestion does not meet the pilot moderation policy.',
+          );
+        }
         const created = store.submitNextProblem({
           municipalityId: route.params.municipalityId,
-          title: requireText(body.title, 'title', maxTitleLength),
-          description: requireText(
-            body.description,
-            'description',
-            maxDescriptionLength,
-          ),
+          title,
+          description,
           category: requireEnum(body.category, problemKeys, 'category'),
-          userId: textOrDefault(
-            body.userId,
-            'demo-user',
-            'userId',
-            maxUserIdLength,
-          ),
+          userId,
         });
         return sendJson(res, 201, created, responseHeaders);
       }
@@ -213,12 +228,7 @@ export function createApp(options = {}) {
           municipalityId: route.params.municipalityId,
           problemId: route.params.problemId,
           vote: requireEnum(body.vote, voteChoices, 'vote'),
-          userId: textOrDefault(
-            body.userId,
-            'demo-user',
-            'userId',
-            maxUserIdLength,
-          ),
+          userId,
         });
         return sendJson(res, 200, updated, responseHeaders);
       }
@@ -230,12 +240,7 @@ export function createApp(options = {}) {
           {
             items: store.getPredictions({
               turnId: route.params.turnId,
-              userId: textOrDefault(
-                url.searchParams.get('userId'),
-                'demo-user',
-                'userId',
-                maxUserIdLength,
-              ),
+              userId,
             }),
           },
           responseHeaders,
@@ -247,12 +252,7 @@ export function createApp(options = {}) {
         const prediction = store.upsertPrediction({
           turnId: route.params.turnId,
           problemId: route.params.problemId,
-          userId: textOrDefault(
-            body.userId,
-            'demo-user',
-            'userId',
-            maxUserIdLength,
-          ),
+          userId,
           choice: requireEnum(body.choice, predictionChoices, 'choice'),
           motivations: requireEnumArray(
             body.motivations ?? [],
@@ -272,12 +272,7 @@ export function createApp(options = {}) {
           {
             items: store.getPredictionResults({
               turnId: route.params.turnId,
-              userId: textOrDefault(
-                url.searchParams.get('userId'),
-                'demo-user',
-                'userId',
-                maxUserIdLength,
-              ),
+              userId,
             }),
           },
           responseHeaders,
@@ -290,12 +285,7 @@ export function createApp(options = {}) {
           200,
           store.getReputationScore({
             turnId: route.params.turnId,
-            userId: textOrDefault(
-              url.searchParams.get('userId'),
-              'demo-user',
-              'userId',
-              maxUserIdLength,
-            ),
+            userId,
           }),
           responseHeaders,
         );
@@ -308,12 +298,7 @@ export function createApp(options = {}) {
           {
             items: store.getReputationHistory({
               municipalityId: route.params.municipalityId,
-              userId: textOrDefault(
-                url.searchParams.get('userId'),
-                'demo-user',
-                'userId',
-                maxUserIdLength,
-              ),
+              userId,
             }),
           },
           responseHeaders,
@@ -325,12 +310,7 @@ export function createApp(options = {}) {
         const result = store.resolvePrediction({
           problemId: route.params.problemId,
           choice: requireEnum(body.choice, predictionChoices, 'choice'),
-          userId: textOrDefault(
-            body.userId,
-            'demo-user',
-            'userId',
-            maxUserIdLength,
-          ),
+          userId,
         });
         return sendJson(res, 200, result, responseHeaders);
       }
@@ -403,7 +383,10 @@ export function createApp(options = {}) {
   };
 }
 
-export function createMemoryStore() {
+export function createMemoryStore(options = {}) {
+  const clock = options.now ?? Date.now;
+  const onChange = options.onChange ?? (() => {});
+  const isoNow = () => new Date(clock()).toISOString();
   const municipalities = new Map([
     [
       'castel-bolognese',
@@ -425,7 +408,7 @@ export function createMemoryStore() {
     ],
   ]);
 
-  const now = Date.now();
+  const now = clock();
   const turnStartAt = new Date(now - 24 * 60 * 60 * 1000).toISOString();
   const turnEndAt = new Date(now + 6 * 24 * 60 * 60 * 1000).toISOString();
   const turnsByMunicipality = new Map([
@@ -462,6 +445,7 @@ export function createMemoryStore() {
           zoneName: 'Centro',
           status: 'worsening',
           trendPercent: -14,
+          updatedAt: new Date(now - 6 * 60 * 60 * 1000).toISOString(),
         }),
         createProblem({
           id: 'problem-green-margherita',
@@ -470,6 +454,7 @@ export function createMemoryStore() {
           zoneName: 'Santo Stefano',
           status: 'improving',
           trendPercent: 9,
+          updatedAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
         }),
       ],
     ],
@@ -488,6 +473,7 @@ export function createMemoryStore() {
           votesUp: 0,
           votesDown: 0,
           status: 'pending',
+          createdAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
         }),
         createSuggestedProblem({
           id: 'suggested-lighting-park',
@@ -497,6 +483,7 @@ export function createMemoryStore() {
           votesUp: 0,
           votesDown: 0,
           status: 'pending',
+          createdAt: new Date(now - 60 * 60 * 1000).toISOString(),
         }),
       ],
     ],
@@ -511,6 +498,7 @@ export function createMemoryStore() {
           votesUp: 4,
           votesDown: 1,
           status: 'approved',
+          createdAt: new Date(now - 24 * 60 * 60 * 1000).toISOString(),
         }),
       ],
     ],
@@ -520,6 +508,130 @@ export function createMemoryStore() {
   const predictionsByTurn = new Map();
   const predictionResultsByTurn = new Map();
   let nextProblemCounter = 200;
+
+  if (options.initialState !== undefined && options.initialState !== null) {
+    restoreState(options.initialState);
+  }
+
+  function restoreState(state) {
+    if (
+      state === null ||
+      typeof state !== 'object' ||
+      state.schemaVersion !== 1
+    ) {
+      throw new Error('Unsupported or invalid persistent state.');
+    }
+    const requiredCollections = [
+      'municipalities',
+      'turns',
+      'problems',
+      'suggestedProblems',
+      'votes',
+      'predictions',
+      'predictionResults',
+    ];
+    for (const key of requiredCollections) {
+      if (!Array.isArray(state[key])) {
+        throw new Error(`Persistent state field ${key} must be an array.`);
+      }
+    }
+
+    municipalities.clear();
+    for (const municipality of state.municipalities) {
+      municipalities.set(municipality.id, { ...municipality });
+    }
+    turnsByMunicipality.clear();
+    for (const turn of state.turns) {
+      turnsByMunicipality.set(turn.municipalityId, { ...turn });
+    }
+    problemsByMunicipality.clear();
+    nextProblemsByMunicipality.clear();
+    for (const municipalityId of municipalities.keys()) {
+      problemsByMunicipality.set(municipalityId, []);
+      nextProblemsByMunicipality.set(municipalityId, []);
+    }
+    for (const item of state.problems) {
+      const problems = problemsByMunicipality.get(item.municipalityId) ?? [];
+      problems.push({ ...item.problem });
+      problemsByMunicipality.set(item.municipalityId, problems);
+    }
+    for (const item of state.suggestedProblems) {
+      const suggestions =
+        nextProblemsByMunicipality.get(item.municipalityId) ?? [];
+      suggestions.push({ ...item.problem });
+      nextProblemsByMunicipality.set(item.municipalityId, suggestions);
+    }
+
+    votesByProblem.clear();
+    for (const item of state.votes) {
+      const votes = votesByProblem.get(item.problemId) ?? new Map();
+      votes.set(item.userId, item.vote);
+      votesByProblem.set(item.problemId, votes);
+    }
+    predictionsByTurn.clear();
+    for (const prediction of state.predictions) {
+      const predictions = predictionsByTurn.get(prediction.turnId) ?? new Map();
+      predictions.set(prediction.id, { ...prediction });
+      predictionsByTurn.set(prediction.turnId, predictions);
+    }
+    predictionResultsByTurn.clear();
+    for (const resolution of state.predictionResults) {
+      const results =
+        predictionResultsByTurn.get(resolution.turnId) ?? new Map();
+      results.set(
+        resolution.turnId + ':' + resolution.problemId + ':' + resolution.userId,
+        { ...resolution },
+      );
+      predictionResultsByTurn.set(resolution.turnId, results);
+    }
+    if (
+      !Number.isSafeInteger(state.nextProblemCounter) ||
+      state.nextProblemCounter < 1
+    ) {
+      throw new Error('Persistent nextProblemCounter is invalid.');
+    }
+    nextProblemCounter = state.nextProblemCounter;
+  }
+
+  function exportState() {
+    return {
+      schemaVersion: 1,
+      municipalities: [...municipalities.values()].map((item) => ({ ...item })),
+      turns: [...turnsByMunicipality.values()].map((item) => ({ ...item })),
+      problems: [...problemsByMunicipality.entries()].flatMap(
+        ([municipalityId, problems]) =>
+          problems.map((problem) => ({
+            municipalityId,
+            problem: { ...problem },
+          })),
+      ),
+      suggestedProblems: [...nextProblemsByMunicipality.entries()].flatMap(
+        ([municipalityId, problems]) =>
+          problems.map((problem) => ({
+            municipalityId,
+            problem: { ...problem },
+          })),
+      ),
+      votes: [...votesByProblem.entries()].flatMap(([problemId, votes]) =>
+        [...votes.entries()].map(([userId, vote]) => ({
+          problemId,
+          userId,
+          vote,
+        })),
+      ),
+      predictions: [...predictionsByTurn.values()].flatMap((predictions) =>
+        [...predictions.values()].map((item) => ({ ...item })),
+      ),
+      predictionResults: [...predictionResultsByTurn.values()].flatMap(
+        (results) => [...results.values()].map((item) => ({ ...item })),
+      ),
+      nextProblemCounter,
+    };
+  }
+
+  function persist() {
+    onChange(exportState());
+  }
 
   function getMunicipality(municipalityId) {
     const canonicalId = canonicalMunicipalityId(municipalityId);
@@ -578,6 +690,19 @@ export function createMemoryStore() {
     if (duplicate) {
       throw httpError(409, 'duplicate_title', 'A suggestion with this title exists.');
     }
+    const windowStart = clock() - submissionWindowMs;
+    const recentSubmissions = items.filter(
+      (item) =>
+        item.submittedByUserId === userId &&
+        Date.parse(item.createdAt) >= windowStart,
+    );
+    if (recentSubmissions.length >= maxSubmissionsPerWindow) {
+      throw httpError(
+        429,
+        'submission_rate_limited',
+        'Too many suggestions were submitted recently.',
+      );
+    }
 
     const created = createSuggestedProblem({
       id: `suggested-${nextProblemCounter++}`,
@@ -588,9 +713,11 @@ export function createMemoryStore() {
       votesUp: 0,
       votesDown: 0,
       submittedByUserId: userId,
-      submittedByDisplayName: userId === 'demo-user' ? 'Tu' : 'Cittadino',
+      submittedByDisplayName: 'Cittadino',
+      createdAt: isoNow(),
     });
     nextProblemsByMunicipality.set(municipality.id, [created, ...items]);
+    persist();
     return withUserVote(created, userId);
   }
 
@@ -637,6 +764,7 @@ export function createMemoryStore() {
     };
     items[index] = updated;
     syncPromotion(municipality, updated);
+    persist();
     return withUserVote(updated, userId);
   }
 
@@ -662,7 +790,7 @@ export function createMemoryStore() {
           zoneName: 'Tema scelto dai cittadini',
           status: 'stable',
           trendPercent: 0,
-          updatedAt: new Date().toISOString(),
+          updatedAt: isoNow(),
         }),
       );
     }
@@ -718,7 +846,7 @@ export function createMemoryStore() {
         'Prediction choice is already locked for this turn.',
       );
     }
-    const timestamp = new Date().toISOString();
+    const timestamp = isoNow();
     const prediction = {
       id,
       turnId,
@@ -732,6 +860,7 @@ export function createMemoryStore() {
     };
     turnPredictions.set(id, prediction);
     predictionsByTurn.set(turnId, turnPredictions);
+    persist();
     return prediction;
   }
 
@@ -768,11 +897,12 @@ export function createMemoryStore() {
       result,
       correct: result === 'correct',
       pointsDelta: pointsForResult(result),
-      resolvedAt: new Date().toISOString(),
+      resolvedAt: isoNow(),
     };
     const turnResults = predictionResultsByTurn.get(turn.id) ?? new Map();
     turnResults.set(turn.id + ':' + problemId + ':' + userId, resolution);
     predictionResultsByTurn.set(turn.id, turnResults);
+    persist();
     return resolution;
   }
 
@@ -1034,7 +1164,34 @@ export function createMemoryStore() {
     getCriticalInsights,
     getCivicLoopSummary,
     getLeaderboard,
+    exportState,
   };
+}
+
+export function createPersistentStore({ databasePath, now } = {}) {
+  const stateRepository = createSqliteStateRepository({ databasePath });
+  try {
+    const initialState = stateRepository.load();
+    const store = createMemoryStore({
+      initialState,
+      now,
+      onChange: stateRepository.save,
+    });
+    if (initialState === null) {
+      stateRepository.save(store.exportState());
+    }
+    return {
+      ...store,
+      close: stateRepository.close,
+      persistence: {
+        path: stateRepository.path,
+        schemaVersion: stateRepository.schemaVersion,
+      },
+    };
+  } catch (error) {
+    stateRepository.close();
+    throw error;
+  }
 }
 
 export function startServer({
@@ -1042,8 +1199,30 @@ export function startServer({
   host = process.env.HOST ?? '127.0.0.1',
   store,
   allowedOrigins,
+  databasePath = process.env.DATABASE_PATH,
+  identitySecret = process.env.ANON_IDENTITY_SECRET,
+  secureCookies = process.env.NODE_ENV === 'production',
 } = {}) {
-  const server = http.createServer(createApp({ store, allowedOrigins }));
+  if (process.env.NODE_ENV === 'production' && !store && !databasePath) {
+    throw new Error('DATABASE_PATH is required in production.');
+  }
+  if (process.env.NODE_ENV === 'production' && !identitySecret) {
+    throw new Error('ANON_IDENTITY_SECRET is required in production.');
+  }
+  const managedStore =
+    store ??
+    (databasePath ? createPersistentStore({ databasePath }) : createMemoryStore());
+  const server = http.createServer(
+    createApp({
+      store: managedStore,
+      allowedOrigins,
+      identitySecret: identitySecret ?? developmentIdentitySecret,
+      secureCookies,
+    }),
+  );
+  if (!store && typeof managedStore.close === 'function') {
+    server.once('close', managedStore.close);
+  }
   server.listen(normalizePort(port), host);
   return server;
 }
@@ -1205,6 +1384,7 @@ function corsHeadersForRequest(req, allowedOrigins) {
       'access-control-allow-origin': origin,
       'access-control-allow-methods': 'GET, POST, PUT, OPTIONS',
       'access-control-allow-headers': 'Content-Type',
+      'access-control-allow-credentials': 'true',
       'access-control-max-age': '600',
       vary: 'Origin',
     },
@@ -1271,11 +1451,6 @@ function requireText(value, field, maxLength = null) {
     );
   }
   return normalized;
-}
-
-function textOrDefault(value, fallback, field, maxLength) {
-  if (value == null) return fallback;
-  return requireText(value, field, maxLength);
 }
 
 function optionalText(value, field, maxLength) {

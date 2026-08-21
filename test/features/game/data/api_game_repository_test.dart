@@ -53,7 +53,7 @@ void main() {
       requests.every((request) => request.url.pathSegments.contains('bologna')),
       isTrue,
     );
-    expect(requests[1].url.queryParameters, {'userId': 'user:test'});
+    expect(requests[1].url.queryParameters, isEmpty);
     expect(requests.last.url.queryParameters, {'leagueId': 'centro'});
   });
 
@@ -108,12 +108,11 @@ void main() {
       'choice': 'stable',
       'motivations': ['seasonality'],
       'confidence': 'considered',
-      'userId': 'user:test',
     });
-    expect(requests[1].url.queryParameters, {'userId': 'user:test'});
+    expect(requests[1].url.queryParameters, isEmpty);
     expect(metadataWrite['motivations'], ['visibleActions']);
     expect(metadataWrite['choice'], 'stable');
-    expect(resolution, {'choice': 'stable', 'userId': 'user:test'});
+    expect(resolution, {'choice': 'stable'});
     expect(result, PredictionResult.partial);
   });
 

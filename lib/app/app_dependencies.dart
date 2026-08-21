@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/network/api_client.dart';
+import 'package:fanta_comune/core/network/http_client_factory.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/civic_loop/data/civic_loop_store.dart';
 import 'package:fanta_comune/features/game/data/api_game_repository.dart';
@@ -35,7 +36,7 @@ class AppDependencies extends StatelessWidget {
               CivicLoopStore(currentUserId: context.read<AppPrefs>().userId),
         ),
         Provider<http.Client>(
-          create: (_) => http.Client(),
+          create: (_) => createHttpClient(),
           dispose: (_, client) => client.close(),
         ),
         Provider<ApiClient>(
@@ -102,7 +103,6 @@ NextProblemsRepository createNextProblemsRepository({
     ),
     NextProblemsDataSource.api => ApiNextProblemsRepository(
       client: apiClient ?? (throw ArgumentError.notNull('apiClient')),
-      userId: currentUserId,
     ),
   };
 }

@@ -22,7 +22,9 @@ import 'package:fanta_comune/features/leaderboard/domain/leaderboard_entry.dart'
 ///
 /// Le domande di riflessione restano locali finché il backend non espone un
 /// contratto dedicato. Il segnale che modifica lo stato di un problema è
-/// rifiutato esplicitamente per evitare aggiornamenti solo apparenti.
+/// rifiutato esplicitamente per evitare aggiornamenti solo apparenti. L'ID
+/// locale identifica l'utente nella UI; il backend usa invece la propria
+/// identità anonima firmata e non accetta identificativi dal client.
 class ApiGameRepository implements GameRepository {
   ApiGameRepository({
     required ApiClient client,
@@ -62,7 +64,6 @@ class ApiGameRepository implements GameRepository {
   Future<CivicLoopSummary> getCivicLoopSummary(String municipalityId) async {
     final payload = await _client.getJson(
       _municipalityPath(municipalityId, 'summary'),
-      queryParameters: {'userId': _userId},
     );
     return GameMapper.civicSummaryFromResponse(payload);
   }
@@ -81,10 +82,12 @@ class ApiGameRepository implements GameRepository {
 
   @override
   Future<Map<String, Prediction>> getMyPredictions(String turnId) async {
-    final payload = await _client.getJson(
-      ['v1', 'turns', turnId, 'predictions'],
-      queryParameters: {'userId': _userId},
-    );
+    final payload = await _client.getJson([
+      'v1',
+      'turns',
+      turnId,
+      'predictions',
+    ]);
     return GameMapper.predictionsFromResponse(payload);
   }
 
@@ -142,7 +145,6 @@ class ApiGameRepository implements GameRepository {
         'choice': choice.name,
         'motivations': motivations.map((value) => value.name).toList(),
         'confidence': confidence?.name,
-        'userId': _userId,
       },
     );
   }
@@ -159,7 +161,7 @@ class ApiGameRepository implements GameRepository {
   }) async {
     final payload = await _client.postJson(
       ['v1', 'problems', problemId, 'resolve'],
-      body: {'choice': choice.name, 'userId': _userId},
+      body: {'choice': choice.name},
     );
     return GameMapper.predictionResultFromResolution(payload);
   }
@@ -212,19 +214,23 @@ class ApiGameRepository implements GameRepository {
   Future<Map<String, PredictionResult>> getPredictionResults(
     String turnId,
   ) async {
-    final payload = await _client.getJson(
-      ['v1', 'turns', turnId, 'prediction-results'],
-      queryParameters: {'userId': _userId},
-    );
+    final payload = await _client.getJson([
+      'v1',
+      'turns',
+      turnId,
+      'prediction-results',
+    ]);
     return GameMapper.resultsFromResponse(payload);
   }
 
   @override
   Future<ReputationScore> getReputationScore(String turnId) async {
-    final payload = await _client.getJson(
-      ['v1', 'turns', turnId, 'reputation'],
-      queryParameters: {'userId': _userId},
-    );
+    final payload = await _client.getJson([
+      'v1',
+      'turns',
+      turnId,
+      'reputation',
+    ]);
     return GameMapper.reputationFromResponse(payload);
   }
 
@@ -245,7 +251,6 @@ class ApiGameRepository implements GameRepository {
   }) async {
     final payload = await _client.getJson(
       _municipalityPath(municipalityId, 'reputation-history'),
-      queryParameters: {'userId': _userId},
     );
     return GameMapper.reputationHistoryFromResponse(payload);
   }

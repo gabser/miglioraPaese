@@ -105,13 +105,14 @@ describe('backend HTTP contract', () => {
     assert.equal(summary.body.topThemeTitle, created.body.title);
   });
 
-  it('computes myVote independently for each client-provided user id', async () => {
+  it('computes myVote from server-issued sessions and ignores spoofed ids', async () => {
     const app = createApp();
     const created = await fetchJson(
       '/v1/municipalities/castel-bolognese/next-problems',
       {
         app,
         method: 'POST',
+        session: 'a',
         body: {
           title: 'Panchina alla fermata',
           description: 'Una seduta per chi aspetta il bus.',
@@ -127,17 +128,18 @@ describe('backend HTTP contract', () => {
       {
         app,
         method: 'POST',
+        session: 'a',
         body: { vote: 'up', userId: 'user-a' },
       },
     );
 
     const forA = await fetchJson(
       '/v1/municipalities/castel-bolognese/next-problems?userId=user-a',
-      { app },
+      { app, session: 'a' },
     );
     const forB = await fetchJson(
       '/v1/municipalities/castel-bolognese/next-problems?userId=user-b',
-      { app },
+      { app, session: 'b' },
     );
     const itemA = forA.body.items.find((item) => item.id === created.body.id);
     const itemB = forB.body.items.find((item) => item.id === created.body.id);
@@ -161,6 +163,10 @@ describe('backend HTTP contract', () => {
     assert.equal(
       loopback.headers['access-control-allow-origin'],
       'http://localhost:7357',
+    );
+    assert.equal(
+      loopback.headers['access-control-allow-credentials'],
+      'true',
     );
 
     const configuredApp = createApp({
@@ -340,6 +346,83 @@ describe('backend HTTP contract', () => {
     assert.equal(missing.body.error, 'municipality_not_found');
   });
 
+  it('issues a signed HttpOnly anonymous session cookie', async () => {
+    const app = createApp();
+    const first = await fetchJson('/v1/municipalities/bologna/summary', {
+      app,
+      session: 'identity',
+    });
+    const second = await fetchJson('/v1/municipalities/bologna/summary', {
+      app,
+      session: 'identity',
+    });
+
+    assert.match(first.headers['set-cookie'], /^mp_anon=v1\./);
+    assert.match(first.headers['set-cookie'], /; HttpOnly;/);
+    assert.match(first.headers['set-cookie'], /; SameSite=Lax$/);
+    assert.equal(second.headers['set-cookie'], undefined);
+  });
+
+  it('rejects unsafe suggestion content before storing it', async () => {
+    const app = createApp();
+    const samples = [
+      ['Contattami', 'Scrivi a mario@example.test per i dettagli.'],
+      ['Foto del problema', 'Guarda https://example.test/foto'],
+      ['Titolo offensivo', 'Questa strada e una merda.'],
+    ];
+
+    for (const [title, description] of samples) {
+      const response = await fetchJson(
+        '/v1/municipalities/bologna/next-problems',
+        {
+          app,
+          method: 'POST',
+          body: { title, description, category: 'decor' },
+        },
+      );
+      assert.equal(response.status, 422);
+      assert.equal(response.body.error, 'content_rejected');
+    }
+    const listed = await fetchJson(
+      '/v1/municipalities/bologna/next-problems',
+      { app },
+    );
+    assert.equal(listed.body.items.length, 1);
+  });
+
+  it('rate limits repeated submissions for the same anonymous identity', async () => {
+    const app = createApp();
+    for (let index = 0; index < 3; index += 1) {
+      const response = await fetchJson(
+        '/v1/municipalities/bologna/next-problems',
+        {
+          app,
+          method: 'POST',
+          body: {
+            title: `Tema civico ${index}`,
+            description: `Descrizione civica ${index}`,
+            category: 'decor',
+          },
+        },
+      );
+      assert.equal(response.status, 201);
+    }
+    const limited = await fetchJson(
+      '/v1/municipalities/bologna/next-problems',
+      {
+        app,
+        method: 'POST',
+        body: {
+          title: 'Tema civico oltre il limite',
+          description: 'Descrizione civica oltre il limite.',
+          category: 'decor',
+        },
+      },
+    );
+    assert.equal(limited.status, 429);
+    assert.equal(limited.body.error, 'submission_rate_limited');
+  });
+
   it('keeps the original prediction resolution happy path', async () => {
     const app = createApp();
     await fetchJson(
@@ -368,43 +451,47 @@ describe('backend HTTP contract', () => {
     await fetchJson(predictionPath, {
       app,
       method: 'PUT',
+      session: 'a',
       body: { choice: 'improve', userId: 'user-a' },
     });
     await fetchJson(predictionPath, {
       app,
       method: 'PUT',
+      session: 'b',
       body: { choice: 'worsen', userId: 'user-b' },
     });
     await fetchJson(resolutionPath, {
       app,
       method: 'POST',
+      session: 'a',
       body: { choice: 'improve', userId: 'user-a' },
     });
     await fetchJson(resolutionPath, {
       app,
       method: 'POST',
+      session: 'b',
       body: { choice: 'worsen', userId: 'user-b' },
     });
 
     const resultsA = await fetchJson(
       '/v1/turns/turn-bologna-today/prediction-results?userId=user-a',
-      { app },
+      { app, session: 'a' },
     );
     const resultsB = await fetchJson(
       '/v1/turns/turn-bologna-today/prediction-results?userId=user-b',
-      { app },
+      { app, session: 'b' },
     );
     const reputationA = await fetchJson(
       '/v1/turns/turn-bologna-today/reputation?userId=user-a',
-      { app },
+      { app, session: 'a' },
     );
     const reputationB = await fetchJson(
       '/v1/turns/turn-bologna-today/reputation?userId=user-b',
-      { app },
+      { app, session: 'b' },
     );
     const summaryA = await fetchJson(
       '/v1/municipalities/bologna/summary?userId=user-a',
-      { app },
+      { app, session: 'a' },
     );
 
     assert.deepEqual(resultsA.body.items, [
@@ -481,6 +568,7 @@ describe('backend HTTP contract', () => {
     await fetchJson(path, {
       app,
       method: 'PUT',
+      session: 'a',
       body: {
         choice: 'improve',
         motivations: ['visibleActions'],
@@ -490,6 +578,7 @@ describe('backend HTTP contract', () => {
     await fetchJson(path, {
       app,
       method: 'PUT',
+      session: 'b',
       body: {
         choice: 'improve',
         motivations: ['visibleActions', 'seasonality'],
@@ -499,6 +588,7 @@ describe('backend HTTP contract', () => {
     await fetchJson(path, {
       app,
       method: 'PUT',
+      session: 'c',
       body: {
         choice: 'stable',
         motivations: ['personalExperience'],
@@ -543,6 +633,7 @@ describe('backend HTTP contract', () => {
     await fetchJson(predictionPath, {
       app,
       method: 'PUT',
+      session: 'a',
       body: { choice: 'improve', userId: 'user-a' },
     });
     const contextual = await fetchJson(
@@ -586,6 +677,7 @@ describe('backend HTTP contract', () => {
     await fetchJson(predictionPath, {
       app,
       method: 'PUT',
+      session: 'a',
       body: { choice: 'improve', userId: 'user-a' },
     });
 
@@ -594,6 +686,7 @@ describe('backend HTTP contract', () => {
       {
         app,
         method: 'POST',
+        session: 'b',
         body: { choice: 'improve', userId: 'user-b' },
       },
     );
@@ -602,6 +695,7 @@ describe('backend HTTP contract', () => {
       {
         app,
         method: 'POST',
+        session: 'a',
         body: { choice: 'worsen', userId: 'user-a' },
       },
     );
@@ -613,16 +707,29 @@ describe('backend HTTP contract', () => {
   });
 });
 
+const cookiesByApp = new WeakMap();
+
 async function fetchJson(path, options = {}) {
   const app = options.app ?? createApp();
+  const session = options.session ?? 'default';
+  let sessionCookies = cookiesByApp.get(app);
+  if (!sessionCookies) {
+    sessionCookies = new Map();
+    cookiesByApp.set(app, sessionCookies);
+  }
   const rawBody =
     options.rawBody ??
     (Object.hasOwn(options, 'body') ? JSON.stringify(options.body) : '');
   const req = Readable.from(rawBody ? [Buffer.from(rawBody)] : []);
   req.method = options.method ?? 'GET';
   req.url = path;
+  const requestHeaders = { ...options.headers };
+  if (!Object.hasOwn(requestHeaders, 'cookie')) {
+    const cookie = sessionCookies.get(session);
+    if (cookie) requestHeaders.cookie = cookie;
+  }
   req.headers = Object.fromEntries(
-    Object.entries(options.headers ?? {}).map(([key, value]) => [
+    Object.entries(requestHeaders).map(([key, value]) => [
       key.toLowerCase(),
       value,
     ]),
@@ -647,6 +754,11 @@ async function fetchJson(path, options = {}) {
   };
 
   await app(req, res);
+
+  const setCookie = res.headers['set-cookie'];
+  if (typeof setCookie === 'string') {
+    sessionCookies.set(session, setCookie.split(';', 1)[0]);
+  }
 
   return {
     status: res.statusCode,

@@ -2,17 +2,18 @@
 
 ## Stato aggiornato (21 agosto 2026)
 
-La fase 1 locale è completata come scaffold contrattuale: avvio reale, store
-in-memory, validazione, CORS loopback, OpenAPI 0.3.0 e test di contratto.
+La fase 1 locale è completata come scaffold contrattuale: avvio reale,
+validazione, CORS loopback, OpenAPI 0.4.0 e test di contratto.
 `ApiNextProblemsRepository` e `ApiGameRepository` sono consumer HTTP opt-in
 attivabili separatamente tramite configurazione ambiente. Il repository di
 gioco copre progressivamente attivazione, turno, problemi, previsioni, esiti,
 reputazione, insight e classifica; reflection resta locale e la mutazione del
 segnale è rifiutata finché manca il relativo endpoint.
 
-Lo scaffold non è un servizio pubblico: `userId` è controllato dal client e
-mancano persistenza, autenticazione, moderazione, rate limiting e cancellazione
-remota.
+Il pilot dispone ora di persistenza SQLite con migrazione, identità anonima
+firmata server-side, moderazione automatica e limite locale degli invii. Non è
+ancora un servizio pubblico: mancano moderazione umana, backup/cancellazione,
+rate limiting distribuito, soglie privacy, staging e osservabilità.
 
 ## Decisione
 
@@ -49,13 +50,18 @@ Sostituire progressivamente i repository mock Flutter con repository HTTP senza 
 
 ```text
 services/backend/
-  src/server.js        # HTTP API e store in-memory
-  test/server.test.js  # test di contratto minimo
+  src/server.js        # HTTP API e store di dominio
+  src/persistence.js   # SQLite e migrazioni
+  src/identity.js      # sessione anonima firmata
+  src/moderation.js    # policy automatica iniziale
+  test/                # contratto e riavvio persistente
   openapi.yaml         # contratto iniziale
   package.json
 ```
 
-Il servizio espone JSON versionato sotto `/v1`. Lo store in-memory serve solo a bloccare shape, stati e comportamento dei primi endpoint. La fase successiva sostituira' lo store con persistenza reale mantenendo gli stessi endpoint.
+Il servizio espone JSON versionato sotto `/v1`. In sviluppo può restare
+in-memory; con `DATABASE_PATH` salva atomicamente uno snapshot versionato su
+SQLite mantenendo gli stessi endpoint.
 
 ## Contratti frontend da rispettare
 
@@ -74,12 +80,11 @@ I nomi enum restano allineati al Flutter:
 ## Roadmap
 
 1. Completato: fondazione backend in-memory e contratto OpenAPI.
-2. In corso: repository HTTP Flutter dietro configurazione ambiente;
-   `ApiNextProblemsRepository` è completo e `ApiGameRepository` copre tutte le
-   capability remote attuali.
-3. Persistenza reale con migrazioni.
-4. Identita' utente anonima stabile e poi auth opzionale.
-5. Deploy preview e ambiente staging.
+2. Completato: repository HTTP Flutter dietro configurazione ambiente.
+3. Completato per il pilot: persistenza SQLite con migrazione iniziale.
+4. Completato per il pilot: identita' anonima server-side, filtro contenuti e
+   limite locale degli invii; auth opzionale resta successiva.
+5. Prossimo: deploy preview e ambiente staging con backup e osservabilita'.
 6. Move Flutter sotto `apps/flutter_app` quando CI backend e client sono gia' separati.
 
 ## Criteri di uscita fase 1
@@ -91,9 +96,10 @@ I nomi enum restano allineati al Flutter:
 
 ## Criteri per iniziare la fase pubblica del backend
 
-- identità anonima emessa e verificata dal server;
-- persistenza con migrazioni, vincoli, backup e cancellazione;
-- moderazione dei testi e protezioni anti-abuso;
+- completato: identità anonima emessa e verificata dal server;
+- parziale: persistenza con migrazioni; backup e cancellazione restano aperti;
+- parziale: filtro testi e limite locale; servono revisione umana e protezioni
+  anti-abuso distribuite;
 - contratto remoto per reflection e mutazione del segnale;
 - soglia minima e regole privacy per gli insight aggregati;
 - staging, osservabilità e test end-to-end;
