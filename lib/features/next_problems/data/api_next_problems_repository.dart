@@ -9,12 +9,9 @@ import 'package:fanta_comune/features/next_problems/domain/suggested_problem_sta
 import 'package:fanta_comune/features/next_problems/domain/vote_choice.dart';
 
 class ApiNextProblemsRepository implements NextProblemsRepository {
-  ApiNextProblemsRepository({required ApiClient client, required String userId})
-    : _client = client,
-      _userId = userId;
+  ApiNextProblemsRepository({required ApiClient client}) : _client = client;
 
   final ApiClient _client;
-  final String _userId;
 
   @override
   Future<List<SuggestedProblem>> listNextProblems({
@@ -24,11 +21,7 @@ class ApiNextProblemsRepository implements NextProblemsRepository {
   }) async {
     final payload = await _client.getJson(
       _collectionPath(municipalityId),
-      queryParameters: {
-        'query': query?.trim(),
-        'status': status?.name,
-        'userId': _userId,
-      },
+      queryParameters: {'query': query?.trim(), 'status': status?.name},
     );
     return SuggestedProblemMapper.listFromResponse(payload);
   }
@@ -46,7 +39,6 @@ class ApiNextProblemsRepository implements NextProblemsRepository {
         'title': title,
         'description': description,
         'category': category.name,
-        'userId': _userId,
       },
     );
     return SuggestedProblemMapper.fromResponse(payload);
@@ -66,7 +58,7 @@ class ApiNextProblemsRepository implements NextProblemsRepository {
     }
     final payload = await _client.postJson(
       [..._collectionPath(municipalityId), problemId, 'votes'],
-      body: {'vote': vote.name, 'userId': _userId},
+      body: {'vote': vote.name},
     );
     return SuggestedProblemMapper.fromResponse(payload);
   }

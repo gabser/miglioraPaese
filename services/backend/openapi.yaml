@@ -1,12 +1,16 @@
 openapi: 3.1.0
 info:
   title: Migliora Paese API
-  version: 0.3.0
+  version: 0.4.0
   description: >-
-    Local pilot API for replacing Flutter in-memory repositories. The optional
-    userId is client-controlled in this scaffold and is not authentication.
+    Pilot API backed by durable SQLite state. User-specific resources use a
+    signed anonymous session issued by the server in an HttpOnly cookie;
+    client-provided userId values are ignored.
 servers:
-  - url: http://127.0.0.1:8787
+  - url: http://localhost:8787
+security:
+  - {}
+  - AnonymousSession: []
 paths:
   /health:
     get:
@@ -37,7 +41,6 @@ paths:
       operationId: getCivicLoopSummary
       parameters:
         - $ref: "#/components/parameters/MunicipalityId"
-        - $ref: "#/components/parameters/UserIdQuery"
       responses:
         "200":
           description: Civic loop summary.
@@ -106,7 +109,6 @@ paths:
       operationId: getReputationHistory
       parameters:
         - $ref: "#/components/parameters/MunicipalityId"
-        - $ref: "#/components/parameters/UserIdQuery"
       responses:
         "200":
           description: Reputation snapshots ordered from the oldest turn.
@@ -132,15 +134,6 @@ paths:
           schema:
             type: string
             maxLength: 120
-        - name: userId
-          in: query
-          description: >-
-            Local client identifier used only to compute myVote. It is
-            client-controlled and must not be treated as authentication.
-          schema:
-            type: string
-            maxLength: 128
-            default: demo-user
       responses:
         "200":
           description: Suggested problems for the selected user view.
@@ -183,6 +176,10 @@ paths:
           $ref: "#/components/responses/Conflict"
         "413":
           $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
         "500":
           $ref: "#/components/responses/InternalError"
   /v1/municipalities/{municipalityId}/next-problems/{problemId}/votes:
@@ -219,12 +216,6 @@ paths:
       operationId: listPredictions
       parameters:
         - $ref: "#/components/parameters/TurnId"
-        - name: userId
-          in: query
-          schema:
-            type: string
-            maxLength: 128
-            default: demo-user
       responses:
         "200":
           description: User predictions.
@@ -272,7 +263,6 @@ paths:
       operationId: getPredictionResults
       parameters:
         - $ref: "#/components/parameters/TurnId"
-        - $ref: "#/components/parameters/UserIdQuery"
       responses:
         "200":
           description: Saved outcomes indexed by problem in the client mapper.
@@ -289,7 +279,6 @@ paths:
       operationId: getReputationScore
       parameters:
         - $ref: "#/components/parameters/TurnId"
-        - $ref: "#/components/parameters/UserIdQuery"
       responses:
         "200":
           description: Reputation derived from the user's saved outcomes.
@@ -384,6 +373,14 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 components:
+  securitySchemes:
+    AnonymousSession:
+      type: apiKey
+      in: cookie
+      name: mp_anon
+      description: >-
+        Signed opaque identifier issued by the server. Browsers cannot read it
+        because the cookie is HttpOnly; credentialed requests send it back.
   parameters:
     MunicipalityId:
       name: municipalityId
@@ -404,17 +401,6 @@ components:
       required: true
       schema:
         type: string
-    UserIdQuery:
-      name: userId
-      in: query
-      description: >-
-        Local client identifier. It is client-controlled and must not be
-        treated as authentication.
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 128
-        default: demo-user
   responses:
     BadRequest:
       description: Invalid JSON, field, enum or query parameter.
@@ -442,6 +428,18 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
     PayloadTooLarge:
       description: JSON body exceeds 64 KiB.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    UnprocessableEntity:
+      description: Suggestion content was rejected by the moderation policy.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    TooManyRequests:
+      description: Anonymous identity exceeded the suggestion submission limit.
       content:
         application/json:
           schema:
@@ -613,14 +611,12 @@ components:
         description: { type: string, minLength: 1, maxLength: 1000 }
         category:
           $ref: "#/components/schemas/ProblemKey"
-        userId: { type: string, minLength: 1, maxLength: 128 }
     VoteSuggestedProblemRequest:
       type: object
       required: [vote]
       properties:
         vote:
           $ref: "#/components/schemas/VoteChoice"
-        userId: { type: string, minLength: 1, maxLength: 128 }
     PredictionChoice:
       type: string
       enum: [improve, stable, worsen]
@@ -651,7 +647,6 @@ components:
           anyOf:
             - $ref: "#/components/schemas/HypothesisConfidence"
             - type: "null"
-        userId: { type: string, minLength: 1, maxLength: 128 }
     Prediction:
       type: object
       required:
@@ -687,7 +682,6 @@ components:
       properties:
         choice:
           $ref: "#/components/schemas/PredictionChoice"
-        userId: { type: string, minLength: 1, maxLength: 128 }
     PredictionResult:
       type: string
       enum: [correct, partial, wrong, pending]

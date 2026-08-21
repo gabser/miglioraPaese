@@ -21,7 +21,7 @@ class AppConfig {
     );
     const apiBaseUrl = String.fromEnvironment(
       'API_BASE_URL',
-      defaultValue: 'http://127.0.0.1:8787',
+      defaultValue: 'http://localhost:8787',
     );
     return AppConfig.fromValues(
       nextProblemsDataSource: dataSource,
@@ -33,7 +33,7 @@ class AppConfig {
   factory AppConfig.fromValues({
     String nextProblemsDataSource = 'mock',
     String gameDataSource = 'mock',
-    String apiBaseUrl = 'http://127.0.0.1:8787',
+    String apiBaseUrl = 'http://localhost:8787',
     Duration apiTimeout = const Duration(seconds: 8),
   }) {
     final nextProblemsSource = switch (nextProblemsDataSource

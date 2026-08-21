@@ -43,12 +43,11 @@ void main() {
       expect(captured.url.queryParameters, {
         'query': 'parco nord',
         'status': 'pending',
-        'userId': 'user:test',
       });
     },
   );
 
-  test('submits a problem with transport enum names and user ID', () async {
+  test('submits a problem with transport enum names', () async {
     late http.Request captured;
     final repository = _repository((request) async {
       captured = request;
@@ -67,11 +66,10 @@ void main() {
       'title': 'Lampioni spenti',
       'description': 'Via Roma resta buia.',
       'category': 'lighting',
-      'userId': 'user:test',
     });
   });
 
-  test('votes with an encoded problem path and user ID', () async {
+  test('votes with an encoded problem path', () async {
     late http.Request captured;
     final repository = _repository((request) async {
       captured = request;
@@ -93,7 +91,7 @@ void main() {
       'problem/with space',
       'votes',
     ]);
-    expect(jsonDecode(captured.body), {'vote': 'up', 'userId': 'user:test'});
+    expect(jsonDecode(captured.body), {'vote': 'up'});
     expect(updated.myVote, VoteChoice.up);
   });
 
@@ -144,7 +142,6 @@ ApiNextProblemsRepository _repository(
       baseUrl: Uri.parse('https://example.test/root'),
       client: MockClient(handler),
     ),
-    userId: 'user:test',
   );
 }
 

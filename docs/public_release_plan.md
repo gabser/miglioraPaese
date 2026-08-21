@@ -60,13 +60,18 @@ nuovo repository pubblico subito dopo la creazione dello snapshot.
 
 ## Confini di sicurezza
 
-La demo Pages non deve chiamare il backend e non deve inviare contributi reali. Il backend usa memoria volatile e identita' controllata dal client; non dispone ancora di autenticazione, persistenza, moderazione, rate limiting e cancellazione remota. Queste capacita' sono prerequisiti per qualunque ambiente pubblico che accetti testo o voti.
+La demo Pages non deve chiamare il backend e non deve inviare contributi reali.
+Il backend pilot dispone di SQLite, identita' anonima firmata, filtro automatico
+e limite locale degli invii, ma non ancora di moderazione umana, backup,
+cancellazione remota, privacy operativa o protezioni anti-abuso distribuite.
+Queste ultime capacita' restano prerequisiti per un'apertura pubblica.
 
 ## Passi successivi al prototipo
 
-1. Identita' anonima emessa dal server e policy privacy completa.
-2. Persistenza con migrazioni, vincoli, backup e cancellazione.
-3. Moderazione dei contenuti e protezioni anti-abuso.
-4. Contratto completo per risultati, reputazione e insight.
-5. Staging, test end-to-end e osservabilita'.
-6. Rollout limitato con un Comune pilota prima di un'apertura generale.
+1. Completato: contratto per risultati, reputazione e insight.
+2. Completato per il pilot: identita' anonima server-side e persistenza con
+   migrazione iniziale.
+3. Parziale: filtro contenuti e limite locale; aggiungere processo umano,
+   backup, cancellazione e policy privacy.
+4. Preparare staging, test end-to-end remoti e osservabilita'.
+5. Eseguire un rollout limitato con un Comune prima di un'apertura generale.
