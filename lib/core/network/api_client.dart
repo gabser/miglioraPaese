@@ -29,13 +29,30 @@ class ApiClient {
     List<String> pathSegments, {
     required Map<String, Object?> body,
   }) {
+    return _writeJson('POST', pathSegments, body);
+  }
+
+  Future<Object?> putJson(
+    List<String> pathSegments, {
+    required Map<String, Object?> body,
+  }) {
+    return _writeJson('PUT', pathSegments, body);
+  }
+
+  Future<Object?> _writeJson(
+    String method,
+    List<String> pathSegments,
+    Map<String, Object?> body,
+  ) {
     final uri = _buildUri(pathSegments, const {});
+    final encodedBody = jsonEncode(body);
+    const headers = {'content-type': 'application/json'};
     return _send(
-      () => _client.post(
-        uri,
-        headers: const {'content-type': 'application/json'},
-        body: jsonEncode(body),
-      ),
+      () => switch (method) {
+        'POST' => _client.post(uri, headers: headers, body: encodedBody),
+        'PUT' => _client.put(uri, headers: headers, body: encodedBody),
+        _ => throw ArgumentError.value(method, 'method'),
+      },
     );
   }
 

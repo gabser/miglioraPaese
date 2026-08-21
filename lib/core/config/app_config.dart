@@ -1,8 +1,11 @@
 enum NextProblemsDataSource { mock, api }
 
+enum GameDataSource { mock, api }
+
 class AppConfig {
   AppConfig({
     required this.nextProblemsDataSource,
+    required this.gameDataSource,
     required Uri apiBaseUrl,
     this.apiTimeout = const Duration(seconds: 8),
   }) : apiBaseUrl = _validateApiBaseUrl(apiBaseUrl);
@@ -12,22 +15,30 @@ class AppConfig {
       'NEXT_PROBLEMS_DATA_SOURCE',
       defaultValue: 'mock',
     );
+    const gameDataSource = String.fromEnvironment(
+      'GAME_DATA_SOURCE',
+      defaultValue: 'mock',
+    );
     const apiBaseUrl = String.fromEnvironment(
       'API_BASE_URL',
       defaultValue: 'http://127.0.0.1:8787',
     );
     return AppConfig.fromValues(
       nextProblemsDataSource: dataSource,
+      gameDataSource: gameDataSource,
       apiBaseUrl: apiBaseUrl,
     );
   }
 
   factory AppConfig.fromValues({
     String nextProblemsDataSource = 'mock',
+    String gameDataSource = 'mock',
     String apiBaseUrl = 'http://127.0.0.1:8787',
     Duration apiTimeout = const Duration(seconds: 8),
   }) {
-    final source = switch (nextProblemsDataSource.trim().toLowerCase()) {
+    final nextProblemsSource = switch (nextProblemsDataSource
+        .trim()
+        .toLowerCase()) {
       'mock' => NextProblemsDataSource.mock,
       'api' => NextProblemsDataSource.api,
       final value => throw ArgumentError.value(
@@ -36,14 +47,25 @@ class AppConfig {
         'Valori supportati: mock, api.',
       ),
     };
+    final gameSource = switch (gameDataSource.trim().toLowerCase()) {
+      'mock' => GameDataSource.mock,
+      'api' => GameDataSource.api,
+      final value => throw ArgumentError.value(
+        value,
+        'gameDataSource',
+        'Valori supportati: mock, api.',
+      ),
+    };
     return AppConfig(
-      nextProblemsDataSource: source,
+      nextProblemsDataSource: nextProblemsSource,
+      gameDataSource: gameSource,
       apiBaseUrl: Uri.parse(apiBaseUrl),
       apiTimeout: apiTimeout,
     );
   }
 
   final NextProblemsDataSource nextProblemsDataSource;
+  final GameDataSource gameDataSource;
   final Uri apiBaseUrl;
   final Duration apiTimeout;
 

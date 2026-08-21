@@ -1,12 +1,14 @@
 # Backend foundation plan
 
-## Stato aggiornato (11 luglio 2026)
+## Stato aggiornato (21 agosto 2026)
 
 La fase 1 locale è completata come scaffold contrattuale: avvio reale, store
-in-memory, validazione, CORS loopback, OpenAPI 0.2.0 e test di contratto. Il
-primo consumer HTTP è `ApiNextProblemsRepository`, attivabile solo con
-configurazione ambiente; `GameRepository` resta mock finché risultati,
-reputazione e insight non avranno contratti server completi.
+in-memory, validazione, CORS loopback, OpenAPI 0.3.0 e test di contratto.
+`ApiNextProblemsRepository` e `ApiGameRepository` sono consumer HTTP opt-in
+attivabili separatamente tramite configurazione ambiente. Il repository di
+gioco copre progressivamente attivazione, turno, problemi, previsioni, esiti,
+reputazione, insight e classifica; reflection resta locale e la mutazione del
+segnale è rifiutata finché manca il relativo endpoint.
 
 Lo scaffold non è un servizio pubblico: `userId` è controllato dal client e
 mancano persistenza, autenticazione, moderazione, rate limiting e cancellazione
@@ -71,8 +73,10 @@ I nomi enum restano allineati al Flutter:
 
 ## Roadmap
 
-1. Fondazione backend in-memory e contratto OpenAPI.
-2. `ApiNextProblemsRepository` nel client Flutter dietro configurazione ambiente; `ApiGameRepository` solo dopo il completamento del contratto di gioco.
+1. Completato: fondazione backend in-memory e contratto OpenAPI.
+2. In corso: repository HTTP Flutter dietro configurazione ambiente;
+   `ApiNextProblemsRepository` è completo e `ApiGameRepository` copre tutte le
+   capability remote attuali.
 3. Persistenza reale con migrazioni.
 4. Identita' utente anonima stabile e poi auth opzionale.
 5. Deploy preview e ambiente staging.
@@ -90,6 +94,7 @@ I nomi enum restano allineati al Flutter:
 - identità anonima emessa e verificata dal server;
 - persistenza con migrazioni, vincoli, backup e cancellazione;
 - moderazione dei testi e protezioni anti-abuso;
-- contratto completo per risultati, reputazione e insight;
+- contratto remoto per reflection e mutazione del segnale;
+- soglia minima e regole privacy per gli insight aggregati;
 - staging, osservabilità e test end-to-end;
 - privacy policy coerente con i dati remoti.
