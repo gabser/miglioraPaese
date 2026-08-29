@@ -52,7 +52,7 @@ risposte CORS consentono credenziali perché l'identità anonima usa cookie.
 
 ## Persistenza e identita' anonima
 
-La versione 0.5 usa `node:sqlite`, disponibile in Node 24, con foreign key,
+La versione 0.6 usa `node:sqlite`, disponibile in Node 24, con foreign key,
 WAL, timeout sui lock e migrazione iniziale registrata in
 `schema_migrations`. Lo stato del pilot e' salvato atomicamente in uno snapshot
 JSON versionato; la normalizzazione in tabelle di dominio resta un passo
@@ -64,6 +64,12 @@ produzione viene aggiunto `Secure`. I valori `userId` eventualmente inviati da
 client precedenti sono ignorati. Il client Flutter Web abilita le richieste con
 credenziali; staging deve servire app e API nello stesso sito per evitare le
 limitazioni dei cookie di terze parti.
+
+`DELETE /v1/session` rimuove voti, previsioni ed esiti associati alla sessione,
+anonimizza il collegamento delle proposte già pubblicate e scade il cookie. Il
+testo civico moderato resta disponibile senza l'identificativo della sessione.
+L'operazione è idempotente ed è collegata al controllo dati della build Flutter
+in modalità API.
 
 ## Moderazione e limiti del pilot
 
@@ -102,8 +108,11 @@ Ogni risposta espone `X-Request-Id`. I log JSON registrano metodo, nome route,
 status e durata, ma non path grezzi, query, cookie, token, body o identità. Le
 metriche devono restare accessibili solo alla rete di monitoraggio.
 
-Gli script `npm run backup`, `npm run verify-database` e `npm run smoke`
-supportano il runbook operativo. Procedura completa, gate e rollback sono in
+Gli script `npm run backup`, `npm run verify-database`,
+`npm run rehearse-restore` e `npm run smoke` supportano il runbook operativo.
+La prova di restore copia un backup in una directory temporanea, lo apre con lo
+store applicativo corrente e rimuove la copia al termine; non sostituisce il
+database attivo. Procedura completa, gate e rollback sono in
 [`docs/pilot_runbook.md`](../../docs/pilot_runbook.md).
 
 ## Contratto di gioco

@@ -191,6 +191,20 @@ export function createApp(options = {}) {
       const userId = requestIdentity.userId;
       responseHeaders = { ...responseHeaders, ...requestIdentity.headers };
 
+      if (route.name === 'deleteSessionData') {
+        store.deleteUserData(userId);
+        responseHeaders = {
+          ...responseHeaders,
+          ...identity.clearHeaders(),
+        };
+        return sendJson(
+          res,
+          200,
+          { status: 'deleted' },
+          responseHeaders,
+        );
+      }
+
       if (route.name === 'municipalityActivation') {
         const municipality = store.getMunicipality(route.params.municipalityId);
         return sendJson(
@@ -891,6 +905,78 @@ export function createMemoryStore(options = {}) {
     };
   }
 
+  function deleteUserData(userId) {
+    let deletedSuggestions = 0;
+    let deletedVotes = 0;
+    let deletedPredictions = 0;
+    let deletedPredictionResults = 0;
+
+    for (const [municipalityId, suggestions] of nextProblemsByMunicipality) {
+      const municipality = getMunicipality(municipalityId);
+      for (let index = 0; index < suggestions.length; index += 1) {
+        const suggestion = suggestions[index];
+        if (suggestion.submittedByUserId === userId) {
+          suggestions[index] = {
+            ...suggestion,
+            submittedByUserId: 'deleted',
+            submittedByDisplayName: 'Utente rimosso',
+          };
+          deletedSuggestions += 1;
+        }
+
+        const userVotes = votesByProblem.get(suggestion.id);
+        const previousVote = userVotes?.get(userId);
+        if (previousVote === undefined) continue;
+
+        userVotes.delete(userId);
+        deletedVotes += 1;
+        const updated = {
+          ...suggestions[index],
+          votesUp:
+            previousVote === 'up'
+              ? Math.max(0, suggestions[index].votesUp - 1)
+              : suggestions[index].votesUp,
+          votesDown:
+            previousVote === 'down'
+              ? Math.max(0, suggestions[index].votesDown - 1)
+              : suggestions[index].votesDown,
+        };
+        updated.score = updated.votesUp - updated.votesDown;
+        if (!moderationRequired && updated.status !== 'rejected') {
+          updated.status = updated.score >= 1 ? 'approved' : 'pending';
+        }
+        suggestions[index] = updated;
+        syncPromotion(municipality, updated);
+      }
+      nextProblemsByMunicipality.set(municipalityId, suggestions);
+    }
+
+    for (const predictions of predictionsByTurn.values()) {
+      for (const [id, prediction] of predictions) {
+        if (prediction.userId === userId) {
+          predictions.delete(id);
+          deletedPredictions += 1;
+        }
+      }
+    }
+    for (const results of predictionResultsByTurn.values()) {
+      for (const [id, resolution] of results) {
+        if (resolution.userId === userId) {
+          results.delete(id);
+          deletedPredictionResults += 1;
+        }
+      }
+    }
+
+    persist();
+    return {
+      suggestions: deletedSuggestions,
+      votes: deletedVotes,
+      predictions: deletedPredictions,
+      predictionResults: deletedPredictionResults,
+    };
+  }
+
   function syncPromotion(municipality, suggestion) {
     const problems = problemsByMunicipality.get(municipality.id) ?? [];
     const promotedId = 'proposal_' + suggestion.id;
@@ -1297,6 +1383,7 @@ export function createMemoryStore(options = {}) {
     getCriticalInsights,
     getCivicLoopSummary,
     getLeaderboard,
+    deleteUserData,
     exportState,
     isReady: () => true,
   };
@@ -1402,7 +1489,7 @@ export function startServer({
           minimumAggregateSampleSize,
         }));
   const managedObservability =
-    observability ?? createObservability({ logger, version: '0.5.0' });
+    observability ?? createObservability({ logger, version: '0.6.0' });
   let app;
   try {
     app = createApp({
@@ -1435,6 +1522,9 @@ function matchRoute(method, pathname) {
   }
   if (method === 'GET' && pathname === '/metrics') {
     return { name: 'metrics', params: {} };
+  }
+  if (method === 'DELETE' && pathname === '/v1/session') {
+    return { name: 'deleteSessionData', params: {} };
   }
 
   const patterns = [
@@ -1628,7 +1718,7 @@ function corsHeadersForRequest(req, allowedOrigins) {
     origin,
     headers: {
       'access-control-allow-origin': origin,
-      'access-control-allow-methods': 'GET, POST, PUT, OPTIONS',
+      'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'access-control-allow-headers': 'Content-Type',
       'access-control-allow-credentials': 'true',
       'access-control-max-age': '600',

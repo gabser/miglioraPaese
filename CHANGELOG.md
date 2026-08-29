@@ -13,6 +13,8 @@ Le modifiche rilevanti al progetto sono documentate in questo file seguendo
 - workflow per verificare la build web e pubblicare la demo mock su GitHub Pages.
 - pilot API opt-in per proposte e voto con client HTTP, mapping tipizzato e test;
 - piano versionato per il rilascio pubblico e i relativi gate di sicurezza.
+- cancellazione end-to-end dei dati associati alla sessione anonima del pilot;
+- prova di ripristino isolata che apre il backup con lo store applicativo.
 
 ### Modificato
 

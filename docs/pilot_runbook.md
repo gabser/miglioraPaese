@@ -122,11 +122,36 @@ Verificarlo prima di considerarlo valido:
       -e BACKUP_PATH=/backups/pilot-YYYYMMDDTHHMMSSZ.sqlite \
       api npm run verify-database
 
+Provare inoltre il caricamento del backup con lo store applicativo, su una
+copia temporanea isolata:
+
+    docker compose --env-file staging.env \
+      -f services/backend/compose.staging.yaml run --rm \
+      -e BACKUP_PATH=/backups/pilot-YYYYMMDDTHHMMSSZ.sqlite \
+      api npm run rehearse-restore
+
+Il comando non tocca `/data/pilot.sqlite`: dimostra che il backup è leggibile
+dalla versione corrente dell'applicazione. Il gate resta aperto finché la
+procedura completa non viene provata nell'ambiente del provider scelto.
+
 Il ripristino è un'operazione controllata: fermare l'API, conservare una copia
 del database corrente, verificare il backup scelto, sostituire esclusivamente
 `/data/pilot.sqlite`, riavviare e ripetere readiness e smoke test. Richiede
 approvazione del product owner e dell'operatore; non va automatizzato su un
 target ambiguo.
+
+## Cancellazione della sessione anonima
+
+La pagina Privacy della build API invia `DELETE /v1/session` dopo una conferma
+esplicita. Il backend elimina voti, previsioni ed esiti della sessione, rimuove
+il collegamento pseudonimo dalle proposte e scade il cookie. Le proposte già
+pubblicate restano come contenuto civico non collegato alla sessione, per non
+invalidare moderazione e discussione aggregate.
+
+La cancellazione deve essere verificata durante lo smoke manuale del pilot e
+descritta nell'informativa approvata. Non sostituisce la policy di retention,
+la gestione di eventuali backup ancora conservati o le richieste amministrate
+dal titolare del trattamento.
 
 ## Lancio e rollback
 
