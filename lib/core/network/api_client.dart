@@ -39,6 +39,11 @@ class ApiClient {
     return _writeJson('PUT', pathSegments, body);
   }
 
+  Future<Object?> deleteJson(List<String> pathSegments) {
+    final uri = _buildUri(pathSegments, const {});
+    return _send(() => _client.delete(uri));
+  }
+
   Future<Object?> _writeJson(
     String method,
     List<String> pathSegments,

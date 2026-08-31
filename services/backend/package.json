@@ -1,6 +1,6 @@
 {
   "name": "@migliorapaese/backend",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -11,6 +11,7 @@
     "start": "NODE_ENV=production node src/server.js",
     "backup": "node scripts/backup.js",
     "verify-database": "node scripts/verify_database.js",
+    "rehearse-restore": "node scripts/rehearse_restore.js",
     "smoke": "node scripts/smoke.js",
     "test": "node --test"
   }

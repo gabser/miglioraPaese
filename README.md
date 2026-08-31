@@ -113,6 +113,10 @@ non promuovono contenuti: serve una decisione dell'operatore tramite endpoint
 amministrativo protetto. Gli insight restano oscurati sotto la soglia minima di
 partecipazione configurata.
 
+Nella build API, il controllo dati nella pagina Privacy cancella voti,
+previsioni ed esiti associati alla sessione anonima, anonimizza il collegamento
+delle proposte pubblicate e scade il cookie server-side.
+
 ## Quality gate
 
 ~~~bash
@@ -159,7 +163,8 @@ Il workflow Pages non avvia e non espone **services/backend**.
 - il repository di gioco HTTP è opt-in e due capability restano progressive:
   reflection locale e mutazione del segnale non supportata;
 - il lancio richiede ancora selezione e accordo con un Comune, provider,
-  privacy/retention, cancellazione remota, alert e prova di ripristino.
+  privacy/retention, rate limiting distribuito, alert e prova di ripristino sul
+  provider scelto.
 
 ## Contribuire e sicurezza
 
