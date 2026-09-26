@@ -7,6 +7,8 @@ Le modifiche rilevanti al progetto sono documentate in questo file seguendo
 
 ### Aggiunto
 
+- target tecnico Tuglie con seed esplicitamente sintetici e comando locale
+  loopback-only `npm run dev:tuglie`;
 - documentazione per contributi, supporto, sicurezza e condotta;
 - template GitHub per issue e pull request;
 - aggiornamenti automatici per dipendenze Pub e GitHub Actions;

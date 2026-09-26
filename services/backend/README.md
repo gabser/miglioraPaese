@@ -10,6 +10,15 @@ Richiede Node.js 24 o superiore e non usa dipendenze npm.
     npm test
     npm run dev
 
+Per la rehearsal locale di Tuglie, con database dedicato e soli seed
+sintetici:
+
+    npm run dev:tuglie
+
+Il comando ascolta esclusivamente su loopback e accetta Flutter Web da
+`http://localhost:7357`. I segreti di sviluppo incorporati nel launcher non
+sono validi per uno staging remoto.
+
 Il server usa HOST (default 127.0.0.1) e PORT (default 8787). Il log di avvio
 viene emesso soltanto dopo che la socket è in ascolto.
 
@@ -30,16 +39,17 @@ repository. In alternativa alle variabili dirette si possono usare
     DATABASE_PATH=/data/pilot.sqlite \
     ANON_IDENTITY_SECRET=<secret-di-almeno-32-byte> \
     MODERATION_ADMIN_TOKEN=<token-indipendente-di-almeno-32-byte> \
-    PILOT_MUNICIPALITY_ID=castel-bolognese \
+    PILOT_MUNICIPALITY_ID=tuglie \
     MIN_AGGREGATE_SAMPLE_SIZE=3 \
     CORS_ALLOWED_ORIGINS=https://pilot.example.test \
     npm start
 
 ## Identificativi Comune
 
-Gli ID API canonici sono slug, attualmente bologna e castel-bolognese. Per
-compatibilità sono accettati anche comune:Bologna e
-comune:Castel Bolognese.
+Gli ID API canonici sono slug, attualmente bologna, castel-bolognese e tuglie.
+Per compatibilità sono accettati anche comune:Bologna,
+comune:Castel Bolognese e comune:Tuglie. I contenuti seed di Tuglie sono
+esplicitamente dimostrativi e non rappresentano condizioni reali.
 
 ## CORS locale
 
