@@ -56,6 +56,8 @@ const municipalityAliases = new Map([
   ['castel-bolognese', 'castel-bolognese'],
   ['castel bolognese', 'castel-bolognese'],
   ['comune:castel bolognese', 'castel-bolognese'],
+  ['tuglie', 'tuglie'],
+  ['comune:tuglie', 'tuglie'],
 ]);
 
 export function createApp(options = {}) {
@@ -500,6 +502,15 @@ export function createMemoryStore(options = {}) {
         baseActivationState: 'active',
       },
     ],
+    [
+      'tuglie',
+      {
+        id: 'tuglie',
+        name: 'Tuglie',
+        activationState: 'active',
+        baseActivationState: 'active',
+      },
+    ],
   ]);
 
   const now = clock();
@@ -521,6 +532,16 @@ export function createMemoryStore(options = {}) {
       {
         id: 'turn-bologna-today',
         municipalityId: 'bologna',
+        state: 'open',
+        startAt: turnStartAt,
+        endAt: turnEndAt,
+      },
+    ],
+    [
+      'tuglie',
+      {
+        id: 'turn-tuglie-demo',
+        municipalityId: 'tuglie',
         state: 'open',
         startAt: turnStartAt,
         endAt: turnEndAt,
@@ -553,6 +574,29 @@ export function createMemoryStore(options = {}) {
       ],
     ],
     ['castel-bolognese', []],
+    [
+      'tuglie',
+      [
+        createProblem({
+          id: 'problem-tuglie-lighting-demo',
+          key: 'lighting',
+          title: 'Scenario demo: illuminazione di un percorso',
+          zoneName: 'Area dimostrativa',
+          status: 'stable',
+          trendPercent: 0,
+          updatedAt: new Date(now - 4 * 60 * 60 * 1000).toISOString(),
+        }),
+        createProblem({
+          id: 'problem-tuglie-green-demo',
+          key: 'green',
+          title: 'Scenario demo: cura di uno spazio verde',
+          zoneName: 'Area dimostrativa',
+          status: 'stable',
+          trendPercent: 0,
+          updatedAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+        }),
+      ],
+    ],
   ]);
 
   const nextProblemsByMunicipality = new Map([
@@ -593,6 +637,33 @@ export function createMemoryStore(options = {}) {
           votesDown: 1,
           status: 'approved',
           createdAt: new Date(now - 24 * 60 * 60 * 1000).toISOString(),
+        }),
+      ],
+    ],
+    [
+      'tuglie',
+      [
+        createSuggestedProblem({
+          id: 'suggested-tuglie-shade-demo',
+          title: 'Esempio demo: più ombra negli spazi pubblici',
+          shortDescription:
+            'Contenuto sintetico per verificare proposta e moderazione.',
+          category: 'green',
+          votesUp: 0,
+          votesDown: 0,
+          status: 'pending',
+          createdAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+        }),
+        createSuggestedProblem({
+          id: 'suggested-tuglie-crossing-demo',
+          title: 'Esempio demo: attraversamento più leggibile',
+          shortDescription:
+            'Contenuto sintetico, non derivato da una segnalazione reale.',
+          category: 'safety',
+          votesUp: 0,
+          votesDown: 0,
+          status: 'pending',
+          createdAt: new Date(now - 60 * 60 * 1000).toISOString(),
         }),
       ],
     ],

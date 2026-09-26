@@ -38,8 +38,8 @@ it('rehearses an isolated restore with the application store', async () => {
     assert.deepEqual(result, {
       event: 'sqlite_restore_rehearsal_completed',
       schemaVersion: 1,
-      municipalities: 2,
-      suggestions: 4,
+      municipalities: 3,
+      suggestions: 6,
       predictions: 0,
       predictionResults: 0,
     });

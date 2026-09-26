@@ -66,12 +66,8 @@ void main() {
   testWidgets('pilot profile keeps the configured municipality locked', (
     tester,
   ) async {
-    final prefs = await createTestPrefs({
-      'municipality_id': 'castel-bolognese',
-    });
-    final config = AppConfig.fromValues(
-      pilotMunicipalityId: 'castel-bolognese',
-    );
+    final prefs = await createTestPrefs({'municipality_id': 'tuglie'});
+    final config = AppConfig.fromValues(pilotMunicipalityId: 'tuglie');
 
     await tester.pumpWidget(buildTestApp(prefs, config: config));
     await pumpRoutingFrame(tester);
@@ -85,7 +81,7 @@ void main() {
     router.go('/profile');
     await pumpRoutingFrame(tester);
 
-    expect(find.text('Castel Bolognese'), findsOneWidget);
+    expect(find.text('Tuglie'), findsOneWidget);
     expect(
       find.text('Questo ambiente è riservato al Comune del pilot.'),
       findsOneWidget,

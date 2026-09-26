@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "node src/server.js",
+    "dev:tuglie": "node scripts/start_tuglie_local.js",
     "start": "NODE_ENV=production node src/server.js",
     "backup": "node scripts/backup.js",
     "verify-database": "node scripts/verify_database.js",

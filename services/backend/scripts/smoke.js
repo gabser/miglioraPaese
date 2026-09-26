@@ -20,6 +20,18 @@ const checks = [
     'application/json',
   ],
   [
+    `/v1/municipalities/${encodeURIComponent(municipalityId)}/summary`,
+    'application/json',
+  ],
+  [
+    `/v1/municipalities/${encodeURIComponent(municipalityId)}/turn`,
+    'application/json',
+  ],
+  [
+    `/v1/municipalities/${encodeURIComponent(municipalityId)}/problems`,
+    'application/json',
+  ],
+  [
     `/v1/municipalities/${encodeURIComponent(municipalityId)}/next-problems`,
     'application/json',
   ],

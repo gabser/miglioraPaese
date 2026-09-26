@@ -72,10 +72,57 @@ describe('backend HTTP contract', () => {
       '/v1/municipalities/comune%3ACastel%20Bolognese/activation',
       { app },
     );
+    const tuglie = await fetchJson(
+      '/v1/municipalities/comune%3ATuglie/activation',
+      { app },
+    );
 
     assert.deepEqual(canonical.body, { municipalityId: 'bologna', state: 'active' });
     assert.deepEqual(legacy.body, canonical.body);
     assert.equal(collecting.body.state, 'collectingSignals');
+    assert.deepEqual(tuglie.body, {
+      municipalityId: 'tuglie',
+      state: 'active',
+    });
+  });
+
+  it('serves clearly synthetic seed data for the Tuglie local pilot', async () => {
+    const app = createApp({ pilotMunicipalityId: 'tuglie' });
+    const problems = await fetchJson('/v1/municipalities/tuglie/problems', {
+      app,
+    });
+    const suggestions = await fetchJson(
+      '/v1/municipalities/tuglie/next-problems',
+      { app },
+    );
+    const turn = await fetchJson('/v1/municipalities/tuglie/turn', { app });
+    const prediction = await fetchJson(
+      '/v1/turns/turn-tuglie-demo/predictions/problem-tuglie-lighting-demo',
+      {
+        app,
+        method: 'PUT',
+        body: { choice: 'stable' },
+      },
+    );
+    const outsidePilot = await fetchJson(
+      '/v1/municipalities/bologna/activation',
+      { app },
+    );
+
+    assert.equal(problems.status, 200);
+    assert.ok(
+      problems.body.items.every((item) => item.title.includes('Scenario demo')),
+    );
+    assert.equal(suggestions.status, 200);
+    assert.ok(
+      suggestions.body.items.every((item) =>
+        item.shortDescription.includes('sintetico'),
+      ),
+    );
+    assert.equal(turn.body.id, 'turn-tuglie-demo');
+    assert.equal(prediction.status, 200);
+    assert.equal(prediction.body.choice, 'stable');
+    assert.equal(outsidePilot.status, 404);
   });
 
   it('returns Flutter-compatible turn field names', async () => {
