@@ -25,13 +25,23 @@ class IconLabel extends StatelessWidget {
 
     return Semantics(
       label: text,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: iconSize),
-          const SizedBox(width: AppTokens.s8),
-          Text(text, style: textTheme.bodyMedium),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final label = Text(text, style: textTheme.bodyMedium);
+          return Row(
+            mainAxisSize: constraints.hasBoundedWidth
+                ? MainAxisSize.max
+                : MainAxisSize.min,
+            children: [
+              Icon(icon, size: iconSize),
+              const SizedBox(width: AppTokens.s8),
+              if (constraints.hasBoundedWidth)
+                Expanded(child: label)
+              else
+                label,
+            ],
+          );
+        },
       ),
     );
   }

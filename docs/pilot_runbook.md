@@ -3,9 +3,10 @@
 ## Stato e confine operativo
 
 Il repository prepara un candidato di staging riproducibile, limitato a un
-solo Comune, ma non autorizza da solo la raccolta di contributi reali. Il nome
-del Comune, il referente istituzionale, il titolare del trattamento e il
-provider devono essere registrati prima del go-live.
+solo Comune. **Tuglie è il target tecnico selezionato**, ma questo non equivale
+a un'approvazione istituzionale e non autorizza la raccolta di contributi
+reali. Il nome del Comune, il referente istituzionale, il titolare del
+trattamento e il provider devono essere registrati prima del go-live.
 
 Il pilot usa:
 
@@ -24,7 +25,7 @@ documentale dell'organizzazione, senza inserire segreti nel repository.
 
 | Campo | Valore richiesto |
 |---|---|
-| Comune e slug API | `bologna` oppure `castel-bolognese` |
+| Comune e slug API | target tecnico `tuglie`; accordo istituzionale ancora richiesto |
 | Referente del Comune | nome, ruolo e canale istituzionale |
 | Product owner | responsabile della decisione go/no-go |
 | Moderatori | almeno un titolare e un sostituto |
@@ -52,6 +53,20 @@ Tutti i punti sono bloccanti:
 
 ## Preparazione dell'ambiente
 
+### Rehearsal locale con dati sintetici
+
+Prima di scegliere un provider, avviare il backend con `npm run dev:tuglie` e
+Flutter Web su `localhost:7357`, come documentato nel README. Questo percorso
+usa un database separato, ascolta solo su loopback e contiene esclusivamente
+scenari marcati `demo` o `sintetico`. Non usare tunnel, URL pubblici o dati di
+cittadini in questa fase.
+
+L'operatore tecnico gestisce processo, segreti, database, backup, smoke test e
+rollback. Un modello AI offline può soltanto segnalare rischi o suggerire una
+decisione: approvazione e rifiuto restano azioni di un moderatore umano.
+
+### Staging remoto futuro
+
 1. Copiare `services/backend/staging.env.example` in un file non versionato.
 2. Impostare lo slug approvato e l'origin HTTPS pubblica. Mantenere
    `MIN_AGGREGATE_SAMPLE_SIZE` almeno a 3.
@@ -65,7 +80,7 @@ Tutti i punti sono bloccanti:
 5. Verificare `GET /health`, `GET /ready` e lo smoke test non mutante:
 
        STAGING_BASE_URL=https://pilot.example.test \
-       PILOT_MUNICIPALITY_ID=castel-bolognese \
+       PILOT_MUNICIPALITY_ID=tuglie \
        npm --prefix services/backend run smoke
 
 6. Eseguire manualmente il workflow **Build staging candidates** con lo stesso
@@ -122,11 +137,46 @@ Verificarlo prima di considerarlo valido:
       -e BACKUP_PATH=/backups/pilot-YYYYMMDDTHHMMSSZ.sqlite \
       api npm run verify-database
 
+Provare inoltre il caricamento del backup con lo store applicativo, su una
+copia temporanea isolata:
+
+    docker compose --env-file staging.env \
+      -f services/backend/compose.staging.yaml run --rm \
+      -e BACKUP_PATH=/backups/pilot-YYYYMMDDTHHMMSSZ.sqlite \
+      api npm run rehearse-restore
+
+Il comando non tocca `/data/pilot.sqlite`: dimostra che il backup è leggibile
+dalla versione corrente dell'applicazione. Il gate resta aperto finché la
+procedura completa non viene provata nell'ambiente del provider scelto.
+
 Il ripristino è un'operazione controllata: fermare l'API, conservare una copia
 del database corrente, verificare il backup scelto, sostituire esclusivamente
 `/data/pilot.sqlite`, riavviare e ripetere readiness e smoke test. Richiede
 approvazione del product owner e dell'operatore; non va automatizzato su un
 target ambiguo.
+
+## Cancellazione della sessione anonima
+
+La pagina Privacy della build API invia `DELETE /v1/session` dopo una conferma
+esplicita. Il backend elimina voti, previsioni ed esiti della sessione, rimuove
+il collegamento pseudonimo dalle proposte e scade il cookie. Le proposte già
+pubblicate restano come contenuto civico non collegato alla sessione, per non
+invalidare moderazione e discussione aggregate.
+
+La cancellazione deve essere verificata durante lo smoke manuale del pilot e
+descritta nell'informativa approvata. Non sostituisce la policy di retention,
+la gestione di eventuali backup ancora conservati o le richieste amministrate
+dal titolare del trattamento.
+
+## Retention provvisoria da validare
+
+Per la progettazione tecnica si assume: dati legati alla sessione cancellati
+su richiesta o entro 30 giorni dalla fine del pilot, e comunque non oltre sei
+mesi; log tecnici per 30 giorni; backup cifrati con rotazione di 14 giorni.
+Statistiche realmente anonime possono essere conservate più a lungo. Testi
+pubblicati e casi di ripristino dopo una cancellazione richiedono una regola
+approvata dal Comune e dal RPD. Questi intervalli non sono un parere legale e
+non autorizzano il trattamento prima della validazione formale.
 
 ## Lancio e rollback
 
