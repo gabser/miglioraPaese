@@ -61,17 +61,19 @@ conservata nell'archivio privato separato.
 
 La demo Pages non deve chiamare il backend e non deve inviare contributi reali.
 Il backend pilot dispone di SQLite, identita' anonima firmata, filtro automatico,
-moderazione operatore, limite locale, backup verificabile e osservabilità di
-base. Restano necessari prova di restore, cancellazione remota, privacy
-operativa e protezioni anti-abuso distribuite prima dell'apertura pubblica.
+moderazione operatore, limite locale, cancellazione della sessione, backup
+verificabile, rehearsal di restore isolato e osservabilità di base. Restano
+necessari prova di restore sul provider, privacy operativa e protezioni
+anti-abuso distribuite prima dell'apertura pubblica.
 
 ## Passi successivi al prototipo
 
 1. Completato: contratto per risultati, reputazione e insight.
 2. Completato per il pilot: identita' anonima server-side e persistenza con
    migrazione iniziale.
-3. Completato nel codice: filtro contenuti, moderazione umana, limite locale e
-   backup verificabile; cancellazione e policy privacy restano operative.
+3. Completato nel codice: filtro contenuti, moderazione umana, limite locale,
+   cancellazione della sessione e backup verificabile; policy privacy e
+   retention dei backup restano operative.
 4. Completato nel repository: candidato staging, smoke e osservabilità; manca
    il deploy su un provider approvato.
 5. Prossimo: selezionare il Comune, superare i gate del runbook ed eseguire un

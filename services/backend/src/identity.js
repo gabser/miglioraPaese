@@ -35,6 +35,18 @@ export function createAnonymousIdentity({
         headers: { 'set-cookie': attributes.join('; ') },
       };
     },
+    clearHeaders() {
+      const attributes = [
+        `${cookieName}=`,
+        'Path=/',
+        'Max-Age=0',
+        'Expires=Thu, 01 Jan 1970 00:00:00 GMT',
+        'HttpOnly',
+        'SameSite=Lax',
+      ];
+      if (secure) attributes.push('Secure');
+      return { 'set-cookie': attributes.join('; ') };
+    },
   };
 }
 

@@ -78,6 +78,24 @@ void main() {
     expect(captured.url.pathSegments.last, 'item/with space');
   });
 
+  test('sends DELETE requests without inventing a request body', () async {
+    late http.Request captured;
+    final api = ApiClient(
+      baseUrl: Uri.parse('https://example.test/api-root'),
+      client: MockClient((request) async {
+        captured = request;
+        return http.Response('{"status":"deleted"}', 200);
+      }),
+    );
+
+    final payload = await api.deleteJson(['v1', 'session']);
+
+    expect(captured.method, 'DELETE');
+    expect(captured.url.path, '/api-root/v1/session');
+    expect(captured.body, isEmpty);
+    expect(payload, {'status': 'deleted'});
+  });
+
   test('rejects malformed success JSON', () async {
     final api = ApiClient(
       baseUrl: Uri.parse('https://example.test'),
