@@ -81,14 +81,27 @@ Per mantenere i dati tra i riavvii, imposta
 un cookie firmato `HttpOnly`; `userId` non viene più accettato come autorità dal
 client.
 
+Per il pilot locale di Tuglie, con database dedicato e soli contenuti
+sintetici, avvia il backend su loopback:
+
+~~~bash
+cd services/backend
+npm run dev:tuglie
+~~~
+
+Il comando rifiuta `NODE_ENV=production`, usa esclusivamente
+`127.0.0.1:8787` e accetta il frontend da `http://localhost:7357`. I segreti
+predefiniti sono deliberatamente locali e non devono essere riutilizzati in
+uno staging remoto.
+
 Poi avvia Flutter con:
 
 ~~~bash
-fvm flutter run -d chrome \
+fvm flutter run -d chrome --web-port=7357 \
   --dart-define=NEXT_PROBLEMS_DATA_SOURCE=api \
   --dart-define=GAME_DATA_SOURCE=api \
   --dart-define=API_BASE_URL=http://localhost:8787 \
-  --dart-define=PILOT_MUNICIPALITY_ID=castel-bolognese
+  --dart-define=PILOT_MUNICIPALITY_ID=tuglie
 ~~~
 
 In locale usa `localhost` sia per Flutter Web sia per l'API: il cookie
@@ -102,8 +115,10 @@ stato di un problema è rifiutato esplicitamente finché manca il relativo
 endpoint. Il lookup diretto di un problema usa la cache popolata dall'elenco
 del Comune.
 
-La modalità API supporta al momento gli ID canonici **bologna** e
-**castel-bolognese**, con mapping esplicito dagli ID Flutter corrispondenti.
+La modalità API supporta al momento gli ID canonici **bologna**,
+**castel-bolognese** e **tuglie**, con mapping esplicito dagli ID Flutter
+corrispondenti. I seed di Tuglie sono marcati come scenari dimostrativi e non
+descrivono segnalazioni o condizioni reali.
 Qualunque altro Comune produce un errore controllato e non ricade
 silenziosamente sui dati di un'altra città.
 
@@ -112,6 +127,10 @@ e linguaggio abusivo noto, e limita gli invii ripetuti. In modalità pilot i vot
 non promuovono contenuti: serve una decisione dell'operatore tramite endpoint
 amministrativo protetto. Gli insight restano oscurati sotto la soglia minima di
 partecipazione configurata.
+
+Nella build API, il controllo dati nella pagina Privacy cancella voti,
+previsioni ed esiti associati alla sessione anonima, anonimizza il collegamento
+delle proposte pubblicate e scade il cookie server-side.
 
 ## Quality gate
 
@@ -159,7 +178,8 @@ Il workflow Pages non avvia e non espone **services/backend**.
 - il repository di gioco HTTP è opt-in e due capability restano progressive:
   reflection locale e mutazione del segnale non supportata;
 - il lancio richiede ancora selezione e accordo con un Comune, provider,
-  privacy/retention, cancellazione remota, alert e prova di ripristino.
+  privacy/retention, rate limiting distribuito, alert e prova di ripristino sul
+  provider scelto.
 
 ## Contribuire e sicurezza
 

@@ -56,6 +56,8 @@ const municipalityAliases = new Map([
   ['castel-bolognese', 'castel-bolognese'],
   ['castel bolognese', 'castel-bolognese'],
   ['comune:castel bolognese', 'castel-bolognese'],
+  ['tuglie', 'tuglie'],
+  ['comune:tuglie', 'tuglie'],
 ]);
 
 export function createApp(options = {}) {
@@ -190,6 +192,20 @@ export function createApp(options = {}) {
       const requestIdentity = identity.resolve(req);
       const userId = requestIdentity.userId;
       responseHeaders = { ...responseHeaders, ...requestIdentity.headers };
+
+      if (route.name === 'deleteSessionData') {
+        store.deleteUserData(userId);
+        responseHeaders = {
+          ...responseHeaders,
+          ...identity.clearHeaders(),
+        };
+        return sendJson(
+          res,
+          200,
+          { status: 'deleted' },
+          responseHeaders,
+        );
+      }
 
       if (route.name === 'municipalityActivation') {
         const municipality = store.getMunicipality(route.params.municipalityId);
@@ -486,6 +502,15 @@ export function createMemoryStore(options = {}) {
         baseActivationState: 'active',
       },
     ],
+    [
+      'tuglie',
+      {
+        id: 'tuglie',
+        name: 'Tuglie',
+        activationState: 'active',
+        baseActivationState: 'active',
+      },
+    ],
   ]);
 
   const now = clock();
@@ -507,6 +532,16 @@ export function createMemoryStore(options = {}) {
       {
         id: 'turn-bologna-today',
         municipalityId: 'bologna',
+        state: 'open',
+        startAt: turnStartAt,
+        endAt: turnEndAt,
+      },
+    ],
+    [
+      'tuglie',
+      {
+        id: 'turn-tuglie-demo',
+        municipalityId: 'tuglie',
         state: 'open',
         startAt: turnStartAt,
         endAt: turnEndAt,
@@ -539,6 +574,29 @@ export function createMemoryStore(options = {}) {
       ],
     ],
     ['castel-bolognese', []],
+    [
+      'tuglie',
+      [
+        createProblem({
+          id: 'problem-tuglie-lighting-demo',
+          key: 'lighting',
+          title: 'Scenario demo: illuminazione di un percorso',
+          zoneName: 'Area dimostrativa',
+          status: 'stable',
+          trendPercent: 0,
+          updatedAt: new Date(now - 4 * 60 * 60 * 1000).toISOString(),
+        }),
+        createProblem({
+          id: 'problem-tuglie-green-demo',
+          key: 'green',
+          title: 'Scenario demo: cura di uno spazio verde',
+          zoneName: 'Area dimostrativa',
+          status: 'stable',
+          trendPercent: 0,
+          updatedAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+        }),
+      ],
+    ],
   ]);
 
   const nextProblemsByMunicipality = new Map([
@@ -579,6 +637,33 @@ export function createMemoryStore(options = {}) {
           votesDown: 1,
           status: 'approved',
           createdAt: new Date(now - 24 * 60 * 60 * 1000).toISOString(),
+        }),
+      ],
+    ],
+    [
+      'tuglie',
+      [
+        createSuggestedProblem({
+          id: 'suggested-tuglie-shade-demo',
+          title: 'Esempio demo: più ombra negli spazi pubblici',
+          shortDescription:
+            'Contenuto sintetico per verificare proposta e moderazione.',
+          category: 'green',
+          votesUp: 0,
+          votesDown: 0,
+          status: 'pending',
+          createdAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+        }),
+        createSuggestedProblem({
+          id: 'suggested-tuglie-crossing-demo',
+          title: 'Esempio demo: attraversamento più leggibile',
+          shortDescription:
+            'Contenuto sintetico, non derivato da una segnalazione reale.',
+          category: 'safety',
+          votesUp: 0,
+          votesDown: 0,
+          status: 'pending',
+          createdAt: new Date(now - 60 * 60 * 1000).toISOString(),
         }),
       ],
     ],
@@ -888,6 +973,78 @@ export function createMemoryStore(options = {}) {
     return {
       ...problem,
       myVote: userVotes?.get(userId) ?? 'none',
+    };
+  }
+
+  function deleteUserData(userId) {
+    let deletedSuggestions = 0;
+    let deletedVotes = 0;
+    let deletedPredictions = 0;
+    let deletedPredictionResults = 0;
+
+    for (const [municipalityId, suggestions] of nextProblemsByMunicipality) {
+      const municipality = getMunicipality(municipalityId);
+      for (let index = 0; index < suggestions.length; index += 1) {
+        const suggestion = suggestions[index];
+        if (suggestion.submittedByUserId === userId) {
+          suggestions[index] = {
+            ...suggestion,
+            submittedByUserId: 'deleted',
+            submittedByDisplayName: 'Utente rimosso',
+          };
+          deletedSuggestions += 1;
+        }
+
+        const userVotes = votesByProblem.get(suggestion.id);
+        const previousVote = userVotes?.get(userId);
+        if (previousVote === undefined) continue;
+
+        userVotes.delete(userId);
+        deletedVotes += 1;
+        const updated = {
+          ...suggestions[index],
+          votesUp:
+            previousVote === 'up'
+              ? Math.max(0, suggestions[index].votesUp - 1)
+              : suggestions[index].votesUp,
+          votesDown:
+            previousVote === 'down'
+              ? Math.max(0, suggestions[index].votesDown - 1)
+              : suggestions[index].votesDown,
+        };
+        updated.score = updated.votesUp - updated.votesDown;
+        if (!moderationRequired && updated.status !== 'rejected') {
+          updated.status = updated.score >= 1 ? 'approved' : 'pending';
+        }
+        suggestions[index] = updated;
+        syncPromotion(municipality, updated);
+      }
+      nextProblemsByMunicipality.set(municipalityId, suggestions);
+    }
+
+    for (const predictions of predictionsByTurn.values()) {
+      for (const [id, prediction] of predictions) {
+        if (prediction.userId === userId) {
+          predictions.delete(id);
+          deletedPredictions += 1;
+        }
+      }
+    }
+    for (const results of predictionResultsByTurn.values()) {
+      for (const [id, resolution] of results) {
+        if (resolution.userId === userId) {
+          results.delete(id);
+          deletedPredictionResults += 1;
+        }
+      }
+    }
+
+    persist();
+    return {
+      suggestions: deletedSuggestions,
+      votes: deletedVotes,
+      predictions: deletedPredictions,
+      predictionResults: deletedPredictionResults,
     };
   }
 
@@ -1297,6 +1454,7 @@ export function createMemoryStore(options = {}) {
     getCriticalInsights,
     getCivicLoopSummary,
     getLeaderboard,
+    deleteUserData,
     exportState,
     isReady: () => true,
   };
@@ -1402,7 +1560,7 @@ export function startServer({
           minimumAggregateSampleSize,
         }));
   const managedObservability =
-    observability ?? createObservability({ logger, version: '0.5.0' });
+    observability ?? createObservability({ logger, version: '0.6.0' });
   let app;
   try {
     app = createApp({
@@ -1435,6 +1593,9 @@ function matchRoute(method, pathname) {
   }
   if (method === 'GET' && pathname === '/metrics') {
     return { name: 'metrics', params: {} };
+  }
+  if (method === 'DELETE' && pathname === '/v1/session') {
+    return { name: 'deleteSessionData', params: {} };
   }
 
   const patterns = [
@@ -1628,7 +1789,7 @@ function corsHeadersForRequest(req, allowedOrigins) {
     origin,
     headers: {
       'access-control-allow-origin': origin,
-      'access-control-allow-methods': 'GET, POST, PUT, OPTIONS',
+      'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'access-control-allow-headers': 'Content-Type',
       'access-control-allow-credentials': 'true',
       'access-control-max-age': '600',
