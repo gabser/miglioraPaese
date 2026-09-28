@@ -72,10 +72,57 @@ describe('backend HTTP contract', () => {
       '/v1/municipalities/comune%3ACastel%20Bolognese/activation',
       { app },
     );
+    const tuglie = await fetchJson(
+      '/v1/municipalities/comune%3ATuglie/activation',
+      { app },
+    );
 
     assert.deepEqual(canonical.body, { municipalityId: 'bologna', state: 'active' });
     assert.deepEqual(legacy.body, canonical.body);
     assert.equal(collecting.body.state, 'collectingSignals');
+    assert.deepEqual(tuglie.body, {
+      municipalityId: 'tuglie',
+      state: 'active',
+    });
+  });
+
+  it('serves clearly synthetic seed data for the Tuglie local pilot', async () => {
+    const app = createApp({ pilotMunicipalityId: 'tuglie' });
+    const problems = await fetchJson('/v1/municipalities/tuglie/problems', {
+      app,
+    });
+    const suggestions = await fetchJson(
+      '/v1/municipalities/tuglie/next-problems',
+      { app },
+    );
+    const turn = await fetchJson('/v1/municipalities/tuglie/turn', { app });
+    const prediction = await fetchJson(
+      '/v1/turns/turn-tuglie-demo/predictions/problem-tuglie-lighting-demo',
+      {
+        app,
+        method: 'PUT',
+        body: { choice: 'stable' },
+      },
+    );
+    const outsidePilot = await fetchJson(
+      '/v1/municipalities/bologna/activation',
+      { app },
+    );
+
+    assert.equal(problems.status, 200);
+    assert.ok(
+      problems.body.items.every((item) => item.title.includes('Scenario demo')),
+    );
+    assert.equal(suggestions.status, 200);
+    assert.ok(
+      suggestions.body.items.every((item) =>
+        item.shortDescription.includes('sintetico'),
+      ),
+    );
+    assert.equal(turn.body.id, 'turn-tuglie-demo');
+    assert.equal(prediction.status, 200);
+    assert.equal(prediction.body.choice, 'stable');
+    assert.equal(outsidePilot.status, 404);
   });
 
   it('returns Flutter-compatible turn field names', async () => {
@@ -201,6 +248,19 @@ describe('backend HTTP contract', () => {
     assert.equal(
       loopback.headers['access-control-allow-credentials'],
       'true',
+    );
+
+    const deletionPreflight = await fetchJson('/v1/session', {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'http://localhost:7357',
+        'access-control-request-method': 'DELETE',
+      },
+    });
+    assert.equal(deletionPreflight.status, 200);
+    assert.match(
+      deletionPreflight.headers['access-control-allow-methods'],
+      /(?:^|,\s*)DELETE(?:,|$)/,
     );
 
     const configuredApp = createApp({
@@ -395,6 +455,93 @@ describe('backend HTTP contract', () => {
     assert.match(first.headers['set-cookie'], /; HttpOnly;/);
     assert.match(first.headers['set-cookie'], /; SameSite=Lax$/);
     assert.equal(second.headers['set-cookie'], undefined);
+  });
+
+  it('deletes data linked to an anonymous session and rotates its cookie', async () => {
+    const store = createMemoryStore({ moderationRequired: true });
+    const app = createApp({ store, secureCookies: true });
+    const created = await fetchJson(
+      '/v1/municipalities/castel-bolognese/next-problems',
+      {
+        app,
+        method: 'POST',
+        session: 'a',
+        body: {
+          title: 'Fontanella nel parco',
+          description: 'Una proposta civica senza dati personali.',
+          category: 'green',
+        },
+      },
+    );
+    const originalCookie = created.headers['set-cookie'];
+    await fetchJson(
+      `/v1/municipalities/castel-bolognese/next-problems/${created.body.id}/votes`,
+      { app, method: 'POST', session: 'a', body: { vote: 'up' } },
+    );
+    await fetchJson(
+      `/v1/municipalities/castel-bolognese/next-problems/${created.body.id}/votes`,
+      { app, method: 'POST', session: 'b', body: { vote: 'down' } },
+    );
+    const predictionPath =
+      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
+    for (const session of ['a', 'b']) {
+      await fetchJson(predictionPath, {
+        app,
+        method: 'PUT',
+        session,
+        body: { choice: 'improve' },
+      });
+    }
+    await fetchJson('/v1/problems/problem-green-margherita/resolve', {
+      app,
+      method: 'POST',
+      session: 'a',
+      body: { choice: 'improve' },
+    });
+
+    const deleted = await fetchJson('/v1/session', {
+      app,
+      method: 'DELETE',
+      session: 'a',
+    });
+
+    assert.equal(deleted.status, 200);
+    assert.deepEqual(deleted.body, { status: 'deleted' });
+    assert.match(deleted.headers['set-cookie'], /^mp_anon=;/);
+    assert.match(deleted.headers['set-cookie'], /Max-Age=0/);
+    assert.match(deleted.headers['set-cookie'], /Expires=Thu, 01 Jan 1970/);
+    assert.match(deleted.headers['set-cookie'], /; Secure$/);
+
+    const listed = await fetchJson(
+      '/v1/municipalities/castel-bolognese/next-problems',
+      { app, session: 'b' },
+    );
+    const retained = listed.body.items.find(
+      (item) => item.id === created.body.id,
+    );
+    assert.equal(retained.submittedByUserId, 'deleted');
+    assert.equal(retained.submittedByDisplayName, 'Utente rimosso');
+    assert.equal(retained.votesUp, 0);
+    assert.equal(retained.votesDown, 1);
+    assert.equal(retained.myVote, 'down');
+
+    const predictions = await fetchJson(
+      '/v1/turns/turn-bologna-today/predictions',
+      { app, session: 'a' },
+    );
+    const results = await fetchJson(
+      '/v1/turns/turn-bologna-today/prediction-results',
+      { app, session: 'a' },
+    );
+    const insight = await fetchJson(
+      '/v1/problems/problem-green-margherita/insight',
+      { app, session: 'b' },
+    );
+    assert.deepEqual(predictions.body.items, []);
+    assert.deepEqual(results.body.items, []);
+    assert.equal(insight.body.totalPredictions, 1);
+    assert.match(predictions.headers['set-cookie'], /^mp_anon=v1\./);
+    assert.notEqual(predictions.headers['set-cookie'], originalCookie);
   });
 
   it('rejects unsafe suggestion content before storing it', async () => {

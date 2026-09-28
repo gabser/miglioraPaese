@@ -1,14 +1,16 @@
 openapi: 3.1.0
 info:
   title: Migliora Paese API
-  version: 0.5.0
+  version: 0.6.0
   description: >-
     Pilot API backed by durable SQLite state. User-specific resources use a
     signed anonymous session issued by the server in an HttpOnly cookie;
     client-provided userId values are ignored. Staging can be restricted to a
     single municipality and requires an explicit human moderation decision.
     Aggregate insight counts and distributions are suppressed below the
-    configured privacy threshold.
+    configured privacy threshold. A session can erase its pseudonymous links,
+    votes, predictions and outcomes; published suggestion text is retained
+    without a link to the deleted session.
 servers:
   - url: http://localhost:8787
 security:
@@ -47,6 +49,24 @@ paths:
             text/plain:
               schema:
                 type: string
+  /v1/session:
+    delete:
+      operationId: deleteAnonymousSessionData
+      description: >-
+        Deletes votes, predictions and outcomes associated with the current
+        anonymous session, removes its link from published suggestions and
+        expires the session cookie. The operation is idempotent.
+      responses:
+        "200":
+          description: Session data deleted and cookie expired.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionDeletionResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /v1/municipalities/{municipalityId}/activation:
     get:
       operationId: getMunicipalityActivation
@@ -544,6 +564,12 @@ components:
       properties:
         status:
           const: ready
+    SessionDeletionResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          const: deleted
     ActivationState:
       type: string
       enum: [active, collectingSignals, newMunicipality]

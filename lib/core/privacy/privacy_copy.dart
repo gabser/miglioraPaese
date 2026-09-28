@@ -18,7 +18,8 @@ class PrivacyCopy {
     'Niente foto; titolo e descrizione della proposta sono gli unici testi liberi',
     'Nessun dato sensibile richiesto',
     'Le preferenze demo sono cancellabili; lo stato mock si azzera ricaricando l\'app',
-    'Il pilot API invia ID locale, Comune, proposte e voti al server configurato',
+    'Il pilot usa una sessione anonima firmata; l\'ID locale non è accettato come identità dal server',
+    'Voti, previsioni ed esiti del pilot associati alla sessione possono essere cancellati',
     'Obiettivo: consapevolezza e confronto, non reclami',
   ];
 }
