@@ -3,7 +3,7 @@
 ## Stato aggiornato (21 agosto 2026)
 
 La fase 1 locale è completata come scaffold contrattuale: avvio reale,
-validazione, CORS loopback, OpenAPI 0.5.0 e test di contratto.
+validazione, CORS loopback, OpenAPI 0.6.0 e test di contratto.
 `ApiNextProblemsRepository` e `ApiGameRepository` sono consumer HTTP opt-in
 attivabili separatamente tramite configurazione ambiente. Il repository di
 gioco copre progressivamente attivazione, turno, problemi, previsioni, esiti,
@@ -12,10 +12,10 @@ segnale è rifiutata finché manca il relativo endpoint.
 
 Il pilot dispone ora di persistenza SQLite con migrazione, identità anonima
 firmata server-side, moderazione automatica e umana, limite locale degli invii,
-container di staging, backup verificabile, readiness, metriche e log
-strutturati. Non è ancora un servizio pubblico: mancano provider e Comune
-approvati, cancellazione, rate limiting distribuito, policy privacy completa e
-prova operativa del runbook.
+container di staging, cancellazione della sessione, backup verificabile,
+rehearsal di restore isolato, readiness, metriche e log strutturati. Non è
+ancora un servizio pubblico: mancano provider e Comune approvati, rate limiting
+distribuito, policy privacy completa e prova operativa del runbook sul provider.
 
 ## Decisione
 
@@ -102,8 +102,8 @@ I nomi enum restano allineati al Flutter:
 ## Criteri per iniziare la fase pubblica del backend
 
 - completato: identità anonima emessa e verificata dal server;
-- parziale: persistenza con migrazioni e backup verificabile; cancellazione e
-  prova di ripristino restano aperte;
+- parziale: persistenza con migrazioni, backup verificabile, cancellazione della
+  sessione e rehearsal isolato; la prova di ripristino sul provider resta aperta;
 - parziale: filtro testi, revisione umana e limite locale; servono protezioni
   anti-abuso distribuite;
 - contratto remoto per reflection e mutazione del segnale;
