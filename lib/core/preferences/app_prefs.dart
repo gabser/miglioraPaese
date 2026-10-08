@@ -175,7 +175,8 @@ class AppPrefs extends ChangeNotifier {
 
   /// Cancella tutte le preferenze locali.
   Future<void> clearAll() async {
-    await _prefs.clear();
+    final cleared = await _prefs.clear();
+    if (!cleared) throw StateError('Local data could not be cleared');
     notifyListeners();
   }
 }

@@ -17,6 +17,7 @@ class FantasyWelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final manager = context.watch<FantasyManager>();
+    if (!manager.hasData) return const FantasyLoadingPage();
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -286,6 +287,7 @@ class SquadPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final manager = context.watch<FantasyManager>();
+    if (!manager.hasData) return const FantasyLoadingPage();
     final issue = manager.lineupIssue;
     return FantasyPage(
       child: Column(
@@ -333,7 +335,7 @@ class SquadPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           SquadBoard(
-            locked: manager.isLocked,
+            locked: manager.isLocked || manager.busy,
             starters: manager.starterCards,
             reserves: manager.benchCards,
             captainId: manager.captainId,
@@ -343,15 +345,17 @@ class SquadPage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           FilledButton.icon(
-            onPressed: issue == null && !manager.isLocked
-                ? () {
-                    final confirmed = manager.confirmLineup();
+            onPressed: issue == null && !manager.isLocked && !manager.busy
+                ? () async {
+                    final confirmed = await manager.confirmLineup();
+                    if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
                           confirmed
                               ? 'Formazione confermata per la giornata.'
-                              : 'Giornata bloccata: conferma non consentita.',
+                              : manager.persistenceError ??
+                                    'Giornata bloccata: conferma non consentita.',
                         ),
                       ),
                     );
@@ -376,6 +380,7 @@ class MatchdayPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final manager = context.watch<FantasyManager>();
+    if (!manager.hasData) return const FantasyLoadingPage();
     return FantasyPage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -389,7 +394,7 @@ class MatchdayPage extends StatelessWidget {
           const SizedBox(height: 16),
           MatchdayProgress(
             now: manager.now,
-            locked: manager.isLocked,
+            locked: manager.isLocked || manager.busy,
             completed: manager.predictionsCompleted,
             total: manager.starterIds.length,
             locksAt: manager.matchday.locksAt,
@@ -419,7 +424,7 @@ class MatchdayPage extends StatelessWidget {
                             (trend) => ChoiceChip(
                               label: Text(trend.label),
                               selected: manager.predictions[card.id] == trend,
-                              onSelected: manager.isLocked
+                              onSelected: manager.isLocked || manager.busy
                                   ? null
                                   : (_) =>
                                         manager.setPrediction(card.id, trend),
@@ -437,7 +442,7 @@ class MatchdayPage extends StatelessWidget {
                             'motivation-${manager.matchday.id}-${card.id}',
                           ),
                           initialValue: manager.motivations[card.id] ?? '',
-                          enabled: !manager.isLocked,
+                          enabled: !manager.isLocked && !manager.loading,
                           onChanged: (text) =>
                               manager.setMotivation(card.id, text),
                           maxLines: 2,
@@ -471,8 +476,9 @@ class MatchdayPage extends StatelessWidget {
                 prediction: manager.predictionFor(outcome),
                 personal: manager.hasPersonalResult(outcome),
                 reflection: manager.reflectionFor(outcome),
-                onReflection: (answer) =>
-                    manager.submitReflection(outcome, answer),
+                onReflection: manager.busy
+                    ? null
+                    : (answer) => manager.submitReflection(outcome, answer),
               ),
             ),
           ),
@@ -495,6 +501,7 @@ class _MarketPageState extends State<MarketPage> {
   @override
   Widget build(BuildContext context) {
     final manager = context.watch<FantasyManager>();
+    if (!manager.hasData) return const FantasyLoadingPage();
     if (!manager.squadIds.contains(_outgoingId)) {
       _outgoingId = manager.squadIds.first;
     }
@@ -648,23 +655,30 @@ class _MarketPageState extends State<MarketPage> {
     final penalty = manager.nextTransferPenalty;
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => MarketComparison(
-        outgoing: outgoing,
-        incoming: incoming,
-        penalty: penalty,
-        onConfirm: () {
-          final error = manager.transfer(
-            outgoingId: outgoing.id,
-            incomingId: incoming.id,
-            expectedPenalty: penalty,
-          );
-          Navigator.pop(dialogContext);
-          if (!mounted || !context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error ?? 'Trasferimento completato.')),
-          );
-          if (error == null) setState(() => _outgoingId = incoming.id);
-        },
+      builder: (dialogContext) => Consumer<FantasyManager>(
+        builder: (_, current, _) => MarketComparison(
+          outgoing: outgoing,
+          incoming: incoming,
+          penalty: penalty,
+          onConfirm: current.busy
+              ? null
+              : () async {
+                  final error = await manager.transfer(
+                    outgoingId: outgoing.id,
+                    incomingId: incoming.id,
+                    expectedPenalty: penalty,
+                  );
+                  if (!dialogContext.mounted) return;
+                  Navigator.pop(dialogContext);
+                  if (!mounted || !context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(error ?? 'Trasferimento completato.'),
+                    ),
+                  );
+                  if (error == null) setState(() => _outgoingId = incoming.id);
+                },
+        ),
       ),
     );
   }
@@ -720,6 +734,7 @@ class _LeaguesPageState extends State<LeaguesPage> {
   @override
   Widget build(BuildContext context) {
     final manager = context.watch<FantasyManager>();
+    if (!manager.hasData) return const FantasyLoadingPage();
     final league = manager.leagues[_municipal ? 1 : 0];
     return FantasyPage(
       child: Column(

@@ -48,8 +48,8 @@ void main() {
     'published outcome itself remains stable after provider data changes on restart',
     () async {
       final h = await createHarness();
-      h.manager.confirmLineup();
-      h.at(day.observationEndsAt);
+      await h.manager.confirmLineup();
+      await h.at(day.observationEndsAt);
       await h.manager.settled;
       final restored = FantasyManager(
         h.prefs,
@@ -74,10 +74,10 @@ void main() {
       final h = Harness(prefs);
       await h.manager.settled;
       prefs.gate = Completer<void>();
-      h.manager.setPrediction('buche-centro', CivicTrend.stable);
+      unawaited(h.manager.setPrediction('buche-centro', CivicTrend.stable));
       await Future<void>.delayed(Duration.zero);
       final cleared = h.manager.clearLocalData();
-      h.manager.setMotivation('buche-centro', 'Must not be saved');
+      await h.manager.setMotivation('buche-centro', 'Must not be saved');
       expect(h.manager.isLocked, isTrue);
       prefs.gate!.complete();
       prefs.gate = null;
@@ -104,13 +104,16 @@ void main() {
     'dates, swaps, captain, prediction and motivation survive reload',
     () async {
       final h = await createHarness();
-      h.manager.swapCards(
+      await h.manager.swapCards(
         starterId: 'buche-centro',
         reserveId: 'attraversamenti-scuole',
       );
-      h.manager.setCaptain('attraversamenti-scuole');
-      h.manager.setPrediction('attraversamenti-scuole', CivicTrend.improves);
-      h.manager.setMotivation(
+      await h.manager.setCaptain('attraversamenti-scuole');
+      await h.manager.setPrediction(
+        'attraversamenti-scuole',
+        CivicTrend.improves,
+      );
+      await h.manager.setMotivation(
         'attraversamenti-scuole',
         'Nuovo attraversamento',
       );
@@ -134,18 +137,18 @@ void main() {
     test('lock boundary at ${offset}ms applies to every operation', () async {
       final h = await createHarness();
       h.time = day.locksAt.add(Duration(milliseconds: offset));
-      h.manager.setPrediction('buche-centro', CivicTrend.stable);
-      h.manager.setMotivation('buche-centro', 'Segnale');
-      h.manager.setCaptain('bus-stazione');
-      h.manager.swapCards(
+      await h.manager.setPrediction('buche-centro', CivicTrend.stable);
+      await h.manager.setMotivation('buche-centro', 'Segnale');
+      await h.manager.setCaptain('bus-stazione');
+      await h.manager.swapCards(
         starterId: 'bus-stazione',
         reserveId: 'attraversamenti-scuole',
       );
-      final transferError = h.manager.transfer(
+      final transferError = await h.manager.transfer(
         outgoingId: 'parco-nord',
         incomingId: 'fontanelle-ovest',
       );
-      final confirmed = h.manager.confirmLineup();
+      final confirmed = await h.manager.confirmLineup();
       if (offset < 0) {
         expect(transferError, isNull);
         expect(confirmed, isTrue);
@@ -166,8 +169,8 @@ void main() {
     'lock is recovered after offline restart and remains closed if clock rolls back',
     () async {
       final h = await createHarness();
-      h.manager.setPrediction('buche-centro', CivicTrend.stable);
-      h.manager.confirmLineup();
+      await h.manager.setPrediction('buche-centro', CivicTrend.stable);
+      await h.manager.confirmLineup();
       h.time = day.locksAt;
       final restored = await h.reload();
       expect(restored.snapshotFor(day.id)!.eligible, isTrue);
@@ -176,7 +179,7 @@ void main() {
         CivicTrend.stable,
       );
       h.time = epoch;
-      restored.setPrediction('buche-centro', CivicTrend.worsens);
+      await restored.setPrediction('buche-centro', CivicTrend.worsens);
       expect(restored.isLocked, isTrue);
       expect(restored.predictions['buche-centro'], CivicTrend.stable);
     },
@@ -186,14 +189,14 @@ void main() {
     'published score and prediction are immutable across a new matchday and restart',
     () async {
       final h = await createHarness();
-      h.manager.setPrediction('buche-centro', CivicTrend.improves);
-      h.manager.confirmLineup();
-      h.at(day.observationEndsAt);
+      await h.manager.setPrediction('buche-centro', CivicTrend.improves);
+      await h.manager.confirmLineup();
+      await h.at(day.observationEndsAt);
       final total = h.manager.scoreFor(result()).total;
       expect(total, 5); // (stable 1 + adjacent prediction 2) * 1.5, rounded.
-      expect(h.manager.startNextMatchday(nextDay), isTrue);
-      h.manager.setPrediction('buche-centro', CivicTrend.stable);
-      h.manager.setCaptain('bus-stazione');
+      expect(await h.manager.startNextMatchday(nextDay), isTrue);
+      await h.manager.setPrediction('buche-centro', CivicTrend.stable);
+      await h.manager.setCaptain('bus-stazione');
       expect(h.manager.scoreFor(result()).total, total);
       expect(h.manager.predictionFor(result()), CivicTrend.improves);
       final restored = await h.reload();
@@ -208,17 +211,17 @@ void main() {
       for (final invalid in [false, true]) {
         final h = await createHarness();
         if (invalid) {
-          h.manager.swapCards(
+          await h.manager.swapCards(
             starterId: 'lampioni-sud',
             reserveId: 'alberi-viale',
           );
-          expect(h.manager.confirmLineup(), isFalse);
+          expect(await h.manager.confirmLineup(), isFalse);
         }
-        h.at(day.observationEndsAt);
+        await h.at(day.observationEndsAt);
         expect(h.manager.scoreFor(result()).total, 0);
         expect(h.manager.scoreForMatchday(day.id).total, 0);
         expect(
-          h.manager.submitReflection(
+          await h.manager.submitReflection(
             result(),
             ReflectionAnswer.externalConditions,
           ),
@@ -234,28 +237,28 @@ void main() {
     'reflection starts at zero, is only accepted after reveal and is idempotent',
     () async {
       final h = await createHarness();
-      h.manager.setPrediction('buche-centro', CivicTrend.stable);
-      h.manager.confirmLineup();
+      await h.manager.setPrediction('buche-centro', CivicTrend.stable);
+      await h.manager.confirmLineup();
       expect(
-        h.manager.submitReflection(
+        await h.manager.submitReflection(
           result(),
           ReflectionAnswer.externalConditions,
         ),
         isFalse,
       );
-      h.at(day.locksAt);
+      await h.at(day.locksAt);
       expect(
-        h.manager.submitReflection(
+        await h.manager.submitReflection(
           result(),
           ReflectionAnswer.externalConditions,
         ),
         isFalse,
       );
-      h.at(day.observationEndsAt);
+      await h.at(day.observationEndsAt);
       expect(h.manager.scoreFor(result()).reflectionPoints, 0);
       expect(h.manager.scoreFor(result()).total, 8);
       expect(
-        h.manager.submitReflection(
+        await h.manager.submitReflection(
           result(),
           ReflectionAnswer.externalConditions,
         ),
@@ -263,7 +266,7 @@ void main() {
       );
       expect(h.manager.scoreFor(result()).total, 9);
       expect(
-        h.manager.submitReflection(
+        await h.manager.submitReflection(
           result(),
           ReflectionAnswer.insufficientInformation,
         ),
@@ -276,7 +279,7 @@ void main() {
         ReflectionAnswer.externalConditions,
       );
       expect(
-        restored.submitReflection(
+        await restored.submitReflection(
           result(),
           ReflectionAnswer.externalConditions,
         ),
@@ -301,14 +304,15 @@ void main() {
         observeTime: false,
       );
       addTearDown(other.dispose);
-      other.confirmLineup();
+      await other.settled;
+      await other.confirmLineup();
       h.time = day.observationEndsAt;
-      other.refreshTime();
+      await other.refreshTime();
       for (final outcome in other.outcomes) {
         expect(other.scoreFor(outcome).total, 0);
         expect(other.hasPersonalResult(outcome), isFalse);
         expect(
-          other.submitReflection(
+          await other.submitReflection(
             outcome,
             ReflectionAnswer.observedIntervention,
           ),
@@ -325,15 +329,15 @@ void main() {
       for (var i = 0; i < 4; i++) {
         expect(h.manager.nextTransferPenalty, i < 2 ? 0 : 4);
         expect(
-          h.manager.transfer(
+          await h.manager.transfer(
             outgoingId: i.isEven ? 'parco-nord' : 'fontanelle-ovest',
             incomingId: i.isEven ? 'fontanelle-ovest' : 'parco-nord',
           ),
           isNull,
         );
       }
-      h.manager.confirmLineup();
-      h.at(day.observationEndsAt);
+      await h.manager.confirmLineup();
+      await h.at(day.observationEndsAt);
       expect(h.manager.transfersRemaining, 0);
       expect(h.manager.transferPenalty, 8);
       expect(h.manager.scoreForMatchday(day.id).total, -6);
@@ -350,25 +354,28 @@ void main() {
     () async {
       final h = await createHarness();
       expect(
-        h.manager.transfer(
+        await h.manager.transfer(
           outgoingId: 'lampioni-sud',
           incomingId: 'fontanelle-ovest',
         ),
         contains('meno di 2'),
       );
       expect(
-        h.manager.transfer(outgoingId: 'parco-nord', incomingId: 'missing'),
+        await h.manager.transfer(
+          outgoingId: 'parco-nord',
+          incomingId: 'missing',
+        ),
         isNotNull,
       );
       expect(
-        h.manager.transfer(
+        await h.manager.transfer(
           outgoingId: 'parco-nord',
           incomingId: 'ciclabile-est',
         ),
         contains('Fonte non disponibile'),
       );
       expect(
-        h.manager.transfer(
+        await h.manager.transfer(
           outgoingId: 'parco-nord',
           incomingId: 'fontanelle-ovest',
           expectedPenalty: 4,
@@ -416,16 +423,23 @@ void main() {
         observeTime: false,
       );
       addTearDown(manager.dispose);
+      await manager.settled;
       expect(
-        manager.transfer(outgoingId: 'parco-nord', incomingId: 'unavailable'),
+        await manager.transfer(
+          outgoingId: 'parco-nord',
+          incomingId: 'unavailable',
+        ),
         contains('non disponibile'),
       );
       expect(
-        manager.transfer(outgoingId: 'parco-nord', incomingId: 'expensive'),
+        await manager.transfer(
+          outgoingId: 'parco-nord',
+          incomingId: 'expensive',
+        ),
         contains('insufficienti'),
       );
       expect(
-        manager.transfer(outgoingId: 'parco-nord', incomingId: 'pending'),
+        await manager.transfer(outgoingId: 'parco-nord', incomingId: 'pending'),
         isNull,
       );
       expect(manager.transfers, hasLength(1));
@@ -436,16 +450,16 @@ void main() {
     'new day resets free transfer allowance and preserves previous penalties',
     () async {
       final h = await createHarness();
-      h.manager.transfer(
+      await h.manager.transfer(
         outgoingId: 'parco-nord',
         incomingId: 'fontanelle-ovest',
       );
-      expect(h.manager.startNextMatchday(nextDay), isFalse);
-      h.at(day.observationEndsAt);
-      expect(h.manager.startNextMatchday(nextDay), isTrue);
+      expect(await h.manager.startNextMatchday(nextDay), isFalse);
+      await h.at(day.observationEndsAt);
+      expect(await h.manager.startNextMatchday(nextDay), isTrue);
       expect(h.manager.transfersRemaining, 2);
       expect(
-        h.manager.transfer(
+        await h.manager.transfer(
           outgoingId: 'fontanelle-ovest',
           incomingId: 'parco-nord',
         ),
@@ -486,6 +500,7 @@ void main() {
       );
       addTearDown(manager.dispose);
       await manager.settled;
+      await manager.settled;
       expect(manager.confirmed, isTrue);
       expect(manager.predictions['buche-centro'], CivicTrend.stable);
       expect(manager.transferPenalty, 8);
@@ -505,9 +520,9 @@ void main() {
   ]) {
     test('corrupt $corruption state restores atomically', () async {
       final h = await createHarness();
-      h.manager.setCaptain('bus-stazione');
-      h.manager.confirmLineup();
-      h.at(day.locksAt);
+      await h.manager.setCaptain('bus-stazione');
+      await h.manager.confirmLineup();
+      await h.at(day.locksAt);
       await h.manager.settled;
       final payload =
           jsonDecode(h.prefs.fantasyStateJson!) as Map<String, dynamic>;
@@ -553,9 +568,9 @@ void main() {
       await h.manager.settled;
       final count = prefs.writes.length;
       prefs.gate = Completer<void>();
-      h.manager.setPrediction('buche-centro', CivicTrend.improves);
-      h.manager.setPrediction('buche-centro', CivicTrend.stable);
-      h.manager.setMotivation('buche-centro', 'Latest');
+      unawaited(h.manager.setPrediction('buche-centro', CivicTrend.improves));
+      unawaited(h.manager.setPrediction('buche-centro', CivicTrend.stable));
+      unawaited(h.manager.setMotivation('buche-centro', 'Latest'));
       await Future<void>.delayed(Duration.zero);
       expect(prefs.writes, hasLength(count));
       prefs.gate!.complete();
@@ -575,7 +590,7 @@ void main() {
       expect(saved['predictions']['buche-centro'], 'stable');
       expect(saved['motivations']['buche-centro'], 'Latest');
       prefs.fail = true;
-      h.manager.setMotivation('buche-centro', 'Retry me');
+      await h.manager.setMotivation('buche-centro', 'Retry me');
       await h.manager.settled;
       expect(h.manager.persistenceError, isNotNull);
       prefs.fail = false;
