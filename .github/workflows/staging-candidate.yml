@@ -43,6 +43,7 @@ jobs:
       - name: Build API-enabled candidate
         run: >-
           flutter build web --release
+          --dart-define=FANTASY_MODE_ENABLED=false
           --dart-define=NEXT_PROBLEMS_DATA_SOURCE=api
           --dart-define=GAME_DATA_SOURCE=api
           --dart-define=API_BASE_URL="$API_BASE_URL"

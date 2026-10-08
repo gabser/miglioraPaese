@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
 import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/network/api_client.dart';
 import 'package:fanta_comune/core/network/api_exception.dart';
@@ -57,13 +58,20 @@ class _PrivacyPageState extends State<PrivacyPage> {
 
     setState(() => _clearing = true);
     final prefs = context.read<AppPrefs>();
+    final fantasyManager = config.fantasyModeEnabled
+        ? context.read<FantasyManager>()
+        : null;
     try {
       if (hasRemoteData) {
         await context.read<ApiClient>().deleteJson(['v1', 'session']);
       }
-      await prefs.clearAll();
+      if (config.fantasyModeEnabled) {
+        await fantasyManager!.clearLocalData();
+      } else {
+        await prefs.clearAll();
+      }
       if (!context.mounted) return;
-      context.go('/boot');
+      context.go(config.fantasyModeEnabled ? '/welcome' : '/boot');
     } on ApiException catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

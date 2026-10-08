@@ -20,6 +20,7 @@ class AppPrefs extends ChangeNotifier {
   static const _perspectiveChangesKey = 'perspective_changes_count';
   static const _lastSeenTurnIdKey = 'last_seen_turn_id';
   static const _insightSignaturesKey = 'insight_signatures';
+  static const _fantasyStateKey = 'fantasy_manager_state_v1';
 
   /// Inizializza le preferenze condivise e restituisce il wrapper.
   static Future<AppPrefs> init() async {
@@ -142,6 +143,14 @@ class AppPrefs extends ChangeNotifier {
         .join(';');
     await _prefs.setString(_insightSignaturesKey, encoded);
     notifyListeners();
+  }
+
+  /// Stato locale del prototipo Manager civico. Non contiene dati certificati.
+  String? get fantasyStateJson => _prefs.getString(_fantasyStateKey);
+
+  Future<void> setFantasyStateJson(String value) async {
+    final saved = await _prefs.setString(_fantasyStateKey, value);
+    if (!saved) throw StateError('Fantasy state could not be saved');
   }
 
   /// Data dell'ultima proposta inviata, se presente.

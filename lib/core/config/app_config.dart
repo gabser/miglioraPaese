@@ -8,6 +8,7 @@ class AppConfig {
   AppConfig({
     required this.nextProblemsDataSource,
     required this.gameDataSource,
+    required this.fantasyModeEnabled,
     required Uri apiBaseUrl,
     String? pilotMunicipalityId,
     this.apiTimeout = const Duration(seconds: 8),
@@ -28,11 +29,16 @@ class AppConfig {
       defaultValue: 'http://localhost:8787',
     );
     const pilotMunicipalityId = String.fromEnvironment('PILOT_MUNICIPALITY_ID');
+    const fantasyModeEnabled = bool.fromEnvironment(
+      'FANTASY_MODE_ENABLED',
+      defaultValue: true,
+    );
     return AppConfig.fromValues(
       nextProblemsDataSource: dataSource,
       gameDataSource: gameDataSource,
       apiBaseUrl: apiBaseUrl,
       pilotMunicipalityId: pilotMunicipalityId,
+      fantasyModeEnabled: fantasyModeEnabled,
     );
   }
 
@@ -41,6 +47,7 @@ class AppConfig {
     String gameDataSource = 'mock',
     String apiBaseUrl = 'http://localhost:8787',
     String? pilotMunicipalityId,
+    bool fantasyModeEnabled = false,
     Duration apiTimeout = const Duration(seconds: 8),
   }) {
     final nextProblemsSource = switch (nextProblemsDataSource
@@ -66,6 +73,7 @@ class AppConfig {
     return AppConfig(
       nextProblemsDataSource: nextProblemsSource,
       gameDataSource: gameSource,
+      fantasyModeEnabled: fantasyModeEnabled,
       apiBaseUrl: Uri.parse(apiBaseUrl),
       pilotMunicipalityId: pilotMunicipalityId,
       apiTimeout: apiTimeout,
@@ -74,6 +82,7 @@ class AppConfig {
 
   final NextProblemsDataSource nextProblemsDataSource;
   final GameDataSource gameDataSource;
+  final bool fantasyModeEnabled;
   final Uri apiBaseUrl;
   final String? pilotMunicipalityId;
   final Duration apiTimeout;
