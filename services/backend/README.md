@@ -139,3 +139,23 @@ Reputazione e riepilogo civico sono calcolati dagli esiti salvati. Gli insight
 aggregano le previsioni di tutti gli utenti del turno. In produzione conteggio,
 distribuzioni e timestamp restano oscurati finché non viene raggiunta
 `MIN_AGGREGATE_SAMPLE_SIZE`, pari a 3 per default.
+
+## Fantasy foundation (OpenAPI 0.7.0)
+
+Additive read-only routes under `/v1/fantasy/municipalities/{municipalityId}`:
+`/season`, `/cards`, `/matchday`, `/matchdays/{matchdayId}`. Each response
+includes UTC `serverTime` and `isDemo`. Catalog cards also carry demo
+provenance, price, role, availability and source status. No real source is
+certified by these fixtures, including cards marked `verified`.
+
+SQLite schema 2 adds `fantasy_seasons`, `fantasy_cards` and
+`fantasy_matchdays` without changing the legacy `app_state` JSON. The calendar
+starts on 8 October 2026 UTC and lasts eight weeks. It is seeded once per
+municipality; restarting or reaching the end never creates another season.
+The single-instance SQLite scope follows the incremental fantasy plan.
+
+`verify-database` accepts legacy schema 1 backups and validates fantasy schema
+2 tables and foreign keys. `rehearse-restore` upgrades an isolated copy and
+reports the counts of fantasy seasons, cards and matchdays. Readiness includes
+the fantasy schema. No personal fantasy data or player writes are introduced
+in this increment. Squad commands, scoring and leagues remain subsequent work.

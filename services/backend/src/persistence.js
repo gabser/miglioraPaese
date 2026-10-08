@@ -2,9 +2,11 @@ import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
-const schemaVersion = 1;
+import { createFantasyStore, fantasySchemaReady, migrateFantasy } from './fantasy/store.js';
 
-export function createSqliteStateRepository({ databasePath }) {
+const schemaVersion = 2;
+
+export function createSqliteStateRepository({ databasePath, now }) {
   if (typeof databasePath !== 'string' || databasePath.trim() === '') {
     throw new TypeError('databasePath must be a non-empty string.');
   }
@@ -15,7 +17,14 @@ export function createSqliteStateRepository({ databasePath }) {
     enableForeignKeyConstraints: true,
   });
   database.exec('PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL;');
-  migrate(database);
+  let fantasy;
+  try {
+    migrate(database);
+    fantasy = createFantasyStore({ database, now });
+  } catch (error) {
+    database.close();
+    throw error;
+  }
 
   const loadStatement = database.prepare(
     'SELECT payload FROM app_state WHERE id = 1',
@@ -31,6 +40,7 @@ export function createSqliteStateRepository({ databasePath }) {
 
   return {
     path: resolvedPath,
+    fantasy,
     schemaVersion,
     load() {
       const row = loadStatement.get();
@@ -47,7 +57,7 @@ export function createSqliteStateRepository({ databasePath }) {
       saveStatement.run(JSON.stringify(state), new Date().toISOString());
     },
     isReady() {
-      return database.prepare('SELECT 1 AS ready').get().ready === 1;
+      return database.prepare('SELECT 1 AS ready').get().ready === 1 && fantasySchemaReady(database);
     },
     close() {
       if (database.isOpen) database.close();
@@ -71,11 +81,12 @@ function migrate(database) {
       `Database schema ${currentVersion} is newer than supported ${schemaVersion}.`,
     );
   }
-  if (currentVersion >= 1) return;
+  if (currentVersion >= schemaVersion) return;
 
   database.exec('BEGIN IMMEDIATE;');
   try {
-    database.exec(`
+    if (currentVersion < 1) {
+      database.exec(`
       CREATE TABLE app_state (
         id INTEGER PRIMARY KEY CHECK (id = 1),
         revision INTEGER NOT NULL CHECK (revision > 0),
@@ -83,11 +94,16 @@ function migrate(database) {
         updated_at TEXT NOT NULL
       ) STRICT;
     `);
-    database
-      .prepare(
+      database
+        .prepare(
         'INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)',
       )
       .run(1, new Date().toISOString());
+    }
+    if (currentVersion < 2) {
+      migrateFantasy(database);
+      database.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)').run(2, new Date().toISOString());
+    }
     database.exec('COMMIT;');
   } catch (error) {
     database.exec('ROLLBACK;');

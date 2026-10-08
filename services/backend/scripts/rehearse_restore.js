@@ -30,6 +30,7 @@ try {
       event: 'sqlite_restore_rehearsal_completed',
       schemaVersion: store.persistence.schemaVersion,
       municipalities: state.municipalities.length,
+      fantasy: store.fantasy.counts(),
       suggestions: state.suggestedProblems.length,
       predictions: state.predictions.length,
       predictionResults: state.predictionResults.length,
