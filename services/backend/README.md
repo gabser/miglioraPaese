@@ -264,3 +264,12 @@ an invite revokes all previous ones. Join attempts are limited to five per
 minute per enrolled session, including failed guesses, across restarts. This
 is not protection against multiple anonymous browser identities. Tokens must
 be shared only with the intended protected pilot group and never logged.
+
+### Leghe Flutter API
+
+Il profilo fantasy API usa ora le leghe private server: nessuna classifica seed.
+Creazione e adesione richiedono conferma; l'invito generato è mostrato soltanto
+nella pagina corrente e può essere copiato o revocato. Un nuovo invito revoca
+i precedenti. Dopo il primo lock si entra come spettatori. La classifica
+richiede tre competitori; il punteggio cooperativo resta non disponibile.
+Le ricevute di creazione evitano leghe duplicate dopo una risposta persa.

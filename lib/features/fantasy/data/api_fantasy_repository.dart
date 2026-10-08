@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:fanta_comune/features/fantasy/data/fantasy_league_repository.dart';
 import 'dart:math';
 import 'package:fanta_comune/core/network/api_client.dart';
 import 'package:fanta_comune/core/network/api_exception.dart';
@@ -7,7 +8,8 @@ import 'package:fanta_comune/features/fantasy/data/fantasy_api_mapper.dart';
 import 'package:fanta_comune/features/fantasy/data/fantasy_repository.dart';
 import 'package:fanta_comune/features/fantasy/domain/fantasy_models.dart';
 
-class ApiFantasyRepository implements RemoteFantasyRepository {
+class ApiFantasyRepository
+    implements RemoteFantasyRepository, FantasyLeagueRepository {
   ApiFantasyRepository({
     required this.client,
     required this.prefs,
@@ -280,6 +282,79 @@ class ApiFantasyRepository implements RemoteFantasyRepository {
     }
     return load();
   });
+
+  String _randomKey() => base64UrlEncode(
+    List.generate(24, (_) => Random.secure().nextInt(256)),
+  ).replaceAll('=', '');
+  @override
+  Future<List<RemoteFantasyLeague>> loadLeagues() => _guard(() async {
+    final listing = await get(['leagues']);
+    final leagues = <RemoteFantasyLeague>[];
+    for (final raw in listing['items'] as List) {
+      final id = FantasyApiMapper.object(raw)['id'] as String;
+      final detail = await get(['leagues', id]);
+      if (detail['seasonId'] != cached?.season?.id)
+        throw const FormatException('Mixed league season');
+      leagues.add(RemoteFantasyLeague.fromJson(detail));
+    }
+    return List.unmodifiable(leagues);
+  });
+  @override
+  Future<void> createLeague(String name) => _guard(() async {
+    if (_scope == null || _deleted)
+      throw const FantasyFailure(
+        FantasyFailureKind.invalidCommand,
+        'Carica prima la squadra.',
+      );
+    final scope = '${_scope!}/league-creation';
+    final stored = prefs.fantasyReceipt(scope);
+    final body = stored == null
+        ? <String, dynamic>{'name': name, 'idempotencyKey': _randomKey()}
+        : FantasyApiMapper.object(jsonDecode(stored));
+    if (body['name'] != name)
+      throw const FantasyFailure(
+        FantasyFailureKind.busy,
+        'Verifica prima la creazione della lega precedente selezionando lo stesso tipo.',
+      );
+    await prefs.setFantasyReceipt(scope, jsonEncode(body));
+    try {
+      await post(['leagues'], body.cast<String, Object?>());
+    } on ApiException catch (e) {
+      if (e.statusCode != null && e.statusCode! >= 400 && e.statusCode! < 500)
+        await prefs.setFantasyReceipt(scope, null);
+      rethrow;
+    }
+    await prefs.setFantasyReceipt(scope, null);
+  });
+  @override
+  Future<void> joinLeague(String token) => _guard(() async {
+    await post(['leagues', 'join'], {'token': token});
+  });
+  @override
+  Future<void> leaveLeague(String id) => _guard(() async {
+    await client.deleteJson(path(['leagues', id, 'membership']));
+  });
+  @override
+  Future<FantasyLeagueInvite> rotateInvite(String id) => _guard(() async {
+    final invite = FantasyApiMapper.object(
+      (await post(
+        ['leagues', id, 'invites'],
+        {'expiresInHours': 24},
+      ))['invite'],
+    );
+    return FantasyLeagueInvite(
+      id: invite['id'] as String,
+      token: invite['token'] as String,
+      expiresAt: FantasyApiMapper.date(invite['expiresAt']),
+    );
+  });
+  @override
+  Future<void> revokeInvite(String leagueId, String inviteId) => _guard(
+    () async {
+      await client.deleteJson(path(['leagues', leagueId, 'invites', inviteId]));
+    },
+  );
+
   @override
   Future<FantasyData?> clear() async {
     await client.deleteJson(['v1', 'session']);

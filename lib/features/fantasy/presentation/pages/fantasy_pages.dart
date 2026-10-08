@@ -1,3 +1,4 @@
+import 'package:fanta_comune/features/fantasy/presentation/pages/remote_leagues_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -752,10 +753,7 @@ class _LeaguesPageState extends State<LeaguesPage> {
   Widget build(BuildContext context) {
     final manager = context.watch<FantasyManager>();
     if (!manager.hasData) return const FantasyLoadingPage();
-    if (manager.isRemote)
-      return const FantasyPage(
-        child: Text('Leghe remote non ancora disponibili.'),
-      );
+    if (manager.isRemote) return const RemoteLeaguesPage();
     final league = manager.leagues[_municipal ? 1 : 0];
     return FantasyPage(
       child: Column(
