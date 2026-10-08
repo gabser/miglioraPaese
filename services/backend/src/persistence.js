@@ -6,7 +6,9 @@ import { createFantasyStore, fantasySchemaReady, migrateFantasy } from './fantas
 
 import { migrateFantasyTeams } from './fantasy/teams.js';
 
-const schemaVersion = 3;
+import { migrateFantasyMarket } from './fantasy/market.js';
+
+const schemaVersion = 4;
 
 export function createSqliteStateRepository({ databasePath, now }) {
   if (typeof databasePath !== 'string' || databasePath.trim() === '') {
@@ -109,6 +111,10 @@ function migrate(database) {
     if (currentVersion < 3) {
       migrateFantasyTeams(database);
       database.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)').run(3, new Date().toISOString());
+    }
+    if (currentVersion < 4) {
+      migrateFantasyMarket(database);
+      database.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)').run(4, new Date().toISOString());
     }
     database.exec('COMMIT;');
   } catch (error) {

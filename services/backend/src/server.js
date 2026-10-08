@@ -216,6 +216,14 @@ export function createApp(options = {}) {
         );
       }
 
+      if (route.name === 'fantasyTransferQuote' || route.name === 'fantasyTransferConfirm') {
+        const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
+        const body = await readJson(req);
+        const result = route.name === 'fantasyTransferQuote' ? store.fantasy.market.quote(municipalityId, userId, body)
+          : store.fantasy.market.confirm(municipalityId, userId, body);
+        return sendJson(res, 200, result, responseHeaders);
+      }
+
       if (['fantasyEnroll', 'fantasyTeam', 'fantasyUpdateTeam', 'fantasyConfirmTeam'].includes(route.name)) {
         const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
         const teams = store.fantasy.teams;
@@ -1633,6 +1641,12 @@ function matchRoute(method, pathname) {
   }
   if (method === 'DELETE' && pathname === '/v1/session') {
     return { name: 'deleteSessionData', params: {} };
+  }
+
+  const fantasyTransfer = pathname.match(/^\/v1\/fantasy\/municipalities\/([^/]+)\/transfers\/(quote|confirmation)$/);
+  if (fantasyTransfer && method === 'POST') {
+    return { name: fantasyTransfer[2] === 'quote' ? 'fantasyTransferQuote' : 'fantasyTransferConfirm',
+      params: { municipalityId: decodeURIComponent(fantasyTransfer[1]) } };
   }
 
   const fantasyTeam = pathname.match(/^\/v1\/fantasy\/municipalities\/([^/]+)\/(enrollment|team|team\/confirmation)$/);
