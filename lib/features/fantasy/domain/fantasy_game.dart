@@ -250,31 +250,13 @@ class FantasyGame {
   ScoreBreakdown scoreFor(CardOutcome outcome) {
     final snapshot = _snapshots[outcome.matchdayId];
     final published = _revealed[_key(outcome.matchdayId, outcome.cardId)];
-    final eligible = hasPersonalResult(outcome);
-    final observed = published?.observed;
-    final prediction = snapshot?.predictions[outcome.cardId];
-    final observation = !eligible
-        ? 0
-        : observed == CivicTrend.improves
-        ? 4
-        : observed == CivicTrend.stable
-        ? 1
-        : 0;
-    final forecast = !eligible || prediction == null
-        ? 0
-        : prediction == observed
-        ? 4
-        : prediction == CivicTrend.stable || observed == CivicTrend.stable
-        ? 2
-        : 0;
-    return ScoreBreakdown(
+    return scoreFantasyOutcome(
       cardId: outcome.cardId,
-      observationPoints: observation,
-      predictionPoints: forecast,
-      reflectionPoints: eligible && reflectionFor(outcome) != null ? 1 : 0,
-      captainMultiplier: eligible && snapshot!.captainId == outcome.cardId
-          ? 1.5
-          : 1,
+      observed: published?.observed,
+      prediction: snapshot?.predictions[outcome.cardId],
+      eligible: hasPersonalResult(outcome),
+      captain: snapshot?.captainId == outcome.cardId,
+      reflection: reflectionFor(outcome) != null,
     );
   }
 

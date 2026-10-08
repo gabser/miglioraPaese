@@ -261,3 +261,36 @@ class FantasyLeague {
 
   bool get isVisible => entries.length >= minimumParticipants;
 }
+
+/// Version 1 fantasy scoring, shared with the Node fixture contract.
+ScoreBreakdown scoreFantasyOutcome({
+  required String cardId,
+  required CivicTrend? observed,
+  required CivicTrend? prediction,
+  required bool captain,
+  required bool reflection,
+  bool eligible = true,
+}) {
+  final hasResult = eligible && observed != null;
+  final observation = !hasResult
+      ? 0
+      : observed == CivicTrend.improves
+      ? 4
+      : observed == CivicTrend.stable
+      ? 1
+      : 0;
+  final forecast = !hasResult || prediction == null
+      ? 0
+      : prediction == observed
+      ? 4
+      : prediction == CivicTrend.stable || observed == CivicTrend.stable
+      ? 2
+      : 0;
+  return ScoreBreakdown(
+    cardId: cardId,
+    observationPoints: observation,
+    predictionPoints: forecast,
+    reflectionPoints: hasResult && reflection ? 1 : 0,
+    captainMultiplier: hasResult && captain ? 1.5 : 1,
+  );
+}

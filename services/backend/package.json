@@ -1,6 +1,6 @@
 {
   "name": "@migliorapaese/backend",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -14,6 +14,7 @@
     "verify-database": "node scripts/verify_database.js",
     "rehearse-restore": "node scripts/rehearse_restore.js",
     "smoke": "node scripts/smoke.js",
+    "publish-fantasy-outcome": "node scripts/publish_fantasy_outcome.js",
     "test": "node --test"
   }
 }

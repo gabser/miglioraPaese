@@ -167,6 +167,14 @@ export function createApp(options = {}) {
         return sendText(res, 200, observability.metrics(), responseHeaders);
       }
 
+      if (route.name === 'fantasyPublishOutcome') {
+        if (!isAdminAuthorized(req, moderationAdminToken)) {
+          return sendJson(res, 401, { error: 'unauthorized', message: 'Admin authorization is required.' }, responseHeaders);
+        }
+        const result = store.fantasy.results.publish(canonicalMunicipalityId(route.params.municipalityId), route.params.matchdayId, route.params.cardId, await readJson(req));
+        return sendJson(res, 200, result, responseHeaders);
+      }
+
       if (['fantasySeason', 'fantasyCards', 'fantasyMatchday'].includes(route.name)) {
         const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
         const result = route.name === 'fantasySeason' ? store.fantasy.season(municipalityId)
@@ -214,6 +222,13 @@ export function createApp(options = {}) {
           { status: 'deleted' },
           responseHeaders,
         );
+      }
+
+      if (route.name === 'fantasyReveal' || route.name === 'fantasySummary' || route.name === 'fantasyReflection') {
+        const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
+        const result = route.name === 'fantasyReflection' ? store.fantasy.results.reflect(municipalityId, userId, route.params.matchdayId, route.params.cardId, await readJson(req))
+          : store.fantasy.results.read(municipalityId, userId, route.params.matchdayId);
+        return sendJson(res, 200, result, responseHeaders);
       }
 
       if (route.name === 'fantasyTransferQuote' || route.name === 'fantasyTransferConfirm') {
@@ -1641,6 +1656,14 @@ function matchRoute(method, pathname) {
   }
   if (method === 'DELETE' && pathname === '/v1/session') {
     return { name: 'deleteSessionData', params: {} };
+  }
+
+  const fantasyOutcome = pathname.match(/^\/v1\/fantasy\/admin\/municipalities\/([^/]+)\/matchdays\/([^/]+)\/outcomes\/([^/]+)$/);
+  if (fantasyOutcome && method === 'PUT') return { name: 'fantasyPublishOutcome', params: { municipalityId: decodeURIComponent(fantasyOutcome[1]), matchdayId: decodeURIComponent(fantasyOutcome[2]), cardId: decodeURIComponent(fantasyOutcome[3]) } };
+  const fantasyResult = pathname.match(/^\/v1\/fantasy\/municipalities\/([^/]+)\/matchdays\/([^/]+)\/(reveal|summary|cards\/([^/]+)\/reflection)$/);
+  if (fantasyResult && ((method === 'GET' && ['reveal', 'summary'].includes(fantasyResult[3])) || (method === 'POST' && fantasyResult[4]))) {
+    return { name: fantasyResult[4] ? 'fantasyReflection' : fantasyResult[3] === 'reveal' ? 'fantasyReveal' : 'fantasySummary',
+      params: { municipalityId: decodeURIComponent(fantasyResult[1]), matchdayId: decodeURIComponent(fantasyResult[2]), cardId: fantasyResult[4] ? decodeURIComponent(fantasyResult[4]) : undefined } };
   }
 
   const fantasyTransfer = pathname.match(/^\/v1\/fantasy\/municipalities\/([^/]+)\/transfers\/(quote|confirmation)$/);

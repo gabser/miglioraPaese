@@ -200,3 +200,36 @@ lock. Another payload with that key returns `idempotency_conflict`.
 Schema 4 adds quotes, transfer receipts and the penalty ledger. Session erasure
 removes these personal rows with the player. Backups and readiness include all
 market tables. The server team view now includes transfers and day allowances.
+
+## Fantasy reveal, scoring and reflection (OpenAPI 0.10.0)
+
+An authorized pilot moderator publishes an outcome with
+`PUT /v1/fantasy/admin/municipalities/{municipalityId}/matchdays/{matchdayId}/outcomes/{cardId}`
+and the existing moderation bearer token. The source must match a verified
+catalog source, its date must be inside the observation window and publication
+waits until that window ends. The version-1 outcome records publication ID,
+server time, publisher role and demo provenance. Retries keep the original
+record; changes conflict. Extraordinary corrections require a separate procedure.
+
+Player `GET /matchdays/{matchdayId}/reveal` and `/summary` calculate personal
+results from the frozen snapshot and transfer ledger. The summary stays
+provisional while eligible starter outcomes are pending. Once final, only
+reflection can increase its total. Each card result is frozen at its first
+reveal; future predictions or formations never change it. Negative totals are
+allowed. `cooperativeScore: null` explicitly means unavailable.
+
+`POST /matchdays/{matchdayId}/cards/{cardId}/reflection` takes the expected
+revision and one of three structured answers. It requires a previously revealed
+eligible starter. The first answer grants one base point using the demo's
+captain multiplier and rounding; an identical retry is idempotent. A different
+answer conflicts. Shared Dart/Node scoring fixtures cover all 48 combinations.
+
+Schema 5 adds publications, personal reveals, finalizations and reflections.
+Session deletion removes personal rows and preserves authorized publications.
+No real data is imported by these endpoints or their tests.
+
+For an authorized fixture environment, `npm run publish-fantasy-outcome` reads
+`FANTASY_OUTCOME_FILE` (`municipalityId`, `matchdayId`, `cardId`, `outcome`),
+`API_BASE_URL` and `MODERATION_ADMIN_TOKEN_FILE`. It prints only publication
+metadata, never the bearer token or source content. Do not run it against a
+live pilot without the operational authorization required by the runbook.
