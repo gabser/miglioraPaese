@@ -167,7 +167,7 @@ export function createApp(options = {}) {
         return sendText(res, 200, observability.metrics(), responseHeaders);
       }
 
-      if (route.name.startsWith('fantasy')) {
+      if (['fantasySeason', 'fantasyCards', 'fantasyMatchday'].includes(route.name)) {
         const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
         const result = route.name === 'fantasySeason' ? store.fantasy.season(municipalityId)
           : route.name === 'fantasyCards' ? store.fantasy.cards(municipalityId)
@@ -214,6 +214,16 @@ export function createApp(options = {}) {
           { status: 'deleted' },
           responseHeaders,
         );
+      }
+
+      if (['fantasyEnroll', 'fantasyTeam', 'fantasyUpdateTeam', 'fantasyConfirmTeam'].includes(route.name)) {
+        const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
+        const teams = store.fantasy.teams;
+        const result = route.name === 'fantasyTeam' ? teams.team(municipalityId, userId, url.searchParams.get('matchdayId'))
+          : route.name === 'fantasyEnroll' ? teams.enroll(municipalityId, userId, await readJson(req))
+          : route.name === 'fantasyUpdateTeam' ? teams.update(municipalityId, userId, await readJson(req))
+          : teams.confirm(municipalityId, userId, await readJson(req));
+        return sendJson(res, 200, result, responseHeaders);
       }
 
       if (route.name === 'municipalityActivation') {
@@ -987,6 +997,20 @@ export function createMemoryStore(options = {}) {
   }
 
   function deleteUserData(userId) {
+    const before = structuredClone(exportState());
+    try {
+      return fantasy.atomic(() => {
+        const result = eraseLegacyUserData(userId);
+        fantasy.eraseUserData(userId);
+        return result;
+      });
+    } catch (error) {
+      restoreState(before);
+      throw error;
+    }
+  }
+
+  function eraseLegacyUserData(userId) {
     let deletedSuggestions = 0;
     let deletedVotes = 0;
     let deletedPredictions = 0;
@@ -1609,6 +1633,15 @@ function matchRoute(method, pathname) {
   }
   if (method === 'DELETE' && pathname === '/v1/session') {
     return { name: 'deleteSessionData', params: {} };
+  }
+
+  const fantasyTeam = pathname.match(/^\/v1\/fantasy\/municipalities\/([^/]+)\/(enrollment|team|team\/confirmation)$/);
+  if (fantasyTeam) {
+    const name = fantasyTeam[2] === 'enrollment' && method === 'POST' ? 'fantasyEnroll'
+      : fantasyTeam[2] === 'team' && method === 'GET' ? 'fantasyTeam'
+      : fantasyTeam[2] === 'team' && method === 'PUT' ? 'fantasyUpdateTeam'
+      : fantasyTeam[2] === 'team/confirmation' && method === 'POST' ? 'fantasyConfirmTeam' : null;
+    if (name) return { name, params: { municipalityId: decodeURIComponent(fantasyTeam[1]) } };
   }
 
   const fantasy = pathname.match(/^\/v1\/fantasy\/municipalities\/([^/]+)\/(season|cards|matchday|matchdays\/([^/]+))$/);

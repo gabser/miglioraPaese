@@ -41,9 +41,25 @@ include il commit del primo incremento; nessun merge o PR remota eseguito.
 - OpenAPI YAML letto correttamente e quattro route/schema verificati.
 - `git diff --check`: riuscito.
 
+## Incremento 3 — squadra, previsioni e lock
+
+Implementato su `codex/fantasy-team-lock`, nella serie locale preparata.
+
+- Schema 3: iscrizioni, bozze per giornata e snapshot univoci con eliminazione
+  a cascata dei dati personali. API di iscrizione, lettura, modifica e conferma.
+- Sessione firmata e revisione attesa, validazione di rosa/budget/ruoli,
+  previsioni e motivazioni. I cambi formazione invalidano la conferma.
+- Lock controllato nella transazione, riconciliazione al riavvio e alle
+  richieste. Lo storico non viene modificato dalle giornate successive.
+- Cancellazione transazionale comune a legacy e fantasy, con rollback anche
+  dello stato legacy in memoria in caso di fallimento.
+- `npm test` con Node 24.18.0: 46 test superati, inclusi sessioni indipendenti,
+  prima/esattamente/dopo lock, processo fermo, concorrenza, clock rollback,
+  fallimenti di scrittura/cancellazione e restart.
+- OpenAPI 0.8.0 valido; `git diff --check` riuscito.
+
 ## Incrementi ancora da completare
 
-3. Squadra, previsioni e snapshot al lock autorevoli.
 4. Preventivi, trasferimenti transazionali e ledger delle penalità.
 5. Pubblicazione esiti, reveal, punteggi e riflessione server.
 6. Repository API Flutter e percorso individuale remoto completo.

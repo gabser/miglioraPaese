@@ -37,8 +37,8 @@ it('rehearses an isolated restore with the application store', async () => {
     const result = JSON.parse(stdout.trim());
     assert.deepEqual(result, {
       event: 'sqlite_restore_rehearsal_completed',
-      schemaVersion: 2,
-      fantasy: { seasons: 3, cards: 36, matchdays: 24 },
+      schemaVersion: 3,
+      fantasy: { seasons: 3, cards: 36, matchdays: 24, players: 0, drafts: 0, snapshots: 0 },
       municipalities: 3,
       suggestions: 6,
       predictions: 0,
