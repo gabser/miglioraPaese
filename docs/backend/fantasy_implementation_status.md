@@ -74,9 +74,26 @@ Implementato su `codex/fantasy-market-ledger`, nella serie locale preparata.
   disponibilità/fonti, budget/ruoli, catalogo cambiato, scadenze e rollback.
 - OpenAPI 0.9.0 valido; `git diff --check` riuscito.
 
+## Incremento 5 — esiti, reveal, punteggi e riflessioni
+
+Implementato su `codex/fantasy-reveal-scoring`, nella serie locale preparata.
+
+- Pubblicazione con autorizzazione amministrativa esistente, validazione di
+  fonte/finestra/versione e record immutabile con provenienza demo e audit.
+- Reveal da snapshot e ledger server; punti della carta congelati al reveal,
+  riepilogo provvisorio/definitivo persistito, cooperativo non disponibile.
+- Riflessione strutturata unica dopo il reveal, idempotente, con revisioni e
+  bonus coerente con capitano e arrotondamento. Totali negativi consentiti.
+- Schema 5 con cancellazione a cascata dei dati personali; pubblicazioni
+  autorizzate preservate. Strumento admin testato su server fixture isolato.
+- 48 fixture condivise verificano tutte le combinazioni delle vere regole Dart
+  e Node. `flutter test --no-pub`: 147 test superati; `npm test`: 62 superati.
+- Test di autorizzazione, pending, storico, immutabilità, duplicati, restart,
+  cancellazione, rollback riflessione e assenza di token/fonti nei log.
+- OpenAPI 0.10.0 valido; `git diff --check` riuscito.
+
 ## Incrementi ancora da completare
 
-5. Pubblicazione esiti, reveal, punteggi e riflessione server.
 6. Repository API Flutter e percorso individuale remoto completo.
 7. Leghe private e classifiche backend.
 8. Leghe Flutter e percorso multi-sessione.

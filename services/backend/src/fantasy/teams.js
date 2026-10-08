@@ -202,7 +202,7 @@ export function createFantasyTeams({ database, now = Date.now, catalog, getTrans
     },
     update: (municipalityId, userId, body) => mutate(municipalityId, userId, body, false),
     confirm: (municipalityId, userId, body) => mutate(municipalityId, userId, body, true),
-    withOpenTeam, seasonFor, playerFor, validSquad, writeDraft, view,
+    withOpenTeam, seasonFor, playerFor, dayFor, validSquad, writeDraft, view,
     reconcile,
     erase(userId) { database.prepare('DELETE FROM fantasy_players WHERE user_id = ?').run(userId); },
   };
