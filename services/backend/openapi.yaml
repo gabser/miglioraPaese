@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Migliora Paese API
-  version: 0.6.0
+  version: 0.7.0
   description: >-
     Pilot API backed by durable SQLite state. User-specific resources use a
     signed anonymous session issued by the server in an HttpOnly cookie;
@@ -17,6 +17,76 @@ security:
   - {}
   - AnonymousSession: []
 paths:
+  "/v1/fantasy/municipalities/{municipalityId}/season":
+    "get":
+      "operationId": "getFantasySeason"
+      "description": "Read-only synthetic fantasy fixture. Server time is UTC. A verified source status does not certify real data. Pilot municipality restrictions apply. Calendar dates and catalog survive restarts; expired seasons are not renewed."
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+      "responses":
+        "200":
+          "description": "Versioned fantasy data with explicit demo provenance."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasySeasonResponse"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+  "/v1/fantasy/municipalities/{municipalityId}/cards":
+    "get":
+      "operationId": "getFantasyCards"
+      "description": "Read-only synthetic fantasy fixture. Server time is UTC. A verified source status does not certify real data. Pilot municipality restrictions apply. Calendar dates and catalog survive restarts; expired seasons are not renewed."
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+      "responses":
+        "200":
+          "description": "Versioned fantasy data with explicit demo provenance."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyCardsResponse"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+  "/v1/fantasy/municipalities/{municipalityId}/matchday":
+    "get":
+      "operationId": "getFantasyCurrentMatchday"
+      "description": "Read-only synthetic fantasy fixture. Server time is UTC. A verified source status does not certify real data. Pilot municipality restrictions apply. Calendar dates and catalog survive restarts; expired seasons are not renewed."
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+      "responses":
+        "200":
+          "description": "Versioned fantasy data with explicit demo provenance."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyMatchdayResponse"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+  "/v1/fantasy/municipalities/{municipalityId}/matchdays/{matchdayId}":
+    "get":
+      "operationId": "getFantasyMatchday"
+      "description": "Read-only synthetic fantasy fixture. Server time is UTC. A verified source status does not certify real data. Pilot municipality restrictions apply. Calendar dates and catalog survive restarts; expired seasons are not renewed."
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+        -
+          "name": "matchdayId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+      "responses":
+        "200":
+          "description": "Versioned fantasy data with explicit demo provenance."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyMatchdayResponse"
+        "404":
+          "$ref": "#/components/responses/NotFound"
   /health:
     get:
       operationId: getHealth
@@ -544,6 +614,208 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
   schemas:
+    "FantasySeason":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "id"
+        - "municipalityId"
+        - "name"
+        - "startsAt"
+        - "endsAt"
+        - "totalMatchdays"
+        - "currentMatchday"
+        - "catalogVersion"
+        - "status"
+      "properties":
+        "id":
+          "type": "string"
+        "municipalityId":
+          "type": "string"
+        "name":
+          "type": "string"
+        "startsAt":
+          "type": "string"
+          "format": "date-time"
+        "endsAt":
+          "type": "string"
+          "format": "date-time"
+        "totalMatchdays":
+          "type": "integer"
+          "const": 8
+        "currentMatchday":
+          "type": "integer"
+          "minimum": 1
+          "maximum": 8
+        "catalogVersion":
+          "type": "integer"
+          "minimum": 1
+        "status":
+          "type": "string"
+          "enum":
+            - "upcoming"
+            - "active"
+            - "ended"
+    "FantasyCard":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "id"
+        - "title"
+        - "zone"
+        - "role"
+        - "price"
+        - "version"
+        - "form"
+        - "observationWindow"
+        - "sourceStatus"
+        - "sourceLabel"
+        - "sourceUpdatedAt"
+        - "popularity"
+        - "illustrationKey"
+        - "availability"
+        - "isDemo"
+      "properties":
+        "id":
+          "type": "string"
+        "title":
+          "type": "string"
+        "zone":
+          "type": "string"
+        "role":
+          "type": "string"
+          "enum":
+            - "mobility"
+            - "environment"
+            - "servicesAndSafety"
+        "price":
+          "type": "integer"
+          "minimum": 0
+        "version":
+          "type": "integer"
+          "minimum": 1
+        "form":
+          "type": "array"
+          "minItems": 1
+          "items":
+            "type": "string"
+            "enum":
+              - "improves"
+              - "stable"
+              - "worsens"
+        "observationWindow":
+          "type": "string"
+        "sourceStatus":
+          "type": "string"
+          "enum":
+            - "verified"
+            - "pending"
+            - "unavailable"
+        "sourceLabel":
+          "type": "string"
+        "sourceUpdatedAt":
+          "anyOf":
+            -
+              "type": "string"
+              "format": "date-time"
+            -
+              "type": "null"
+        "popularity":
+          "type": "integer"
+        "illustrationKey":
+          "type": "string"
+        "availability":
+          "type": "string"
+          "enum":
+            - "available"
+            - "unavailable"
+        "isDemo":
+          "type": "boolean"
+    "FantasyMatchday":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "id"
+        - "seasonId"
+        - "number"
+        - "startsAt"
+        - "locksAt"
+        - "observationEndsAt"
+        - "rulesVersion"
+      "properties":
+        "id":
+          "type": "string"
+        "seasonId":
+          "type": "string"
+        "number":
+          "type": "integer"
+          "minimum": 1
+          "maximum": 8
+        "startsAt":
+          "type": "string"
+          "format": "date-time"
+        "locksAt":
+          "type": "string"
+          "format": "date-time"
+        "observationEndsAt":
+          "type": "string"
+          "format": "date-time"
+        "rulesVersion":
+          "type": "string"
+    "FantasySeasonResponse":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "serverTime"
+        - "isDemo"
+        - "season"
+      "properties":
+        "serverTime":
+          "type": "string"
+          "format": "date-time"
+        "isDemo":
+          "type": "boolean"
+        "season":
+          "$ref": "#/components/schemas/FantasySeason"
+    "FantasyCardsResponse":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "serverTime"
+        - "isDemo"
+        - "seasonId"
+        - "catalogVersion"
+        - "items"
+      "properties":
+        "serverTime":
+          "type": "string"
+          "format": "date-time"
+        "isDemo":
+          "type": "boolean"
+        "seasonId":
+          "type": "string"
+        "catalogVersion":
+          "type": "integer"
+          "minimum": 1
+        "items":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/FantasyCard"
+    "FantasyMatchdayResponse":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "serverTime"
+        - "isDemo"
+        - "matchday"
+      "properties":
+        "serverTime":
+          "type": "string"
+          "format": "date-time"
+        "isDemo":
+          "type": "boolean"
+        "matchday":
+          "$ref": "#/components/schemas/FantasyMatchday"
     ErrorResponse:
       type: object
       required: [error]

@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { createFantasyStore } from './fantasy/store.js';
 import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
@@ -164,6 +165,14 @@ export function createApp(options = {}) {
 
       if (route.name === 'metrics') {
         return sendText(res, 200, observability.metrics(), responseHeaders);
+      }
+
+      if (route.name.startsWith('fantasy')) {
+        const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
+        const result = route.name === 'fantasySeason' ? store.fantasy.season(municipalityId)
+          : route.name === 'fantasyCards' ? store.fantasy.cards(municipalityId)
+          : store.fantasy.matchday(municipalityId, route.params.matchdayId);
+        return sendJson(res, 200, result, responseHeaders);
       }
 
       if (route.name === 'moderateNextProblem') {
@@ -476,6 +485,7 @@ export function createApp(options = {}) {
 
 export function createMemoryStore(options = {}) {
   const clock = options.now ?? Date.now;
+  const fantasy = options.fantasy ?? createFantasyStore({ now: clock });
   const onChange = options.onChange ?? (() => {});
   const moderationRequired = options.moderationRequired ?? false;
   const minimumAggregateSampleSize = positiveInteger(
@@ -1456,7 +1466,9 @@ export function createMemoryStore(options = {}) {
     getLeaderboard,
     deleteUserData,
     exportState,
-    isReady: () => true,
+    fantasy,
+    close: fantasy.close,
+    isReady: fantasy.isReady,
   };
 }
 
@@ -1466,7 +1478,7 @@ export function createPersistentStore({
   moderationRequired,
   minimumAggregateSampleSize,
 } = {}) {
-  const stateRepository = createSqliteStateRepository({ databasePath });
+  const stateRepository = createSqliteStateRepository({ databasePath, now });
   try {
     const initialState = stateRepository.load();
     const store = createMemoryStore({
@@ -1475,6 +1487,7 @@ export function createPersistentStore({
       moderationRequired,
       minimumAggregateSampleSize,
       onChange: stateRepository.save,
+      fantasy: stateRepository.fantasy,
     });
     if (initialState === null) {
       stateRepository.save(store.exportState());
@@ -1596,6 +1609,12 @@ function matchRoute(method, pathname) {
   }
   if (method === 'DELETE' && pathname === '/v1/session') {
     return { name: 'deleteSessionData', params: {} };
+  }
+
+  const fantasy = pathname.match(/^\/v1\/fantasy\/municipalities\/([^/]+)\/(season|cards|matchday|matchdays\/([^/]+))$/);
+  if (method === 'GET' && fantasy) {
+    return { name: fantasy[2] === 'season' ? 'fantasySeason' : fantasy[2] === 'cards' ? 'fantasyCards' : 'fantasyMatchday',
+      params: { municipalityId: decodeURIComponent(fantasy[1]), matchdayId: fantasy[3] == null ? undefined : decodeURIComponent(fantasy[3]) } };
   }
 
   const patterns = [

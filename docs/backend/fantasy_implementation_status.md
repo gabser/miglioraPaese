@@ -27,9 +27,22 @@ Verifiche locali con Flutter 3.44.2 / Dart 3.12.2:
 
 Queste prove locali non attestano i check GitHub o i gate operativi del pilot.
 
+## Incremento 2 — fondazione backend
+
+Implementato su `codex/fantasy-backend-foundation`, in una serie locale che
+include il commit del primo incremento; nessun merge o PR remota eseguito.
+
+- Schema SQLite 2 additivo con stagioni, catalogo e giornate dedicate.
+- Quattro route GET fantasy, OpenAPI 0.7.0, serverTime UTC e provenienza demo.
+- Calendario fisso e seed idempotente; nessun rinnovo delle stagioni scadute.
+- Readiness, verifica dei backup e restore isolato estesi alle tabelle fantasy.
+- `npm test` con Node 24.18.0: 35 test superati, inclusi legacy, migrazione
+  da schema 1, rollback transazionale, fusi, isolamento pilot e backup reale.
+- OpenAPI YAML letto correttamente e quattro route/schema verificati.
+- `git diff --check`: riuscito.
+
 ## Incrementi ancora da completare
 
-2. Fondazione persistente fantasy, catalogo, stagioni e calendario API.
 3. Squadra, previsioni e snapshot al lock autorevoli.
 4. Preventivi, trasferimenti transazionali e ledger delle penalità.
 5. Pubblicazione esiti, reveal, punteggi e riflessione server.

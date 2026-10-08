@@ -2,6 +2,7 @@ import { constants } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { fantasySchemaReady } from '../src/fantasy/store.js';
 
 const configuredPath = process.env.BACKUP_PATH ?? process.env.DATABASE_PATH;
 if (typeof configuredPath !== 'string' || configuredPath.trim() === '') {
@@ -19,8 +20,11 @@ try {
   if (integrity.length !== 1 || integrity[0].integrity_check !== 'ok') {
     throw new Error('SQLite integrity check failed.');
   }
-  if (Number(version.version) !== 1) {
+  if (![1, 2].includes(Number(version.version))) {
     throw new Error(`Unsupported schema version ${version.version}.`);
+  }
+  if (Number(version.version) >= 2 && !fantasySchemaReady(database)) {
+    throw new Error('Fantasy schema integrity check failed.');
   }
   console.log(
     JSON.stringify({

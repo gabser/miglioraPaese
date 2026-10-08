@@ -1,0 +1,218 @@
+[
+  {
+    "id": "buche-centro",
+    "title": "Buche sulle vie centrali",
+    "zone": "Centro",
+    "role": "mobility",
+    "price": 13,
+    "form": [
+      "stable",
+      "worsens",
+      "improves"
+    ],
+    "observationWindow": "7 giorni",
+    "sourceStatus": "verified",
+    "sourceLabel": "Open data manutenzioni · demo · demo sintetica",
+    "popularity": 74,
+    "illustrationKey": "road",
+    "availability": "available"
+  },
+  {
+    "id": "bus-stazione",
+    "title": "Regolarità bus stazione",
+    "zone": "Stazione",
+    "role": "mobility",
+    "price": 12,
+    "form": [
+      "improves",
+      "stable",
+      "stable"
+    ],
+    "observationWindow": "7 giorni",
+    "sourceStatus": "verified",
+    "sourceLabel": "Orari trasporto locale · demo · demo sintetica",
+    "popularity": 68,
+    "illustrationKey": "bus",
+    "availability": "available"
+  },
+  {
+    "id": "attraversamenti-scuole",
+    "title": "Attraversamenti scolastici",
+    "zone": "Zona scuole",
+    "role": "mobility",
+    "price": 10,
+    "form": [
+      "stable",
+      "improves",
+      "improves"
+    ],
+    "observationWindow": "5 giorni",
+    "sourceStatus": "pending",
+    "sourceLabel": "Osservazione civica moderata · demo sintetica",
+    "popularity": 61,
+    "illustrationKey": "crosswalk",
+    "availability": "available"
+  },
+  {
+    "id": "ciclabile-est",
+    "title": "Continuità pista ciclabile",
+    "zone": "Quartiere Est",
+    "role": "mobility",
+    "price": 9,
+    "form": [
+      "worsens",
+      "stable",
+      "stable"
+    ],
+    "observationWindow": "7 giorni",
+    "sourceStatus": "unavailable",
+    "sourceLabel": "Fonte in aggiornamento · demo sintetica",
+    "popularity": 39,
+    "illustrationKey": "bike",
+    "availability": "available"
+  },
+  {
+    "id": "parco-nord",
+    "title": "Pulizia del parco",
+    "zone": "Parco Nord",
+    "role": "environment",
+    "price": 11,
+    "form": [
+      "stable",
+      "improves",
+      "improves"
+    ],
+    "observationWindow": "7 giorni",
+    "sourceStatus": "verified",
+    "sourceLabel": "Calendario servizi · demo · demo sintetica",
+    "popularity": 70,
+    "illustrationKey": "park",
+    "availability": "available"
+  },
+  {
+    "id": "rifiuti-mercato",
+    "title": "Rifiuti dopo il mercato",
+    "zone": "Piazza Mercato",
+    "role": "environment",
+    "price": 12,
+    "form": [
+      "worsens",
+      "stable",
+      "improves"
+    ],
+    "observationWindow": "3 giorni",
+    "sourceStatus": "verified",
+    "sourceLabel": "Report gestore rifiuti · demo · demo sintetica",
+    "popularity": 82,
+    "illustrationKey": "waste",
+    "availability": "available"
+  },
+  {
+    "id": "alberi-viale",
+    "title": "Cura degli alberi del viale",
+    "zone": "Viale Europa",
+    "role": "environment",
+    "price": 8,
+    "form": [
+      "stable",
+      "stable",
+      "improves"
+    ],
+    "observationWindow": "14 giorni",
+    "sourceStatus": "pending",
+    "sourceLabel": "Verifica ufficio verde · demo · demo sintetica",
+    "popularity": 44,
+    "illustrationKey": "tree",
+    "availability": "available"
+  },
+  {
+    "id": "fontanelle-ovest",
+    "title": "Fontanelle funzionanti",
+    "zone": "Quartiere Ovest",
+    "role": "environment",
+    "price": 7,
+    "form": [
+      "improves",
+      "stable",
+      "worsens"
+    ],
+    "observationWindow": "7 giorni",
+    "sourceStatus": "verified",
+    "sourceLabel": "Controlli manutenzione · demo · demo sintetica",
+    "popularity": 36,
+    "illustrationKey": "water",
+    "availability": "available"
+  },
+  {
+    "id": "lampioni-sud",
+    "title": "Lampioni attivi",
+    "zone": "Quartiere Sud",
+    "role": "servicesAndSafety",
+    "price": 10,
+    "form": [
+      "improves",
+      "improves",
+      "stable"
+    ],
+    "observationWindow": "7 notti",
+    "sourceStatus": "verified",
+    "sourceLabel": "Registro illuminazione · demo · demo sintetica",
+    "popularity": 77,
+    "illustrationKey": "light",
+    "availability": "available"
+  },
+  {
+    "id": "sportello-anagrafe",
+    "title": "Attesa allo sportello",
+    "zone": "Municipio",
+    "role": "servicesAndSafety",
+    "price": 9,
+    "form": [
+      "stable",
+      "stable",
+      "improves"
+    ],
+    "observationWindow": "5 giorni",
+    "sourceStatus": "verified",
+    "sourceLabel": "Tempi medi servizio · demo · demo sintetica",
+    "popularity": 49,
+    "illustrationKey": "office",
+    "availability": "available"
+  },
+  {
+    "id": "fermata-accessibile",
+    "title": "Accessibilità fermata",
+    "zone": "Via Roma",
+    "role": "servicesAndSafety",
+    "price": 8,
+    "form": [
+      "worsens",
+      "stable",
+      "improves"
+    ],
+    "observationWindow": "7 giorni",
+    "sourceStatus": "pending",
+    "sourceLabel": "Sopralluogo in verifica · demo sintetica",
+    "popularity": 57,
+    "illustrationKey": "stop",
+    "availability": "available"
+  },
+  {
+    "id": "biblioteca-orari",
+    "title": "Apertura biblioteca",
+    "zone": "Centro civico",
+    "role": "servicesAndSafety",
+    "price": 6,
+    "form": [
+      "stable",
+      "improves",
+      "stable"
+    ],
+    "observationWindow": "7 giorni",
+    "sourceStatus": "verified",
+    "sourceLabel": "Calendario biblioteca · demo · demo sintetica",
+    "popularity": 32,
+    "illustrationKey": "library",
+    "availability": "available"
+  }
+]
