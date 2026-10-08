@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import 'package:fanta_comune/features/fantasy/data/api_fantasy_repository.dart';
+import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
@@ -35,13 +37,6 @@ class AppDependencies extends StatelessWidget {
       providers: [
         Provider<AppConfig>.value(value: config),
         ChangeNotifierProvider<AppPrefs>.value(value: appPrefs),
-        Provider<FantasyRepository>(
-          create: (_) => LocalFantasyRepository(appPrefs),
-        ),
-        ChangeNotifierProvider<FantasyManager>(
-          create: (context) =>
-              FantasyManager.withRepository(context.read<FantasyRepository>()),
-        ),
         Provider<CivicLoopStore>(
           create: (context) =>
               CivicLoopStore(currentUserId: context.read<AppPrefs>().userId),
@@ -56,6 +51,28 @@ class AppDependencies extends StatelessWidget {
             client: context.read<http.Client>(),
             timeout: config.apiTimeout,
           ),
+        ),
+        Provider<FantasyRepository>(
+          create: (context) =>
+              config.fantasyDataSource == FantasyDataSource.mock
+              ? LocalFantasyRepository(appPrefs)
+              : ApiFantasyRepository(
+                  client: context.read<ApiClient>(),
+                  prefs: appPrefs,
+                  environment: config.apiBaseUrl.toString(),
+                  municipalityId:
+                      config.pilotMunicipalityId ??
+                      MunicipalityCatalog.apiIdFor(
+                        appPrefs.municipalityId ?? '',
+                      ) ??
+                      (throw StateError(
+                        'Configura il Comune pilot per le API fantasy.',
+                      )),
+                ),
+        ),
+        ChangeNotifierProvider<FantasyManager>(
+          create: (context) =>
+              FantasyManager.withRepository(context.read<FantasyRepository>()),
         ),
         Provider<GameRepository>(
           create: (context) => createGameRepository(

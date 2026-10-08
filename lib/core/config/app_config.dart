@@ -2,6 +2,8 @@ import 'package:fanta_comune/core/models/municipality_catalog.dart';
 
 enum NextProblemsDataSource { mock, api }
 
+enum FantasyDataSource { mock, api }
+
 enum GameDataSource { mock, api }
 
 class AppConfig {
@@ -9,6 +11,7 @@ class AppConfig {
     required this.nextProblemsDataSource,
     required this.gameDataSource,
     required this.fantasyModeEnabled,
+    this.fantasyDataSource = FantasyDataSource.mock,
     required Uri apiBaseUrl,
     String? pilotMunicipalityId,
     this.apiTimeout = const Duration(seconds: 8),
@@ -24,6 +27,10 @@ class AppConfig {
       'GAME_DATA_SOURCE',
       defaultValue: 'mock',
     );
+    const fantasyDataSource = String.fromEnvironment(
+      'FANTASY_DATA_SOURCE',
+      defaultValue: 'mock',
+    );
     const apiBaseUrl = String.fromEnvironment(
       'API_BASE_URL',
       defaultValue: 'http://localhost:8787',
@@ -36,6 +43,7 @@ class AppConfig {
     return AppConfig.fromValues(
       nextProblemsDataSource: dataSource,
       gameDataSource: gameDataSource,
+      fantasyDataSource: fantasyDataSource,
       apiBaseUrl: apiBaseUrl,
       pilotMunicipalityId: pilotMunicipalityId,
       fantasyModeEnabled: fantasyModeEnabled,
@@ -45,6 +53,7 @@ class AppConfig {
   factory AppConfig.fromValues({
     String nextProblemsDataSource = 'mock',
     String gameDataSource = 'mock',
+    String fantasyDataSource = 'mock',
     String apiBaseUrl = 'http://localhost:8787',
     String? pilotMunicipalityId,
     bool fantasyModeEnabled = false,
@@ -70,9 +79,15 @@ class AppConfig {
         'Valori supportati: mock, api.',
       ),
     };
+    final fantasySource = switch (fantasyDataSource.trim().toLowerCase()) {
+      'mock' => FantasyDataSource.mock,
+      'api' => FantasyDataSource.api,
+      final value => throw ArgumentError.value(value, 'fantasyDataSource'),
+    };
     return AppConfig(
       nextProblemsDataSource: nextProblemsSource,
       gameDataSource: gameSource,
+      fantasyDataSource: fantasySource,
       fantasyModeEnabled: fantasyModeEnabled,
       apiBaseUrl: Uri.parse(apiBaseUrl),
       pilotMunicipalityId: pilotMunicipalityId,
@@ -82,6 +97,7 @@ class AppConfig {
 
   final NextProblemsDataSource nextProblemsDataSource;
   final GameDataSource gameDataSource;
+  final FantasyDataSource fantasyDataSource;
   final bool fantasyModeEnabled;
   final Uri apiBaseUrl;
   final String? pilotMunicipalityId;

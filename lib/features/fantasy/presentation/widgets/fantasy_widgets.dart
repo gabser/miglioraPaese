@@ -68,9 +68,13 @@ class FantasyPage extends StatelessWidget {
                 ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(bottom: 12),
-              child: Text('Demo locale · carte, fonti e classifiche simulate.'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                context.watch<FantasyManager>().isRemote
+                    ? 'Rehearsal API · dati sintetici. Sessione anonima legata al browser: nessun recupero su altri dispositivi.'
+                    : 'Demo locale · carte, fonti e classifiche simulate.',
+              ),
             ),
             child,
           ],
@@ -502,12 +506,16 @@ class MarketComparison extends StatelessWidget {
     required this.incoming,
     required this.onConfirm,
     required this.penalty,
+    this.outgoingPrice,
+    this.incomingPrice,
     super.key,
   });
   final model.FantasyCard outgoing;
   final model.FantasyCard incoming;
   final VoidCallback? onConfirm;
   final int penalty;
+  final int? outgoingPrice;
+  final int? incomingPrice;
 
   @override
   Widget build(BuildContext context) => AlertDialog(
@@ -515,11 +523,13 @@ class MarketComparison extends StatelessWidget {
     content: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _ComparisonRow(label: 'Esce', card: outgoing),
+        _ComparisonRow(label: 'Esce', card: outgoing, price: outgoingPrice),
         const Divider(height: 24),
-        _ComparisonRow(label: 'Entra', card: incoming),
+        _ComparisonRow(label: 'Entra', card: incoming, price: incomingPrice),
         const SizedBox(height: 12),
-        Text('Differenza: ${incoming.price - outgoing.price} crediti'),
+        Text(
+          'Differenza: ${(incomingPrice ?? incoming.price) - (outgoingPrice ?? outgoing.price)} crediti',
+        ),
         Text(
           penalty == 0
               ? 'Trasferimento gratuito'
@@ -538,8 +548,9 @@ class MarketComparison extends StatelessWidget {
 }
 
 class _ComparisonRow extends StatelessWidget {
-  const _ComparisonRow({required this.label, required this.card});
+  const _ComparisonRow({required this.label, required this.card, this.price});
   final String label;
+  final int? price;
   final model.FantasyCard card;
 
   @override
@@ -552,7 +563,7 @@ class _ComparisonRow extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
-      CreditPill(credits: card.price, label: 'cr'),
+      CreditPill(credits: price ?? card.price, label: 'cr'),
     ],
   );
 }

@@ -1472,6 +1472,7 @@ components:
       "type": "object"
       "additionalProperties": false
       "required":
+        - "sessionScope"
         - "serverTime"
         - "isDemo"
         - "seasonId"
@@ -1484,6 +1485,9 @@ components:
         - "transfersRemaining"
         - "nextTransferPenalty"
       "properties":
+        "sessionScope":
+          "type": "string"
+          "description": "Opaque season/session cache scope; never a client identity credential."
         "serverTime":
           "type": "string"
           "format": "date-time"

@@ -92,9 +92,30 @@ Implementato su `codex/fantasy-reveal-scoring`, nella serie locale preparata.
   cancellazione, rollback riflessione e assenza di token/fonti nei log.
 - OpenAPI 0.10.0 valido; `git diff --check` riuscito.
 
-## Incrementi ancora da completare
+## Incremento 6 — Flutter su API fantasy
 
-6. Repository API Flutter e percorso individuale remoto completo.
+Implementato su `codex/fantasy-api-client`, nella serie locale preparata.
+
+- Selettore indipendente `FANTASY_DATA_SOURCE=mock|api`, default mock.
+  Mapper espliciti, nessuna importazione demo né fallback in caso di errore.
+- Stato accettato, revisione server, clock monotono sincronizzato, polling
+  limitato con backoff e riconciliazione a resume. Errori e retry visibili;
+  nessuna coda di scritture offline. Motivazioni remote con salvataggio esplicito.
+- Preventivi server mostrati prima della conferma; ricevuta del comando
+  persistita per ambiente/sessione/Comune/stagione prima del trasferimento.
+  Retry con la stessa chiave anche dopo riavvio o risposta persa.
+- Riepiloghi e punteggi server, cooperativo indisponibile e leghe remote
+  esplicitamente non disponibili fino all'incremento 8. Reset remoto prima
+  delle preferenze locali; nessuna iscrizione automatica durante il reset.
+- 153 test Flutter e 62 backend superati. Percorso contro Node/SQLite isolato:
+  revisione obsoleta, clock client errato, lock, perdita risposta, restart,
+  storico, riflessione, isolamento e cancellazione fallita/riuscita.
+- UI API verificata a 390, 1024 e 1440 px. Analisi con opzioni CI riuscita;
+  build release fantasy mock, fantasy API e legacy API riuscite localmente.
+- OpenAPI aggiornato per la cache scope opaca; nessuna esecuzione GitHub CI
+  o validazione su provider live dichiarata.
+
+## Incrementi ancora da completare
 7. Leghe private e classifiche backend.
 8. Leghe Flutter e percorso multi-sessione.
 9. Candidati staging, rehearsal, backup/restore e scheda go/no-go.
