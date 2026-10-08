@@ -1,3 +1,4 @@
+import { createFantasyMarket, migrateFantasyMarket, marketSchemaReady, transferPenalty, transferData } from './market.js';
 import { transaction } from './transaction.js';
 export { transaction } from './transaction.js';
 import { createFantasyTeams, migrateFantasyTeams, teamsSchemaReady } from './teams.js';
@@ -49,12 +50,13 @@ export function migrateFantasy(database) {
   `);
 }
 
-export function fantasySchemaReady(database, { includeTeams = true } = {}) {
+export function fantasySchemaReady(database, { includeTeams = true, includeMarket = true } = {}) {
   // Also detects a damaged/missing table instead of accepting SELECT 1 alone.
   database.prepare('SELECT id, municipality_id, starts_at, ends_at, catalog_version, is_demo FROM fantasy_seasons LIMIT 1').get();
   database.prepare('SELECT season_id, id, version, role, price, availability, source_status, payload FROM fantasy_cards LIMIT 1').get();
   database.prepare('SELECT season_id, id, number, starts_at, locks_at, observation_ends_at, rules_version FROM fantasy_matchdays LIMIT 1').get();
   if (includeTeams) teamsSchemaReady(database);
+  if (includeMarket) marketSchemaReady(database);
   return database.prepare('PRAGMA foreign_key_check').all().length === 0;
 }
 
@@ -64,7 +66,7 @@ export function createFantasyStore({ database, now = Date.now, seedStartsAt = de
   if (!Number.isFinite(startsAt)) throw new TypeError('seedStartsAt requires an ISO date with timezone.');
   const ownsDatabase = !database;
   database ??= new DatabaseSync(':memory:', { enableForeignKeyConstraints: true });
-  if (ownsDatabase) { migrateFantasy(database); migrateFantasyTeams(database); }
+  if (ownsDatabase) { migrateFantasy(database); migrateFantasyTeams(database); migrateFantasyMarket(database); }
   // A fixed fixture calendar, persisted once. An expired season is never renewed.
   const iso = (value) => new Date(value).toISOString();
   transaction(database, () => {
@@ -131,12 +133,13 @@ export function createFantasyStore({ database, now = Date.now, seedStartsAt = de
     },
     isReady: () => fantasySchemaReady(database),
     counts() {
-      return Object.fromEntries(['seasons', 'cards', 'matchdays', 'players', 'drafts', 'snapshots'].map((name) => [name,
+      return Object.fromEntries(['seasons', 'cards', 'matchdays', 'players', 'drafts', 'snapshots', 'quotes', 'transfers', 'transfer_commands'].map((name) => [name,
         database.prepare(`SELECT COUNT(*) AS count FROM fantasy_${name}`).get().count]));
     },
     close() { if (ownsDatabase && database.isOpen) database.close(); },
   };
-  api.teams = createFantasyTeams({ database, now, catalog: api.cards });
+  api.teams = createFantasyTeams({ database, now, catalog: api.cards, getTransferPenalty: (player, day) => transferPenalty(database, player, day), getTransferData: (player, day) => transferData(database, player, day) });
+  api.market = createFantasyMarket({ database, teams: api.teams, now });
   api.atomic = (action) => transaction(database, action);
   api.eraseUserData = api.teams.erase;
   return api;

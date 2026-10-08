@@ -181,3 +181,22 @@ not confirmed before the lock is ineligible for personal points. Reading a new
 day never changes old snapshots. `DELETE /v1/session` removes fantasy personal
 data and legacy links in one SQLite transaction; failures restore the legacy
 in-memory state as well. Roster transfers and scoring are subsequent increments.
+
+## Transactional fantasy market (OpenAPI 0.9.0)
+
+`POST /transfers/quote` takes matchday, revision and outgoing/incoming card IDs.
+`POST /transfers/confirmation` takes the quote ID, expected revision and an
+idempotency key. Store and reuse the key after a timeout; do not create another
+key while the result of the original confirmation is unknown.
+
+The quote lasts five minutes at most and expires at lock. Confirmation checks
+card versions, catalog, prices, roles, availability, source, budget and server
+time again. Pending sources may be bought; unavailable cards or sources may
+not. A successful command changes roster, draft, confirmation, revision and
+ledger atomically. The third and each following transfer charges four points.
+Retry of an accepted command returns its original response after restart or
+lock. Another payload with that key returns `idempotency_conflict`.
+
+Schema 4 adds quotes, transfer receipts and the penalty ledger. Session erasure
+removes these personal rows with the player. Backups and readiness include all
+market tables. The server team view now includes transfers and day allowances.

@@ -58,9 +58,24 @@ Implementato su `codex/fantasy-team-lock`, nella serie locale preparata.
   fallimenti di scrittura/cancellazione e restart.
 - OpenAPI 0.8.0 valido; `git diff --check` riuscito.
 
+## Incremento 4 — mercato e ledger
+
+Implementato su `codex/fantasy-market-ledger`, nella serie locale preparata.
+
+- Preventivi legati a giornata, revisione, catalogo e versioni/ruoli/prezzi
+  delle carte; scadenza massima di cinque minuti e sempre entro il lock.
+- Conferma con idempotency key persistita. Retry di un comando accettato dopo
+  risposta persa, riavvio o lock restituisce l'esito originale; payload diverso
+  con la stessa chiave viene respinto.
+- Rosa, bozza, revisione, conferma e ledger aggiornati nella stessa transazione.
+  Due trasferimenti gratuiti, poi −4 ciascuno; i fallimenti non consumano nulla.
+- Schema 4, cancellazione a cascata, readiness e restore estesi al mercato.
+- `npm test` con Node 24.18.0: 53 test superati, inclusi retry, concorrenza,
+  disponibilità/fonti, budget/ruoli, catalogo cambiato, scadenze e rollback.
+- OpenAPI 0.9.0 valido; `git diff --check` riuscito.
+
 ## Incrementi ancora da completare
 
-4. Preventivi, trasferimenti transazionali e ledger delle penalità.
 5. Pubblicazione esiti, reveal, punteggi e riflessione server.
 6. Repository API Flutter e percorso individuale remoto completo.
 7. Leghe private e classifiche backend.

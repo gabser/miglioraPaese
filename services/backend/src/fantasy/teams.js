@@ -52,7 +52,7 @@ export function exactFields(body, fields) {
   requireValue(body && typeof body === 'object' && !Array.isArray(body) && Object.keys(body).every((key) => fields.includes(key)), 'Unsupported command field.');
 }
 
-export function createFantasyTeams({ database, now = Date.now, catalog, getTransferPenalty = () => 0 }) {
+export function createFantasyTeams({ database, now = Date.now, catalog, getTransferPenalty = () => 0, getTransferData = () => ({}) }) {
   const isoNow = () => new Date(now()).toISOString();
   const seasonFor = (municipalityId) => database.prepare('SELECT * FROM fantasy_seasons WHERE municipality_id = ? ORDER BY starts_at DESC LIMIT 1').get(municipalityId)
     ?? missing();
@@ -114,7 +114,7 @@ export function createFantasyTeams({ database, now = Date.now, catalog, getTrans
     const draft = draftFor(player, day, cards);
     const snapshots = database.prepare('SELECT payload FROM fantasy_snapshots WHERE season_id = ? AND user_id = ? ORDER BY matchday_id').all(season.id, player.user_id).map((row) => JSON.parse(row.payload));
     return { serverTime: time, isDemo: Boolean(season.is_demo), seasonId: season.id, matchdayId: day.id, revision: player.revision,
-      team: { squadIds: squad, ...draft, budgetRemaining: 100 - squad.reduce((sum, id) => sum + cards.get(id).price, 0) }, snapshots };
+      ...getTransferData(player, day), team: { squadIds: squad, ...draft, budgetRemaining: 100 - squad.reduce((sum, id) => sum + cards.get(id).price, 0) }, snapshots };
   }
   function checkRevision(player, revision) {
     requireValue(Number.isSafeInteger(revision) && revision > 0, 'expectedRevision must be a positive integer.');
@@ -126,6 +126,21 @@ export function createFantasyTeams({ database, now = Date.now, catalog, getTrans
     if (time >= day.locks_at) throw fantasyError(409, 'matchday_locked', 'Matchday is locked.');
     if (time < day.starts_at) throw fantasyError(409, 'matchday_not_open', 'Matchday has not started.');
   }
+  function withOpenTeam(municipalityId, userId, revision, matchdayId, action) {
+    requireValue(typeof matchdayId === 'string' && matchdayId.length > 0, 'matchdayId is required.');
+    reconcile();
+    return transaction(database, () => {
+      const time = isoNow();
+      const season = seasonFor(municipalityId);
+      const player = playerFor(season.id, userId);
+      const day = dayFor(season.id, matchdayId, time);
+      checkRevision(player, revision);
+      assertOpen(day, time, player);
+      const cards = cardsFor(season);
+      return action({ season, player, day, time, cards, squad: JSON.parse(player.squad_ids), draft: draftFor(player, day, cards) });
+    });
+  }
+
   function mutate(municipalityId, userId, body, confirm) {
     // Reconcile in its own committed transaction: a rejected late command must
     // still leave the last accepted formation frozen.
@@ -187,6 +202,7 @@ export function createFantasyTeams({ database, now = Date.now, catalog, getTrans
     },
     update: (municipalityId, userId, body) => mutate(municipalityId, userId, body, false),
     confirm: (municipalityId, userId, body) => mutate(municipalityId, userId, body, true),
+    withOpenTeam, seasonFor, playerFor, validSquad, writeDraft, view,
     reconcile,
     erase(userId) { database.prepare('DELETE FROM fantasy_players WHERE user_id = ?').run(userId); },
   };
