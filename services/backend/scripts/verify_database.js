@@ -20,10 +20,10 @@ try {
   if (integrity.length !== 1 || integrity[0].integrity_check !== 'ok') {
     throw new Error('SQLite integrity check failed.');
   }
-  if (![1, 2].includes(Number(version.version))) {
+  if (![1, 2, 3].includes(Number(version.version))) {
     throw new Error(`Unsupported schema version ${version.version}.`);
   }
-  if (Number(version.version) >= 2 && !fantasySchemaReady(database)) {
+  if (Number(version.version) >= 2 && !fantasySchemaReady(database, { includeTeams: Number(version.version) >= 3 })) {
     throw new Error('Fantasy schema integrity check failed.');
   }
   console.log(

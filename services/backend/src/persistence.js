@@ -4,7 +4,9 @@ import { DatabaseSync } from 'node:sqlite';
 
 import { createFantasyStore, fantasySchemaReady, migrateFantasy } from './fantasy/store.js';
 
-const schemaVersion = 2;
+import { migrateFantasyTeams } from './fantasy/teams.js';
+
+const schemaVersion = 3;
 
 export function createSqliteStateRepository({ databasePath, now }) {
   if (typeof databasePath !== 'string' || databasePath.trim() === '') {
@@ -103,6 +105,10 @@ function migrate(database) {
     if (currentVersion < 2) {
       migrateFantasy(database);
       database.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)').run(2, new Date().toISOString());
+    }
+    if (currentVersion < 3) {
+      migrateFantasyTeams(database);
+      database.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)').run(3, new Date().toISOString());
     }
     database.exec('COMMIT;');
   } catch (error) {

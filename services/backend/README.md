@@ -159,3 +159,25 @@ The single-instance SQLite scope follows the incremental fantasy plan.
 reports the counts of fantasy seasons, cards and matchdays. Readiness includes
 the fantasy schema. No personal fantasy data or player writes are introduced
 in this increment. Squad commands, scoring and leagues remain subsequent work.
+
+## Fantasy team and authoritative lock (OpenAPI 0.8.0)
+
+The same municipality prefix adds `POST /enrollment`, `GET /team`,
+`PUT /team` and `POST /team/confirmation`. Commands take `expectedRevision`
+and `matchdayId`. The team update takes starters, captain, predictions and
+optional text values in the motivations map; it cannot upload points or change
+the roster outside the market. The initial eight-card roster can be chosen
+with enrollment and is validated by the server.
+
+The signed anonymous cookie determines ownership; body-supplied identities
+are rejected. The session is browser-bound, with no account recovery promise.
+Changes to starters or captain invalidate confirmation. Pre-lock prediction
+edits remain permitted. Commands fail with `stale_revision`, `matchday_locked`
+or `matchday_not_open` (409), invalid fields (400), or absent resources (404).
+
+Schema 3 adds players, per-matchday drafts and unique immutable lock snapshots.
+A stopped process reconciles missed locks at restart and on requests. A team
+not confirmed before the lock is ineligible for personal points. Reading a new
+day never changes old snapshots. `DELETE /v1/session` removes fantasy personal
+data and legacy links in one SQLite transaction; failures restore the legacy
+in-memory state as well. Roster transfers and scoring are subsequent increments.

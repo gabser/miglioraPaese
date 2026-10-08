@@ -1,3 +1,6 @@
+import { transaction } from './transaction.js';
+export { transaction } from './transaction.js';
+import { createFantasyTeams, migrateFantasyTeams, teamsSchemaReady } from './teams.js';
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 
@@ -6,18 +9,6 @@ const municipalities = ['bologna', 'castel-bolognese', 'tuglie'];
 const dayMs = 24 * 60 * 60 * 1000;
 export const fantasyRulesVersion = 'fantasy-demo-v1';
 export const demoSeasonStartsAt = '2026-10-08T00:00:00.000Z';
-
-export function transaction(database, action) {
-  database.exec('BEGIN IMMEDIATE;');
-  try {
-    const result = action();
-    database.exec('COMMIT;');
-    return result;
-  } catch (error) {
-    database.exec('ROLLBACK;');
-    throw error;
-  }
-}
 
 export function migrateFantasy(database) {
   database.exec(`
@@ -58,11 +49,12 @@ export function migrateFantasy(database) {
   `);
 }
 
-export function fantasySchemaReady(database) {
+export function fantasySchemaReady(database, { includeTeams = true } = {}) {
   // Also detects a damaged/missing table instead of accepting SELECT 1 alone.
   database.prepare('SELECT id, municipality_id, starts_at, ends_at, catalog_version, is_demo FROM fantasy_seasons LIMIT 1').get();
   database.prepare('SELECT season_id, id, version, role, price, availability, source_status, payload FROM fantasy_cards LIMIT 1').get();
   database.prepare('SELECT season_id, id, number, starts_at, locks_at, observation_ends_at, rules_version FROM fantasy_matchdays LIMIT 1').get();
+  if (includeTeams) teamsSchemaReady(database);
   return database.prepare('PRAGMA foreign_key_check').all().length === 0;
 }
 
@@ -72,7 +64,7 @@ export function createFantasyStore({ database, now = Date.now, seedStartsAt = de
   if (!Number.isFinite(startsAt)) throw new TypeError('seedStartsAt requires an ISO date with timezone.');
   const ownsDatabase = !database;
   database ??= new DatabaseSync(':memory:', { enableForeignKeyConstraints: true });
-  if (ownsDatabase) migrateFantasy(database);
+  if (ownsDatabase) { migrateFantasy(database); migrateFantasyTeams(database); }
   // A fixed fixture calendar, persisted once. An expired season is never renewed.
   const iso = (value) => new Date(value).toISOString();
   transaction(database, () => {
@@ -113,7 +105,7 @@ export function createFantasyStore({ database, now = Date.now, seedStartsAt = de
       ?? fail();
   }
   function envelope(season, serverTime) { return { serverTime, isDemo: Boolean(season.is_demo) }; }
-  return {
+  const api = {
     season(municipalityId) {
       const row = seasonRow(municipalityId);
       const serverTime = iso(now());
@@ -139,9 +131,13 @@ export function createFantasyStore({ database, now = Date.now, seedStartsAt = de
     },
     isReady: () => fantasySchemaReady(database),
     counts() {
-      return Object.fromEntries(['seasons', 'cards', 'matchdays'].map((name) => [name,
+      return Object.fromEntries(['seasons', 'cards', 'matchdays', 'players', 'drafts', 'snapshots'].map((name) => [name,
         database.prepare(`SELECT COUNT(*) AS count FROM fantasy_${name}`).get().count]));
     },
     close() { if (ownsDatabase && database.isOpen) database.close(); },
   };
+  api.teams = createFantasyTeams({ database, now, catalog: api.cards });
+  api.atomic = (action) => transaction(database, action);
+  api.eraseUserData = api.teams.erase;
+  return api;
 }

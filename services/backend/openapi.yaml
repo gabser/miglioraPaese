@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Migliora Paese API
-  version: 0.7.0
+  version: 0.8.0
   description: >-
     Pilot API backed by durable SQLite state. User-specific resources use a
     signed anonymous session issued by the server in an HttpOnly cookie;
@@ -17,6 +17,117 @@ security:
   - {}
   - AnonymousSession: []
 paths:
+  "/v1/fantasy/municipalities/{municipalityId}/enrollment":
+    "post":
+      "operationId": "enrollFantasySeason"
+      "description": "Current signed anonymous session only; client user IDs and points are rejected. Enrollment is idempotent and creates a server-validated draft, never imported demo results. Writes check the expected revision and server lock inside a transaction. Formation changes invalidate confirmation; predictions remain editable before lock. Snapshots are reconciled on restart and after deadlines. Anonymous sessions do not provide cross-device account recovery."
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+      "responses":
+        "200":
+          "description": "Accepted server team revision and immutable lock snapshots."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyTeamResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
+        "500":
+          "$ref": "#/components/responses/InternalError"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/FantasyEnrollment"
+  "/v1/fantasy/municipalities/{municipalityId}/team":
+    "get":
+      "operationId": "getFantasyTeam"
+      "description": "Current signed anonymous session only; client user IDs and points are rejected. Enrollment is idempotent and creates a server-validated draft, never imported demo results. Writes check the expected revision and server lock inside a transaction. Formation changes invalidate confirmation; predictions remain editable before lock. Snapshots are reconciled on restart and after deadlines. Anonymous sessions do not provide cross-device account recovery."
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+        -
+          "name": "matchdayId"
+          "in": "query"
+          "required": false
+          "schema":
+            "type": "string"
+      "responses":
+        "200":
+          "description": "Accepted server team revision and immutable lock snapshots."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyTeamResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
+        "500":
+          "$ref": "#/components/responses/InternalError"
+    "put":
+      "operationId": "updateFantasyTeam"
+      "description": "Current signed anonymous session only; client user IDs and points are rejected. Enrollment is idempotent and creates a server-validated draft, never imported demo results. Writes check the expected revision and server lock inside a transaction. Formation changes invalidate confirmation; predictions remain editable before lock. Snapshots are reconciled on restart and after deadlines. Anonymous sessions do not provide cross-device account recovery."
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+      "responses":
+        "200":
+          "description": "Accepted server team revision and immutable lock snapshots."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyTeamResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
+        "500":
+          "$ref": "#/components/responses/InternalError"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/FantasyTeamUpdate"
+  "/v1/fantasy/municipalities/{municipalityId}/team/confirmation":
+    "post":
+      "operationId": "confirmFantasyTeam"
+      "description": "Current signed anonymous session only; client user IDs and points are rejected. Enrollment is idempotent and creates a server-validated draft, never imported demo results. Writes check the expected revision and server lock inside a transaction. Formation changes invalidate confirmation; predictions remain editable before lock. Snapshots are reconciled on restart and after deadlines. Anonymous sessions do not provide cross-device account recovery."
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+      "responses":
+        "200":
+          "description": "Accepted server team revision and immutable lock snapshots."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyTeamResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
+        "500":
+          "$ref": "#/components/responses/InternalError"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/FantasyTeamConfirmation"
   "/v1/fantasy/municipalities/{municipalityId}/season":
     "get":
       "operationId": "getFantasySeason"
@@ -123,8 +234,8 @@ paths:
     delete:
       operationId: deleteAnonymousSessionData
       description: >-
-        Deletes votes, predictions and outcomes associated with the current
-        anonymous session, removes its link from published suggestions and
+        Deletes votes, predictions, fantasy enrollments, drafts, snapshots and outcomes associated with the current
+        anonymous session atomically across legacy and fantasy stores, removes its link from published suggestions and
         expires the session cookie. The operation is idempotent.
       responses:
         "200":
@@ -614,6 +725,214 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
   schemas:
+    "FantasyTeam":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "squadIds"
+        - "starterIds"
+        - "captainId"
+        - "confirmed"
+        - "predictions"
+        - "motivations"
+        - "budgetRemaining"
+      "properties":
+        "squadIds":
+          "type": "array"
+          "minItems": 8
+          "maxItems": 8
+          "uniqueItems": true
+          "items":
+            "type": "string"
+        "starterIds":
+          "type": "array"
+          "minItems": 5
+          "maxItems": 5
+          "uniqueItems": true
+          "items":
+            "type": "string"
+        "captainId":
+          "type": "string"
+        "confirmed":
+          "type": "boolean"
+        "predictions":
+          "type": "object"
+          "additionalProperties":
+            "type": "string"
+            "enum":
+              - "improves"
+              - "stable"
+              - "worsens"
+        "motivations":
+          "type": "object"
+          "additionalProperties":
+            "type": "string"
+            "maxLength": 1000
+        "budgetRemaining":
+          "type": "integer"
+          "minimum": 0
+          "maximum": 100
+    "FantasySnapshot":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "matchdayId"
+        - "seasonId"
+        - "rulesVersion"
+        - "catalogVersion"
+        - "locksAt"
+        - "observationEndsAt"
+        - "squadIds"
+        - "starterIds"
+        - "captainId"
+        - "confirmed"
+        - "predictions"
+        - "motivations"
+        - "transferPenalty"
+        - "eligible"
+      "properties":
+        "matchdayId":
+          "type": "string"
+        "seasonId":
+          "type": "string"
+        "rulesVersion":
+          "type": "string"
+        "catalogVersion":
+          "type": "integer"
+          "minimum": 1
+        "locksAt":
+          "type": "string"
+          "format": "date-time"
+        "observationEndsAt":
+          "type": "string"
+          "format": "date-time"
+        "squadIds":
+          "type": "array"
+          "minItems": 8
+          "maxItems": 8
+          "uniqueItems": true
+          "items":
+            "type": "string"
+        "starterIds":
+          "type": "array"
+          "minItems": 5
+          "maxItems": 5
+          "uniqueItems": true
+          "items":
+            "type": "string"
+        "captainId":
+          "type": "string"
+        "confirmed":
+          "type": "boolean"
+        "predictions":
+          "type": "object"
+          "additionalProperties":
+            "type": "string"
+            "enum":
+              - "improves"
+              - "stable"
+              - "worsens"
+        "motivations":
+          "type": "object"
+          "additionalProperties":
+            "type": "string"
+            "maxLength": 1000
+        "transferPenalty":
+          "type": "integer"
+          "minimum": 0
+        "eligible":
+          "type": "boolean"
+    "FantasyTeamResponse":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "serverTime"
+        - "isDemo"
+        - "seasonId"
+        - "matchdayId"
+        - "revision"
+        - "team"
+        - "snapshots"
+      "properties":
+        "serverTime":
+          "type": "string"
+          "format": "date-time"
+        "isDemo":
+          "type": "boolean"
+        "seasonId":
+          "type": "string"
+        "matchdayId":
+          "type": "string"
+        "revision":
+          "type": "integer"
+          "minimum": 1
+        "team":
+          "$ref": "#/components/schemas/FantasyTeam"
+        "snapshots":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/FantasySnapshot"
+    "FantasyEnrollment":
+      "type": "object"
+      "additionalProperties": false
+      "properties":
+        "squadIds":
+          "type": "array"
+          "minItems": 8
+          "maxItems": 8
+          "uniqueItems": true
+          "items":
+            "type": "string"
+    "FantasyTeamUpdate":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "expectedRevision"
+        - "matchdayId"
+        - "starterIds"
+        - "captainId"
+        - "predictions"
+        - "motivations"
+      "properties":
+        "expectedRevision":
+          "type": "integer"
+          "minimum": 1
+        "matchdayId":
+          "type": "string"
+        "starterIds":
+          "type": "array"
+          "minItems": 5
+          "maxItems": 5
+          "uniqueItems": true
+          "items":
+            "type": "string"
+        "captainId":
+          "type": "string"
+        "predictions":
+          "type": "object"
+          "additionalProperties":
+            "type": "string"
+            "enum":
+              - "improves"
+              - "stable"
+              - "worsens"
+        "motivations":
+          "type": "object"
+          "additionalProperties":
+            "type": "string"
+            "maxLength": 1000
+    "FantasyTeamConfirmation":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "expectedRevision"
+        - "matchdayId"
+      "properties":
+        "expectedRevision":
+          "type": "integer"
+          "minimum": 1
+        "matchdayId":
+          "type": "string"
     "FantasySeason":
       "type": "object"
       "additionalProperties": false
