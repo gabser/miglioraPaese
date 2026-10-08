@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Migliora Paese API
-  version: 0.10.0
+  version: 0.11.0
   description: >-
     Pilot API backed by durable SQLite state. User-specific resources use a
     signed anonymous session issued by the server in an HttpOnly cookie;
@@ -17,6 +17,235 @@ security:
   - {}
   - AnonymousSession: []
 paths:
+  "/v1/fantasy/municipalities/{municipalityId}/leagues":
+    "get":
+      "operationId": "listFantasyLeagues"
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+      "description": "Private, session-owned synthetic pilot league scoped to one municipality and season. Generated pseudonyms only. Competitors must join before the first season lock; later members are spectators. Ranking hidden below three competitors. Ties share rank with stable member-ID order; points derive only from frozen server results and transfer ledger. No teams, predictions or internal identities are exposed. Owner exit/deletion archives the league and revokes all invites. Invite rotation invalidates all prior invites; raw tokens are returned once, stored only as SHA-256 hashes and never logged. Join guesses are limited to five per minute per enrolled session, persisted across restarts. Anonymous sessions do not prevent multiple identities."
+      "responses":
+        "200":
+          "description": "Accepted league operation."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyLeagueList"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+        "500":
+          "$ref": "#/components/responses/InternalError"
+    "post":
+      "operationId": "createFantasyLeague"
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+      "description": "Private, session-owned synthetic pilot league scoped to one municipality and season. Generated pseudonyms only. Competitors must join before the first season lock; later members are spectators. Ranking hidden below three competitors. Ties share rank with stable member-ID order; points derive only from frozen server results and transfer ledger. No teams, predictions or internal identities are exposed. Owner exit/deletion archives the league and revokes all invites. Invite rotation invalidates all prior invites; raw tokens are returned once, stored only as SHA-256 hashes and never logged. Join guesses are limited to five per minute per enrolled session, persisted across restarts. Anonymous sessions do not prevent multiple identities."
+      "responses":
+        "200":
+          "description": "Accepted league operation."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyLeagueResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+        "500":
+          "$ref": "#/components/responses/InternalError"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/FantasyLeagueCreate"
+  "/v1/fantasy/municipalities/{municipalityId}/leagues/join":
+    "post":
+      "operationId": "joinFantasyLeague"
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+      "description": "Private, session-owned synthetic pilot league scoped to one municipality and season. Generated pseudonyms only. Competitors must join before the first season lock; later members are spectators. Ranking hidden below three competitors. Ties share rank with stable member-ID order; points derive only from frozen server results and transfer ledger. No teams, predictions or internal identities are exposed. Owner exit/deletion archives the league and revokes all invites. Invite rotation invalidates all prior invites; raw tokens are returned once, stored only as SHA-256 hashes and never logged. Join guesses are limited to five per minute per enrolled session, persisted across restarts. Anonymous sessions do not prevent multiple identities."
+      "responses":
+        "200":
+          "description": "Accepted league operation."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyLeagueResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+        "500":
+          "$ref": "#/components/responses/InternalError"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/FantasyLeagueJoin"
+  "/v1/fantasy/municipalities/{municipalityId}/leagues/{leagueId}":
+    "get":
+      "operationId": "getFantasyLeague"
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+        -
+          "name": "leagueId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+      "description": "Private, session-owned synthetic pilot league scoped to one municipality and season. Generated pseudonyms only. Competitors must join before the first season lock; later members are spectators. Ranking hidden below three competitors. Ties share rank with stable member-ID order; points derive only from frozen server results and transfer ledger. No teams, predictions or internal identities are exposed. Owner exit/deletion archives the league and revokes all invites. Invite rotation invalidates all prior invites; raw tokens are returned once, stored only as SHA-256 hashes and never logged. Join guesses are limited to five per minute per enrolled session, persisted across restarts. Anonymous sessions do not prevent multiple identities."
+      "responses":
+        "200":
+          "description": "Accepted league operation."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyLeagueRanking"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+        "500":
+          "$ref": "#/components/responses/InternalError"
+  "/v1/fantasy/municipalities/{municipalityId}/leagues/{leagueId}/membership":
+    "delete":
+      "operationId": "leaveFantasyLeague"
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+        -
+          "name": "leagueId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+      "description": "Private, session-owned synthetic pilot league scoped to one municipality and season. Generated pseudonyms only. Competitors must join before the first season lock; later members are spectators. Ranking hidden below three competitors. Ties share rank with stable member-ID order; points derive only from frozen server results and transfer ledger. No teams, predictions or internal identities are exposed. Owner exit/deletion archives the league and revokes all invites. Invite rotation invalidates all prior invites; raw tokens are returned once, stored only as SHA-256 hashes and never logged. Join guesses are limited to five per minute per enrolled session, persisted across restarts. Anonymous sessions do not prevent multiple identities."
+      "responses":
+        "200":
+          "description": "Accepted league operation."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyLeagueLeft"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+        "500":
+          "$ref": "#/components/responses/InternalError"
+  "/v1/fantasy/municipalities/{municipalityId}/leagues/{leagueId}/invites":
+    "post":
+      "operationId": "rotateFantasyLeagueInvite"
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+        -
+          "name": "leagueId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+      "description": "Private, session-owned synthetic pilot league scoped to one municipality and season. Generated pseudonyms only. Competitors must join before the first season lock; later members are spectators. Ranking hidden below three competitors. Ties share rank with stable member-ID order; points derive only from frozen server results and transfer ledger. No teams, predictions or internal identities are exposed. Owner exit/deletion archives the league and revokes all invites. Invite rotation invalidates all prior invites; raw tokens are returned once, stored only as SHA-256 hashes and never logged. Join guesses are limited to five per minute per enrolled session, persisted across restarts. Anonymous sessions do not prevent multiple identities."
+      "responses":
+        "200":
+          "description": "Accepted league operation."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyLeagueInviteResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+        "500":
+          "$ref": "#/components/responses/InternalError"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/FantasyLeagueInviteRequest"
+  "/v1/fantasy/municipalities/{municipalityId}/leagues/{leagueId}/invites/{inviteId}":
+    "delete":
+      "operationId": "revokeFantasyLeagueInvite"
+      "parameters":
+        -
+          "$ref": "#/components/parameters/MunicipalityId"
+        -
+          "name": "leagueId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+        -
+          "name": "inviteId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+      "description": "Private, session-owned synthetic pilot league scoped to one municipality and season. Generated pseudonyms only. Competitors must join before the first season lock; later members are spectators. Ranking hidden below three competitors. Ties share rank with stable member-ID order; points derive only from frozen server results and transfer ledger. No teams, predictions or internal identities are exposed. Owner exit/deletion archives the league and revokes all invites. Invite rotation invalidates all prior invites; raw tokens are returned once, stored only as SHA-256 hashes and never logged. Join guesses are limited to five per minute per enrolled session, persisted across restarts. Anonymous sessions do not prevent multiple identities."
+      "responses":
+        "200":
+          "description": "Accepted league operation."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FantasyLeagueRevoked"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
+        "429":
+          "$ref": "#/components/responses/TooManyRequests"
+        "500":
+          "$ref": "#/components/responses/InternalError"
   "/v1/fantasy/admin/municipalities/{municipalityId}/matchdays/{matchdayId}/outcomes/{cardId}":
     "put":
       "operationId": "publishFantasyOutcome"
@@ -928,6 +1157,245 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
   schemas:
+    "FantasyLeagueMetadata":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "id"
+        - "seasonId"
+        - "municipalityId"
+        - "name"
+        - "status"
+        - "firstLocksAt"
+        - "role"
+        - "isOwner"
+        - "memberCount"
+        - "competitiveCount"
+        - "minimumParticipants"
+      "properties":
+        "id":
+          "type": "string"
+        "seasonId":
+          "type": "string"
+        "municipalityId":
+          "type": "string"
+        "name":
+          "type": "string"
+          "enum":
+            - "Amici"
+            - "Quartiere"
+            - "Comune"
+        "status":
+          "type": "string"
+          "enum":
+            - "active"
+            - "archived"
+        "firstLocksAt":
+          "type": "string"
+          "format": "date-time"
+        "role":
+          "type": "string"
+          "enum":
+            - "competitor"
+            - "spectator"
+        "isOwner":
+          "type": "boolean"
+        "memberCount":
+          "type": "integer"
+        "competitiveCount":
+          "type": "integer"
+        "minimumParticipants":
+          "type": "integer"
+          "const": 3
+    "FantasyLeagueEntry":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "memberId"
+        - "pseudonym"
+        - "points"
+        - "rank"
+        - "isCurrentUser"
+      "properties":
+        "memberId":
+          "type": "string"
+        "pseudonym":
+          "type": "string"
+        "points":
+          "type": "integer"
+        "rank":
+          "type": "integer"
+          "minimum": 1
+        "isCurrentUser":
+          "type": "boolean"
+    "FantasyLeagueList":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "serverTime"
+        - "isDemo"
+        - "seasonId"
+        - "items"
+      "properties":
+        "serverTime":
+          "type": "string"
+          "format": "date-time"
+        "isDemo":
+          "type": "boolean"
+        "seasonId":
+          "type": "string"
+        "items":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/FantasyLeagueMetadata"
+    "FantasyLeagueResponse":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "serverTime"
+        - "isDemo"
+        - "seasonId"
+        - "league"
+      "properties":
+        "serverTime":
+          "type": "string"
+          "format": "date-time"
+        "isDemo":
+          "type": "boolean"
+        "seasonId":
+          "type": "string"
+        "league":
+          "$ref": "#/components/schemas/FantasyLeagueMetadata"
+    "FantasyLeagueRanking":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "serverTime"
+        - "isDemo"
+        - "seasonId"
+        - "league"
+        - "entries"
+        - "cooperativeScore"
+      "properties":
+        "serverTime":
+          "type": "string"
+          "format": "date-time"
+        "isDemo":
+          "type": "boolean"
+        "seasonId":
+          "type": "string"
+        "league":
+          "$ref": "#/components/schemas/FantasyLeagueMetadata"
+        "entries":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/FantasyLeagueEntry"
+        "cooperativeScore":
+          "type": "null"
+    "FantasyLeagueCreate":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "name"
+        - "idempotencyKey"
+      "properties":
+        "name":
+          "type": "string"
+          "enum":
+            - "Amici"
+            - "Quartiere"
+            - "Comune"
+        "idempotencyKey":
+          "type": "string"
+          "pattern": "^[A-Za-z0-9_-]{8,128}$"
+    "FantasyLeagueJoin":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "token"
+      "properties":
+        "token":
+          "type": "string"
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+    "FantasyLeagueInviteRequest":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "expiresInHours"
+      "properties":
+        "expiresInHours":
+          "type": "integer"
+          "minimum": 1
+          "maximum": 168
+    "FantasyLeagueInviteResponse":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "serverTime"
+        - "isDemo"
+        - "seasonId"
+        - "invite"
+      "properties":
+        "serverTime":
+          "type": "string"
+          "format": "date-time"
+        "isDemo":
+          "type": "boolean"
+        "seasonId":
+          "type": "string"
+        "invite":
+          "type": "object"
+          "additionalProperties": false
+          "required":
+            - "id"
+            - "token"
+            - "expiresAt"
+          "properties":
+            "id":
+              "type": "string"
+            "token":
+              "type": "string"
+            "expiresAt":
+              "type": "string"
+              "format": "date-time"
+    "FantasyLeagueLeft":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "serverTime"
+        - "isDemo"
+        - "seasonId"
+        - "status"
+      "properties":
+        "serverTime":
+          "type": "string"
+          "format": "date-time"
+        "isDemo":
+          "type": "boolean"
+        "seasonId":
+          "type": "string"
+        "status":
+          "type": "string"
+          "const": "left"
+    "FantasyLeagueRevoked":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "serverTime"
+        - "isDemo"
+        - "seasonId"
+        - "status"
+      "properties":
+        "serverTime":
+          "type": "string"
+          "format": "date-time"
+        "isDemo":
+          "type": "boolean"
+        "seasonId":
+          "type": "string"
+        "status":
+          "type": "string"
+          "const": "revoked"
     "FantasyOutcome":
       "type": "object"
       "additionalProperties": false

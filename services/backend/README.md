@@ -242,3 +242,25 @@ Il browser invia cookie con credenziali: il pilot richiede HTTPS same-site
 secondo il runbook. Nessun account recuperabile o importazione demo.
 Il test Flutter avvia esclusivamente `test/support/fantasy_backend_fixture.mjs`
 su loopback e database temporaneo; richiede Node 24 nel PATH.
+
+## Fantasy private leagues (OpenAPI 0.11.0, SQLite schema 6)
+
+The `/v1/fantasy/municipalities/{municipalityId}/leagues` collection supports
+list/create, `/join`, `/{leagueId}`, `/{leagueId}/membership` deletion, invite
+rotation and revocation. Every operation uses signed anonymous session ownership.
+League names are selected templates; member pseudonyms are server-generated.
+No free personal names, internal user IDs, predictions or teams enter ranking DTOs.
+
+A ranking requires at least three competitors; equal totals share rank with
+stable member ordering. Points are read from frozen server results, including
+reflection and penalties, without altering personal history on entry/exit.
+The first season lock is the competition-entry deadline, including for the owner.
+Late entries are spectators. Owner exit/deletion archives the league, removes
+the owner link and revokes all invitations; other members and their teams survive.
+
+Invites expire in 1..168 hours (bounded by season end), are generated with 256
+bits of randomness, returned once and stored only as SHA-256 hashes. Rotating
+an invite revokes all previous ones. Join attempts are limited to five per
+minute per enrolled session, including failed guesses, across restarts. This
+is not protection against multiple anonymous browser identities. Tokens must
+be shared only with the intended protected pilot group and never logged.
