@@ -16,6 +16,10 @@ confrontare esiti e percezioni aggregate.
 
 ## Funzionalità
 
+- modalità **Manager civico** attivabile via feature flag, con stagione di 8
+  giornate, rosa da 8 carte, 5 titolari, capitano e budget da 100 crediti;
+- mercato non esclusivo, previsioni, reveal verificabile, leghe private,
+  classifica comunale e punteggio cooperativo separato;
 - onboarding leggero e scelta del Comune;
 - shell responsive per mobile e desktop;
 - turno di gioco con previsioni, motivazioni e confidence;
@@ -54,6 +58,45 @@ un'installazione Flutter esattamente alla versione indicata in **.fvmrc**.
 fvm flutter pub get
 fvm flutter run -d chrome
 ~~~
+
+La build standard abilita il nuovo flusso Manager civico con dati mock
+persistenti. Per riaprire temporaneamente il prototipo precedente:
+
+~~~bash
+fvm flutter run -d chrome --dart-define=FANTASY_MODE_ENABLED=false
+~~~
+
+Le carte, le fonti e gli esiti inclusi nel seed sono esclusivamente demo e
+restano etichettati come tali nell'interfaccia.
+
+### Regole della demo Manager civico
+
+- Le date della giornata vengono salvate sul dispositivo. Alla scadenza si
+  bloccano rosa, formazione, capitano, previsioni e motivazioni, anche dopo
+  un riavvio o un ritorno dell'app in primo piano.
+- Solo una formazione valida e confermata al blocco genera punti. Ogni cambio
+  di titolari, capitano o mercato richiede una nuova conferma; una previsione
+  mancante assegna zero punti previsione.
+- I primi due trasferimenti di ogni giornata sono gratuiti; ogni successivo
+  costa 4 punti, dichiarati prima della conferma. La penalità viene sottratta
+  una sola volta dal totale personale, che può essere negativo.
+- Una fonte non disponibile sospende l'acquisto. Le carte con fonte in attesa
+  sono acquistabili ma non generano punti prima di un esito verificato.
+- Il reveal usa formazione, capitano e previsioni congelati per quella giornata:
+  osservazione 4/1/0, previsione 4/2/0. Il capitano moltiplica per 1,5, con
+  arrotondamento all'intero più vicino.
+- Dopo il reveal, la prima riflessione confermata su una carta titolare vale
+  un punto base, soggetto al moltiplicatore del capitano. Il bonus non si ripete
+  dopo visite, modifiche o riavvii. La motivazione pre-partita non assegna bonus.
+- Gli esiti precedenti senza uno snapshot storico restano esempi e non assegnano
+  punti personali. Il punteggio cooperativo e le classifiche demo sono separati
+  dal riepilogo personale della giornata.
+
+Lo stato locale viene migrato al formato v2 conservando i dati validi; i dati
+incompatibili vengono ripristinati con un messaggio. Gli errori di salvataggio
+mostrano un'azione per riprovare. La demo locale non offre garanzie anti-manomissione
+fra dispositivi: un pilot competitivo richiederà un orologio e uno stato server.
+La build staging API imposta esplicitamente `FANTASY_MODE_ENABLED=false`.
 
 Senza FVM:
 

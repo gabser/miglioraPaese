@@ -5,6 +5,7 @@ import 'package:fanta_comune/features/boot/boot_screen.dart';
 import 'package:fanta_comune/features/home/presentation/home_page.dart';
 import 'package:fanta_comune/features/game/presentation/play/play_page.dart';
 import 'package:fanta_comune/features/game/presentation/board/board_page.dart';
+import 'package:fanta_comune/features/fantasy/presentation/pages/fantasy_pages.dart';
 import 'package:fanta_comune/features/info/presentation/how_it_works_page.dart';
 import 'package:fanta_comune/features/info/presentation/privacy_page.dart';
 import 'package:fanta_comune/features/leaderboard/presentation/leaderboard_page.dart';
@@ -18,6 +19,9 @@ import 'package:fanta_comune/features/shell/presentation/shell_page.dart';
 
 /// Costruisce la configurazione di routing dichiarativo usando [GoRouter].
 GoRouter buildRouter(AppPrefs appPrefs, AppConfig config) {
+  if (config.fantasyModeEnabled) {
+    return _buildFantasyRouter(appPrefs, config);
+  }
   return GoRouter(
     initialLocation: '/welcome',
     refreshListenable: appPrefs,
@@ -99,6 +103,105 @@ GoRouter buildRouter(AppPrefs appPrefs, AppConfig config) {
               GoRoute(
                 path: '/leaderboard',
                 builder: (context, state) => const LeaderboardPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfilePage(),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+GoRouter _buildFantasyRouter(AppPrefs appPrefs, AppConfig config) {
+  return GoRouter(
+    initialLocation: '/welcome',
+    refreshListenable: appPrefs,
+    redirect: (context, state) {
+      final municipalityId = appPrefs.municipalityId;
+      final location = state.matchedLocation.isNotEmpty
+          ? state.matchedLocation
+          : state.uri.path;
+      if (municipalityId != null && location == '/onboarding') {
+        return '/squad';
+      }
+      if (config.pilotMunicipalityId != null &&
+          location == '/change-municipality') {
+        return '/profile';
+      }
+      return null;
+    },
+    routes: [
+      GoRoute(path: '/home', redirect: (context, state) => '/squad'),
+      GoRoute(
+        path: '/welcome',
+        builder: (context, state) => const FantasyWelcomePage(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingPage(),
+      ),
+      GoRoute(
+        path: '/change-municipality',
+        builder: (context, state) =>
+            const OnboardingPage(afterSelectionRoute: '/profile'),
+      ),
+      GoRoute(
+        path: '/next-problems',
+        builder: (context, state) => const NextProblemsPage(),
+      ),
+      GoRoute(
+        path: '/suggest-problem',
+        builder: (context, state) => const SuggestProblemPage(),
+      ),
+      GoRoute(
+        path: '/how-it-works',
+        builder: (context, state) => const HowItWorksPage(),
+      ),
+      GoRoute(
+        path: '/privacy',
+        builder: (context, state) => const PrivacyPage(),
+      ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            FantasyShellPage(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/squad',
+                builder: (context, state) => const SquadPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/matchday',
+                builder: (context, state) => const MatchdayPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/market',
+                builder: (context, state) => const MarketPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/leagues',
+                builder: (context, state) => const LeaguesPage(),
               ),
             ],
           ),
