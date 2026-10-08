@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fanta_comune/features/fantasy/data/fantasy_league_repository.dart';
 import 'package:fanta_comune/core/network/api_exception.dart';
 
 import 'package:flutter/widgets.dart';
@@ -65,9 +66,90 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
   bool loading = true;
   FantasyCommand? _failedCommand;
   String? persistenceError;
+  String? leagueError;
+  bool leagueBusy = false;
+  List<RemoteFantasyLeague> remoteLeagues = const [];
+  Future<void> _readLeagues() async {
+    if (_repository case final FantasyLeagueRepository repo) {
+      try {
+        final leagues = await repo.loadLeagues();
+        if (!_disposed) {
+          remoteLeagues = leagues;
+          leagueError = null;
+        }
+      } catch (error) {
+        if (!_disposed)
+          leagueError = error is ApiException
+              ? error.message
+              : 'Leghe non disponibili. Riprova.';
+      }
+    }
+  }
+
+  Future<T?> _leagueCommand<T>(
+    Future<T> Function(FantasyLeagueRepository repo) action,
+  ) async {
+    if (busy ||
+        leagueBusy ||
+        _disposed ||
+        _repository is! FantasyLeagueRepository)
+      return null;
+    leagueBusy = true;
+    _notify();
+    T? value;
+    _queue = _queue.then((_) async {
+      try {
+        if (_disposed || _clearing) return;
+        value = await action(_repository as FantasyLeagueRepository);
+        await _readLeagues();
+      } catch (error) {
+        leagueError = error is ApiException ? error.message : error.toString();
+      } finally {
+        leagueBusy = false;
+        _notify();
+      }
+    });
+    await _queue;
+    return value;
+  }
+
+  Future<bool> createLeague(String name) async =>
+      await _leagueCommand((repo) async {
+        await repo.createLeague(name);
+        return true;
+      }) ??
+      false;
+  Future<bool> joinLeague(String token) async =>
+      await _leagueCommand((repo) async {
+        await repo.joinLeague(token);
+        return true;
+      }) ??
+      false;
+  Future<bool> leaveLeague(String id) async =>
+      await _leagueCommand((repo) async {
+        await repo.leaveLeague(id);
+        return true;
+      }) ??
+      false;
+  Future<FantasyLeagueInvite?> rotateInvite(String id) =>
+      _leagueCommand((repo) => repo.rotateInvite(id));
+  Future<bool> revokeInvite(String leagueId, String inviteId) async =>
+      await _leagueCommand((repo) async {
+        await repo.revokeInvite(leagueId, inviteId);
+        return true;
+      }) ??
+      false;
+  Future<void> refreshLeagues() async {
+    await _leagueCommand((repo) async {
+      await _readLeagues();
+      return true;
+    });
+  }
+
   String? get recoveryMessage => _data?.recoveryMessage;
   bool get hasData => _projection != null;
-  bool get busy => loading || _pending > 0 || _submitting || _clearing;
+  bool get busy =>
+      leagueBusy || loading || _pending > 0 || _submitting || _clearing;
   int get revision => _data?.revision ?? 0;
 
   FantasyGame get _game => _projection!;
@@ -98,6 +180,7 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
       final data = await _repository.load();
       if (!_disposed) {
         _apply(data);
+        await _readLeagues();
         persistenceError =
             isRemote &&
                 (_repository as RemoteFantasyRepository).hasPendingTransfer
@@ -139,6 +222,7 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
         );
         if (!_disposed) {
           _apply(data);
+          await _readLeagues();
           persistenceError = null;
           _failedCommand = null;
         }
@@ -290,6 +374,13 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
             );
             if (!_disposed) {
               _apply(data);
+              await _readLeagues();
+              persistenceError =
+                  isRemote &&
+                      (_repository as RemoteFantasyRepository)
+                          .hasPendingTransfer
+                  ? 'Trasferimento da verificare: premi Riprova.'
+                  : null;
               _pollDelay = 30000;
             }
           } catch (error) {
@@ -318,6 +409,8 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
         } else {
           _data = null;
           _projection = null;
+          remoteLeagues = const [];
+          leagueError = null;
         }
         _failedCommand = null;
         persistenceError = null;

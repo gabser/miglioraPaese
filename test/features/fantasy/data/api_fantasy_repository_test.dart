@@ -1,10 +1,8 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import '../../../helpers/test_app.dart';
-import 'package:http/http.dart' as http;
+import '../../../support/fantasy_backend.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/network/api_client.dart';
@@ -15,80 +13,6 @@ import 'package:fanta_comune/features/fantasy/data/fantasy_api_mapper.dart';
 import 'package:fanta_comune/features/fantasy/data/fantasy_repository.dart';
 import 'package:fanta_comune/features/fantasy/domain/fantasy_models.dart';
 import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
-
-class CookieClient extends http.BaseClient {
-  final http.Client inner = http.Client();
-  String? cookie;
-  bool loseTransferReply = false;
-  bool offline = false;
-  bool refuseDeletion = false;
-  final List<String> keys = [];
-  @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    if (offline) throw http.ClientException('offline');
-    if (refuseDeletion && request.method == 'DELETE')
-      return http.StreamedResponse(
-        Stream.value(
-          utf8.encode('{"error":"unavailable","message":"Riprova"}'),
-        ),
-        503,
-      );
-    if (cookie != null) request.headers['cookie'] = cookie!;
-    final response = await inner.send(request);
-    cookie = response.headers['set-cookie']?.split(';').first ?? cookie;
-    if (request.url.path.endsWith('/transfers/confirmation')) {
-      keys.add(
-        (jsonDecode((request as http.Request).body) as Map)['idempotencyKey']
-            as String,
-      );
-      if (loseTransferReply) {
-        loseTransferReply = false;
-        await response.stream.drain<void>();
-        throw http.ClientException('reply lost after commit');
-      }
-    }
-    return response;
-  }
-
-  @override
-  void close() => inner.close();
-}
-
-class BackendFixture {
-  late Process process;
-  late StreamIterator<String> lines;
-  late String url;
-  Future<void> start() async {
-    final node = Platform.environment['FANTASY_TEST_NODE'] ?? 'node';
-    process = await Process.start(node, [
-      'test/support/fantasy_backend_fixture.mjs',
-    ]);
-    process.stderr.drain<void>();
-    lines = StreamIterator(
-      process.stdout.transform(utf8.decoder).transform(const LineSplitter()),
-    );
-    url = (await read())['url'] as String;
-  }
-
-  Future<Map<String, dynamic>> read() async {
-    await lines.moveNext().timeout(const Duration(seconds: 15));
-    return (jsonDecode(lines.current) as Map).cast<String, dynamic>();
-  }
-
-  Future<void> command(String action, [String? value]) async {
-    process.stdin.writeln(jsonEncode({'action': action, 'value': value}));
-    final result = await read();
-    if (result['error'] != null) throw StateError(result['error'] as String);
-    if (result['url'] != null) url = result['url'] as String;
-  }
-
-  Future<void> stop() async {
-    process.stdin.writeln('{"action":"stop"}');
-    await process.stdin.close();
-    await process.exitCode.timeout(const Duration(seconds: 10));
-    await lines.cancel();
-  }
-}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -305,6 +229,11 @@ void main() {
         );
         await manager.settled;
       });
+      addTearDown(() async {
+        manager.dispose();
+        transport.close();
+        await fixture.stop();
+      });
       expect(manager.hasData, isTrue);
       await tester.pumpWidget(
         buildTestApp(
@@ -324,14 +253,32 @@ void main() {
         await tester.tap(find.text(label).last);
         await pumpRoutingFrame(tester);
         expect(tester.takeException(), isNull);
+        if (label == 'Leghe') {
+          expect(find.text('Leghe private'), findsOneWidget);
+          final create = find.text('Crea lega privata');
+          await tester.ensureVisible(create);
+          await tester.runAsync(() async {
+            await tester.tap(create);
+          });
+          await tester.pumpAndSettle();
+          await tester.runAsync(() async {
+            await tester.tap(find.widgetWithText(FilledButton, 'Conferma'));
+            await Future<void>.delayed(const Duration(milliseconds: 20));
+            await manager.settled;
+          });
+          await tester.pumpAndSettle();
+          expect(manager.remoteLeagues.length, 1);
+          expect(
+            find.text(
+              'Servono almeno tre competitori per mostrare la classifica.',
+            ),
+            findsOneWidget,
+          );
+          expect(tester.takeException(), isNull);
+        }
       }
       expect(find.textContaining('Rehearsal API'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
-      manager.dispose();
-      await tester.runAsync(() async {
-        transport.close();
-        await fixture.stop();
-      });
     });
   }
 }
