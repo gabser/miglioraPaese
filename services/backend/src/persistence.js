@@ -10,7 +10,9 @@ import { migrateFantasyMarket } from './fantasy/market.js';
 
 import { migrateFantasyResults } from './fantasy/results.js';
 
-const schemaVersion = 5;
+import { migrateFantasyLeagues } from './fantasy/leagues.js';
+
+const schemaVersion = 6;
 
 export function createSqliteStateRepository({ databasePath, now }) {
   if (typeof databasePath !== 'string' || databasePath.trim() === '') {
@@ -121,6 +123,10 @@ function migrate(database) {
     if (currentVersion < 5) {
       migrateFantasyResults(database);
       database.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)').run(5, new Date().toISOString());
+    }
+    if (currentVersion < 6) {
+      migrateFantasyLeagues(database);
+      database.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)').run(6, new Date().toISOString());
     }
     database.exec('COMMIT;');
   } catch (error) {

@@ -39,7 +39,7 @@ it('persists suggestions, votes, predictions and results across restarts', async
       userId: 'anon:test-user',
       choice: 'improve',
     });
-    assert.equal(firstStore.persistence.schemaVersion, 5);
+    assert.equal(firstStore.persistence.schemaVersion, 6);
     firstStore.close();
     firstStore = null;
 

@@ -224,6 +224,20 @@ export function createApp(options = {}) {
         );
       }
 
+      if (route.name.startsWith('fantasyLeague')) {
+        const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
+        const { leagueId, inviteId } = route.params;
+        const leagues = store.fantasy.leagues;
+        const result = route.name === 'fantasyLeagueList' ? leagues.list(municipalityId, userId)
+          : route.name === 'fantasyLeagueRead' ? leagues.read(municipalityId, userId, leagueId)
+          : route.name === 'fantasyLeagueCreate' ? leagues.create(municipalityId, userId, await readJson(req))
+          : route.name === 'fantasyLeagueJoin' ? leagues.join(municipalityId, userId, await readJson(req))
+          : route.name === 'fantasyLeagueInvite' ? leagues.invite(municipalityId, userId, leagueId, await readJson(req))
+          : route.name === 'fantasyLeagueRevoke' ? leagues.revoke(municipalityId, userId, leagueId, inviteId)
+          : leagues.leave(municipalityId, userId, leagueId);
+        return sendJson(res, 200, result, responseHeaders);
+      }
+
       if (route.name === 'fantasyReveal' || route.name === 'fantasySummary' || route.name === 'fantasyReflection') {
         const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
         const result = route.name === 'fantasyReflection' ? store.fantasy.results.reflect(municipalityId, userId, route.params.matchdayId, route.params.cardId, await readJson(req))
@@ -1656,6 +1670,19 @@ function matchRoute(method, pathname) {
   }
   if (method === 'DELETE' && pathname === '/v1/session') {
     return { name: 'deleteSessionData', params: {} };
+  }
+
+  const fantasyLeague = pathname.match(/^\/v1\/fantasy\/municipalities\/([^/]+)\/leagues(?:\/([^/]+))?(?:\/(invites|membership)(?:\/([^/]+))?)?$/);
+  if (fantasyLeague) {
+    const [, municipalityId, leagueId, action, inviteId] = fantasyLeague;
+    const name = !leagueId && method === 'GET' ? 'fantasyLeagueList'
+      : !leagueId && method === 'POST' ? 'fantasyLeagueCreate'
+      : leagueId === 'join' && !action && method === 'POST' ? 'fantasyLeagueJoin'
+      : leagueId && !action && method === 'GET' ? 'fantasyLeagueRead'
+      : action === 'invites' && !inviteId && method === 'POST' ? 'fantasyLeagueInvite'
+      : action === 'invites' && inviteId && method === 'DELETE' ? 'fantasyLeagueRevoke'
+      : action === 'membership' && !inviteId && method === 'DELETE' ? 'fantasyLeagueLeave' : null;
+    if (name) return { name, params: { municipalityId: decodeURIComponent(municipalityId), leagueId: leagueId && decodeURIComponent(leagueId), inviteId: inviteId && decodeURIComponent(inviteId) } };
   }
 
   const fantasyOutcome = pathname.match(/^\/v1\/fantasy\/admin\/municipalities\/([^/]+)\/matchdays\/([^/]+)\/outcomes\/([^/]+)$/);

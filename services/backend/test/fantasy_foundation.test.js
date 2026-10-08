@@ -1,3 +1,4 @@
+import { migrateFantasyLeagues } from '../src/fantasy/leagues.js';
 import assert from 'node:assert/strict';
 import { it } from 'node:test';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -88,7 +89,7 @@ it('calendar handles timezone offsets and observation boundaries without season 
     now = Date.parse('2027-10-08T00:00:00Z');
     assert.equal(store.season('tuglie').season.status, 'ended');
     assert.equal(store.matchday('tuglie').matchday.number, 8);
-    assert.deepEqual(store.counts(), { seasons: 3, cards: 36, matchdays: 24, players: 0, drafts: 0, snapshots: 0, quotes: 0, transfers: 0, transfer_commands: 0, outcomes: 0, reveals: 0, reflections: 0, finalizations: 0 });
+    assert.deepEqual(store.counts(), { seasons: 3, cards: 36, matchdays: 24, players: 0, drafts: 0, snapshots: 0, quotes: 0, transfers: 0, transfer_commands: 0, outcomes: 0, reveals: 0, reflections: 0, finalizations: 0, leagues: 0, members: 0, invites: 0, invite_attempts: 0 });
   } finally { store.close(); }
   assert.throws(() => createFantasyStore({ seedStartsAt: '2026-10-08T00:00:00' }), /timezone/);
 });
@@ -120,12 +121,12 @@ it('migrates a version 1 fixture additively, preserves exact legacy payload, and
     store = createPersistentStore({ databasePath, now: () => Date.parse('2027-10-09T00:00:00Z') });
     assert.deepEqual(store.fantasy.matchday('tuglie', 'matchday-1').matchday, firstDay);
     assert.deepEqual(store.fantasy.cards('tuglie').items, firstCards);
-    assert.deepEqual(store.fantasy.counts(), { seasons: 3, cards: 36, matchdays: 24, players: 0, drafts: 0, snapshots: 0, quotes: 0, transfers: 0, transfer_commands: 0, outcomes: 0, reveals: 0, reflections: 0, finalizations: 0 });
+    assert.deepEqual(store.fantasy.counts(), { seasons: 3, cards: 36, matchdays: 24, players: 0, drafts: 0, snapshots: 0, quotes: 0, transfers: 0, transfer_commands: 0, outcomes: 0, reveals: 0, reflections: 0, finalizations: 0, leagues: 0, members: 0, invites: 0, invite_attempts: 0 });
     assert.equal(store.fantasy.season('tuglie').season.status, 'ended');
     store.close(); store = null;
     const output = execFileSync(process.execPath, ['scripts/verify_database.js'],
       { cwd: new URL('..', import.meta.url), env: { ...process.env, BACKUP_PATH: databasePath }, encoding: 'utf8' });
-    assert.equal(JSON.parse(output).schemaVersion, 5);
+    assert.equal(JSON.parse(output).schemaVersion, 6);
   } finally {
     database?.close(); store?.close();
     await rm(directory, { recursive: true, force: true });
@@ -141,6 +142,7 @@ it('rolls back all fantasy schema changes on failure and detects missing tables 
     migrateFantasyTeams(database);
     migrateFantasyMarket(database);
     migrateFantasyResults(database);
+    migrateFantasyLeagues(database);
     const store = createFantasyStore({ database });
     assert.equal(store.isReady(), true);
     assert.throws(() => transaction(database, () => {
@@ -175,7 +177,7 @@ it('backup and isolated restore preserve the full fantasy catalog and calendar',
     const rehearsal = execFileSync(process.execPath, ['scripts/rehearse_restore.js'], {
       cwd: new URL('..', import.meta.url), env: { ...process.env, BACKUP_PATH: backupPath }, encoding: 'utf8',
     });
-    assert.deepEqual(JSON.parse(rehearsal).fantasy, { seasons: 3, cards: 36, matchdays: 24, players: 0, drafts: 0, snapshots: 0, quotes: 0, transfers: 0, transfer_commands: 0, outcomes: 0, reveals: 0, reflections: 0, finalizations: 0 });
+    assert.deepEqual(JSON.parse(rehearsal).fantasy, { seasons: 3, cards: 36, matchdays: 24, players: 0, drafts: 0, snapshots: 0, quotes: 0, transfers: 0, transfer_commands: 0, outcomes: 0, reveals: 0, reflections: 0, finalizations: 0, leagues: 0, members: 0, invites: 0, invite_attempts: 0 });
     const damaged = new DatabaseSync(sourcePath);
     damaged.exec('DROP TABLE fantasy_cards;');
     damaged.close();
