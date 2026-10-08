@@ -56,9 +56,9 @@ class Harness {
   final AppPrefs prefs;
   DateTime time = epoch;
   late final FantasyManager manager;
-  void at(DateTime value) {
+  Future<void> at(DateTime value) async {
     time = value;
-    manager.refreshTime();
+    await manager.refreshTime();
   }
 
   Future<FantasyManager> reload() async {

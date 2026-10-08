@@ -11,6 +11,8 @@ import 'package:fanta_comune/features/game/data/api_game_repository.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/data/mock_game_repository.dart';
 import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
+import 'package:fanta_comune/features/fantasy/data/fantasy_repository.dart';
+import 'package:fanta_comune/features/fantasy/data/local_fantasy_repository.dart';
 import 'package:fanta_comune/features/next_problems/data/api_next_problems_repository.dart';
 import 'package:fanta_comune/features/next_problems/data/mock_next_problems_repository.dart';
 import 'package:fanta_comune/features/next_problems/data/next_problems_repository.dart';
@@ -33,8 +35,12 @@ class AppDependencies extends StatelessWidget {
       providers: [
         Provider<AppConfig>.value(value: config),
         ChangeNotifierProvider<AppPrefs>.value(value: appPrefs),
+        Provider<FantasyRepository>(
+          create: (_) => LocalFantasyRepository(appPrefs),
+        ),
         ChangeNotifierProvider<FantasyManager>(
-          create: (_) => FantasyManager(appPrefs),
+          create: (context) =>
+              FantasyManager.withRepository(context.read<FantasyRepository>()),
         ),
         Provider<CivicLoopStore>(
           create: (context) =>

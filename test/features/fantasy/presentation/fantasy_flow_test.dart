@@ -64,7 +64,7 @@ void main() {
     await tester.enterText(field, 'Segnale dal quartiere');
     await tester.pump();
     expect(h.manager.motivations['buche-centro'], 'Segnale dal quartiere');
-    h.at(day.locksAt);
+    await h.at(day.locksAt);
     await tester.pump();
     expect(tester.widget<TextFormField>(field).enabled, isFalse);
     expect(find.text('Segnale dal quartiere'), findsOneWidget);
@@ -84,11 +84,11 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         final h = await createHarness();
-        h.manager.transfer(
+        await h.manager.transfer(
           outgoingId: 'parco-nord',
           incomingId: 'fontanelle-ovest',
         );
-        h.manager.transfer(
+        await h.manager.transfer(
           outgoingId: 'fontanelle-ovest',
           incomingId: 'parco-nord',
         );
@@ -135,9 +135,9 @@ void main() {
         await tester.pumpAndSettle();
         expect(h.manager.transferPenalty, 4);
         expect(h.manager.squadIds, contains('fontanelle-ovest'));
-        h.manager.setCaptain('bus-stazione');
-        h.manager.confirmLineup();
-        h.at(day.locksAt);
+        await h.manager.setCaptain('bus-stazione');
+        await h.manager.confirmLineup();
+        await h.at(day.locksAt);
         await tester.pump();
         for (final button in tester.widgetList<FilledButton>(
           find.byWidgetPredicate((w) => w is FilledButton),
@@ -169,7 +169,7 @@ void main() {
           isTrue,
         );
         expect(find.text('Conferma: Intervento osservato'), findsNothing);
-        h.at(day.observationEndsAt);
+        await h.at(day.observationEndsAt);
         await tester.pump();
         final reflection = find.text('Conferma: Intervento osservato');
         await tester.ensureVisible(reflection);
@@ -267,7 +267,7 @@ void main() {
     'fantasy privacy reset returns to welcome with no saved or in-memory game',
     (tester) async {
       final h = await createHarness();
-      h.manager.setPrediction('buche-centro', CivicTrend.stable);
+      await h.manager.setPrediction('buche-centro', CivicTrend.stable);
       await tester.pumpWidget(
         buildTestApp(
           h.prefs,
@@ -299,7 +299,7 @@ void main() {
     final h = Harness(prefs);
     await h.manager.settled;
     prefs.fail = true;
-    h.manager.setMotivation('buche-centro', 'Retry');
+    await h.manager.setMotivation('buche-centro', 'Retry');
     await h.manager.settled;
     await tester.pumpWidget(
       buildTestApp(

@@ -34,6 +34,10 @@ class FantasyPage extends StatelessWidget {
               builder: (context, manager, _) => Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (manager.loading || manager.busy)
+                    const LinearProgressIndicator(
+                      semanticsLabel: 'Operazione in corso',
+                    ),
                   if (manager.recoveryMessage != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -52,7 +56,9 @@ class FantasyPage extends StatelessWidget {
                               semanticsLabel: manager.persistenceError,
                             ),
                             TextButton(
-                              onPressed: manager.retrySave,
+                              onPressed: manager.busy
+                                  ? null
+                                  : manager.retrySave,
                               child: const Text('Riprova salvataggio'),
                             ),
                           ],
@@ -500,7 +506,7 @@ class MarketComparison extends StatelessWidget {
   });
   final model.FantasyCard outgoing;
   final model.FantasyCard incoming;
-  final VoidCallback onConfirm;
+  final VoidCallback? onConfirm;
   final int penalty;
 
   @override
@@ -856,3 +862,27 @@ class _UrbanScene extends StatelessWidget {
 
 String _date(DateTime value) =>
     '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
+
+class FantasyLoadingPage extends StatelessWidget {
+  const FantasyLoadingPage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final manager = context.watch<FantasyManager>();
+    return Scaffold(
+      body: Center(
+        child: manager.loading
+            ? const CircularProgressIndicator()
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(manager.persistenceError ?? 'Caricamento non riuscito.'),
+                  TextButton(
+                    onPressed: manager.retrySave,
+                    child: const Text('Riprova'),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
