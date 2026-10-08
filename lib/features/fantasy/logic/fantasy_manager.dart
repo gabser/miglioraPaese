@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fanta_comune/core/network/api_exception.dart';
 
 import 'package:flutter/widgets.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
@@ -45,6 +46,12 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
 
   final FantasyRepository _repository;
   final DateTime Function() _now;
+  bool get isRemote => _repository is RemoteFantasyRepository;
+  final Stopwatch _serverElapsed = Stopwatch();
+  DateTime? _serverTime;
+  final Stopwatch _pollClock = Stopwatch()..start();
+  int _nextPoll = 0;
+  int _pollDelay = 30000;
   FantasyData? _data;
   FantasyGame? _projection;
   Future<void> _queue = Future.value();
@@ -66,12 +73,16 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
   FantasyGame get _game => _projection!;
   void _apply(FantasyData data) {
     _data = data;
+    _serverTime = data.serverTime;
+    _serverElapsed
+      ..reset()
+      ..start();
     _projection = FantasyGame(
       matchday: data.state.matchday,
       cards: data.cards,
       outcomes: data.outcomes,
       leagues: data.leagues,
-      now: _now,
+      now: () => this.now,
       usingDemoOutcomes: false,
       restored: data.state,
     );
@@ -87,7 +98,11 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
       final data = await _repository.load();
       if (!_disposed) {
         _apply(data);
-        persistenceError = null;
+        persistenceError =
+            isRemote &&
+                (_repository as RemoteFantasyRepository).hasPendingTransfer
+            ? 'Trasferimento da verificare: premi Riprova.'
+            : null;
       }
     } catch (error) {
       if (!_disposed) _error(error);
@@ -100,11 +115,16 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
   void _error(Object error) {
     persistenceError = error is FantasyFailure
         ? error.message
+        : error is ApiException
+        ? '${error.message} Stato di sola lettura: Riprova.'
         : 'Operazione non riuscita. Riprova.';
   }
 
   Future<bool> _command(FantasyCommand command, {bool exclusive = false}) {
-    if (_disposed || _clearing || (exclusive && (_submitting || loading))) {
+    if ((isRemote && (busy || persistenceError != null)) ||
+        _disposed ||
+        _clearing ||
+        (exclusive && (_submitting || loading))) {
       return Future.value(false);
     }
     if (exclusive) _submitting = true;
@@ -150,6 +170,24 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> get settled => _queue;
   Future<void> retrySave() async {
     if (_disposed || _clearing || busy) return;
+    if (isRemote &&
+        (_repository as RemoteFantasyRepository).hasPendingTransfer) {
+      loading = true;
+      _notify();
+      _queue = () async {
+        try {
+          _apply(await _repository.retryPendingTransfer());
+          persistenceError = null;
+        } catch (error) {
+          _error(error);
+        } finally {
+          loading = false;
+          _notify();
+        }
+      }();
+      await _queue;
+      return;
+    }
     final command = _failedCommand;
     if (command != null) {
       await _command(command, exclusive: true);
@@ -184,10 +222,16 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
     required String outgoingId,
     required String incomingId,
     int? expectedPenalty,
+    FantasyTransferQuote? quote,
   }) async {
     if (busy) return 'Operazione già in corso.';
     final accepted = await _command(
-      TransferFantasyCard(outgoingId, incomingId, expectedPenalty),
+      TransferFantasyCard(
+        outgoingId,
+        incomingId,
+        expectedPenalty,
+        quote: quote,
+      ),
       exclusive: true,
     );
     return accepted
@@ -200,9 +244,40 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
   Future<bool> startNextMatchday(Matchday next) =>
       _command(StartFantasyMatchday(next), exclusive: true);
 
-  Future<void> refreshTime() {
+  Future<FantasyTransferQuote?> quoteTransfer(
+    String outgoing,
+    String incoming,
+  ) async {
+    if (!isRemote || busy || persistenceError != null) return null;
+    _submitting = true;
+    _notify();
+    try {
+      return await (_repository as RemoteFantasyRepository).quoteTransfer(
+        outgoing,
+        incoming,
+        revision,
+      );
+    } catch (error) {
+      _error(error);
+      if (error is FantasyFailure &&
+          error.kind == FantasyFailureKind.staleRevision)
+        await _load();
+      return null;
+    } finally {
+      _submitting = false;
+      _notify();
+    }
+  }
+
+  Future<void> refreshTime({bool force = false}) {
     if (_disposed || _clearing || loading || _refreshing || !hasData) {
       return settled;
+    }
+    if (isRemote) {
+      _notify();
+      if (busy || (!force && _pollClock.elapsedMilliseconds < _nextPoll))
+        return settled;
+      _nextPoll = _pollClock.elapsedMilliseconds + _pollDelay;
     }
     _refreshing = true;
     _notify(); // Disable controls at the clock boundary while persistence completes.
@@ -215,9 +290,12 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
             );
             if (!_disposed) {
               _apply(data);
+              _pollDelay = 30000;
             }
           } catch (error) {
             if (!_disposed) _error(error);
+            _pollDelay = (_pollDelay * 2).clamp(30000, 300000);
+            _nextPoll = _pollClock.elapsedMilliseconds + _pollDelay;
           }
         })
         .whenComplete(() {
@@ -235,7 +313,12 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
       await settled;
       final data = await _repository.clear();
       if (!_disposed) {
-        _apply(data);
+        if (data != null) {
+          _apply(data);
+        } else {
+          _data = null;
+          _projection = null;
+        }
         _failedCommand = null;
         persistenceError = null;
       }
@@ -250,7 +333,7 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) unawaited(refreshTime());
+    if (state == AppLifecycleState.resumed) unawaited(refreshTime(force: true));
   }
 
   @override
@@ -261,10 +344,16 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
     super.dispose();
   }
 
-  FantasySeason get season => _game.season;
+  FantasySeason get season => _data?.season ?? _game.season;
   Matchday get matchday => _game.matchday;
-  DateTime get now => _now();
-  bool get isLocked => _clearing || !hasData || _game.isLocked;
+  DateTime get now => isRemote && _serverTime != null
+      ? _serverTime!.add(_serverElapsed.elapsed)
+      : _now();
+  bool get isLocked =>
+      _clearing ||
+      !hasData ||
+      (isRemote && persistenceError != null) ||
+      _game.isLocked;
   List<FantasyCard> get cards => _game.cards;
   List<FantasyLeague> get leagues => _game.leagues;
   List<String> get squadIds => _game.squadIds;
@@ -277,7 +366,7 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
   List<Transfer> get transfers => _game.transfers;
   int get transfersRemaining => _game.transfersRemaining;
   int get nextTransferPenalty => _game.nextTransferPenalty;
-  int get communityScore => _game.communityScore;
+  int? get communityScore => isRemote ? null : _game.communityScore;
   int get transferPenalty => _game.transferPenalty;
   Squad get squad => _game.squad;
   Lineup get lineup => _game.lineup;
@@ -296,6 +385,25 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
   CivicTrend? predictionFor(CardOutcome o) => _game.predictionFor(o);
   ReflectionAnswer? reflectionFor(CardOutcome o) => _game.reflectionFor(o);
   bool hasPersonalResult(CardOutcome o) => _game.hasPersonalResult(o);
-  ScoreBreakdown scoreFor(CardOutcome o) => _game.scoreFor(o);
-  MatchdayScore scoreForMatchday(String dayId) => _game.scoreForMatchday(dayId);
+  ScoreBreakdown scoreFor(CardOutcome o) => isRemote
+      ? _data!.scores['${o.matchdayId}/${o.cardId}'] ??
+            const ScoreBreakdown(
+              cardId: '',
+              observationPoints: 0,
+              predictionPoints: 0,
+              reflectionPoints: 0,
+              captainMultiplier: 1,
+            )
+      : _game.scoreFor(o);
+  MatchdayScore scoreForMatchday(String dayId) => isRemote
+      ? _data!.summaries[dayId] ??
+            const MatchdayScore(
+              frozenPoints: 0,
+              reflectionBonus: 0,
+              transferPenalty: 0,
+              eligible: false,
+            )
+      : _game.scoreForMatchday(dayId);
+  String summaryStatus(String dayId) =>
+      _data?.summaryStatuses[dayId] ?? 'provisional';
 }

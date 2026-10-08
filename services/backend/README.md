@@ -233,3 +233,12 @@ For an authorized fixture environment, `npm run publish-fantasy-outcome` reads
 `API_BASE_URL` and `MODERATION_ADMIN_TOKEN_FILE`. It prints only publication
 metadata, never the bearer token or source content. Do not run it against a
 live pilot without the operational authorization required by the runbook.
+
+### Client Flutter fantasy API
+
+Usare `FANTASY_MODE_ENABLED=true`, `FANTASY_DATA_SOURCE=api`,
+`PILOT_MUNICIPALITY_ID=tuglie` e `API_BASE_URL` esplicito. Il default resta mock.
+Il browser invia cookie con credenziali: il pilot richiede HTTPS same-site
+secondo il runbook. Nessun account recuperabile o importazione demo.
+Il test Flutter avvia esclusivamente `test/support/fantasy_backend_fixture.mjs`
+su loopback e database temporaneo; richiede Node 24 nel PATH.

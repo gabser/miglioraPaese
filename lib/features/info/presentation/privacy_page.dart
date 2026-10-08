@@ -28,6 +28,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
     if (_clearing) return;
     final config = context.read<AppConfig>();
     final hasRemoteData =
+        config.fantasyDataSource == FantasyDataSource.api ||
         config.gameDataSource == GameDataSource.api ||
         config.nextProblemsDataSource == NextProblemsDataSource.api;
     if (hasRemoteData) {
@@ -62,7 +63,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
         ? context.read<FantasyManager>()
         : null;
     try {
-      if (hasRemoteData) {
+      if (hasRemoteData && !(fantasyManager?.isRemote ?? false)) {
         await context.read<ApiClient>().deleteJson(['v1', 'session']);
       }
       if (config.fantasyModeEnabled) {
@@ -72,12 +73,12 @@ class _PrivacyPageState extends State<PrivacyPage> {
       }
       if (!context.mounted) return;
       context.go(config.fantasyModeEnabled ? '/welcome' : '/boot');
-    } on ApiException catch (error) {
+    } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Cancellazione non completata: ${error.message} Riprova.',
+            'Cancellazione non completata: ${error is ApiException ? error.message : 'Riprova la cancellazione.'} Riprova.',
           ),
         ),
       );
@@ -92,6 +93,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final config = context.watch<AppConfig>();
     final hasRemoteData =
+        config.fantasyDataSource == FantasyDataSource.api ||
         config.gameDataSource == GameDataSource.api ||
         config.nextProblemsDataSource == NextProblemsDataSource.api;
 

@@ -207,5 +207,5 @@ class DelayedRepository implements FantasyRepository {
   Future<FantasyData> synchronize({required int expectedRevision}) =>
       delegate.synchronize(expectedRevision: expectedRevision);
   @override
-  Future<FantasyData> clear() => delegate.clear();
+  Future<FantasyData?> clear() => delegate.clear();
 }

@@ -33,6 +33,11 @@ jobs:
           flutter-version: "3.44.2"
           cache: true
 
+      - name: Set up Node for isolated fantasy API tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
       - name: Install dependencies
         run: flutter pub get --enforce-lockfile
 

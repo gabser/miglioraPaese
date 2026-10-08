@@ -12,10 +12,18 @@ class FantasyData {
     required this.revision,
     required this.isDemo,
     this.recoveryMessage,
+    this.season,
+    this.scores = const {},
+    this.summaries = const {},
+    this.summaryStatuses = const {},
   }) : cards = List.unmodifiable(cards),
        outcomes = List.unmodifiable(outcomes),
        leagues = List.unmodifiable(leagues);
 
+  final FantasySeason? season;
+  final Map<String, ScoreBreakdown> scores;
+  final Map<String, MatchdayScore> summaries;
+  final Map<String, String> summaryStatuses;
   final FantasySavedState state;
   final List<FantasyCard> cards;
   final List<CardOutcome> outcomes;
@@ -47,7 +55,7 @@ abstract interface class FantasyRepository {
     required int expectedRevision,
   });
   Future<FantasyData> synchronize({required int expectedRevision});
-  Future<FantasyData> clear();
+  Future<FantasyData?> clear();
 }
 
 sealed class FantasyCommand {
@@ -85,11 +93,13 @@ class TransferFantasyCard extends FantasyCommand {
   const TransferFantasyCard(
     this.outgoingId,
     this.incomingId,
-    this.expectedPenalty,
-  );
+    this.expectedPenalty, {
+    this.quote,
+  });
   final String outgoingId;
   final String incomingId;
   final int? expectedPenalty;
+  final FantasyTransferQuote? quote;
 }
 
 class ReflectOnFantasyCard extends FantasyCommand {
@@ -102,4 +112,33 @@ class ReflectOnFantasyCard extends FantasyCommand {
 class StartFantasyMatchday extends FantasyCommand {
   const StartFantasyMatchday(this.matchday);
   final Matchday matchday;
+}
+
+/// Server repositories do not replay a queue of offline commands.
+abstract interface class RemoteFantasyRepository implements FantasyRepository {
+  bool get hasPendingTransfer;
+  Future<FantasyData> retryPendingTransfer();
+  Future<FantasyTransferQuote> quoteTransfer(
+    String outgoingId,
+    String incomingId,
+    int revision,
+  );
+}
+
+class FantasyTransferQuote {
+  const FantasyTransferQuote({
+    required this.id,
+    required this.revision,
+    required this.outgoingPrice,
+    required this.incomingPrice,
+    required this.penalty,
+    required this.expiresAt,
+  });
+  final String id;
+  final int revision;
+  final int outgoingPrice;
+  final int incomingPrice;
+  final int penalty;
+  final DateTime expiresAt;
+  int get creditDelta => outgoingPrice - incomingPrice;
 }

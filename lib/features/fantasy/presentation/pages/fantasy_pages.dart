@@ -437,20 +437,29 @@ class MatchdayPage extends StatelessWidget {
                       tilePadding: EdgeInsets.zero,
                       title: const Text('Aggiungi una motivazione facoltativa'),
                       children: [
-                        TextFormField(
-                          key: ValueKey(
-                            'motivation-${manager.matchday.id}-${card.id}',
+                        if (manager.isRemote)
+                          _RemoteMotivation(
+                            manager: manager,
+                            cardId: card.id,
+                            key: ValueKey(
+                              'remote-${manager.matchday.id}-${card.id}',
+                            ),
+                          )
+                        else
+                          TextFormField(
+                            key: ValueKey(
+                              'motivation-${manager.matchday.id}-${card.id}',
+                            ),
+                            initialValue: manager.motivations[card.id] ?? '',
+                            enabled: !manager.isLocked && !manager.loading,
+                            onChanged: (text) =>
+                                manager.setMotivation(card.id, text),
+                            maxLines: 2,
+                            decoration: const InputDecoration(
+                              hintText:
+                                  'Quale segnale ti ha portato a questa previsione?',
+                            ),
                           ),
-                          initialValue: manager.motivations[card.id] ?? '',
-                          enabled: !manager.isLocked && !manager.loading,
-                          onChanged: (text) =>
-                              manager.setMotivation(card.id, text),
-                          maxLines: 2,
-                          decoration: const InputDecoration(
-                            hintText:
-                                'Quale segnale ti ha portato a questa previsione?',
-                          ),
-                        ),
                       ],
                     ),
                   ],
@@ -652,7 +661,10 @@ class _MarketPageState extends State<MarketPage> {
     model.FantasyCard incoming,
   ) async {
     final outgoing = manager.cardById(_outgoingId!);
-    final penalty = manager.nextTransferPenalty;
+    final quote = await manager.quoteTransfer(outgoing.id, incoming.id);
+    if (!context.mounted) return;
+    if (manager.isRemote && quote == null) return;
+    final penalty = quote?.penalty ?? manager.nextTransferPenalty;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => Consumer<FantasyManager>(
@@ -660,6 +672,8 @@ class _MarketPageState extends State<MarketPage> {
           outgoing: outgoing,
           incoming: incoming,
           penalty: penalty,
+          outgoingPrice: quote?.outgoingPrice,
+          incomingPrice: quote?.incomingPrice,
           onConfirm: current.busy
               ? null
               : () async {
@@ -667,6 +681,7 @@ class _MarketPageState extends State<MarketPage> {
                     outgoingId: outgoing.id,
                     incomingId: incoming.id,
                     expectedPenalty: penalty,
+                    quote: quote,
                   );
                   if (!dialogContext.mounted) return;
                   Navigator.pop(dialogContext);
@@ -712,8 +727,10 @@ class _MatchdaySummary extends StatelessWidget {
               const Text(
                 'Formazione non valida o non confermata al blocco: nessun punto personale.',
               ),
-            const Text(
-              'Dati demo locali. Il punteggio cooperativo è separato.',
+            Text(
+              manager.isRemote
+                  ? 'Dati sintetici dal server · ${manager.summaryStatus(manager.matchday.id) == 'final' ? 'Definitivo' : 'Provvisorio'}. Punteggio cooperativo non disponibile.'
+                  : 'Dati demo locali. Il punteggio cooperativo è separato.',
             ),
           ],
         ),
@@ -735,6 +752,10 @@ class _LeaguesPageState extends State<LeaguesPage> {
   Widget build(BuildContext context) {
     final manager = context.watch<FantasyManager>();
     if (!manager.hasData) return const FantasyLoadingPage();
+    if (manager.isRemote)
+      return const FantasyPage(
+        child: Text('Leghe remote non ancora disponibili.'),
+      );
     final league = manager.leagues[_municipal ? 1 : 0];
     return FantasyPage(
       child: Column(
@@ -769,7 +790,10 @@ class _LeaguesPageState extends State<LeaguesPage> {
           const SizedBox(height: 8),
           LeagueTable(league: league),
           const SizedBox(height: 16),
-          CommunityScore(value: manager.communityScore),
+          if (manager.communityScore case final int score)
+            CommunityScore(value: score)
+          else
+            const Text('Punteggio cooperativo non disponibile.'),
         ],
       ),
     );
@@ -822,6 +846,49 @@ class _PageHeader extends StatelessWidget {
         ),
       ),
       if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+    ],
+  );
+}
+
+class _RemoteMotivation extends StatefulWidget {
+  const _RemoteMotivation({
+    required this.manager,
+    required this.cardId,
+    super.key,
+  });
+  final FantasyManager manager;
+  final String cardId;
+  @override
+  State<_RemoteMotivation> createState() => _RemoteMotivationState();
+}
+
+class _RemoteMotivationState extends State<_RemoteMotivation> {
+  late final TextEditingController controller = TextEditingController(
+    text: widget.manager.motivations[widget.cardId] ?? '',
+  );
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      TextField(
+        controller: controller,
+        enabled: !widget.manager.isLocked && !widget.manager.busy,
+        maxLength: 1000,
+        maxLines: 2,
+        decoration: const InputDecoration(labelText: 'Motivazione facoltativa'),
+      ),
+      TextButton(
+        onPressed: widget.manager.isLocked || widget.manager.busy
+            ? null
+            : () =>
+                  widget.manager.setMotivation(widget.cardId, controller.text),
+        child: const Text('Salva motivazione'),
+      ),
     ],
   );
 }

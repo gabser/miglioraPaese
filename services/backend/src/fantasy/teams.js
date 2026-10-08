@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { transaction } from './transaction.js';
 
 const initialSquad = ['buche-centro', 'bus-stazione', 'parco-nord', 'rifiuti-mercato', 'lampioni-sud', 'attraversamenti-scuole', 'alberi-viale', 'sportello-anagrafe'];
@@ -113,7 +114,7 @@ export function createFantasyTeams({ database, now = Date.now, catalog, getTrans
     const squad = JSON.parse(player.squad_ids);
     const draft = draftFor(player, day, cards);
     const snapshots = database.prepare('SELECT payload FROM fantasy_snapshots WHERE season_id = ? AND user_id = ? ORDER BY matchday_id').all(season.id, player.user_id).map((row) => JSON.parse(row.payload));
-    return { serverTime: time, isDemo: Boolean(season.is_demo), seasonId: season.id, matchdayId: day.id, revision: player.revision,
+    return { serverTime: time, isDemo: Boolean(season.is_demo), seasonId: season.id, matchdayId: day.id, revision: player.revision, sessionScope: createHash('sha256').update(JSON.stringify([season.id, player.user_id])).digest('hex'),
       ...getTransferData(player, day), team: { squadIds: squad, ...draft, budgetRemaining: 100 - squad.reduce((sum, id) => sum + cards.get(id).price, 0) }, snapshots };
   }
   function checkRevision(player, revision) {
