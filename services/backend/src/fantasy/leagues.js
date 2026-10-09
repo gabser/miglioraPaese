@@ -87,8 +87,9 @@ export function createFantasyLeagues({database: db, teams, results, now=Date.now
       memberCount:members.length,competitiveCount:members.filter(m=>m.role==='competitor').length,minimumParticipants:3};
   }
   function envelope(c) { return {serverTime:iso(),isDemo:Boolean(c.season.is_demo),seasonId:c.season.id}; }
-  function archive(id) {
-    db.prepare("UPDATE fantasy_leagues SET status = 'archived', owner_id = NULL, creation_key = '' WHERE id = ?").run(id);
+  function archive(id, eraseOwner = true) {
+    if (eraseOwner) db.prepare("UPDATE fantasy_leagues SET status = 'archived', owner_id = NULL, creation_key = '' WHERE id = ?").run(id);
+    else db.prepare("UPDATE fantasy_leagues SET status = 'archived' WHERE id = ?").run(id);
     db.prepare('UPDATE fantasy_invites SET revoked = 1 WHERE league_id = ?').run(id);
   }
   function rateLimit(c) {
@@ -108,6 +109,7 @@ export function createFantasyLeagues({database: db, teams, results, now=Date.now
       const c=context(municipalityId,userId); activeSeason(c);
       return transaction(db,()=> {
         let league=db.prepare('SELECT * FROM fantasy_leagues WHERE season_id = ? AND owner_id = ? AND creation_key = ?').get(c.season.id,userId,body.idempotencyKey);
+        if (league?.status === 'archived') fail('league_archived', 'This creation command belongs to an archived league.');
         if(league && league.name!==body.name) fail('idempotency_conflict','Key already used for another league.');
         if(!league) {
           const count=db.prepare("SELECT COUNT(*) AS n FROM fantasy_leagues WHERE season_id = ? AND owner_id = ? AND status = 'active'").get(c.season.id,userId).n;
@@ -178,7 +180,7 @@ export function createFantasyLeagues({database: db, teams, results, now=Date.now
       const c=context(municipalityId,userId);
       return transaction(db,()=> {
         const league=leagueFor(c,id);
-        if(league.owner_id===userId) archive(id);
+        if(league.owner_id===userId) archive(id, false);
         db.prepare('DELETE FROM fantasy_members WHERE league_id = ? AND user_id = ?').run(id,userId);
         return {...envelope(c),status:'left'};
       });

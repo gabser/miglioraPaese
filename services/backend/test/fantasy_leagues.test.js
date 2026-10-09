@@ -126,6 +126,10 @@ it('owner exit archives the league and prevents future invitation rotation',()=>
   try { const {league}=fullLeague(store); store.fantasy.leagues.leave('tuglie',a,league.id);
     assert.equal(store.fantasy.leagues.read('tuglie',b,league.id).league.status,'archived');
     assert.throws(()=>invite(store,league.id),e=>e.statusCode===404);
+    assert.throws(()=>create(store),e=>e.code==='league_archived');
+    assert.equal(store.fantasy.counts().leagues,1);
+    store.deleteUserData(a);
+    assert.equal(store.fantasy.leagues.read('tuglie',b,league.id).league.status,'archived');
   } finally {store.close();}
 });
 it('hash-only invites and rate limit survive restart; failed deletion rolls all league state back',async()=> {

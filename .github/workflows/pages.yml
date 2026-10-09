@@ -36,7 +36,12 @@ jobs:
         uses: actions/configure-pages@v6
 
       - name: Build mock demo
-        run: flutter build web --release --base-href "/miglioraPaese/"
+        run: >-
+          flutter build web --release --base-href "/miglioraPaese/"
+          --dart-define=FANTASY_MODE_ENABLED=true
+          --dart-define=FANTASY_DATA_SOURCE=mock
+          --dart-define=GAME_DATA_SOURCE=mock
+          --dart-define=NEXT_PROBLEMS_DATA_SOURCE=mock
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v5

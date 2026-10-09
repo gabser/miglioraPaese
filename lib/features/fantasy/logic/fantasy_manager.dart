@@ -78,10 +78,11 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
           leagueError = null;
         }
       } catch (error) {
-        if (!_disposed)
+        if (!_disposed) {
           leagueError = error is ApiException
               ? error.message
               : 'Leghe non disponibili. Riprova.';
+        }
       }
     }
   }
@@ -92,8 +93,9 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
     if (busy ||
         leagueBusy ||
         _disposed ||
-        _repository is! FantasyLeagueRepository)
+        _repository is! FantasyLeagueRepository) {
       return null;
+    }
     leagueBusy = true;
     _notify();
     T? value;
@@ -344,8 +346,9 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
     } catch (error) {
       _error(error);
       if (error is FantasyFailure &&
-          error.kind == FantasyFailureKind.staleRevision)
+          error.kind == FantasyFailureKind.staleRevision) {
         await _load();
+      }
       return null;
     } finally {
       _submitting = false;
@@ -359,8 +362,9 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
     }
     if (isRemote) {
       _notify();
-      if (busy || (!force && _pollClock.elapsedMilliseconds < _nextPoll))
+      if (busy || (!force && _pollClock.elapsedMilliseconds < _nextPoll)) {
         return settled;
+      }
       _nextPoll = _pollClock.elapsedMilliseconds + _pollDelay;
     }
     _refreshing = true;
@@ -416,7 +420,15 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
         persistenceError = null;
       }
     } catch (error) {
-      if (!_disposed) _error(error);
+      if (!_disposed) {
+        if (isRemote && _repository.cached == null) {
+          _data = null;
+          _projection = null;
+          remoteLeagues = const [];
+          leagueError = null;
+        }
+        _error(error);
+      }
       rethrow;
     } finally {
       _clearing = false;

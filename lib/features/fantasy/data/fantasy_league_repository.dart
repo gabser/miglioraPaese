@@ -23,8 +23,9 @@ class RemoteFantasyLeague {
     final role = l['role'], status = l['status'];
     if (!['competitor', 'spectator'].contains(role) ||
         !['active', 'archived'].contains(status) ||
-        l['minimumParticipants'] != 3)
+        l['minimumParticipants'] != 3) {
       throw const FormatException('Invalid league metadata');
+    }
     final entries = (raw['entries'] as List).map((v) {
       final row = FantasyApiMapper.object(v);
       return LeagueEntry(

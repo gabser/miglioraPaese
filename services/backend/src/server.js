@@ -1634,7 +1634,7 @@ export function startServer({
           minimumAggregateSampleSize,
         }));
   const managedObservability =
-    observability ?? createObservability({ logger, version: '0.6.0' });
+    observability ?? createObservability({ logger });
   let app;
   try {
     app = createApp({

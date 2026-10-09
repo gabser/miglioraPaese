@@ -3,8 +3,16 @@ name: Build staging candidates
 on:
   workflow_dispatch:
     inputs:
+      profile:
+        description: Explicit API candidate profile (build only)
+        required: true
+        type: choice
+        default: legacy-api
+        options:
+          - legacy-api
+          - fantasy-api
       api_base_url:
-        description: Same-site public API base URL for staging
+        description: Same-site HTTPS API base URL for protected staging
         required: true
         type: string
       pilot_municipality_id:
@@ -26,43 +34,52 @@ jobs:
     env:
       API_BASE_URL: ${{ inputs.api_base_url }}
       PILOT_MUNICIPALITY_ID: ${{ inputs.pilot_municipality_id }}
-
+      STAGING_PROFILE: ${{ inputs.profile }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Validate candidate inputs
+        run: node services/backend/scripts/validate_candidate_config.js
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.44.2"
           cache: true
-
       - name: Install dependencies
         run: flutter pub get --enforce-lockfile
-
-      - name: Build API-enabled candidate
-        run: >-
-          flutter build web --release
-          --dart-define=FANTASY_MODE_ENABLED=false
-          --dart-define=NEXT_PROBLEMS_DATA_SOURCE=api
-          --dart-define=GAME_DATA_SOURCE=api
-          --dart-define=API_BASE_URL="$API_BASE_URL"
-          --dart-define=PILOT_MUNICIPALITY_ID="$PILOT_MUNICIPALITY_ID"
-
+      - name: Build explicit API profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$STAGING_PROFILE" in
+            legacy-api) fantasy_enabled=false; fantasy_source=mock ;;
+            fantasy-api) fantasy_enabled=true; fantasy_source=api ;;
+            *) exit 1 ;;
+          esac
+          flutter build web --release \
+            --dart-define=FANTASY_MODE_ENABLED="$fantasy_enabled" \
+            --dart-define=FANTASY_DATA_SOURCE="$fantasy_source" \
+            --dart-define=NEXT_PROBLEMS_DATA_SOURCE=api \
+            --dart-define=GAME_DATA_SOURCE=api \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=PILOT_MUNICIPALITY_ID="$PILOT_MUNICIPALITY_ID"
+          node services/backend/scripts/validate_candidate_config.js > build/web/staging-candidate.json
       - name: Upload staging artifact
         uses: actions/upload-artifact@v4
         with:
-          name: staging-web-${{ inputs.pilot_municipality_id }}
+          name: staging-web-${{ inputs.profile }}-${{ inputs.pilot_municipality_id }}-${{ github.sha }}
           path: build/web
           retention-days: 7
 
   backend-image:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
       - name: Build staging image
         run: docker build --tag migliorapaese/backend:staging services/backend

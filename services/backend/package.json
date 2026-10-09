@@ -13,6 +13,7 @@
     "backup": "node scripts/backup.js",
     "verify-database": "node scripts/verify_database.js",
     "rehearse-restore": "node scripts/rehearse_restore.js",
+    "rehearse-fantasy": "node scripts/rehearse_fantasy.js",
     "smoke": "node scripts/smoke.js",
     "publish-fantasy-outcome": "node scripts/publish_fantasy_outcome.js",
     "test": "node --test"

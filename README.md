@@ -240,3 +240,26 @@ La cronologia privata con metadati personali e operativi è conservata
 nell'archivio separato `miglioraPaese-private`; questo repository pubblico nasce
 da uno snapshot bonificato, come descritto nel
 [piano di rilascio](docs/public_release_plan.md).
+
+## Fanta Comune su API sintetiche
+
+Il default e GitHub Pages restano mock. Per Flutter Web locale avviare
+npm --prefix services/backend run dev:tuglie, poi:
+
+    flutter run -d chrome --web-hostname localhost --web-port 7357 \
+      --dart-define=FANTASY_MODE_ENABLED=true \
+      --dart-define=FANTASY_DATA_SOURCE=api \
+      --dart-define=GAME_DATA_SOURCE=api \
+      --dart-define=NEXT_PROBLEMS_DATA_SOURCE=api \
+      --dart-define=PILOT_MUNICIPALITY_ID=tuglie \
+      --dart-define=API_BASE_URL=http://localhost:8787
+
+Usare localhost per entrambi gli origin così i cookie restano same-site.
+Le squadre remote non importano risultati demo. Leghe private, pseudonimi server,
+almeno tre competitori; sessione legata al browser. Il calendario sintetico
+persistito non si rinnova: per provare tutta la giornata senza attendere le date
+usare npm --prefix services/backend run rehearse-fantasy.
+
+[Stato dei nove incrementi](docs/backend/fantasy_implementation_status.md) ·
+[Evidenze e gate pilot ancora aperti](docs/backend/fantasy_pilot_go_no_go.md).
+Nessun deploy o raccolta di dati reali autorizzato dai test locali.
