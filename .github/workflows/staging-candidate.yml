@@ -69,7 +69,7 @@ jobs:
             --dart-define=PILOT_MUNICIPALITY_ID="$PILOT_MUNICIPALITY_ID"
           node services/backend/scripts/validate_candidate_config.js > build/web/staging-candidate.json
       - name: Upload staging artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: staging-web-${{ inputs.profile }}-${{ inputs.pilot_municipality_id }}-${{ github.sha }}
           path: build/web
