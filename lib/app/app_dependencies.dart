@@ -65,9 +65,7 @@ class AppDependencies extends StatelessWidget {
                       MunicipalityCatalog.apiIdFor(
                         appPrefs.municipalityId ?? '',
                       ) ??
-                      (throw StateError(
-                        'Configura il Comune pilot per le API fantasy.',
-                      )),
+                      '',
                 ),
         ),
         ChangeNotifierProvider<FantasyManager>(

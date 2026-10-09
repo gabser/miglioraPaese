@@ -34,8 +34,9 @@ class FantasyApiMapper {
   };
   static DateTime date(Object? raw) {
     final text = raw as String;
-    if (!RegExp(r'(Z|[+-]\d{2}:\d{2})$').hasMatch(text))
+    if (!RegExp(r'(Z|[+-]\d{2}:\d{2})$').hasMatch(text)) {
       throw const FormatException('Timezone required');
+    }
     return DateTime.parse(text).toUtc();
   }
 
@@ -68,8 +69,9 @@ class FantasyApiMapper {
 
   static Matchday day(Object? raw) {
     final v = object(raw);
-    if (v['rulesVersion'] != 'fantasy-demo-v1')
+    if (v['rulesVersion'] != 'fantasy-demo-v1') {
       throw const FormatException('Unsupported rules');
+    }
     return Matchday(
       id: v['id'] as String,
       number: v['number'] as int,
@@ -100,8 +102,9 @@ class FantasyApiMapper {
     required List<Map<String, dynamic>> reveals,
   }) {
     final s = object(seasonResponse['season']);
-    if (teamResponse['seasonId'] != s['id'] || catalog['seasonId'] != s['id'])
+    if (teamResponse['seasonId'] != s['id'] || catalog['seasonId'] != s['id']) {
       throw const FormatException('Mixed seasons');
+    }
     final team = object(teamResponse['team']);
     final snapshots = <String, MatchdaySnapshot>{};
     for (final raw in teamResponse['snapshots'] as List) {
@@ -122,8 +125,9 @@ class FantasyApiMapper {
         scores = <String, ScoreBreakdown>{};
     final summaries = <String, MatchdayScore>{}, statuses = <String, String>{};
     for (final reveal in reveals) {
-      if (reveal['seasonId'] != s['id'])
+      if (reveal['seasonId'] != s['id']) {
         throw const FormatException('Mixed results');
+      }
       for (final raw in reveal['outcomes'] as List) {
         final o = outcome(raw);
         outcomes[FantasySavedState.resultKey(o.matchdayId, o.cardId)] = o;
@@ -142,15 +146,17 @@ class FantasyApiMapper {
           captainMultiplier: (score['captainMultiplier'] as num).toDouble(),
         );
         if (scores[key]!.total != score['total'] ||
-            scores[key]!.frozenTotal != score['frozenTotal'])
+            scores[key]!.frozenTotal != score['frozenTotal']) {
           throw const FormatException('Inconsistent score');
+        }
         if (v['reflection'] != null) reflections[key] = answer(v['reflection']);
       }
       final summary = object(reveal['summary']),
           id = reveal['matchdayId'] as String;
       final status = summary['status'];
-      if (status != 'final' && status != 'provisional')
+      if (status != 'final' && status != 'provisional') {
         throw const FormatException('Unknown status');
+      }
       statuses[id] = status as String;
       summaries[id] = MatchdayScore(
         frozenPoints: summary['frozenPoints'] as int,
@@ -158,8 +164,9 @@ class FantasyApiMapper {
         transferPenalty: summary['transferPenalty'] as int,
         eligible: summary['eligible'] as bool,
       );
-      if (summaries[id]!.total != summary['total'])
+      if (summaries[id]!.total != summary['total']) {
         throw const FormatException('Inconsistent total');
+      }
     }
     return FantasyData(
       state: FantasySavedState(
@@ -187,7 +194,11 @@ class FantasyApiMapper {
       cards: (catalog['items'] as List).map(card).toList(),
       outcomes: outcomes.values.toList(),
       leagues: [],
-      serverTime: date(teamResponse['serverTime']),
+      serverTime: date(
+        reveals.isEmpty
+            ? teamResponse['serverTime']
+            : reveals.last['serverTime'],
+      ),
       revision: teamResponse['revision'] as int,
       isDemo: teamResponse['isDemo'] as bool,
       season: FantasySeason(

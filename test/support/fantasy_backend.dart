@@ -15,13 +15,14 @@ class CookieClient extends http.BaseClient {
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     if (offline) throw http.ClientException('offline');
-    if (refuseDeletion && request.method == 'DELETE')
+    if (refuseDeletion && request.method == 'DELETE') {
       return http.StreamedResponse(
         Stream.value(
           utf8.encode('{"error":"unavailable","message":"Riprova"}'),
         ),
         503,
       );
+    }
     if (cookie != null) request.headers['cookie'] = cookie!;
     final response = await inner.send(request);
     cookie = response.headers['set-cookie']?.split(';').first ?? cookie;

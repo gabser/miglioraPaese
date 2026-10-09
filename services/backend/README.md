@@ -255,8 +255,9 @@ A ranking requires at least three competitors; equal totals share rank with
 stable member ordering. Points are read from frozen server results, including
 reflection and penalties, without altering personal history on entry/exit.
 The first season lock is the competition-entry deadline, including for the owner.
-Late entries are spectators. Owner exit/deletion archives the league, removes
-the owner link and revokes all invitations; other members and their teams survive.
+Late entries are spectators. Owner exit/deletion archives the league and revokes
+all invitations; other teams survive. Deletion also removes the owner link.
+Exit retains the creation receipt until session deletion to prevent replay.
 
 Invites expire in 1..168 hours (bounded by season end), are generated with 256
 bits of randomness, returned once and stored only as SHA-256 hashes. Rotating
@@ -273,3 +274,24 @@ nella pagina corrente e può essere copiato o revocato. Un nuovo invito revoca
 i precedenti. Dopo il primo lock si entra come spettatori. La classifica
 richiede tre competitori; il punteggio cooperativo resta non disponibile.
 Le ricevute di creazione evitano leghe duplicate dopo una risposta persa.
+
+## Candidati e rehearsal fantasy
+
+STAGING_PROFILE=legacy-api|fantasy-api npm run smoke seleziona controlli solo
+GET; default legacy compatibile. Richiede STAGING_BASE_URL e PILOT_MUNICIPALITY_ID.
+Il profilo fantasy controlla readiness, catalogo e calendario senza iscrivere
+giocatori o congelare snapshot/reveal.
+
+npm run rehearse-fantasy crea un database temporaneo e un server loopback,
+prova tre sessioni, tutti i dati fantasy, backup/restore, privacy, log e fault
+injection 500/503. Non accetta URL o database live. La risposta finale contiene
+esiti sintetici e segnali locali; non certifica backup provider, alert installati
+o autorizzazione al go-live.
+
+L'uscita del proprietario conserva il legame della ricevuta di creazione nella
+sessione ancora iscritta: il replay non crea un'altra lega. DELETE session
+rimuove quel legame e la chiave, archivia e revoca gli inviti.
+
+Il workflow manuale produce manifest e artefatti distinti per profilo/Comune/commit.
+Non esegue deploy. [Scheda go/no-go](../../docs/backend/fantasy_pilot_go_no_go.md)
+con gate mancanti, retention, identità anonima e rollback conservativo.

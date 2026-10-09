@@ -48,11 +48,12 @@ class ApiFantasyRepository
     try {
       return await action();
     } on ApiException catch (e) {
-      if (e.code == 'stale_revision')
+      if (e.code == 'stale_revision') {
         throw const FantasyFailure(
           FantasyFailureKind.staleRevision,
           'La squadra è cambiata. Stato ricaricato: ripeti la scelta.',
         );
+      }
       rethrow;
     } on FormatException catch (e) {
       throw ApiException.invalidPayload('Dati fantasy non validi.', cause: e);
@@ -66,6 +67,12 @@ class ApiFantasyRepository
 
   @override
   Future<FantasyData> load() => _guard(() async {
+    if (municipalityId.isEmpty) {
+      throw ApiException.configuration(
+        code: 'fantasy_municipality_required',
+        message: 'Configura il Comune pilot per le API fantasy.',
+      );
+    }
     _deleted = false;
     final season = await get(['season']), catalog = await get(['cards']);
     Map<String, dynamic> team;
@@ -87,8 +94,9 @@ class ApiFantasyRepository
     }
     _scope = scope;
     final receipt = prefs.fantasyReceipt(scope);
-    if (receipt != null)
+    if (receipt != null) {
       _pending = FantasyApiMapper.object(jsonDecode(receipt));
+    }
     final ids = <String>{
       team['matchdayId'] as String,
       for (final raw in team['snapshots'] as List)
@@ -127,11 +135,12 @@ class ApiFantasyRepository
     String incomingId,
     int revision,
   ) => _guard(() async {
-    if (hasPendingTransfer)
+    if (hasPendingTransfer) {
       throw const FantasyFailure(
         FantasyFailureKind.busy,
         'Verifica il trasferimento precedente con Riprova.',
       );
+    }
     final v = FantasyApiMapper.object(
       (await post(
         ['transfers', 'quote'],
@@ -179,16 +188,18 @@ class ApiFantasyRepository
     FantasyCommand command, {
     required int expectedRevision,
   }) => _guard(() async {
-    if (_deleted || _cached == null)
+    if (_deleted || _cached == null) {
       throw const FantasyFailure(
         FantasyFailureKind.invalidCommand,
         'Carica prima la squadra.',
       );
-    if (hasPendingTransfer)
+    }
+    if (hasPendingTransfer) {
       throw const FantasyFailure(
         FantasyFailureKind.busy,
         'Esito trasferimento da verificare: premi Riprova.',
       );
+    }
     final state = _cached!.state;
     final base = <String, Object?>{
       'expectedRevision': expectedRevision,
@@ -206,11 +217,12 @@ class ApiFantasyRepository
               expectedRevision,
             );
         if (command.expectedPenalty != null &&
-            q.penalty != command.expectedPenalty)
+            q.penalty != command.expectedPenalty) {
           throw const FantasyFailure(
             FantasyFailureKind.staleRevision,
             'Penalità cambiata: richiedi un nuovo preventivo.',
           );
+        }
         final random = Random.secure();
         _pending = {
           'quoteId': q.id,
@@ -248,11 +260,12 @@ class ApiFantasyRepository
             final index = starters.indexOf(command.starterId);
             if (index < 0 ||
                 !state.squadIds.contains(command.reserveId) ||
-                starters.contains(command.reserveId))
+                starters.contains(command.reserveId)) {
               throw const FantasyFailure(
                 FantasyFailureKind.invalidCommand,
                 'Cambio non valido.',
               );
+            }
             starters[index] = command.reserveId;
             predictions.remove(command.starterId);
             motivations.remove(command.starterId);
@@ -293,35 +306,39 @@ class ApiFantasyRepository
     for (final raw in listing['items'] as List) {
       final id = FantasyApiMapper.object(raw)['id'] as String;
       final detail = await get(['leagues', id]);
-      if (detail['seasonId'] != cached?.season?.id)
+      if (detail['seasonId'] != cached?.season?.id) {
         throw const FormatException('Mixed league season');
+      }
       leagues.add(RemoteFantasyLeague.fromJson(detail));
     }
     return List.unmodifiable(leagues);
   });
   @override
   Future<void> createLeague(String name) => _guard(() async {
-    if (_scope == null || _deleted)
+    if (_scope == null || _deleted) {
       throw const FantasyFailure(
         FantasyFailureKind.invalidCommand,
         'Carica prima la squadra.',
       );
+    }
     final scope = '${_scope!}/league-creation';
     final stored = prefs.fantasyReceipt(scope);
     final body = stored == null
         ? <String, dynamic>{'name': name, 'idempotencyKey': _randomKey()}
         : FantasyApiMapper.object(jsonDecode(stored));
-    if (body['name'] != name)
+    if (body['name'] != name) {
       throw const FantasyFailure(
         FantasyFailureKind.busy,
         'Verifica prima la creazione della lega precedente selezionando lo stesso tipo.',
       );
+    }
     await prefs.setFantasyReceipt(scope, jsonEncode(body));
     try {
       await post(['leagues'], body.cast<String, Object?>());
     } on ApiException catch (e) {
-      if (e.statusCode != null && e.statusCode! >= 400 && e.statusCode! < 500)
+      if (e.statusCode != null && e.statusCode! >= 400 && e.statusCode! < 500) {
         await prefs.setFantasyReceipt(scope, null);
+      }
       rethrow;
     }
     await prefs.setFantasyReceipt(scope, null);

@@ -115,10 +115,72 @@ Implementato su `codex/fantasy-api-client`, nella serie locale preparata.
 - OpenAPI aggiornato per la cache scope opaca; nessuna esecuzione GitHub CI
   o validazione su provider live dichiarata.
 
-## Incrementi ancora da completare
-7. Leghe private e classifiche backend.
-8. Leghe Flutter e percorso multi-sessione.
-9. Candidati staging, rehearsal, backup/restore e scheda go/no-go.
+## Incremento 7 — leghe private backend
 
-Nessun deploy, apertura automatica di PR o dato reale. Le decisioni operative
-sul provider, sulla privacy e sulla platea del pilot restano da documentare.
+Implementato su codex/fantasy-private-leagues (ecd950e), nella serie locale.
+
+- Schema 6 additivo, OpenAPI 0.11.0 e route per creazione idempotente, elenco,
+  classifica privata, rotazione/revoca inviti, adesione e uscita idempotenti.
+- Membership per stagione/Comune, pseudonimi generati, nessuna identità,
+  rosa o previsione esposta. Prima scadenza della stagione come termine
+  competitivo; ingressi successivi spettatori, anche dopo clock rollback.
+- Soglia tre competitori, pareggi con posizione condivisa e ordine stabile.
+  Totali dal server, compresi riflessioni e ledger penalità.
+- Token casuali 256 bit, solo hash a riposo, scadenza/revoca e cinque tentativi
+  al minuto per sessione. Nessun token o ID lega nei log.
+- Cancellazione proprietario archivia, rimuove il legame e revoca gli inviti,
+  preservando gli altri. Rollback transazionale verificato.
+- 70 test backend superati: A/B/C, estraneo, soglia, pareggi, penalità,
+  riflessione, inviti, isolamento, restart e cancellazione.
+
+## Incremento 8 — leghe Flutter e percorso condiviso
+
+Implementato su codex/fantasy-leagues-client (a06f242), nella serie locale.
+
+- UI remota per crea/entra/esci, rotazione e revoca inviti, conferme esplicite,
+  errori/retry e aggiornamento classifiche. Nessuna lega mock in modalità API.
+- Pseudonimi server, spettatore e archiviazione visibili; minimo tre competitori,
+  cooperativo indisponibile e limite della sessione legata al browser dichiarato.
+- Creazione con ricevuta idempotente persistita e scope completo: risposta
+  persa e nuova istanza repository non duplicano la lega.
+- Test reale con tre manager: mercato, penalità −8, lock, esiti, bonus,
+  classifica 29/28/20, estraneo respinto, cancellazione proprietario e restart
+  con storico degli altri invariato.
+- 154 test Flutter superati; creazione/conferma UI a 390/1024/1440 px.
+  Analisi CI riuscita e build release fantasy API, mock e legacy API riuscite.
+
+## Incremento 9 — candidati, rehearsal e gate operativi
+
+Implementato su codex/fantasy-staging-rehearsal, nella serie locale.
+
+- Workflow manuale con profili legacy-api/fantasy-api, input HTTPS verificati,
+  manifest e artefatti per profilo/Comune/commit. Nessun deploy nel candidato.
+  GitHub Pages imposta esplicitamente tutte le sorgenti mock.
+- Smoke solo GET per readiness, catalogo e calendario, con supporto prefisso
+  API e prova che nessuna tabella fantasy cambia. Legacy compatibile.
+- Rehearsal senza target configurabile: server loopback e SQLite temporaneo,
+  tre sessioni, backup/restore di tutte le righe fantasy e leghe, cancellazione
+  isolata, rollback, fault injection readiness/5xx e log senza dati personali.
+- Segnali locali per readiness ripetutamente fallita, crescita 5xx, disco basso,
+  backup vecchio e scraping assente. Nessun alert provider installato o attestato.
+- Review finale: tempo dal reveal server più recente; errore di Comune visibile
+  senza crash; dati UI rimossi anche se il reset locale fallisce dopo DELETE;
+  replay della creazione di una lega archiviata non crea una seconda lega.
+- Verifica finale: 155 test Flutter e 75 backend superati, formato pulito,
+  analisi con opzioni CI riuscita (111 info, zero errori/warning), tre build
+  release riuscite. Le 48 fixture Dart/Node e la rehearsal completa sono verdi.
+- Docker non trovato localmente: build immagine demandata ai workflow, che non
+  sono stati avviati. Nessun risultato GitHub CI o prova su provider dichiarato.
+- Scheda go/no-go compilata con tutte le evidenze mancanti marcate aperte:
+  [decisione pilot](fantasy_pilot_go_no_go.md) e [registro](fantasy_local_evidence.json).
+
+## Esito e serie locale
+
+Tutti i nove incrementi tecnici sono implementati. I branch sono preparati in
+serie locale; prima di PR/merge dovranno essere riallineati alle dipendenze
+effettivamente integrate e sottoposti ai check GitHub e alla review.
+
+Nessuna PR aperta automaticamente, nessun push/deploy, nessun dato reale.
+La chiusura tecnica non chiude i gate operativi del runbook: provider, accordi,
+privacy/retention, ruoli, platea, TLS, backup provider, alert, moderatori e rollback
+restano da documentare e approvare. La decisione operativa corrente è NO-GO.

@@ -191,3 +191,27 @@ Comune chiede la sospensione. Il rollback consiste nel chiudere l'accesso al
 frontend, fermare le scritture API, preservare database e log secondo retention
 e pubblicare il messaggio operativo concordato. La demo mock pubblica resta
 separata e non deve essere convertita automaticamente nel pilot.
+
+## Estensione Fanta Comune: candidati separati
+
+I nove incrementi fantasy aggiungono catalogo, squadre, snapshot, mercato,
+risultati, riflessioni e leghe su tabelle SQLite dedicate. Il payload legacy
+resta compatibile. Il candidato manuale distingue legacy-api da fantasy-api;
+GitHub Pages imposta esplicitamente tutte le sorgenti mock.
+
+La [scheda fantasy go/no-go](backend/fantasy_pilot_go_no_go.md) registra evidenze
+locali e gate operativi ancora aperti. I dati sintetici restano demo anche via
+API; i test non autorizzano dati reali, deploy o competizioni pubbliche.
+Le policy per fonti, definitività, pseudonimi, soglia tre, ingresso tardivo
+e cancellazione del proprietario richiedono ratifica prima del pilot.
+
+Per lo smoke non mutante aggiungere STAGING_PROFILE=fantasy-api al comando
+esistente. Per l'intero percorso mutante usare esclusivamente:
+
+    npm --prefix services/backend run rehearse-fantasy
+
+Il comando crea e distrugge fixture temporanee su loopback; non accetta un
+target remoto o un database live. Copre backup/restore di tutti i domini fantasy,
+cancellazione, log privati e fault injection degli allarmi locali. Le prove
+sul provider, i canali degli alert e il rollback operativo restano gate
+separati, da documentare e approvare. Nessun downgrade distruttivo.

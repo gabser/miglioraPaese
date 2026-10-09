@@ -14,6 +14,16 @@ import 'package:fanta_comune/features/fantasy/data/fantasy_repository.dart';
 import 'package:fanta_comune/features/fantasy/domain/fantasy_models.dart';
 import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
 
+class ClearFailurePrefs extends AppPrefs {
+  ClearFailurePrefs(super.prefs);
+  bool failClear = false;
+  @override
+  Future<void> clearAll() async {
+    if (failClear) throw StateError('Local reset failed');
+    await super.clearAll();
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test('fantasy selector is independent and rejects unknown values', () {
@@ -27,6 +37,31 @@ void main() {
       throwsArgumentError,
     );
   });
+  test(
+    'missing API municipality produces a visible configuration failure without network or mock data',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = AppPrefs(await SharedPreferences.getInstance()),
+          transport = CookieClient();
+      addTearDown(transport.close);
+      final manager = FantasyManager.withRepository(
+        ApiFantasyRepository(
+          client: ApiClient(
+            baseUrl: Uri.parse('https://fixture.invalid'),
+            client: transport,
+          ),
+          prefs: prefs,
+          environment: 'missing-config',
+          municipalityId: '',
+        ),
+        observeTime: false,
+      );
+      addTearDown(manager.dispose);
+      await manager.settled;
+      expect(manager.hasData, isFalse);
+      expect(manager.persistenceError, contains('Comune pilot'));
+    },
+  );
   test(
     'strict mapper rejects unknown enum, incomplete DTO and missing timezone',
     () {
@@ -54,7 +89,7 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'fantasy_manager_state_v1': 'DEMO NOT IMPORTED',
       });
-      final prefs = AppPrefs(await SharedPreferences.getInstance());
+      final prefs = ClearFailurePrefs(await SharedPreferences.getInstance());
       final transport = CookieClient();
       addTearDown(transport.close);
       ApiFantasyRepository repository() => ApiFantasyRepository(
@@ -120,11 +155,12 @@ void main() {
         const TransferFantasyCard('fontanelle-ovest', 'parco-nord', 0),
         expectedRevision: data.revision,
       );
-      for (final id in data.state.starterIds)
+      for (final id in data.state.starterIds) {
         data = await repo.execute(
           SetFantasyPrediction(id, CivicTrend.stable),
           expectedRevision: data.revision,
         );
+      }
       data = await repo.execute(
         const ConfirmFantasyLineup(),
         expectedRevision: data.revision,
@@ -176,7 +212,19 @@ void main() {
       expect(repo.cached, isNotNull);
       expect(prefs.fantasyStateJson, isNotNull);
       transport.refuseDeletion = false;
-      await repo.clear();
+      final privacyManager = FantasyManager.withRepository(
+        repo,
+        observeTime: false,
+      );
+      addTearDown(privacyManager.dispose);
+      await privacyManager.settled;
+      prefs.failClear = true;
+      await expectLater(privacyManager.clearLocalData(), throwsStateError);
+      expect(privacyManager.hasData, isFalse);
+      expect(privacyManager.remoteLeagues, isEmpty);
+      expect(prefs.fantasyStateJson, isNotNull);
+      prefs.failClear = false;
+      await privacyManager.clearLocalData();
       expect(repo.cached, isNull);
       expect(prefs.fantasyStateJson, isNull);
       final other = CookieClient();

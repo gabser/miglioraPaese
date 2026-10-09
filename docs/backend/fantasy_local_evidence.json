@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-09",
+  "timezone": "Europe/Rome",
+  "scope": "local synthetic fixtures only",
+  "toolchain": {
+    "flutter": "3.44.2",
+    "dart": "3.12.2",
+    "node": "24.18.0"
+  },
+  "flutterTests": {
+    "passed": 155,
+    "failed": 0,
+    "responsiveWidths": [
+      390,
+      1024,
+      1440
+    ]
+  },
+  "backendTests": {
+    "passed": 75,
+    "failed": 0
+  },
+  "sharedScoringFixtures": 48,
+  "analysis": {
+    "options": [
+      "--no-fatal-infos",
+      "--no-fatal-warnings"
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "infos": 111
+  },
+  "releaseBuilds": {
+    "fantasyMock": "passed",
+    "fantasyApi": "passed",
+    "legacyApi": "passed"
+  },
+  "rehearsal": {
+    "event": "fantasy_isolated_rehearsal_completed",
+    "isDemo": true,
+    "sessions": 3,
+    "ranking": [
+      29,
+      28,
+      20
+    ],
+    "backupRestore": true,
+    "privacyRollback": true,
+    "ownerDeletion": true,
+    "nonMutatingSmoke": true,
+    "privateLogs": true,
+    "localAlertSignals": [
+      "readiness_unavailable",
+      "http_5xx_increase",
+      "disk_space_low_or_unknown",
+      "backup_stale_or_unknown",
+      "metrics_scrape_unavailable"
+    ],
+    "operationalGoLive": "not_authorized"
+  },
+  "githubCi": "not run",
+  "dockerImageBuild": "not run: executable unavailable locally",
+  "providerValidation": "not performed",
+  "deployment": "not performed",
+  "operationalDecision": "NO-GO",
+  "policyApprovals": "pending, see fantasy_pilot_go_no_go.md"
+}

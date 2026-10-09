@@ -21,7 +21,9 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       final prefs = AppPrefs(await SharedPreferences.getInstance());
       final transports = List.generate(4, (_) => CookieClient());
-      for (final t in transports) addTearDown(t.close);
+      for (final t in transports) {
+        addTearDown(t.close);
+      }
       ApiFantasyRepository repository(int i) => ApiFantasyRepository(
         client: ApiClient(
           baseUrl: Uri.parse(fixture.url),
@@ -139,17 +141,20 @@ void main() {
         isTrue,
       );
       await a.settled;
-      for (final m in [a, b, c]) await m.refreshLeagues();
+      for (final m in [a, b, c]) {
+        await m.refreshLeagues();
+      }
       final ranking = a.remoteLeagues.single.table.entries;
       expect(ranking.map((e) => e.points), [29, 28, 20]);
       expect(ranking.map((e) => e.rank), [1, 2, 3]);
-      for (final m in [b, c])
+      for (final m in [b, c]) {
         expect(
           m.remoteLeagues.single.table.entries.map(
             (e) => [e.userId, e.points, e.rank],
           ),
           ranking.map((e) => [e.userId, e.points, e.rank]),
         );
+      }
       // Owner deletion archives, removes its membership and preserves other history.
       await a.clearLocalData();
       expect(a.hasData, isFalse);

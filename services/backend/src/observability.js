@@ -1,3 +1,4 @@
+import metadata from '../package.json' with { type: 'json' };
 import { randomUUID } from 'node:crypto';
 
 const requestIdPattern = /^[A-Za-z0-9._:-]{1,128}$/;
@@ -6,7 +7,7 @@ export function createObservability({
   clock = Date.now,
   generateRequestId = randomUUID,
   logger = null,
-  version = '0.5.0',
+  version = metadata.version,
 } = {}) {
   const processStartedAt = clock();
   const requests = new Map();

@@ -34,7 +34,7 @@ jobs:
           cache: true
 
       - name: Set up Node for isolated fantasy API tests
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "24"
 

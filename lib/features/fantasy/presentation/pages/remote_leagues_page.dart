@@ -41,10 +41,11 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
       ) ??
       false;
   void accepted(String message) {
-    if (mounted)
+    if (mounted) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   @override
@@ -118,8 +119,9 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                                   'Il server assegnerà pseudonimi automatici. Dopo il primo lock della stagione si entra come spettatori.',
                                 ) &&
                                 mounted) {
-                              if (await manager.createLeague(template))
+                              if (await manager.createLeague(template)) {
                                 accepted('Lega creata sul server.');
+                              }
                             }
                           },
                     child: const Text('Crea lega privata'),
@@ -197,15 +199,17 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                                 if (!await confirm(
                                   'Generare un nuovo invito?',
                                   'Tutti gli inviti precedenti saranno revocati. Il codice scade entro 24 ore: condividilo solo con il gruppo pilot autorizzato.',
-                                ))
+                                )) {
                                   return;
+                                }
                                 final invite = await manager.rotateInvite(
                                   league.table.id,
                                 );
-                                if (invite != null && mounted)
+                                if (invite != null && mounted) {
                                   setState(
                                     () => invites[league.table.id] = invite,
                                   );
+                                }
                               },
                         child: const Text('Genera o sostituisci invito'),
                       ),
@@ -233,10 +237,11 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                                             league.table.id,
                                             invite.id,
                                           ) &&
-                                          mounted)
+                                          mounted) {
                                         setState(
                                           () => invites.remove(league.table.id),
                                         );
+                                      }
                                     },
                               child: const Text('Revoca invito'),
                             ),
@@ -253,13 +258,15 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                                 league.isOwner
                                     ? 'La lega sarà archiviata e tutti gli inviti revocati. Le squadre degli altri membri resteranno conservate.'
                                     : 'La tua squadra e i tuoi punti personali resteranno conservati. Un eventuale rientro dopo il lock sarà da spettatore.',
-                              ))
+                              )) {
                                 return;
+                              }
                               if (await manager.leaveLeague(league.table.id)) {
-                                if (mounted)
+                                if (mounted) {
                                   setState(
                                     () => invites.remove(league.table.id),
                                   );
+                                }
                                 accepted('Uscita accettata dal server.');
                               }
                             },
