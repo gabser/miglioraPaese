@@ -13,11 +13,11 @@ export function createAnonymousIdentity({
   }
 
   return {
-    resolve(req) {
+    resolve(req, { isRevoked = () => false, renewRevoked = false } = {}) {
       const cookies = parseCookies(req.headers?.cookie);
       const existing = verifyToken(cookies.get(cookieName), secret);
-      if (existing !== null) {
-        return { userId: existing, headers: {} };
+      if (existing !== null && (!isRevoked(existing) || !renewRevoked)) {
+        return { userId: existing, revoked: isRevoked(existing), headers: {} };
       }
 
       const userId = 'anon:' + generateId();
@@ -34,6 +34,9 @@ export function createAnonymousIdentity({
         userId,
         headers: { 'set-cookie': attributes.join('; ') },
       };
+    },
+    submissionScope(userId) {
+      return createHmac('sha256', secret).update('proposal-submission-scope:v1:' + userId).digest('base64url');
     },
     clearHeaders() {
       const attributes = [

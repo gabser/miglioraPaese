@@ -1,0 +1,238 @@
+{
+  "version": 1,
+  "unit": "Unicode code points after trim",
+  "samples": [
+    {
+      "text": " é ",
+      "count": 2
+    },
+    {
+      "text": "🌳",
+      "count": 1
+    },
+    {
+      "text": "👩‍🌾",
+      "count": 3
+    },
+    {
+      "text": "Via Milano",
+      "count": 10
+    },
+    {
+      "text": " 🏛️ ",
+      "count": 2
+    }
+  ],
+  "boundaries": [
+    {
+      "field": "title",
+      "unit": "🌳",
+      "repeat": 119,
+      "count": 119,
+      "valid": true
+    },
+    {
+      "field": "title",
+      "unit": "🌳",
+      "repeat": 120,
+      "count": 120,
+      "valid": true
+    },
+    {
+      "field": "title",
+      "unit": "🌳",
+      "repeat": 121,
+      "count": 121,
+      "valid": false
+    },
+    {
+      "field": "title",
+      "unit": "a",
+      "repeat": 119,
+      "count": 119,
+      "valid": true
+    },
+    {
+      "field": "title",
+      "unit": "a",
+      "repeat": 120,
+      "count": 120,
+      "valid": true
+    },
+    {
+      "field": "title",
+      "unit": "a",
+      "repeat": 121,
+      "count": 121,
+      "valid": false
+    },
+    {
+      "field": "description",
+      "unit": "🌳",
+      "repeat": 999,
+      "count": 999,
+      "valid": true
+    },
+    {
+      "field": "description",
+      "unit": "🌳",
+      "repeat": 1000,
+      "count": 1000,
+      "valid": true
+    },
+    {
+      "field": "description",
+      "unit": "🌳",
+      "repeat": 1001,
+      "count": 1001,
+      "valid": false
+    },
+    {
+      "field": "description",
+      "unit": "a",
+      "repeat": 999,
+      "count": 999,
+      "valid": true
+    },
+    {
+      "field": "description",
+      "unit": "a",
+      "repeat": 1000,
+      "count": 1000,
+      "valid": true
+    },
+    {
+      "field": "description",
+      "unit": "a",
+      "repeat": 1001,
+      "count": 1001,
+      "valid": false
+    },
+    {
+      "field": "label",
+      "unit": "🌳",
+      "repeat": 119,
+      "count": 119,
+      "valid": true
+    },
+    {
+      "field": "label",
+      "unit": "🌳",
+      "repeat": 120,
+      "count": 120,
+      "valid": true
+    },
+    {
+      "field": "label",
+      "unit": "🌳",
+      "repeat": 121,
+      "count": 121,
+      "valid": false
+    },
+    {
+      "field": "label",
+      "unit": "a",
+      "repeat": 119,
+      "count": 119,
+      "valid": true
+    },
+    {
+      "field": "label",
+      "unit": "a",
+      "repeat": 120,
+      "count": 120,
+      "valid": true
+    },
+    {
+      "field": "label",
+      "unit": "a",
+      "repeat": 121,
+      "count": 121,
+      "valid": false
+    },
+    {
+      "field": "civic",
+      "unit": "🌳",
+      "repeat": 19,
+      "count": 19,
+      "valid": true
+    },
+    {
+      "field": "civic",
+      "unit": "🌳",
+      "repeat": 20,
+      "count": 20,
+      "valid": true
+    },
+    {
+      "field": "civic",
+      "unit": "🌳",
+      "repeat": 21,
+      "count": 21,
+      "valid": false
+    },
+    {
+      "field": "civic",
+      "unit": "a",
+      "repeat": 19,
+      "count": 19,
+      "valid": true
+    },
+    {
+      "field": "civic",
+      "unit": "a",
+      "repeat": 20,
+      "count": 20,
+      "valid": true
+    },
+    {
+      "field": "civic",
+      "unit": "a",
+      "repeat": 21,
+      "count": 21,
+      "valid": false
+    },
+    {
+      "field": "reference",
+      "unit": "🌳",
+      "repeat": 199,
+      "count": 199,
+      "valid": true
+    },
+    {
+      "field": "reference",
+      "unit": "🌳",
+      "repeat": 200,
+      "count": 200,
+      "valid": true
+    },
+    {
+      "field": "reference",
+      "unit": "🌳",
+      "repeat": 201,
+      "count": 201,
+      "valid": false
+    },
+    {
+      "field": "reference",
+      "unit": "a",
+      "repeat": 199,
+      "count": 199,
+      "valid": true
+    },
+    {
+      "field": "reference",
+      "unit": "a",
+      "repeat": 200,
+      "count": 200,
+      "valid": true
+    },
+    {
+      "field": "reference",
+      "unit": "a",
+      "repeat": 201,
+      "count": 201,
+      "valid": false
+    }
+  ]
+}
