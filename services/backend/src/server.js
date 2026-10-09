@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { createHash } from 'node:crypto';
 import { createFantasyStore } from './fantasy/store.js';
 import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
@@ -206,7 +207,13 @@ export function createApp(options = {}) {
         return sendJson(res, 200, updated, responseHeaders);
       }
 
-      const requestIdentity = identity.resolve(req);
+      const requestIdentity = identity.resolve(req, {
+        isRevoked: store.isSessionRevoked,
+        renewRevoked: (req.method ?? 'GET') === 'GET',
+      });
+      if (requestIdentity.revoked && route.name !== 'deleteSessionData') {
+        throw httpError(401, 'session_revoked', 'The session has been reset.');
+      }
       const userId = requestIdentity.userId;
       responseHeaders = { ...responseHeaders, ...requestIdentity.headers };
 
@@ -319,6 +326,17 @@ export function createApp(options = {}) {
         );
       }
 
+      const submissionScope = () => identity.submissionScope(userId);
+      if (route.name === 'nextProblemDetail') {
+        return sendJson(res, 200, store.getNextProblem({ ...route.params, userId }), responseHeaders);
+      }
+      if (route.name === 'nextProblemSubmission') {
+        const key = requireSubmissionKey(route.params.key);
+        const receipt = store.getSubmission({ ...route.params, key, userId });
+        return sendJson(res, receipt ? 200 : 404, receipt
+          ? { submissionScope: submissionScope(), receipt }
+          : { error: 'submission_not_found', message: 'Submission not found.', submissionScope: submissionScope() }, responseHeaders);
+      }
       if (route.name === 'nextProblems') {
         return sendJson(
           res,
@@ -337,7 +355,10 @@ export function createApp(options = {}) {
                 maxQueryLength,
               ),
               userId,
+              own: optionalBooleanQuery(url.searchParams.get('own'), 'own'),
             }),
+            submissionScope: submissionScope(),
+            capabilities: { proposalSubmission: 1 },
           },
           responseHeaders,
         );
@@ -345,28 +366,19 @@ export function createApp(options = {}) {
 
       if (route.name === 'submitNextProblem') {
         const body = await readJson(req);
-        const title = requireText(body.title, 'title', maxTitleLength);
-        const description = requireText(
-          body.description,
-          'description',
-          maxDescriptionLength,
-        );
-        const moderation = moderateSuggestion({ title, description });
-        if (!moderation.allowed) {
-          throw httpError(
-            422,
-            'content_rejected',
-            'The suggestion does not meet the pilot moderation policy.',
-          );
+        if (body.expectedSubmissionScope != null) {
+          if (typeof body.expectedSubmissionScope !== 'string') throw fieldError('expectedSubmissionScope', 'invalid', 'expectedSubmissionScope must be text.');
+          if (body.expectedSubmissionScope !== submissionScope()) throw httpError(409, 'submission_scope_changed', 'The submission session has changed. Verify the previous outcome before starting a new intent.');
         }
+        const normalized = normalizeSubmission(body);
+        const previous = store.getSubmission({ municipalityId: route.params.municipalityId, key: normalized.idempotencyKey, userId });
         const created = store.submitNextProblem({
           municipalityId: route.params.municipalityId,
-          title,
-          description,
-          category: requireEnum(body.category, problemKeys, 'category'),
+          ...normalized,
           userId,
+          submissionScope: submissionScope(),
         });
-        return sendJson(res, 201, created, responseHeaders);
+        return sendJson(res, previous ? 200 : 201, created, responseHeaders);
       }
 
       if (route.name === 'voteNextProblem') {
@@ -523,6 +535,7 @@ export function createApp(options = {}) {
         {
           error: error.code ?? 'internal_error',
           message: status === 500 ? 'Unexpected error.' : error.message,
+          ...(error.fieldErrors ? { fieldErrors: error.fieldErrors } : {}),
         },
         responseHeaders,
       );
@@ -730,6 +743,8 @@ export function createMemoryStore(options = {}) {
   const predictionsByTurn = new Map();
   const predictionResultsByTurn = new Map();
   let nextProblemCounter = 200;
+  const submissionCommands = new Map();
+  const revokedSessions = new Set();
 
   if (options.initialState !== undefined && options.initialState !== null) {
     restoreState(options.initialState);
@@ -757,6 +772,35 @@ export function createMemoryStore(options = {}) {
         throw new Error(`Persistent state field ${key} must be an array.`);
       }
     }
+
+    if (state.submissionCommands !== undefined && !Array.isArray(state.submissionCommands)) {
+      throw new Error('Persistent submissionCommands must be an array.');
+    }
+    if (state.revokedSessions !== undefined && (!Array.isArray(state.revokedSessions) || state.revokedSessions.some((id) => typeof id !== 'string'))) {
+      throw new Error('Persistent revokedSessions must be a string array.');
+    }
+    const restoredCommands = new Map();
+    for (const command of state.submissionCommands ?? []) {
+      if (!command || typeof command.userId !== 'string' || typeof command.municipalityId !== 'string' ||
+          !/^[A-Za-z0-9_-]{8,128}$/.test(command.key) || !/^[a-f0-9]{64}$/.test(command.digest) ||
+          typeof command.acceptedAt !== 'string' || !Number.isFinite(Date.parse(command.acceptedAt)) ||
+          !command.receipt || command.receipt.id !== command.proposalId ||
+          command.receipt.municipalityId !== command.municipalityId ||
+          Object.hasOwn(command.receipt, 'submittedByUserId') || Object.hasOwn(command.receipt, 'moderationReason') ||
+          !state.suggestedProblems.some((item) => item.municipalityId === command.municipalityId && item.problem.id === command.proposalId && item.problem.submittedByUserId === command.userId) ||
+          (state.revokedSessions ?? []).includes(command.userId)) {
+        throw new Error('Persistent submission command is invalid.');
+      }
+      normalizeLocation(command.receipt.location);
+      const index = commandIndex(command.municipalityId, command.userId, command.key);
+      if (restoredCommands.has(index)) throw new Error('Duplicate persistent submission command.');
+      restoredCommands.set(index, structuredClone(command));
+    }
+    for (const item of state.suggestedProblems) normalizeLocation(item.problem.location);
+    submissionCommands.clear();
+    for (const [index, command] of restoredCommands) submissionCommands.set(index, command);
+    revokedSessions.clear();
+    for (const id of state.revokedSessions ?? []) revokedSessions.add(id);
 
     municipalities.clear();
     for (const municipality of state.municipalities) {
@@ -848,6 +892,8 @@ export function createMemoryStore(options = {}) {
         (results) => [...results.values()].map((item) => ({ ...item })),
       ),
       nextProblemCounter,
+      submissionCommands: structuredClone([...submissionCommands.values()]),
+      revokedSessions: [...revokedSessions],
     };
   }
 
@@ -879,9 +925,11 @@ export function createMemoryStore(options = {}) {
     status = null,
     query = null,
     userId = 'demo-user',
+    own = false,
   }) {
     const municipality = getMunicipality(municipalityId);
     let items = nextProblemsByMunicipality.get(municipality.id) ?? [];
+    items = items.filter((item) => own ? item.submittedByUserId === userId : item.status !== 'rejected');
     if (status) {
       items = items.filter((item) => item.status === status);
     }
@@ -894,63 +942,81 @@ export function createMemoryStore(options = {}) {
         );
       });
     }
-    return items.map((item) => withUserVote(item, userId));
+    return items.map((item) => withUserVote(item, userId, municipality.id));
   }
 
-  function submitNextProblem({
-    municipalityId,
-    title,
-    description,
-    category,
-    userId,
-  }) {
-    const municipality = getMunicipality(municipalityId);
-    const items = nextProblemsByMunicipality.get(municipality.id) ?? [];
-    const duplicate = items.some(
-      (item) => normalizeTitle(item.title) === normalizeTitle(title),
-    );
-    if (duplicate) {
-      throw httpError(409, 'duplicate_title', 'A suggestion with this title exists.');
-    }
-    const windowStart = clock() - submissionWindowMs;
-    const recentSubmissions = items.filter(
-      (item) =>
-        item.submittedByUserId === userId &&
-        Date.parse(item.createdAt) >= windowStart,
-    );
-    if (recentSubmissions.length >= maxSubmissionsPerWindow) {
-      throw httpError(
-        429,
-        'submission_rate_limited',
-        'Too many suggestions were submitted recently.',
-      );
-    }
+  function isSessionRevoked(userId) { return revokedSessions.has(userId); }
 
-    const created = createSuggestedProblem({
-      id: `suggested-${nextProblemCounter++}`,
-      title,
-      shortDescription: description,
-      category,
-      status: 'pending',
-      votesUp: 0,
-      votesDown: 0,
-      submittedByUserId: userId,
-      submittedByDisplayName: 'Cittadino',
-      createdAt: isoNow(),
-    });
-    if (moderationRequired) {
-      created.promotionRule = {
-        ...created.promotionRule,
-        reason:
-          'Pilot: i voti ordinano le proposte; la promozione richiede moderazione.',
-      };
+  function assertActiveSession(userId) {
+    if (isSessionRevoked(userId)) throw httpError(401, 'session_revoked', 'The session has been reset.');
+  }
+
+  function commandIndex(municipalityId, userId, key) {
+    return JSON.stringify([municipalityId, userId, key]);
+  }
+
+  function getSubmission({ municipalityId, userId, key }) {
+    const municipality = getMunicipality(municipalityId);
+    if (key == null || isSessionRevoked(userId)) return null;
+    const command = submissionCommands.get(commandIndex(municipality.id, userId, key));
+    return command ? structuredClone(command.receipt) : null;
+  }
+
+  function getNextProblem({ municipalityId, problemId, userId }) {
+    const municipality = getMunicipality(municipalityId);
+    const item = (nextProblemsByMunicipality.get(municipality.id) ?? []).find((item) => item.id === problemId);
+    if (!item || (item.status === 'rejected' && item.submittedByUserId !== userId)) {
+      throw httpError(404, 'suggested_problem_not_found', 'Suggested problem not found.');
     }
-    nextProblemsByMunicipality.set(municipality.id, [created, ...items]);
-    persist();
-    return withUserVote(created, userId);
+    return withUserVote(item, userId, municipality.id);
+  }
+
+  function submitNextProblem({ municipalityId, userId, submissionScope, ...payload }) {
+    // All changes below are synchronous: no request may interleave between this
+    // revocation check and the single snapshot write (including DELETE /session).
+    assertActiveSession(userId);
+    const municipality = getMunicipality(municipalityId);
+    const { title, description, category, location, idempotencyKey } = normalizeSubmission(payload);
+    const digest = createHash('sha256').update(JSON.stringify([title, description, category, location])).digest('hex');
+    const index = commandIndex(municipality.id, userId, idempotencyKey);
+    const existing = idempotencyKey == null ? null : submissionCommands.get(index);
+    if (existing) {
+      if (existing.digest !== digest) throw httpError(409, 'idempotency_conflict', 'This submission key was accepted with different content.');
+      return structuredClone(existing.receipt);
+    }
+    const moderation = moderateSuggestion({ title, description, location });
+    if (!moderation.allowed) throw httpError(422, 'content_rejected', 'The suggestion does not meet the pilot moderation policy.');
+    const items = nextProblemsByMunicipality.get(municipality.id) ?? [];
+    const windowStart = clock() - submissionWindowMs;
+    if (items.filter((item) => item.submittedByUserId === userId && Date.parse(item.createdAt) >= windowStart).length >= maxSubmissionsPerWindow) {
+      throw httpError(429, 'submission_rate_limited', 'Too many suggestions were submitted recently.');
+    }
+    const before = structuredClone(exportState());
+    try {
+      const created = createSuggestedProblem({
+        id: `suggested-${nextProblemCounter++}`, title, shortDescription: description,
+        category, status: 'pending', votesUp: 0, votesDown: 0,
+        submittedByUserId: userId, submittedByDisplayName: 'Cittadino', createdAt: isoNow(),
+      });
+      created.location = location;
+      if (moderationRequired) created.promotionRule = { ...created.promotionRule, reason: 'Pilot: i voti ordinano le proposte; la promozione richiede moderazione.' };
+      nextProblemsByMunicipality.set(municipality.id, [created, ...items]);
+      const receipt = { ...withUserVote(created, userId, municipality.id), ...(submissionScope ? { submissionScope } : {}) };
+      if (idempotencyKey != null) submissionCommands.set(index, {
+        key: idempotencyKey, digest, municipalityId: municipality.id, userId,
+        proposalId: created.id, acceptedAt: created.createdAt, receipt: structuredClone(receipt),
+      });
+      persist();
+      return receipt;
+    } catch (error) {
+      restoreState(before);
+      throw error;
+    }
   }
 
   function voteNextProblem({ municipalityId, problemId, vote, userId }) {
+    assertActiveSession(userId);
+    getNextProblem({ municipalityId, problemId, userId });
     const municipality = getMunicipality(municipalityId);
     const items = nextProblemsByMunicipality.get(municipality.id) ?? [];
     const index = items.findIndex((item) => item.id === problemId);
@@ -994,7 +1060,7 @@ export function createMemoryStore(options = {}) {
     items[index] = updated;
     syncPromotion(municipality, updated);
     persist();
-    return withUserVote(updated, userId);
+    return withUserVote(updated, userId, municipality.id);
   }
 
   function moderateNextProblem({
@@ -1025,18 +1091,27 @@ export function createMemoryStore(options = {}) {
     return updated;
   }
 
-  function withUserVote(problem, userId) {
-    const userVotes = votesByProblem.get(problem.id);
-    return {
-      ...problem,
-      myVote: userVotes?.get(userId) ?? 'none',
-    };
+  function withUserVote(problem, userId, municipalityId) {
+    // Explicit allow-list prevents new internal storage properties from leaking.
+    const { id, title, shortDescription, category, status, votesUp, votesDown,
+      score, submittedByDisplayName, createdAt, promotionRule, moderatedAt } = problem;
+    return { id, municipalityId, title, shortDescription, category, status, votesUp,
+      votesDown, score, submittedByDisplayName, createdAt, promotionRule,
+      ...(moderatedAt ? { moderatedAt } : {}),
+      location: structuredClone(problem.location ?? null),
+      isMine: problem.submittedByUserId === userId,
+      myVote: votesByProblem.get(problem.id)?.get(userId) ?? 'none' };
   }
 
   function deleteUserData(userId) {
+    if (isSessionRevoked(userId)) return { suggestions: 0, votes: 0, predictions: 0, predictionResults: 0 };
     const before = structuredClone(exportState());
     try {
       return fantasy.atomic(() => {
+        revokedSessions.add(userId);
+        for (const [index, command] of submissionCommands) {
+          if (command.userId === userId) submissionCommands.delete(index);
+        }
         const result = eraseLegacyUserData(userId);
         fantasy.eraseUserData(userId);
         return result;
@@ -1130,7 +1205,9 @@ export function createMemoryStore(options = {}) {
           id: promotedId,
           key: suggestion.category,
           title: suggestion.title,
-          zoneName: 'Tema scelto dai cittadini',
+          zoneName: suggestion.location?.kind === 'specific'
+            ? [suggestion.location.label, suggestion.location.civic, suggestion.location.reference].filter(Boolean).join(' · ')
+            : suggestion.location?.kind === 'municipality' ? 'Intero Comune' : 'Tema scelto dai cittadini',
           status: 'stable',
           trendPercent: 0,
           updatedAt: isoNow(),
@@ -1511,6 +1588,9 @@ export function createMemoryStore(options = {}) {
     getCurrentTurn,
     listProblems,
     listNextProblems,
+    getNextProblem,
+    getSubmission,
+    isSessionRevoked,
     submitNextProblem,
     voteNextProblem,
     moderateNextProblem,
@@ -1725,6 +1805,8 @@ function matchRoute(method, pathname) {
       /^\/v1\/municipalities\/([^/]+)\/reputation-history$/,
       'reputationHistory',
     ],
+    ['GET', /^\/v1\/municipalities\/([^/]+)\/next-problem-submissions\/([^/]+)$/, 'nextProblemSubmission'],
+    ['GET', /^\/v1\/municipalities\/([^/]+)\/next-problems\/([^/]+)$/, 'nextProblemDetail'],
     ['GET', /^\/v1\/municipalities\/([^/]+)\/next-problems$/, 'nextProblems'],
     ['POST', /^\/v1\/municipalities\/([^/]+)\/next-problems$/, 'submitNextProblem'],
     [
@@ -1772,7 +1854,8 @@ function routeParams(name, match) {
   ) {
     return { municipalityId: decodeURIComponent(match[1]) };
   }
-  if (name === 'voteNextProblem' || name === 'moderateNextProblem') {
+  if (name === 'nextProblemSubmission') return { municipalityId: decodeURIComponent(match[1]), key: decodeURIComponent(match[2]) };
+  if (name === 'voteNextProblem' || name === 'moderateNextProblem' || name === 'nextProblemDetail') {
     return {
       municipalityId: decodeURIComponent(match[1]),
       problemId: decodeURIComponent(match[2]),
@@ -1835,6 +1918,7 @@ function routeBelongsToPilot(route, store, pilotMunicipalityId) {
     route.params.problemId !== undefined &&
     route.name !== 'voteNextProblem' &&
     route.name !== 'moderateNextProblem' &&
+    route.name !== 'nextProblemDetail' &&
     !store
       .listProblems(pilotMunicipalityId)
       .some((problem) => problem.id === route.params.problemId)
@@ -1842,10 +1926,6 @@ function routeBelongsToPilot(route, store, pilotMunicipalityId) {
     return false;
   }
   return true;
-}
-
-function normalizeTitle(value) {
-  return value.trim().toLowerCase().replaceAll(/\s+/g, ' ');
 }
 
 function getHeader(req, name) {
@@ -1998,29 +2078,71 @@ function sendText(res, statusCode, body, headers = {}) {
   res.end(body);
 }
 
+function fieldError(field, code, message) {
+  const error = httpError(400, 'invalid_field', message);
+  error.fieldErrors = { [field]: code };
+  return error;
+}
+
+function optionalBooleanQuery(value, field) {
+  if (value == null || value === 'false') return false;
+  if (value === 'true') return true;
+  throw fieldError(field, 'invalid', `${field} is invalid.`);
+}
+
+function requireSubmissionKey(value) {
+  if (typeof value !== 'string' || !/^[A-Za-z0-9_-]{8,128}$/.test(value)) {
+    throw fieldError('idempotencyKey', 'invalid', 'idempotencyKey must be 8–128 ASCII letters, digits, underscores or hyphens.');
+  }
+  return value;
+}
+
+function normalizeLocation(value) {
+  if (value == null) return null; // rollout compatibility for legacy clients/data
+  if (typeof value !== 'object' || Array.isArray(value)) throw fieldError('location', 'invalid', 'location is invalid.');
+  const kind = requireEnum(value.kind, new Set(['specific', 'municipality']), 'location.kind');
+  if (kind === 'municipality') {
+    if (Object.keys(value).some((key) => key !== 'kind')) throw fieldError('location', 'invalid', 'Municipality location must contain only kind.');
+    return { kind };
+  }
+  if (Object.keys(value).some((key) => !['kind', 'label', 'civic', 'reference'].includes(key))) throw fieldError('location', 'invalid', 'location contains an unsupported field.');
+  const label = requireText(value.label, 'location.label', 120);
+  const civic = optionalText(value.civic, 'location.civic', 20);
+  const reference = optionalText(value.reference, 'location.reference', 200);
+  return { kind, label, ...(civic ? { civic } : {}), ...(reference ? { reference } : {}) };
+}
+
+function normalizeSubmission(body) {
+  return {
+    title: requireText(body.title, 'title', maxTitleLength),
+    description: requireText(body.description, 'description', maxDescriptionLength),
+    category: requireEnum(body.category, problemKeys, 'category'),
+    location: normalizeLocation(body.location),
+    idempotencyKey: body.idempotencyKey == null ? null : requireSubmissionKey(body.idempotencyKey),
+  };
+}
+
 function requireText(value, field, maxLength = null) {
-  if (typeof value !== 'string' || value.trim().length === 0) {
-    throw httpError(400, 'invalid_field', field + ' is required.');
+  if (typeof value !== 'string' || Array.from(value.trim()).length === 0) {
+    throw fieldError(field, 'required', field + ' is required.');
   }
   const normalized = value.trim();
-  if (maxLength !== null && normalized.length > maxLength) {
-    throw httpError(
-      400,
-      'invalid_field',
-      field + ' must be at most ' + maxLength + ' characters.',
-    );
+  if (maxLength !== null && Array.from(normalized).length > maxLength) {
+    throw fieldError(field, 'too_long', field + ' must be at most ' + maxLength + ' characters.');
   }
   return normalized;
 }
 
 function optionalText(value, field, maxLength) {
-  if (value == null || value.trim() === '') return null;
+  if (value == null) return null;
+  if (typeof value !== 'string') throw fieldError(field, 'invalid', field + ' must be text.');
+  if (value.trim() === '') return null;
   return requireText(value, field, maxLength);
 }
 
 function requireEnum(value, values, field) {
   if (typeof value !== 'string' || !values.has(value)) {
-    throw httpError(400, 'invalid_field', `${field} is invalid.`);
+    throw fieldError(field, 'invalid', `${field} is invalid.`);
   }
   return value;
 }
@@ -2033,7 +2155,7 @@ function optionalEnum(value, values, field) {
 function optionalInteger(value, field, min, max) {
   if (value == null) return null;
   if (!/^-?\d+$/.test(value)) {
-    throw httpError(400, 'invalid_field', `${field} is invalid.`);
+    throw fieldError(field, 'invalid', `${field} is invalid.`);
   }
   const parsed = Number(value);
   if (!Number.isSafeInteger(parsed) || parsed < min || parsed > max) {

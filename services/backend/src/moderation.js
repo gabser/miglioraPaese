@@ -12,13 +12,15 @@ const abusiveTerms = new Set([
   'vaffanculo',
 ]);
 
-export function moderateSuggestion({ title, description }) {
-  const content = `${title}\n${description}`;
+export function moderateSuggestion({ title, description, location }) {
+  // Check each field independently: address numbers in separate fields are not a phone.
+  const fields = [title, description, location?.label, location?.civic, location?.reference].filter((value) => typeof value === 'string');
+  const content = fields.join('\n');
   if (controlCharacterPattern.test(content)) {
     return rejected('unsafe_characters');
   }
   if (urlPattern.test(content)) return rejected('external_link');
-  if (emailPattern.test(content) || phonePattern.test(content)) {
+  if (emailPattern.test(content) || fields.some((field) => phonePattern.test(field))) {
     return rejected('personal_data');
   }
 

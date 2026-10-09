@@ -781,8 +781,12 @@ paths:
   /v1/municipalities/{municipalityId}/next-problems:
     get:
       operationId: listNextProblems
+      description: Public pending and approved proposals; own=true returns all statuses belonging to the signed cookie. Bootstrap establishes the cookie and opaque continuity scope.
       parameters:
         - $ref: "#/components/parameters/MunicipalityId"
+        - name: own
+          in: query
+          schema: { type: boolean, default: false }
         - name: status
           in: query
           schema:
@@ -809,6 +813,7 @@ paths:
           $ref: "#/components/responses/InternalError"
     post:
       operationId: submitSuggestedProblem
+      description: Location and idempotencyKey are optional for legacy rollout; new UI requires both. Same cookie, canonical municipality, key and normalized content replay the immutable receipt before rate/moderation. Different content gives idempotency_conflict. expectedSubmissionScope is an optional legacy-compatible precondition required by the new UI; mismatch against the current signed session HMAC gives 409 submission_scope_changed before replay/commit, without changing quota. This is not an identity credential and is excluded from the content digest. Limits use Unicode code points after trim. Three accepted new proposals per rolling hour, inclusive boundary, per session and municipality. Atomic snapshot persists proposal and command together; no command TTL until reset.
       parameters:
         - $ref: "#/components/parameters/MunicipalityId"
       requestBody:
@@ -818,6 +823,18 @@ paths:
             schema:
               $ref: "#/components/schemas/SubmitSuggestedProblemRequest"
       responses:
+        "200":
+          description: Immutable original receipt replayed; no new proposal or quota.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestedProblem"
+        "401":
+          description: session_revoked; token reset before commit, no proposal created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "201":
           description: Created suggested problem.
           content:
@@ -838,6 +855,56 @@ paths:
           $ref: "#/components/responses/UnprocessableEntity"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /v1/municipalities/{municipalityId}/next-problems/{problemId}:
+    get:
+      operationId: getSuggestedProblem
+      description: Current sanitized proposal. Pending/approved publicly readable; rejected only by owner. Missing, other municipality and inaccessible IDs return the same 404. Receipt status may differ from this current status.
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+        - $ref: "#/components/parameters/ProblemId"
+      responses:
+        "200":
+          description: Current public proposal DTO.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestedProblem"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /v1/municipalities/{municipalityId}/next-problem-submissions/{key}:
+    get:
+      operationId: getSuggestedProblemSubmission
+      description: Private immutable receipt for signed cookie and canonical municipality. 404 includes continuity scope but does not prove a previous request has stopped. A revoked cookie is replaced on GET with a new scope; never use that scope to retry a previous uncertain intent.
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+        - name: key
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[A-Za-z0-9_-]{8,128}$' }
+      responses:
+        "200":
+          description: Original receipt and current session scope.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProposalSubmissionLookup"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: submission_not_found for absent or another session/municipality key; supported municipality only.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - type: object
+                    required: [submissionScope]
+                    properties:
+                      submissionScope: { type: string }
         "500":
           $ref: "#/components/responses/InternalError"
   /v1/municipalities/{municipalityId}/next-problems/{problemId}/votes:
@@ -891,7 +958,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuggestedProblem"
+                $ref: "#/components/schemas/AdminSuggestedProblem"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -2257,6 +2324,12 @@ components:
       type: object
       required: [error]
       properties:
+        fieldErrors:
+          type: object
+          description: Invalid field paths mapped to stable public codes required, invalid, too_long.
+          additionalProperties:
+            type: string
+            enum: [required, invalid, too_long]
         error:
           type: string
         message:
@@ -2374,6 +2447,15 @@ components:
         threshold: { type: integer, minimum: 1 }
         scopeLabel: { type: string }
         reason: { type: string }
+    AdminSuggestedProblem:
+      description: Authorized moderation result includes storage identity and internal reason, never returned by user routes.
+      type: object
+      required: [id, submittedByUserId]
+      properties:
+        id: { type: string }
+        submittedByUserId: { type: string }
+        moderationReason: { type: [string, "null"], maxLength: 500 }
+      additionalProperties: true
     SuggestedProblem:
       type: object
       required:
@@ -2386,7 +2468,9 @@ components:
         - votesDown
         - score
         - myVote
-        - submittedByUserId
+        - municipalityId
+        - isMine
+        - location
         - submittedByDisplayName
         - createdAt
         - promotionRule
@@ -2404,29 +2488,72 @@ components:
         myVote:
           type: string
           enum: [none, up, down]
-        submittedByUserId: { type: string }
+        municipalityId: { type: string }
+        isMine: { type: boolean }
+        submissionScope: { type: string, description: Opaque session continuity marker on POST receipts; never an authorization credential. }
+        location:
+          anyOf:
+            - $ref: "#/components/schemas/ProposalLocation"
+            - type: "null"
         submittedByDisplayName: { type: string }
         createdAt: { type: string, format: date-time }
         moderatedAt:
           type: [string, "null"]
           format: date-time
-        moderationReason:
-          type: [string, "null"]
-          maxLength: 500
         promotionRule:
           $ref: "#/components/schemas/PromotionRule"
     SuggestedProblemList:
       type: object
-      required: [items]
+      required: [items, submissionScope, capabilities]
       properties:
+        submissionScope: { type: string }
+        capabilities:
+          type: object
+          required: [proposalSubmission]
+          properties:
+            proposalSubmission: { const: 1 }
         items:
           type: array
           items:
             $ref: "#/components/schemas/SuggestedProblem"
+    ProposalSubmissionLookup:
+      type: object
+      required: [submissionScope, receipt]
+      properties:
+        submissionScope: { type: string }
+        receipt:
+          $ref: "#/components/schemas/SuggestedProblem"
+    ProposalLocation:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [kind]
+          properties:
+            kind: { const: municipality }
+        - type: object
+          additionalProperties: false
+          required: [kind, label]
+          properties:
+            kind: { const: specific }
+            label: { type: string, minLength: 1, maxLength: 120 }
+            civic: { type: string, maxLength: 20 }
+            reference: { type: string, maxLength: 200 }
+      description: Manual place, Unicode code point limits after trim. Optional blank strings are omitted. No geocoding inferred for legacy null.
     SubmitSuggestedProblemRequest:
       type: object
       required: [title, description, category]
       properties:
+        expectedSubmissionScope:
+          type: [string, "null"]
+          description: Scope frozen when creating this intent, required by new UI as a session continuity precondition. Mismatch returns 409 submission_scope_changed without commit or replay.
+        idempotencyKey:
+          type: [string, "null"]
+          pattern: '^[A-Za-z0-9_-]{8,128}$'
+          description: Optional only for legacy rollout; new UI always supplies a random immutable intent key.
+        location:
+          anyOf:
+            - $ref: "#/components/schemas/ProposalLocation"
+            - type: "null"
         title: { type: string, minLength: 1, maxLength: 120 }
         description: { type: string, minLength: 1, maxLength: 1000 }
         category:

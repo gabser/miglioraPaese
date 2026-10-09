@@ -403,7 +403,7 @@ describe('backend HTTP contract', () => {
     assert.equal(changed.body.error, 'prediction_locked');
   });
 
-  it('returns stable JSON errors for malformed JSON, duplicates and missing data', async () => {
+  it('returns stable JSON errors for malformed JSON, advisory duplicates and missing data', async () => {
     const app = createApp();
     const malformed = await fetchJson(
       '/v1/municipalities/bologna/next-problems',
@@ -434,8 +434,8 @@ describe('backend HTTP contract', () => {
 
     assert.equal(malformed.status, 400);
     assert.equal(malformed.body.error, 'invalid_json');
-    assert.equal(duplicate.status, 409);
-    assert.equal(duplicate.body.error, 'duplicate_title');
+    assert.equal(duplicate.status, 201);
+    assert.equal(duplicate.body.title, 'Tema   con   spazi');
     assert.equal(missing.status, 404);
     assert.equal(missing.body.error, 'municipality_not_found');
   });
@@ -519,7 +519,8 @@ describe('backend HTTP contract', () => {
     const retained = listed.body.items.find(
       (item) => item.id === created.body.id,
     );
-    assert.equal(retained.submittedByUserId, 'deleted');
+    assert.equal('submittedByUserId' in retained, false);
+    assert.equal(retained.isMine, false);
     assert.equal(retained.submittedByDisplayName, 'Utente rimosso');
     assert.equal(retained.votesUp, 0);
     assert.equal(retained.votesDown, 1);
