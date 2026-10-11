@@ -215,6 +215,15 @@ export function createApp(options = {}) {
         throw httpError(401, 'session_revoked', 'The session has been reset.');
       }
       const userId = requestIdentity.userId;
+      // Identity was resolved before reading the request body. A concurrent
+      // reset may revoke it while the body stream is still pending.
+      const readSessionJson = async () => {
+        const body = await readJson(req);
+        if (store.isSessionRevoked(userId)) {
+          throw httpError(401, 'session_revoked', 'The session has been reset.');
+        }
+        return body;
+      };
       responseHeaders = { ...responseHeaders, ...requestIdentity.headers };
 
       if (route.name === 'deleteSessionData') {
@@ -237,9 +246,9 @@ export function createApp(options = {}) {
         const leagues = store.fantasy.leagues;
         const result = route.name === 'fantasyLeagueList' ? leagues.list(municipalityId, userId)
           : route.name === 'fantasyLeagueRead' ? leagues.read(municipalityId, userId, leagueId)
-          : route.name === 'fantasyLeagueCreate' ? leagues.create(municipalityId, userId, await readJson(req))
-          : route.name === 'fantasyLeagueJoin' ? leagues.join(municipalityId, userId, await readJson(req))
-          : route.name === 'fantasyLeagueInvite' ? leagues.invite(municipalityId, userId, leagueId, await readJson(req))
+          : route.name === 'fantasyLeagueCreate' ? leagues.create(municipalityId, userId, await readSessionJson())
+          : route.name === 'fantasyLeagueJoin' ? leagues.join(municipalityId, userId, await readSessionJson())
+          : route.name === 'fantasyLeagueInvite' ? leagues.invite(municipalityId, userId, leagueId, await readSessionJson())
           : route.name === 'fantasyLeagueRevoke' ? leagues.revoke(municipalityId, userId, leagueId, inviteId)
           : leagues.leave(municipalityId, userId, leagueId);
         return sendJson(res, 200, result, responseHeaders);
@@ -247,14 +256,14 @@ export function createApp(options = {}) {
 
       if (route.name === 'fantasyReveal' || route.name === 'fantasySummary' || route.name === 'fantasyReflection') {
         const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
-        const result = route.name === 'fantasyReflection' ? store.fantasy.results.reflect(municipalityId, userId, route.params.matchdayId, route.params.cardId, await readJson(req))
+        const result = route.name === 'fantasyReflection' ? store.fantasy.results.reflect(municipalityId, userId, route.params.matchdayId, route.params.cardId, await readSessionJson())
           : store.fantasy.results.read(municipalityId, userId, route.params.matchdayId);
         return sendJson(res, 200, result, responseHeaders);
       }
 
       if (route.name === 'fantasyTransferQuote' || route.name === 'fantasyTransferConfirm') {
         const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
-        const body = await readJson(req);
+        const body = await readSessionJson();
         const result = route.name === 'fantasyTransferQuote' ? store.fantasy.market.quote(municipalityId, userId, body)
           : store.fantasy.market.confirm(municipalityId, userId, body);
         return sendJson(res, 200, result, responseHeaders);
@@ -264,9 +273,9 @@ export function createApp(options = {}) {
         const municipalityId = canonicalMunicipalityId(route.params.municipalityId);
         const teams = store.fantasy.teams;
         const result = route.name === 'fantasyTeam' ? teams.team(municipalityId, userId, url.searchParams.get('matchdayId'))
-          : route.name === 'fantasyEnroll' ? teams.enroll(municipalityId, userId, await readJson(req))
-          : route.name === 'fantasyUpdateTeam' ? teams.update(municipalityId, userId, await readJson(req))
-          : teams.confirm(municipalityId, userId, await readJson(req));
+          : route.name === 'fantasyEnroll' ? teams.enroll(municipalityId, userId, await readSessionJson())
+          : route.name === 'fantasyUpdateTeam' ? teams.update(municipalityId, userId, await readSessionJson())
+          : teams.confirm(municipalityId, userId, await readSessionJson());
         return sendJson(res, 200, result, responseHeaders);
       }
 
@@ -365,7 +374,7 @@ export function createApp(options = {}) {
       }
 
       if (route.name === 'submitNextProblem') {
-        const body = await readJson(req);
+        const body = await readSessionJson();
         if (body.expectedSubmissionScope != null) {
           if (typeof body.expectedSubmissionScope !== 'string') throw fieldError('expectedSubmissionScope', 'invalid', 'expectedSubmissionScope must be text.');
           if (body.expectedSubmissionScope !== submissionScope()) throw httpError(409, 'submission_scope_changed', 'The submission session has changed. Verify the previous outcome before starting a new intent.');
@@ -382,7 +391,7 @@ export function createApp(options = {}) {
       }
 
       if (route.name === 'voteNextProblem') {
-        const body = await readJson(req);
+        const body = await readSessionJson();
         const updated = store.voteNextProblem({
           municipalityId: route.params.municipalityId,
           problemId: route.params.problemId,
@@ -407,7 +416,7 @@ export function createApp(options = {}) {
       }
 
       if (route.name === 'upsertPrediction') {
-        const body = await readJson(req);
+        const body = await readSessionJson();
         const prediction = store.upsertPrediction({
           turnId: route.params.turnId,
           problemId: route.params.problemId,
@@ -465,7 +474,7 @@ export function createApp(options = {}) {
       }
 
       if (route.name === 'resolvePrediction') {
-        const body = await readJson(req);
+        const body = await readSessionJson();
         const result = store.resolvePrediction({
           problemId: route.params.problemId,
           choice: requireEnum(body.choice, predictionChoices, 'choice'),

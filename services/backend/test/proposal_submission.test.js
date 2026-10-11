@@ -185,3 +185,37 @@ it('promotion keeps the full manual place including civic and reference, and leg
     assert.equal(store.listProblems('castel-bolognese').find((item) => item.id === 'proposal_' + proposal.id).zoneName, expected);
   }
 });
+
+it('reset rejects body-paused writes across predictions and every fantasy command family', async () => {
+  const cases = [
+    ['PUT', '/v1/turns/turn-bologna-today/predictions/problem-green-margherita', { choice: 'improve' }],
+    ['POST', '/v1/fantasy/municipalities/tuglie/enrollment', {}],
+    ['PUT', '/v1/fantasy/municipalities/tuglie/team', {}],
+    ['POST', '/v1/fantasy/municipalities/tuglie/team/confirmation', {}],
+    ['POST', '/v1/fantasy/municipalities/tuglie/transfers/quote', {}],
+    ['POST', '/v1/fantasy/municipalities/tuglie/transfers/confirmation', {}],
+    ['POST', '/v1/fantasy/municipalities/tuglie/leagues', {}],
+    ['POST', '/v1/fantasy/municipalities/tuglie/leagues/join', {}],
+    ['POST', '/v1/fantasy/municipalities/tuglie/leagues/league-example/invites', {}],
+    ['POST', '/v1/fantasy/municipalities/tuglie/matchdays/matchday-2/cards/buche-centro/reflection', {}],
+    ['POST', '/v1/problems/problem-green-margherita/resolve', { choice: 'improve' }],
+  ];
+  for (const [method, path, body] of cases) {
+    const store = createMemoryStore({ now: () => Date.parse('2026-10-08T00:00:00Z') });
+    try {
+      const app = createApp({ store });
+      const bootstrap = await request(app, base + '/next-problems');
+      const cookie = cookieOf(bootstrap);
+      const stream = new PassThrough();
+      const pending = request(app, path, { method, cookie, req: stream });
+      const reset = await request(app, '/v1/session', { method: 'DELETE', cookie });
+      assert.equal(reset.status, 200);
+      const afterReset = store.exportState();
+      stream.end(JSON.stringify(body));
+      const late = await pending;
+      assert.equal(late.status, 401, `${method} ${path}: ${JSON.stringify(late.body)}`);
+      assert.equal(late.body.error, 'session_revoked');
+      assert.deepEqual(store.exportState(), afterReset, `${path} recreated reset data`);
+    } finally { store.close(); }
+  }
+});
