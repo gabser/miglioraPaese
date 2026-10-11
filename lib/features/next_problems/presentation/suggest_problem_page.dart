@@ -223,12 +223,16 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
       );
       return;
     }
-    context.go(
-      ProposalRouteContext.location(
-        '/next-problems',
-        widget.routeContext.municipalityId,
-      ),
-    );
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(
+        ProposalRouteContext.location(
+          '/next-problems',
+          widget.routeContext.municipalityId,
+        ),
+      );
+    }
   }
 
   Widget _draftStatus() {
@@ -507,12 +511,15 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
       });
     }
     if (result.status == SubmissionStatus.succeeded) {
-      context.go(
-        ProposalRouteContext.receiptLocation(
-          result.intent!.receipt!.id,
-          scope.municipalityId,
-        ),
+      final receiptRoute = ProposalRouteContext.receiptLocation(
+        result.intent!.receipt!.id,
+        scope.municipalityId,
       );
+      if (context.canPop()) {
+        context.pushReplacement(receiptRoute);
+      } else {
+        context.go(receiptRoute);
+      }
     } else if (result.message != null &&
         result.status != SubmissionStatus.outcomeUnknown &&
         result.status != SubmissionStatus.scopeLost &&
@@ -603,13 +610,12 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
               child: const Text('Leggi la ricevuta salvata'),
             ),
             TextButton(
-              onPressed: () => context.go(
-                ProposalRouteContext.location(
-                  '/next-problems',
-                  scope.municipalityId,
-                ),
+              onPressed: _leave,
+              child: Text(
+                (GoRouter.maybeOf(context)?.canPop() ?? false)
+                    ? 'Torna indietro'
+                    : 'Vai alle proposte',
               ),
-              child: const Text('Vai alle proposte'),
             ),
           ],
         ),

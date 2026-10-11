@@ -96,11 +96,11 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                             ),
                             const SizedBox(height: AppTokens.s12),
                             FilledButton(
-                              onPressed: () => context.go('/suggest-problem'),
+                              onPressed: () => context.push('/suggest-problem'),
                               child: const Text('Proponi un problema'),
                             ),
                             TextButton(
-                              onPressed: () => context.go('/next-problems'),
+                              onPressed: () => context.push('/next-problems'),
                               child: const Text('Vedi le proposte'),
                             ),
                           ],

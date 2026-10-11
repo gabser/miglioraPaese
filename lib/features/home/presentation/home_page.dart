@@ -199,11 +199,11 @@ class _MunicipalityActivationDashboard extends StatelessWidget {
       runSpacing: AppTokens.s8,
       children: [
         FilledButton(
-          onPressed: () => context.go('/suggest-problem'),
+          onPressed: () => context.push('/suggest-problem'),
           child: const Text(VenialCopy.activationPrimaryCta),
         ),
         OutlinedButton(
-          onPressed: () => context.go('/next-problems'),
+          onPressed: () => context.push('/next-problems'),
           child: const Text(VenialCopy.activationSecondaryCta),
         ),
       ],

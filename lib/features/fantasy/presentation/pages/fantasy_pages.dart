@@ -748,7 +748,7 @@ class _MarketPageState extends State<MarketPage> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () => context.go('/next-problems'),
+                    onPressed: () => context.push('/next-problems'),
                     child: const Text('Apri proposte'),
                   ),
                 ],

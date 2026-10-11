@@ -55,6 +55,19 @@ class NextProblemsPage extends StatelessWidget {
   }
 }
 
+Future<void> _openProposalForm(
+  BuildContext context,
+  String? municipality,
+) async {
+  final list = context.read<NextProblemsCubit>();
+  await context.push(
+    ProposalRouteContext.location('/suggest-problem', municipality),
+  );
+  if (context.mounted && !list.isClosed) {
+    await list.load();
+  }
+}
+
 class _NextProblemsView extends StatelessWidget {
   const _NextProblemsView({required this.routeContext});
   final ProposalRouteContext routeContext;
@@ -67,19 +80,23 @@ class _NextProblemsView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.go('/home'),
-          tooltip: 'Torna alla home',
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
+          tooltip: (GoRouter.maybeOf(context)?.canPop() ?? false)
+              ? 'Torna indietro'
+              : 'Torna alla home',
           icon: const Icon(AppIcons.back),
         ),
         title: const Text(VenialCopy.appTitle),
         actions: [
           IconButton(
-            onPressed: () => context.go(
-              ProposalRouteContext.location(
-                '/suggest-problem',
-                routeContext.municipalityId,
-              ),
-            ),
+            onPressed: () =>
+                _openProposalForm(context, routeContext.municipalityId),
             tooltip: VenialCopy.playSuggestCta,
             icon: const Icon(Icons.add),
           ),
@@ -464,11 +481,9 @@ class _NextProblemsEmpty extends StatelessWidget {
                 ),
                 const SizedBox(height: AppTokens.s12),
                 FilledButton(
-                  onPressed: () => context.go(
-                    ProposalRouteContext.location(
-                      '/suggest-problem',
-                      context.read<NextProblemsCubit>().state.municipalityId,
-                    ),
+                  onPressed: () => _openProposalForm(
+                    context,
+                    context.read<NextProblemsCubit>().state.municipalityId,
                   ),
                   child: const Text(VenialCopy.activationPrimaryCta),
                 ),
