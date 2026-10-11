@@ -1,0 +1,77 @@
+{
+  "profile": "legacy-mock",
+  "browser": "154.0.8037.98",
+  "clock": "actual; not proof of controlled lock/reveal",
+  "results": [
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/home",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/play",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/board",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/leaderboard",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/profile",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/next-problems?municipality=tuglie",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/suggest-problem?municipality=tuglie",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/home",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/play",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/board",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/leaderboard",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/profile",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/next-problems?municipality=tuglie",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/suggest-problem?municipality=tuglie",
+      "errors": []
+    }
+  ]
+}

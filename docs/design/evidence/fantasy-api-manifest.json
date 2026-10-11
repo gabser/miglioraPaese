@@ -1,0 +1,67 @@
+{
+  "profile": "fantasy-api",
+  "browser": "154.0.8037.98",
+  "clock": "actual; not proof of controlled lock/reveal",
+  "results": [
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/squad",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/matchday",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/market",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/leagues",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/next-problems?municipality=tuglie",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/suggest-problem?municipality=tuglie",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/squad",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/matchday",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/market",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/leagues",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/next-problems?municipality=tuglie",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/suggest-problem?municipality=tuglie",
+      "errors": []
+    }
+  ]
+}

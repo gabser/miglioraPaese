@@ -1,0 +1,12 @@
+{
+  "postStatus": 201,
+  "capabilities": {
+    "proposalSubmission": 1
+  },
+  "jsCookieContainsSession": false,
+  "httpOnly": true,
+  "sameReceipt": true,
+  "sameScope": true,
+  "count": 1,
+  "limit": "browser fetch contract and refresh; UI coordinator loss covered by separate real HTTP tests"
+}

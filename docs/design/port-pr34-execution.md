@@ -12,26 +12,28 @@ Riferimenti remoti verificati con gh e git ls-remote:
 
 Toolchain: Flutter3.44.2, Dart3.12.2, Node24.18.0. Flutter fuori PATH in ~/fvm/versions/3.44.2. Docker non trovato nei percorsi iniziali; verifica da completare.
 
-## Matrice di accettazione
+## Matrice di accettazione aggiornata
 
 | Requisito | Stato | Evidenza/decisione | Residuo |
 |---|---|---|---|
-| Isolamento e provenienza | verificato | Clone separato; SHA e hash sopra | Nessuna scrittura nella sorgente |
-| Review33 e CI | in corso | agente contratto, suite locale avviata | Gate prima del merge |
-| Fase0 percorsi/stati/gerarchia | in corso | agente esperienza | Checklist e fixture |
-| Classificazione34 | in corso | agente review indipendente | Escludere PostgreSQL/preview/CLI |
-| Contratto cookie e recupero | da fare | PR33 fonte | Port adapter/mock e test perdita risposta |
-| Persistenza e reset | da fare | Conservare chiavi fantasy | Test epoch/storage |
-| Shell e sezione rappresentativa | da fare | Squadra candidata | Render mobile/desktop prima di propagare |
-| Giornata/Mercato/Leghe | da fare | Regole main preservate | UI/stati/feedback |
-| Legacy e proposte | da fare | Import selettivo34 | Pilot/routing/filtri |
-| Suite, analisi, OpenAPI, build4 profili | da fare | Toolchain CI | Risultati sul port |
-| Docker | da fare | Tool non nel PATH | Individuare runtime |
-| Browser e immagini7 larghezze | da fare | Artefatti reali | Fixture e navigazione |
-| Test formativo persone nuove | bloccato | Disponibilità chiesta all'utente | Persone reali; nessuna autocertificazione |
-| Dispositivo rappresentativo | bloccato | Disponibilità chiesta all'utente | Dispositivo reale e feedback |
-| PR draft e CI finale | da fare | Collegare33/34 | Push solo commit controllati |
-| Merge port e demo | bloccato | Richiede tutti i gate | Nessun deploy API;34 resta aperta |
+| Isolamento e provenienza | verificato | Clone separato, import da SHA34, sorgente protetta | Nessuna scrittura nella sorgente |
+| Review33 e CI | verificato | Repro reset, fix11 route,89 backend,155 Flutter, CI verde |33 integrata066533a |
+| Fase0 percorsi/stati/gerarchia | documentato | port-pr34-experience.md, regole main | Validazione umana rinviata |
+| Classificazione34 | completata dall'orchestratore | port-pr34-source-review.md | Seconda review indipendente interrotta dal limite account |
+| Contratto cookie e recupero | verificato | Test HTTP reale SQLite perdita/malformed201, restart, lookup; browser-api-recovery.json | Browser test fetch non simula perdita dalla UI |
+| Persistenza e reset | verificato automaticamente | Test draft/intento/epoch/reset; chiavi fantasy preservate | Prova umana non svolta |
+| Shell e Squadra | implementato e ispezionato | Header responsive, conferma visibile, stato ambra,390/1440 | Intuibilità da valutare con persone |
+| Giornata/Mercato/Leghe | implementato | Vincoli main, feedback distinti, test responsive sette larghezze200% | Gate umano |
+| Legacy e proposte | implementato | Route entrambe modalità, bozza/ricevuta/dettaglio, contesto esplicito pilot | Validazione sul dispositivo |
+| Suite/analisi/OpenAPI | verificato |304 Flutter,90 backend, zero errori/warning analisi; OpenAPI valido46 warning documentali |153 info analisi non bloccanti |
+| Build4 profili | verificato | evidence/build-profiles.json, web release mock/API entrambe modalità | Target nativi Android/iOS assenti |
+| Docker | verificato CI | Backend PR35 test include docker build | Docker locale assente |
+| Browser/immagini7 larghezze | verificato | Manifest Chrome154, nessun pageerror, catture isolati mock/API | Emulazione viewport, non telefono fisico |
+| Percorso conferma/lock/reveal | verificato nel browser | Fixture locale, clock Playwright, conferma/lock/esiti390 e1440 | Intuibilità con persone ancora aperta |
+| Test formativo persone nuove | rinviato dall'utente | Conferma mobile/web e dubbi sull'intuibilità | Gate prodotto aperto |
+| Dispositivo rappresentativo | aperto | Viewport e test200% non sostituiscono telefono reale | Gate prodotto aperto |
+| PR draft e CI finale | PR35 draft | Backend/Flutter verdi0458244 | CI conclusiva registrata nel corpo PR sullo SHA finale |
+| Merge port e demo | sospeso ai gate |33 e sua demo CI verdi; port non integrato |35 draft,34 aperta, nessun deploy API |
 
 ## Registro
 
@@ -39,3 +41,29 @@ Toolchain: Flutter3.44.2, Dart3.12.2, Node24.18.0. Flutter fuori PATH in ~/fvm/v
 - Agenti: contratto/persistenza review read-only33; esperienza autore unico docs/design/port-pr34-experience.md; verifica indipendente read-only34. Orchestratore proprietario router/dipendenze/tema/prefs/client e integrazione.
 - Tool sandbox rete inizialmente non disponibile; verifica remota riuscita mediante escalation autorizzata. Nessun blocco di approvazione.
 - flutter pub get --enforce-lockfile sulla33: riuscito. Suite Flutter33 avviata, esito non ancora acquisito.
+
+### Incrementi eseguiti
+
+- Agenti interrotti dal limite d'uso account; orchestratore prosegue in sequenza. Documento esperienza recuperato; review33 ha prodotto repro reale prima interruzione.
+- PR33 corretta d63ca7dde92c8196683697de518137dfb1dc8dec: body-paused richieste revocate al reset (11 route).89/89 backend,155 Flutter prima fix solo backend, CI finale Backend/Flutter SUCCESS. Merge squash autorizzato:066533acdfbba8628edc40cedc0e31226591348a,11 ottobre2026 08:23:46UTC.
+- Branch codex/port-pr34-main creato dalla main aggiornata. Commit529cc2a: adapter cookie e persistenza;214 test Flutter passati sullo stato adapter prima dei nuovi test HTTP. Nuovi test reali2/2: commit con risposta persa e201 malformata, ricostruzione e restartSQLite, lookup stessa ricevuta e una sola proposta/POST.
+- Nessun token bearer in Dart; scope trattato come opaco; nessun retry automatico nel client. Scope locale partizionato anche per fantasy/legacy; chiavi stato/ricevute fantasy conservate.
+- Sezione rappresentativa: Squadra perché comprende azione primaria, dati carte, capitano, vincolo di conferma, stato e accesso Giornata. Catture Chrome390/1440 in docs/design/evidence, manifest. Ispezione agente: prima cattura mobile titolo compresso dal budget; corretto header responsive, stato non confermato in ambra, pulsante conferma sopra carte. Render di correzione in corso. Clock reale: queste catture non attestano lock/reveal controllati.
+- Backend gap port: ricerca luogo/civico/riferimento eRetry-After.90/90 test backend passati. OpenAPI aggiornamento in corso.
+- Utente rimanda prova persone e conferma mobile/web; gate umano aperto, PR rimane draft. Repository è web Flutter e non contiene target nativi Android/iOS: nessuna build nativa dichiarata.
+
+### Verifica conclusiva tecnica
+
+Il port conserva SQLite, Manager civico predefinito, regole fantasy, gioco precedente e contratto cookie della33. I testi distinguono proposta ricevuta, approvazione e ingresso eventuale nel gioco delle previsioni; invio e voti non promettono carte Manager o premi. Il Comune pilot invalido offre un ritorno esplicito al pilot, senza cambio silenzioso.
+
+Suite Flutter completa304/304 dopo l'ultima correzione dei testi e del ritorno pilot. Backend90/90. Analisi153 info, zero errori e warning. OpenAPI3.1 validato con Redocly minimal:46 warning documentali. Quattro build web release: Manager mock/API e legacy mock/API. Screenshot e manifest sono artefatti locali reali, non certificazioni di accessibilità o divertimento.
+
+Browser SQLite: cookie HttpOnly non leggibile da JavaScript,201, refresh, scope invariato, stessa ricevuta e una sola proposta. Il test browser usa fetch sul contratto; i due test Flutter HTTP coprono la perdita/malformazione della risposta nel coordinatore reale e il restart SQLite. Non attribuire al browser una simulazione completa della perdita nella UI.
+
+I test con persone sono rinviati dall'utente. Anche la prova su dispositivo fisico resta aperta; mobile qui significa web responsive. Il repository non contiene progetti nativi Android/iOS. Nessuna accettazione prodotto completa e nessun merge35/chiusura34 dichiarati. La review separata degli agenti non è completa per limite account; i controlli dell'orchestratore e della CI non ne sono un sostituto.
+
+La verifica temporale usa fixture mock e clock Playwright iniziale8 ottobre2026 UTC: conferma formazione, avanzamento52 ore fino al blocco, poi5 giorni fino al termine dell’osservazione. Le catture controlled-* e i relativi JSON registrano lo stato reale. Non è una verifica del clock o del reveal remoto API. Il flusso include ritorno alla route Giornata con stato locale persistito. Il feedback conclusivo ora invita a consultare esiti e punti, e distingue punti dell’esito, previsione e riflessione; le regole di calcolo sono immutate.
+
+Confronto visivo dell'orchestratore: Squadra390 conferma sopra le carte, sidebar desktop; Giornata390 separa previsioni facoltative e formazione richiesta; Mercato1440 mostra confronto e costi; Home legacy390 con metriche impilate; proposte390 distinguono moderazione e premi. Corrette etichette demo locali hardcoded che erano visibili nel profilo API. Le prove possono attestare gerarchia e funzionamento osservato, non comprensione di utenti nuovi o divertimento.
+
+Commit applicativo conclusivo abcd69d: suite304 e analisi153 info/zero errori o warning. Catture API successive alla correzione della sidebar; build mock ricontrollate separatamente (final-mock-builds.json). Gli ultimi messaggi Home legacy sono ricompilati e ricatturati in final-legacy-home-builds.json. Lo stato CI dello SHA conclusivo documentale è registrato nel corpo PR35 per evitare una modifica ricorsiva del commit verificato.

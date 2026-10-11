@@ -1,0 +1,21 @@
+{
+  "sourcePr34": "f3f4d4f8001f972c1dee598ff6519ba2008bb25e",
+  "baseMainAfter33": "066533acdfbba8628edc40cedc0e31226591348a",
+  "priorPortCommit": "0458244817b3700e5f0c009d8128a06ae2ac080a",
+  "testedTreeSha256": "07e23204bdb98c6979033cc82d0098d504b2148743b41efc5a644a81c0e3d420",
+  "hashedRoots": [
+    "lib",
+    "test",
+    "services/backend/src",
+    "services/backend/test"
+  ],
+  "flutter": "3.44.2",
+  "dart": "3.12.2",
+  "node": "24.18.0",
+  "browser": "Chrome154.0.8037.98",
+  "api": "local SQLite; no public deployment",
+  "humanTest": "deferred by user",
+  "physicalDeviceTest": "not performed",
+  "independentFinalReview": "not completed; account usage limit",
+  "applicationCommit": "abcd69de02984f9c60db38933ea615758ec0c0fa"
+}
