@@ -23,3 +23,6 @@ Per un’installazione esterna di Playwright impostare PLAYWRIGHT_MODULE al perc
 ## Limiti e stato di accettazione
 
 Review tecnica favorevole entro lo scope controllato. Nessuna certificazione di accessibilità, intuibilità, divertimento o uso su hardware fisico. I test con persone sono rinviati dall’utente; il dubbio sulla comprensione del gioco resta aperto. Mobile significa responsive web nelle prove attuali; progetti Android/iOS nativi assenti. Restano PR35 draft e PR34 aperta secondo il piano. Nessun deploy API o pilot pubblico.
+
+
+Aggiornamento disponibilità: rilevato un iPhone wireless tramite Flutter; l’utente rinvia esplicitamente anche il collaudo hardware. Disponibilità del dispositivo non equivale a prova eseguita. Preview locale fermata, nessun lancio Safari sul telefono.

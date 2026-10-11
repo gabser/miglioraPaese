@@ -168,3 +168,8 @@ L'utente conferma destinazioni mobile e web e rimanda il test con persone, espri
 Il lavoro prosegue sui controlli indipendenti. Il test con persone che non hanno mai usato il gioco è rinviato su indicazione dell’utente. La comprensione del ciclo e del punteggio resta una domanda aperta; il report tecnico non costituisce risposta a questa domanda. Per mobile si verifica ora il sito responsive; il collaudo su telefono fisico e gli eventuali target nativi richiedono evidenze separate.
 
 Priorità aggiunte: preservare origine e filtri tornando da bozza/ricevuta; distinguere una lista di proposte vuota dallo stato di attivazione del Comune; verificare dalla UI reale il recupero dopo una risposta persa o malformata, anche dopo refresh, senza duplicare l’invio. La PR resta draft con i gate di prodotto annotati, secondo l’indicazione dell’utente di continuare il piano.
+
+
+### Rinvio esplicito anche del collaudo sul telefono
+
+L’utente ha scelto «Rimandiamo anche la prova sul telefono». È stato rilevato un iPhone wireless, ma nessuna sessione Safari è stata avviata e nessun risultato hardware viene dichiarato. Il gate dispositivo è rinviato insieme al test formativo. Il port resta pronto tecnicamente nella PR35 draft; merge, verifica demo del port e chiusura34 attendono i gate previsti. Non interpretare il rinvio come autorizzazione a eliminarli.

@@ -80,3 +80,8 @@ Suite finale307/307. Analisi153 info, zero errori/warning. Il nuovo test a390px 
 Il browser ora percorre davvero form Flutter → POST committato SQLite → risposta persa o201 malformata → refresh → pulsante Verifica invio → ricevuta → dettaglio. Quattro casi a390/1440 attestano una sola POST, una sola proposta, stesso scope e stessa ricevuta immutabile; il cookie è HttpOnly. Due fixture di lista vuota mantengono cookie/contratto reali e sostituiscono solo items con[] nel browser, senza alterare SQLite. Screenshot ui-* e browser-ui-recovery.json documentano questa verifica.
 
 Gate prodotto: prove umane rinviate, telefono fisico non verificato. PR35 draft, PR34 aperta, nessun merge del port o deploy API. La verifica tecnica procede senza dedurre intuibilità o divertimento dalle prove automatiche.
+
+
+### Disponibilità dispositivo e rinvio del collaudo
+
+Verifica `flutter devices`: Chrome/macOS e un iPhone wireless rilevati. Alla richiesta di una breve prova web su telefono l’utente ha scelto di rimandarla. La preview mock locale preparata per il collaudo è stata fermata; Safari non è stato aperto. Gate umano e hardware entrambi rinviati, nessuna prova su telefono o accettazione completa dichiarata. PR35 rimane draft con CI tecnica verde sul commit2d03fe4 prima di questo aggiornamento documentale. Riprendere dai collaudi, poi rivalidare main/head/CI prima di merge, demo e chiusura34.
