@@ -125,7 +125,9 @@ try {
     await page.goto(`${appUrl}/#/next-problems?municipality=tuglie`);
     await page.waitForTimeout(3500);
     await enableSemantics(page);
-    assert.match(await page.locator('body').innerText(), /nessuna proposta|niente proposte/i);
+    const emptyText = await page.locator('body').innerText();
+    assert.match(emptyText, /nessuna proposta/i);
+    assert.doesNotMatch(emptyText, /Comune in attivazione/i);
     await page.screenshot({ path: join(evidenceDir, `ui-empty-proposals-${width}.png`) });
     emptyStates.push({ width, fixture: 'GET list items=[] in browser; SQLite unchanged' });
     await context.close();

@@ -76,6 +76,12 @@ void main() {
       ..calls = 1
       ..forceEmpty = true;
     await _pumpList(tester, repository, width: 390, scale: 2);
+    await tester.scrollUntilVisible(
+      find.text('Nessuna proposta'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     expect(find.text('Nessuna proposta'), findsOneWidget);
     expect(find.text(VenialCopy.activationTitle), findsNothing);
     expect(find.text(VenialCopy.nextProblemsActivationEmpty), findsOneWidget);
