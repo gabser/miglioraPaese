@@ -1,3 +1,4 @@
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -212,14 +213,20 @@ class _Sidebar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Modalità demo',
+                    context.read<AppConfig?>()?.gameDataSource ==
+                            GameDataSource.api
+                        ? 'Rehearsal API'
+                        : 'Modalità demo',
                     style: textTheme.labelMedium?.copyWith(
                       color: Colors.white.withValues(alpha: 0.68),
                     ),
                   ),
                   const SizedBox(height: AppTokens.s8),
                   Text(
-                    'Dati di gioco mock locali',
+                    context.read<AppConfig?>()?.gameDataSource ==
+                            GameDataSource.api
+                        ? 'Dati sintetici dal server'
+                        : 'Dati di gioco mock locali',
                     style: textTheme.titleSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
