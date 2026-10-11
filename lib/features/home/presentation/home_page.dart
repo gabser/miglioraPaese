@@ -363,7 +363,7 @@ class _ActivationTrustPanel extends StatelessWidget {
           ),
           const SizedBox(height: AppTokens.s8),
           Text(
-            'La proposta entra nella lista dei temi. Altri cittadini possono votarla e, quando ci sono abbastanza segnali, diventa una carta del turno.',
+            'L’invio viene ricevuto e valutato. I voti sostengono la proposta; l’eventuale ingresso nel gioco delle previsioni segue le regole e la moderazione previste.',
             style: textTheme.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
               height: 1.42,
@@ -540,7 +540,7 @@ class _RightRail extends StatelessWidget {
               ),
               const SizedBox(height: AppTokens.s16),
               Text(
-                'Punti maturati nella demo locale',
+                'Punti maturati nel gioco delle previsioni',
                 style: textTheme.bodySmall?.copyWith(color: Colors.white),
               ),
             ],

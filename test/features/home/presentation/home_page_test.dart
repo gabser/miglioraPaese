@@ -33,7 +33,7 @@ void main() {
             expect(find.text('Gioca il turno'), findsOneWidget);
             expect(find.textContaining('andamento del tema'), findsWidgets);
             expect(
-              find.text('Punti maturati nella demo locale'),
+              find.text('Punti maturati nel gioco delle previsioni'),
               findsOneWidget,
             );
           }
