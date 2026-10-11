@@ -19,20 +19,20 @@ Toolchain: Flutter3.44.2, Dart3.12.2, Node24.18.0. Flutter fuori PATH in ~/fvm/v
 | Isolamento e provenienza | verificato | Clone separato, import da SHA34, sorgente protetta | Nessuna scrittura nella sorgente |
 | Review33 e CI | verificato | Repro reset, fix11 route,89 backend,155 Flutter, CI verde |33 integrata066533a |
 | Fase0 percorsi/stati/gerarchia | documentato | port-pr34-experience.md, regole main | Validazione umana rinviata |
-| Classificazione34 | completata dall'orchestratore | port-pr34-source-review.md | Seconda review indipendente interrotta dal limite account |
-| Contratto cookie e recupero | verificato | Test HTTP reale SQLite perdita/malformed201, restart, lookup; browser-api-recovery.json | Browser test fetch non simula perdita dalla UI |
+| Classificazione34 | completata dall'orchestratore | port-pr34-source-review.md | Review indipendente completata; rilievi UI corretti |
+| Contratto cookie e recupero | verificato | Test HTTP reale SQLite perdita/malformed201, restart, lookup; browser-ui-recovery.json | UI reale: perdita/malformed, refresh e lookup390/1440 |
 | Persistenza e reset | verificato automaticamente | Test draft/intento/epoch/reset; chiavi fantasy preservate | Prova umana non svolta |
 | Shell e Squadra | implementato e ispezionato | Header responsive, conferma visibile, stato ambra,390/1440 | Intuibilità da valutare con persone |
 | Giornata/Mercato/Leghe | implementato | Vincoli main, feedback distinti, test responsive sette larghezze200% | Gate umano |
 | Legacy e proposte | implementato | Route entrambe modalità, bozza/ricevuta/dettaglio, contesto esplicito pilot | Validazione sul dispositivo |
-| Suite/analisi/OpenAPI | verificato |304 Flutter,90 backend, zero errori/warning analisi; OpenAPI valido46 warning documentali |153 info analisi non bloccanti |
-| Build4 profili | verificato | evidence/build-profiles.json, web release mock/API entrambe modalità | Target nativi Android/iOS assenti |
+| Suite/analisi/OpenAPI | verificato |307 Flutter,90 backend, zero errori/warning analisi; OpenAPI valido46 warning documentali |153 info analisi non bloccanti |
+| Build4 profili | verificato | evidence/next-step-builds.json, web release mock/API entrambe modalità | Target nativi Android/iOS assenti |
 | Docker | verificato CI | Backend PR35 test include docker build | Docker locale assente |
 | Browser/immagini7 larghezze | verificato | Manifest Chrome154, nessun pageerror, catture isolati mock/API | Emulazione viewport, non telefono fisico |
 | Percorso conferma/lock/reveal | verificato nel browser | Fixture locale, clock Playwright, conferma/lock/esiti390 e1440 | Intuibilità con persone ancora aperta |
 | Test formativo persone nuove | rinviato dall'utente | Conferma mobile/web e dubbi sull'intuibilità | Gate prodotto aperto |
 | Dispositivo rappresentativo | aperto | Viewport e test200% non sostituiscono telefono reale | Gate prodotto aperto |
-| PR draft e CI finale | PR35 draft | Backend/Flutter verdi0458244 | CI conclusiva registrata nel corpo PR sullo SHA finale |
+| PR draft e CI finale | PR35 draft | Backend/Flutter verdi3e9d597; nuova CI conclusiva nel corpo PR | CI conclusiva registrata nel corpo PR sullo SHA finale |
 | Merge port e demo | sospeso ai gate |33 e sua demo CI verdi; port non integrato |35 draft,34 aperta, nessun deploy API |
 
 ## Registro
@@ -67,3 +67,16 @@ La verifica temporale usa fixture mock e clock Playwright iniziale8 ottobre2026 
 Confronto visivo dell'orchestratore: Squadra390 conferma sopra le carte, sidebar desktop; Giornata390 separa previsioni facoltative e formazione richiesta; Mercato1440 mostra confronto e costi; Home legacy390 con metriche impilate; proposte390 distinguono moderazione e premi. Corrette etichette demo locali hardcoded che erano visibili nel profilo API. Le prove possono attestare gerarchia e funzionamento osservato, non comprensione di utenti nuovi o divertimento.
 
 Commit applicativo conclusivo abcd69d: suite304 e analisi153 info/zero errori o warning. Catture API successive alla correzione della sidebar; build mock ricontrollate separatamente (final-mock-builds.json). Gli ultimi messaggi Home legacy sono ricompilati e ricatturati in final-legacy-home-builds.json. Lo stato CI dello SHA conclusivo documentale è registrato nel corpo PR35 per evitare una modifica ricorsiva del commit verificato.
+
+
+### Aggiornamento conclusivo dopo la ripresa delle review
+
+Le indicazioni dell’utente su persone e mobile/web sono riportate nel piano. Il precedente registro sulla review interrotta e sul browser limitato a fetch descrive la prima verifica: è superato dalle nuove prove e dalle review riportate in port-pr34-final-review.md.
+
+Review contratto/persistenza completata da agente separato: nessun rilievo,90 backend e44 test Flutter mirati eseguiti dal reviewer. Review UI/routing completata: corretti perdita di filtri e origine durante navigazione, etichetta del ritorno da ricevuta e falsa inferenza di attivazione da lista proposte vuota. Le route conservano lo stack e aggiornano la lista al ritorno; i deep link mantengono un fallback esplicito.
+
+Suite finale307/307. Analisi153 info, zero errori/warning. Il nuovo test a390px con testo200% scorre sotto i filtri prima di verificare lo stato vuoto; il primo tentativo falliva perché il widget non era ancora costruito nella lista lazy, non per una regressione del prodotto. Quattro build release aggiornate nel manifest next-step-builds.json.
+
+Il browser ora percorre davvero form Flutter → POST committato SQLite → risposta persa o201 malformata → refresh → pulsante Verifica invio → ricevuta → dettaglio. Quattro casi a390/1440 attestano una sola POST, una sola proposta, stesso scope e stessa ricevuta immutabile; il cookie è HttpOnly. Due fixture di lista vuota mantengono cookie/contratto reali e sostituiscono solo items con[] nel browser, senza alterare SQLite. Screenshot ui-* e browser-ui-recovery.json documentano questa verifica.
+
+Gate prodotto: prove umane rinviate, telefono fisico non verificato. PR35 draft, PR34 aperta, nessun merge del port o deploy API. La verifica tecnica procede senza dedurre intuibilità o divertimento dalle prove automatiche.

@@ -161,3 +161,10 @@ Questo documento pianifica il lavoro: non attesta revisione remota delle PR, tes
 ## Aggiornamento di esecuzione — 11 ottobre 2026
 
 L'utente conferma destinazioni mobile e web e rimanda il test con persone, esprimendo dubbi sull'intuibilità del gioco. Il test formativo resta un gate di accettazione prodotto aperto: procedere con lavoro indipendente, controlli tecnici e visivi, e PR draft; non sostituire le prove umane con giudizi dell'agente. Dare priorità a prima azione, salvataggio/conferma/lock, punteggio e prossima azione. Distinguere responsive browser mobile da prova su dispositivo reale.
+
+
+### Aggiornamento operativo: prove umane rinviate, destinazioni mobile e web
+
+Il lavoro prosegue sui controlli indipendenti. Il test con persone che non hanno mai usato il gioco è rinviato su indicazione dell’utente. La comprensione del ciclo e del punteggio resta una domanda aperta; il report tecnico non costituisce risposta a questa domanda. Per mobile si verifica ora il sito responsive; il collaudo su telefono fisico e gli eventuali target nativi richiedono evidenze separate.
+
+Priorità aggiunte: preservare origine e filtri tornando da bozza/ricevuta; distinguere una lista di proposte vuota dallo stato di attivazione del Comune; verificare dalla UI reale il recupero dopo una risposta persa o malformata, anche dopo refresh, senza duplicare l’invio. La PR resta draft con i gate di prodotto annotati, secondo l’indicazione dell’utente di continuare il piano.
