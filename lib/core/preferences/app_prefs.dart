@@ -186,18 +186,18 @@ class AppPrefs extends ChangeNotifier {
   String? get fantasyStateJson => _prefs.getString(_fantasyStateKey);
 
   Future<void> setFantasyStateJson(String value) async {
-    final saved = await _prefs.setString(_fantasyStateKey, value);
-    if (!saved) throw StateError('Fantasy state could not be saved');
+    await _checkedWrite(() => _prefs.setString(_fantasyStateKey, value));
   }
 
   // Only an idempotent command receipt is stored remotely, never a draft or score.
   String? fantasyReceipt(String scope) =>
       _prefs.getString('fantasy_receipt_$scope');
   Future<void> setFantasyReceipt(String scope, String? value) async {
-    final saved = value == null
-        ? await _prefs.remove('fantasy_receipt_$scope')
-        : await _prefs.setString('fantasy_receipt_$scope', value);
-    if (!saved) throw StateError('Command receipt could not be saved');
+    await _checkedWrite(
+      () => value == null
+          ? _prefs.remove('fantasy_receipt_$scope')
+          : _prefs.setString('fantasy_receipt_$scope', value),
+    );
   }
 
   /// Data dell'ultima proposta inviata, se presente.

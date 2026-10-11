@@ -23,7 +23,8 @@ class _LostReplyClient extends http.BaseClient {
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     expect(request.headers.containsKey('Authorization'), isFalse);
     final response = await cookies.send(request);
-    if (request.method == 'POST' && request.url.path.endsWith('/next-problems')) {
+    if (request.method == 'POST' &&
+        request.url.path.endsWith('/next-problems')) {
       posts++;
       final body = jsonDecode((request as http.Request).body) as Map;
       expect(body.containsKey('userId'), isFalse);
@@ -32,60 +33,116 @@ class _LostReplyClient extends http.BaseClient {
       if (failReply) {
         failReply = false;
         await response.stream.drain<void>();
-        if (malformed) return http.StreamedResponse(Stream.value(utf8.encode('{"id":"incomplete"}')), 201);
+        if (malformed)
+          return http.StreamedResponse(
+            Stream.value(utf8.encode('{"id":"incomplete"}')),
+            201,
+          );
         throw http.ClientException('reply lost after committed proposal');
       }
     }
     return response;
   }
+
   @override
   void close() => cookies.close();
 }
 
 void main() {
   for (final malformed in [false, true]) {
-    test('SQLite commit with ${malformed ? 'malformed201' : 'lost reply'} refresh restart lookup preserves one immutable receipt', () async {
-      final backend = BackendFixture();
-      await backend.start();
-      final transport = _LostReplyClient()..malformed = malformed;
-      final localBackend = MemoryLocalBackend();
-      LocalDataStore data = LocalDataStore(backend: localBackend);
-      final config = AppConfig.fromValues(nextProblemsDataSource: 'api', apiBaseUrl: backend.url);
-      ApiClient api() => ApiClient(baseUrl: Uri.parse(backend.url), client: transport);
-      ProposalSubmissionCoordinator coordinator() => ProposalSubmissionCoordinator(
-        store: ProposalSubmissionStore(data), drafts: ProposalDraftStore(data),
-        gateway: ApiNextProblemsRepository(client: api(), data: data),
-        isMock: false, keyFactory: () => 'persisted-recovery-key');
-      var controller = coordinator();
-      try {
-        final scope = ProposalScope.fromConfig(municipalityId: 'tuglie', config: config, namespace: data.namespace);
-        final result = await controller.start(scope: scope, draftRevision: 0,
-          title: 'Alberi in via Roma', description: 'Serve ombra vicino al passaggio.',
-          category: ProblemKey.green, location: ProposalLocation.specific(label: 'Via Roma', civic: '12/A'));
-        expect(result.status, SubmissionStatus.outcomeUnknown);
-        expect(transport.posts, 1);
-        final initial = await api().getJson(['v1','municipalities','tuglie','next-problems'], queryParameters: {'own':'true'}) as Map;
-        expect(initial['items'], hasLength(1));
-        final id = (initial['items'] as List).single['id'];
-        controller.dispose(); data.dispose();
-        await backend.command('restart');
-        data = LocalDataStore(backend: localBackend);
-        controller = coordinator();
-        expect(controller.current(scope).status, SubmissionStatus.outcomeUnknown);
-        final recovered = await controller.reconcile(scope);
-        expect(recovered.status, SubmissionStatus.succeeded);
-        expect(recovered.intent!.receipt!.id, id);
-        final receipt = recovered.intent!.receipt!;
-        expect(receipt.location!.civic, '12/A');
-        expect(transport.posts, 1);
-        final lookup = await api().getJson(['v1','municipalities','tuglie','next-problem-submissions','persisted-recovery-key']) as Map;
-        expect((lookup['receipt'] as Map)['id'], id);
-        final own = await api().getJson(['v1','municipalities','tuglie','next-problems'], queryParameters: {'own':'true'}) as Map;
-        expect(own['items'], hasLength(1));
-        expect(controller.savedReceipt(scope).intent!.receipt!.createdAt, receipt.createdAt);
-      } finally {
-        controller.dispose(); data.dispose(); transport.close(); await backend.stop();
-      }
-    });
+    test(
+      'SQLite commit with ${malformed ? 'malformed201' : 'lost reply'} refresh restart lookup preserves one immutable receipt',
+      () async {
+        final backend = BackendFixture();
+        await backend.start();
+        final transport = _LostReplyClient()..malformed = malformed;
+        final localBackend = MemoryLocalBackend();
+        LocalDataStore data = LocalDataStore(backend: localBackend);
+        final config = AppConfig.fromValues(
+          nextProblemsDataSource: 'api',
+          apiBaseUrl: backend.url,
+        );
+        ApiClient api() =>
+            ApiClient(baseUrl: Uri.parse(backend.url), client: transport);
+        ProposalSubmissionCoordinator coordinator() =>
+            ProposalSubmissionCoordinator(
+              store: ProposalSubmissionStore(data),
+              drafts: ProposalDraftStore(data),
+              gateway: ApiNextProblemsRepository(client: api(), data: data),
+              isMock: false,
+              keyFactory: () => 'persisted-recovery-key',
+            );
+        var controller = coordinator();
+        try {
+          final scope = ProposalScope.fromConfig(
+            municipalityId: 'tuglie',
+            config: config,
+            namespace: data.namespace,
+          );
+          final result = await controller.start(
+            scope: scope,
+            draftRevision: 0,
+            title: 'Alberi in via Roma',
+            description: 'Serve ombra vicino al passaggio.',
+            category: ProblemKey.green,
+            location: ProposalLocation.specific(
+              label: 'Via Roma',
+              civic: '12/A',
+            ),
+          );
+          expect(result.status, SubmissionStatus.outcomeUnknown);
+          expect(transport.posts, 1);
+          final initial =
+              await api().getJson(
+                    ['v1', 'municipalities', 'tuglie', 'next-problems'],
+                    queryParameters: {'own': 'true'},
+                  )
+                  as Map;
+          expect(initial['items'], hasLength(1));
+          final id = (initial['items'] as List).single['id'];
+          controller.dispose();
+          data.dispose();
+          await backend.command('restart');
+          data = LocalDataStore(backend: localBackend);
+          controller = coordinator();
+          expect(
+            controller.current(scope).status,
+            SubmissionStatus.outcomeUnknown,
+          );
+          final recovered = await controller.reconcile(scope);
+          expect(recovered.status, SubmissionStatus.succeeded);
+          expect(recovered.intent!.receipt!.id, id);
+          final receipt = recovered.intent!.receipt!;
+          expect(receipt.location!.civic, '12/A');
+          expect(transport.posts, 1);
+          final lookup =
+              await api().getJson([
+                    'v1',
+                    'municipalities',
+                    'tuglie',
+                    'next-problem-submissions',
+                    'persisted-recovery-key',
+                  ])
+                  as Map;
+          expect((lookup['receipt'] as Map)['id'], id);
+          final own =
+              await api().getJson(
+                    ['v1', 'municipalities', 'tuglie', 'next-problems'],
+                    queryParameters: {'own': 'true'},
+                  )
+                  as Map;
+          expect(own['items'], hasLength(1));
+          expect(
+            controller.savedReceipt(scope).intent!.receipt!.createdAt,
+            receipt.createdAt,
+          );
+        } finally {
+          controller.dispose();
+          data.dispose();
+          transport.close();
+          await backend.stop();
+        }
+      },
+    );
   }
 }

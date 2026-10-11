@@ -20,6 +20,13 @@ class ProposalRouteContext {
     return ProposalRouteContext._(canonical, canonical == null);
   }
 
+  ProposalRouteContext restrictToPilot(String? pilot) {
+    if (pilot == null || invalid || municipalityId == null) return this;
+    return municipalityId == ProposalScope.canonicalMunicipality(pilot)
+        ? this
+        : const ProposalRouteContext._(null, true);
+  }
+
   final String? municipalityId;
   final bool invalid;
   String get key => invalid ? 'invalid' : municipalityId ?? 'missing';

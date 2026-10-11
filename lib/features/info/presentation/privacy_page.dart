@@ -23,6 +23,7 @@ class PrivacyPage extends StatefulWidget {
 
 class _PrivacyPageState extends State<PrivacyPage> {
   bool _clearing = false;
+  String? _clearError;
 
   Future<void> _clearDataAndRestart(BuildContext context) async {
     if (_clearing) return;
@@ -57,7 +58,10 @@ class _PrivacyPageState extends State<PrivacyPage> {
       if (confirmed != true || !context.mounted) return;
     }
 
-    setState(() => _clearing = true);
+    setState(() {
+      _clearing = true;
+      _clearError = null;
+    });
     final prefs = context.read<AppPrefs>();
     final fantasyManager = config.fantasyModeEnabled
         ? context.read<FantasyManager>()
@@ -76,12 +80,9 @@ class _PrivacyPageState extends State<PrivacyPage> {
       context.go(config.fantasyModeEnabled ? '/welcome' : '/boot');
     } catch (error) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      setState(
+        () => _clearError =
             'Cancellazione non completata: ${error is ApiException ? error.message : 'Riprova la cancellazione.'} Riprova.',
-          ),
-        ),
       );
     } finally {
       if (mounted) setState(() => _clearing = false);
@@ -139,6 +140,16 @@ class _PrivacyPageState extends State<PrivacyPage> {
                         style: textTheme.bodyMedium,
                       ),
                       const SizedBox(height: AppTokens.s12),
+                      if (_clearError != null) ...[
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            _clearError!,
+                            style: TextStyle(color: colorScheme.error),
+                          ),
+                        ),
+                        const SizedBox(height: AppTokens.s12),
+                      ],
                       FilledButton.icon(
                         onPressed: _clearing
                             ? null

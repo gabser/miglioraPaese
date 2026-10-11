@@ -116,6 +116,8 @@ class _WarmWelcomePageState extends State<WarmWelcomePage> {
                           sectionGap: sectionGap,
                           isCompact: isCompact,
                           onNext: _nextStep,
+                          onPrevious: () =>
+                              setState(() => _stepIndex = stepIndex - 1),
                           onSkip: _skipWelcome,
                           onChooseMunicipality: () =>
                               _completeAndGo('/onboarding'),
@@ -289,6 +291,7 @@ class _TutorialStepView extends StatelessWidget {
     required this.sectionGap,
     required this.isCompact,
     required this.onNext,
+    required this.onPrevious,
     required this.onSkip,
     required this.onChooseMunicipality,
   });
@@ -302,6 +305,7 @@ class _TutorialStepView extends StatelessWidget {
   final double sectionGap;
   final bool isCompact;
   final VoidCallback onNext;
+  final VoidCallback onPrevious;
   final VoidCallback onSkip;
   final VoidCallback onChooseMunicipality;
 
@@ -347,6 +351,8 @@ class _TutorialStepView extends StatelessWidget {
           spacing: AppTokens.s12,
           runSpacing: AppTokens.s12,
           children: [
+            if (stepIndex > 0)
+              TextButton(onPressed: onPrevious, child: const Text('Indietro')),
             FilledButton(
               onPressed: onNext,
               child: Text(step.cta ?? VenialCopy.welcomeStep3Play),

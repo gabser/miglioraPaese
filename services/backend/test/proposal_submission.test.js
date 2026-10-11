@@ -219,3 +219,28 @@ it('reset rejects body-paused writes across predictions and every fantasy comman
     } finally { store.close(); }
   }
 });
+
+it('manual place search includes civic/reference and quota provides inclusive Retry-After', async () => {
+  let now = Date.parse('2026-10-08T00:00:00Z');
+  const store = createMemoryStore({ now: () => now });
+  try {
+    const app = createApp({ store });
+    const initial = await request(app, base + '/next-problems');
+    const cookie = cookieOf(initial);
+    for (let n = 0; n < 3; n++) {
+      assert.equal((await request(app, base + '/next-problems', { method:'POST', cookie,
+        body:{...input,idempotencyKey:`place_search_key_${n}`,location:{kind:'specific',label:'Via Roma',civic:'12/A',reference:'Ingresso nord'}} })).status,201);
+    }
+    for (const query of ['Via Roma','12/A','Ingresso nord']) {
+      const found = await request(app, base + '/next-problems?query=' + encodeURIComponent(query), {cookie});
+      assert.equal(found.body.items.length, 3);
+    }
+    now += 3600000;
+    const limited = await request(app, base + '/next-problems', {method:'POST',cookie,body:{...input,idempotencyKey:'fourth_place_key'}});
+    assert.equal(limited.status,429);
+    assert.equal(limited.body.retryAfterSeconds,1);
+    assert.equal(limited.headers['Retry-After'],'1');
+    now++;
+    assert.equal((await request(app,base+'/next-problems',{method:'POST',cookie,body:{...input,idempotencyKey:'fourth_place_key'}})).status,201);
+  } finally {store.close();}
+});

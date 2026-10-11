@@ -23,7 +23,7 @@ void main() {
     expect(find.text('Gioca il turno'), findsOneWidget);
     expect(find.text(VenialCopy.welcomeStep1Title), findsNothing);
 
-    final context = tester.element(find.text('Gioca il turno'));
+    final context = tester.element(find.text(VenialCopy.navProfile).first);
     GoRouter.of(context).go('/onboarding');
     await pumpRoutingFrame(tester);
 
@@ -49,7 +49,7 @@ void main() {
     await pumpRoutingFrame(tester);
     await tester.pump(const Duration(seconds: 2));
 
-    final context = tester.element(find.text('Gioca il turno'));
+    final context = tester.element(find.text(VenialCopy.navProfile).first);
     final router = GoRouter.of(context);
     router.go('/profile');
     await pumpRoutingFrame(tester);
@@ -76,7 +76,7 @@ void main() {
     await pumpRoutingFrame(tester);
     await tester.pump(const Duration(seconds: 2));
 
-    final context = tester.element(find.text('Gioca il turno'));
+    final context = tester.element(find.text(VenialCopy.navProfile).first);
     final router = GoRouter.of(context);
     router.go('/profile');
     await pumpRoutingFrame(tester);

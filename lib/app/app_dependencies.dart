@@ -30,12 +30,16 @@ class AppDependencies extends StatelessWidget {
     required this.appPrefs,
     required this.config,
     required this.child,
+    this.httpClient,
+    this.fantasyManager,
     super.key,
   });
 
   final AppPrefs appPrefs;
   final AppConfig config;
   final Widget child;
+  final http.Client? httpClient;
+  final FantasyManager? fantasyManager;
 
   @override
   Widget build(BuildContext context) {
@@ -58,8 +62,10 @@ class AppDependencies extends StatelessWidget {
           dispose: (_, store) => store.dispose(),
         ),
         Provider<http.Client>(
-          create: (_) => createHttpClient(),
-          dispose: (_, client) => client.close(),
+          create: (_) => httpClient ?? createHttpClient(),
+          dispose: (_, client) {
+            if (httpClient == null) client.close();
+          },
         ),
         Provider<ApiClient>(
           create: (context) => ApiClient(
@@ -84,10 +90,14 @@ class AppDependencies extends StatelessWidget {
                       '',
                 ),
         ),
-        ChangeNotifierProvider<FantasyManager>(
-          create: (context) =>
-              FantasyManager.withRepository(context.read<FantasyRepository>()),
-        ),
+        if (fantasyManager != null)
+          ChangeNotifierProvider<FantasyManager>.value(value: fantasyManager!)
+        else
+          ChangeNotifierProvider<FantasyManager>(
+            create: (context) => FantasyManager.withRepository(
+              context.read<FantasyRepository>(),
+            ),
+          ),
         Provider<GameRepository>(
           create: (context) => createGameRepository(
             config: config,

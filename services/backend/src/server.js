@@ -545,8 +545,9 @@ export function createApp(options = {}) {
           error: error.code ?? 'internal_error',
           message: status === 500 ? 'Unexpected error.' : error.message,
           ...(error.fieldErrors ? { fieldErrors: error.fieldErrors } : {}),
+          ...(error.retryAfterSeconds ? { retryAfterSeconds: error.retryAfterSeconds } : {}),
         },
-        responseHeaders,
+        { ...responseHeaders, ...(error.retryAfterSeconds ? { 'Retry-After': String(error.retryAfterSeconds) } : {}) },
       );
     }
   };
@@ -947,7 +948,8 @@ export function createMemoryStore(options = {}) {
       items = items.filter((item) => {
         return (
           item.title.toLowerCase().includes(normalized) ||
-          item.shortDescription.toLowerCase().includes(normalized)
+          item.shortDescription.toLowerCase().includes(normalized) ||
+          [item.location?.label, item.location?.civic, item.location?.reference].some((value) => value?.toLowerCase().includes(normalized))
         );
       });
     }
@@ -998,7 +1000,10 @@ export function createMemoryStore(options = {}) {
     const items = nextProblemsByMunicipality.get(municipality.id) ?? [];
     const windowStart = clock() - submissionWindowMs;
     if (items.filter((item) => item.submittedByUserId === userId && Date.parse(item.createdAt) >= windowStart).length >= maxSubmissionsPerWindow) {
-      throw httpError(429, 'submission_rate_limited', 'Too many suggestions were submitted recently.');
+      const recent = items.filter((item) => item.submittedByUserId === userId && Date.parse(item.createdAt) >= windowStart).map((item) => Date.parse(item.createdAt)).sort((a, b) => b - a);
+      const error = httpError(429, 'submission_rate_limited', 'Too many suggestions were submitted recently.');
+      error.retryAfterSeconds = Math.max(1, Math.floor((recent[maxSubmissionsPerWindow - 1] + submissionWindowMs - clock()) / 1000) + 1);
+      throw error;
     }
     const before = structuredClone(exportState());
     try {

@@ -93,84 +93,93 @@ class _CynicOnboardingPageState extends State<CynicOnboardingPage> {
         child: MaxWidthContainer(
           child: Padding(
             padding: EdgeInsets.all(padding),
-            child: FcPanel(
-              tint: AppTokens.blue,
-              elevated: true,
-              padding: EdgeInsets.all(padding),
-              child: AnimatedSwitcherX(
-                duration: AppMotion.normal,
-                switchInCurve: const Interval(
-                  0.2,
-                  1,
-                  curve: AppMotion.standard,
-                ),
-                child: Column(
-                  key: ValueKey('cynic-step-${_stepIndex + 1}'),
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TicketProgress(
-                        label: VenialCopy.onboardingProgressLabel.replaceAll(
-                          '{step}',
-                          progressLabel,
-                        ),
-                        currentStep: _stepIndex + 1,
-                        totalSteps: _steps.length,
-                      ),
-                    ),
-                    SizedBox(height: sectionGap),
-                    Container(
-                      width: 54,
-                      height: 54,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(
-                          AppTokens.radiusSmall,
-                        ),
-                      ),
-                      child: Icon(AppIcons.play, color: colorScheme.primary),
-                    ),
-                    SizedBox(height: sectionGap),
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        step.title,
-                        style: TypographyX.titleMedium(
-                          context,
-                        )?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                    const SizedBox(height: AppTokens.s8),
-                    Text(
-                      step.subtitle,
-                      style: textTheme.titleMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    SizedBox(height: isCompact ? AppTokens.s12 : AppTokens.s16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.check_circle_outline, size: 20),
-                        const SizedBox(width: AppTokens.s8),
-                        Expanded(
-                          child: Text(step.bullet, style: textTheme.bodyMedium),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: isCompact ? AppTokens.s16 : AppTokens.s24),
-                    Semantics(
-                      button: true,
-                      child: Align(
+            child: SingleChildScrollView(
+              child: FcPanel(
+                tint: AppTokens.blue,
+                elevated: true,
+                padding: EdgeInsets.all(padding),
+                child: AnimatedSwitcherX(
+                  duration: AppMotion.normal,
+                  switchInCurve: const Interval(
+                    0.2,
+                    1,
+                    curve: AppMotion.standard,
+                  ),
+                  child: Column(
+                    key: ValueKey('cynic-step-${_stepIndex + 1}'),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Align(
                         alignment: Alignment.centerRight,
-                        child: FilledButton(
-                          onPressed: _nextStep,
-                          child: Text(step.cta),
+                        child: TicketProgress(
+                          label: VenialCopy.onboardingProgressLabel.replaceAll(
+                            '{step}',
+                            progressLabel,
+                          ),
+                          currentStep: _stepIndex + 1,
+                          totalSteps: _steps.length,
                         ),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: sectionGap),
+                      Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(
+                            AppTokens.radiusSmall,
+                          ),
+                        ),
+                        child: Icon(AppIcons.play, color: colorScheme.primary),
+                      ),
+                      SizedBox(height: sectionGap),
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          step.title,
+                          style: TypographyX.titleMedium(
+                            context,
+                          )?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      const SizedBox(height: AppTokens.s8),
+                      Text(
+                        step.subtitle,
+                        style: textTheme.titleMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      SizedBox(
+                        height: isCompact ? AppTokens.s12 : AppTokens.s16,
+                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.check_circle_outline, size: 20),
+                          const SizedBox(width: AppTokens.s8),
+                          Expanded(
+                            child: Text(
+                              step.bullet,
+                              style: textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: isCompact ? AppTokens.s16 : AppTokens.s24,
+                      ),
+                      Semantics(
+                        button: true,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: FilledButton(
+                            onPressed: _nextStep,
+                            child: Text(step.cta),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
