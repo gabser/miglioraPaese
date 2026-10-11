@@ -1,4 +1,11 @@
+import { httpError } from '../domain/errors.js';
+
 const routePatterns = [
+  ['POST', /^\/v1\/proposal-session$/, 'createProposalSession'],
+  ['GET', /^\/v1\/proposal-session$/, 'getProposalSession'],
+  ['POST', /^\/v1\/proposal-session\/revoke$/, 'revokeProposalSession'],
+  ['GET', /^\/v1\/municipalities\/([^/]+)\/submissions\/([^/]+)$/, 'lookupSubmission'],
+  ['GET', /^\/v1\/municipalities\/([^/]+)\/next-problems\/([^/]+)\/own$/, 'ownNextProblem'],
   ['GET', /^\/v1\/municipalities\/([^/]+)\/activation$/, 'municipalityActivation'],
   ['GET', /^\/v1\/municipalities\/([^/]+)\/summary$/, 'municipalitySummary'],
   ['GET', /^\/v1\/municipalities\/([^/]+)\/turn$/, 'currentTurn'],
@@ -6,6 +13,7 @@ const routePatterns = [
   ['GET', /^\/v1\/municipalities\/([^/]+)\/leaderboard$/, 'leaderboard'],
   ['GET', /^\/v1\/municipalities\/([^/]+)\/next-problems$/, 'nextProblems'],
   ['POST', /^\/v1\/municipalities\/([^/]+)\/next-problems$/, 'submitNextProblem'],
+  ['GET', /^\/v1\/municipalities\/([^/]+)\/next-problems\/([^/]+)$/, 'nextProblem'],
   [
     'POST',
     /^\/v1\/municipalities\/([^/]+)\/next-problems\/([^/]+)\/votes$/,
@@ -43,25 +51,30 @@ function routeParams(name, match) {
     name === 'nextProblems' ||
     name === 'submitNextProblem'
   ) {
-    return { municipalityId: decodeURIComponent(match[1]) };
+    return { municipalityId: decodeRouteParam(match[1]) };
   }
-  if (name === 'voteNextProblem') {
+  if (name === 'voteNextProblem' || name === 'nextProblem' || name === 'ownNextProblem' || name === 'lookupSubmission') {
     return {
-      municipalityId: decodeURIComponent(match[1]),
-      problemId: decodeURIComponent(match[2]),
+      municipalityId: decodeRouteParam(match[1]),
+      problemId: decodeRouteParam(match[2]),
     };
   }
   if (name === 'predictions') {
-    return { turnId: decodeURIComponent(match[1]) };
+    return { turnId: decodeRouteParam(match[1]) };
   }
   if (name === 'upsertPrediction') {
     return {
-      turnId: decodeURIComponent(match[1]),
-      problemId: decodeURIComponent(match[2]),
+      turnId: decodeRouteParam(match[1]),
+      problemId: decodeRouteParam(match[2]),
     };
   }
   if (name === 'resolvePrediction') {
-    return { problemId: decodeURIComponent(match[1]) };
+    return { problemId: decodeRouteParam(match[1]) };
   }
   return {};
+}
+
+function decodeRouteParam(value) {
+  try { return decodeURIComponent(value); }
+  catch { throw httpError(400, 'invalid_field', 'Path parameters must be valid UTF-8.'); }
 }

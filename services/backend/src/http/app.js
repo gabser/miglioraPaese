@@ -1,4 +1,7 @@
+import { sessionIdentity } from '../domain/proposal-session.js';
+import { httpError } from '../domain/errors.js';
 import { URL } from 'node:url';
+import { normalizeProposalLocation, proposalLimits, proposalText } from '../domain/proposal-location.js';
 
 import { createBackendService } from '../application/backend-service.js';
 import { normalizeAllowedOrigins } from '../config/environment.js';
@@ -11,7 +14,6 @@ import {
   suggestedProblemStatuses,
   voteChoices,
 } from '../domain/catalog.js';
-import { createMemoryStore } from '../infrastructure/memory-store.js';
 import { matchRoute } from './routes.js';
 import {
   corsHeadersForRequest,
@@ -24,14 +26,16 @@ import {
   optionalText,
   requireEnum,
   requireEnumArray,
+  requireIdempotencyKey,
   requireText,
   textOrDefault,
 } from './validation.js';
 
 export function createApp(options = {}) {
-  const backend =
-    options.application ??
-    createBackendService(options.store ?? createMemoryStore());
+  if (!options.application && !options.store) {
+    throw new TypeError('createApp requires an explicit application or store.');
+  }
+  const backend = options.application ?? createBackendService(options.store);
   const allowedOrigins = normalizeAllowedOrigins(
     options.allowedOrigins ?? process.env.CORS_ALLOWED_ORIGINS,
   );
@@ -83,11 +87,55 @@ export function createApp(options = {}) {
         return sendJson(res, 200, { status: 'ok' }, responseHeaders);
       }
 
+      const authorization = getHeader(req, 'authorization');
+      let sessionToken = null;
+      const proposalRoutes = new Set(['createProposalSession', 'getProposalSession',
+        'revokeProposalSession', 'lookupSubmission', 'ownNextProblem',
+        'nextProblems', 'nextProblem', 'submitNextProblem', 'voteNextProblem']);
+      if (authorization !== null && proposalRoutes.has(route.name)) {
+        const match = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(authorization);
+        if (!match) throw httpError(401, 'proposal_session_required', 'A valid proposal session is required.');
+        sessionToken = match[1];
+      }
+      const privateSession = () => {
+        if (!sessionToken) throw httpError(401, 'proposal_session_required', 'A valid proposal session is required.');
+        return sessionToken;
+      };
+      const sessionCapabilities = { proposalLocation: true, publicDetail: true,
+        privateSubmissionLookup: true, scopedIdempotency: true, revocation: true,
+        sessionRequiredForRecovery: true };
+      if (route.name === 'createProposalSession') {
+        const session = await backend.createProposalSession();
+        return sendJson(res, 201, { ...session, capabilities: sessionCapabilities },
+          { ...responseHeaders, 'cache-control': 'no-store' });
+      }
+      if (route.name === 'getProposalSession') {
+        const session = await backend.getProposalSession(privateSession());
+        return sendJson(res, 200, { ...session, capabilities: sessionCapabilities },
+          { ...responseHeaders, 'cache-control': 'no-store' });
+      }
+      if (route.name === 'revokeProposalSession') {
+        return sendJson(res, 200, await backend.revokeProposalSession(privateSession()),
+          { ...responseHeaders, 'cache-control': 'no-store' });
+      }
+      if (route.name === 'lookupSubmission') {
+        return sendJson(res, 200, await backend.lookupSubmission({
+          municipalityId: route.params.municipalityId,
+          idempotencyKey: requireIdempotencyKey(route.params.problemId),
+          sessionToken: privateSession(),
+        }), { ...responseHeaders, 'cache-control': 'no-store' });
+      }
+      if (route.name === 'ownNextProblem') {
+        return sendJson(res, 200, await backend.getOwnNextProblem({
+          ...route.params, sessionToken: privateSession(),
+        }), { ...responseHeaders, 'cache-control': 'no-store' });
+      }
+
       if (route.name === 'municipalityActivation') {
         return sendJson(
           res,
           200,
-          backend.getMunicipalityActivation(route.params.municipalityId),
+          await backend.getMunicipalityActivation(route.params.municipalityId),
           responseHeaders,
         );
       }
@@ -96,7 +144,7 @@ export function createApp(options = {}) {
         return sendJson(
           res,
           200,
-          backend.getCivicLoopSummary(route.params.municipalityId),
+          await backend.getCivicLoopSummary(route.params.municipalityId),
           responseHeaders,
         );
       }
@@ -105,7 +153,7 @@ export function createApp(options = {}) {
         return sendJson(
           res,
           200,
-          backend.getCurrentTurn(route.params.municipalityId),
+          await backend.getCurrentTurn(route.params.municipalityId),
           responseHeaders,
         );
       }
@@ -114,7 +162,7 @@ export function createApp(options = {}) {
         return sendJson(
           res,
           200,
-          backend.listProblems(route.params.municipalityId),
+          await backend.listProblems(route.params.municipalityId),
           responseHeaders,
         );
       }
@@ -123,16 +171,20 @@ export function createApp(options = {}) {
         return sendJson(
           res,
           200,
-          backend.getLeaderboard(route.params.municipalityId),
+          await backend.getLeaderboard(route.params.municipalityId),
           responseHeaders,
         );
       }
+
+      const proposalUserId = sessionToken !== null &&
+        (route.name === 'nextProblems' || route.name === 'nextProblem')
+        ? sessionIdentity(await backend.getProposalSession(sessionToken)) : null;
 
       if (route.name === 'nextProblems') {
         return sendJson(
           res,
           200,
-          backend.listNextProblems({
+          await backend.listNextProblems({
             municipalityId: route.params.municipalityId,
             status: optionalEnum(
               url.searchParams.get('status'),
@@ -144,7 +196,7 @@ export function createApp(options = {}) {
               'query',
               inputLimits.queryLength,
             ),
-            userId: textOrDefault(
+            userId: proposalUserId ?? textOrDefault(
               url.searchParams.get('userId'),
               'demo-user',
               'userId',
@@ -155,17 +207,32 @@ export function createApp(options = {}) {
         );
       }
 
+      if (route.name === 'nextProblem') {
+        const item = await backend.getNextProblem({
+          municipalityId: route.params.municipalityId,
+          problemId: route.params.problemId,
+          userId: proposalUserId ?? textOrDefault(url.searchParams.get('userId'), 'demo-user',
+            'userId', inputLimits.userIdLength),
+        });
+        return sendJson(res, 200, item, responseHeaders);
+      }
+
       if (route.name === 'submitNextProblem') {
         const body = await readJson(req);
-        const created = backend.submitNextProblem({
+        const created = await backend.submitNextProblem({
+          sessionToken,
+          idempotencyKey: requireIdempotencyKey(
+            getHeader(req, 'idempotency-key'),
+          ),
           municipalityId: route.params.municipalityId,
-          title: requireText(body.title, 'title', inputLimits.titleLength),
-          description: requireText(
+          title: proposalText(body.title, 'title', proposalLimits.title),
+          description: proposalText(
             body.description,
             'description',
-            inputLimits.descriptionLength,
+            proposalLimits.description,
           ),
           category: requireEnum(body.category, problemKeys, 'category'),
+          location: normalizeProposalLocation(body.location),
           userId: textOrDefault(
             body.userId,
             'demo-user',
@@ -178,7 +245,11 @@ export function createApp(options = {}) {
 
       if (route.name === 'voteNextProblem') {
         const body = await readJson(req);
-        const updated = backend.voteNextProblem({
+        const updated = await backend.voteNextProblem({
+          sessionToken,
+          idempotencyKey: requireIdempotencyKey(
+            getHeader(req, 'idempotency-key'),
+          ),
           municipalityId: route.params.municipalityId,
           problemId: route.params.problemId,
           vote: requireEnum(body.vote, voteChoices, 'vote'),
@@ -196,7 +267,7 @@ export function createApp(options = {}) {
         return sendJson(
           res,
           200,
-          backend.getPredictions({
+          await backend.getPredictions({
             turnId: route.params.turnId,
             userId: textOrDefault(
               url.searchParams.get('userId'),
@@ -211,7 +282,10 @@ export function createApp(options = {}) {
 
       if (route.name === 'upsertPrediction') {
         const body = await readJson(req);
-        const prediction = backend.upsertPrediction({
+        const prediction = await backend.upsertPrediction({
+          idempotencyKey: requireIdempotencyKey(
+            getHeader(req, 'idempotency-key'),
+          ),
           turnId: route.params.turnId,
           problemId: route.params.problemId,
           userId: textOrDefault(
@@ -238,7 +312,7 @@ export function createApp(options = {}) {
 
       if (route.name === 'resolvePrediction') {
         const body = await readJson(req);
-        const result = backend.resolvePrediction({
+        const result = await backend.resolvePrediction({
           problemId: route.params.problemId,
           choice: requireEnum(body.choice, predictionChoices, 'choice'),
         });
@@ -253,14 +327,18 @@ export function createApp(options = {}) {
       );
     } catch (error) {
       const status = error.statusCode ?? 500;
+      const retryAfter = status === 429 && Number.isInteger(error.retryAfterSeconds) && error.retryAfterSeconds > 0
+        ? error.retryAfterSeconds : null;
       return sendJson(
         res,
         status,
         {
           error: error.code ?? 'internal_error',
           message: status === 500 ? 'Unexpected error.' : error.message,
+          ...(retryAfter === null ? {} : { retryAfterSeconds: retryAfter }),
+          ...(status === 400 && error.fieldErrors ? { fieldErrors: error.fieldErrors } : {}),
         },
-        responseHeaders,
+        { ...responseHeaders, ...(retryAfter === null ? {} : { 'retry-after': String(retryAfter) }) },
       );
     }
   };

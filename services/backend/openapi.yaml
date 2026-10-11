@@ -4,10 +4,97 @@ info:
   version: 0.2.0
   description: >-
     Local pilot API for replacing Flutter in-memory repositories. The optional
-    userId is client-controlled in this scaffold and is not authentication.
+    userId is client-controlled in legacy scaffold calls and is not authentication.
+    Proposal POST with a proposalBearer token overrides userId with the session identity
+    and scopes Idempotency-Key to session and canonical municipality. Private own and
+    submission lookup require the token. Legacy calls without bearer preserve their
+    previous behavior and do not provide private recovery or authoritative identity.
 servers:
   - url: http://127.0.0.1:8787
 paths:
+  /v1/proposal-session:
+    post:
+      operationId: createProposalSession
+      description: Bootstrap a new anonymous server-authoritative scope. Persist token before sending proposals; never bootstrap silently to recover an old intent.
+      responses:
+        "201":
+          description: New bearer token and submission scope; no-store.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProposalSessionBootstrap'
+    get:
+      operationId: getProposalSession
+      security: [{ proposalBearer: [] }]
+      responses:
+        "200":
+          description: Active scope and capabilities, without returning the token; no-store.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProposalSession'
+        "401":
+          description: Session unavailable or revoked.
+  /v1/proposal-session/revoke:
+    post:
+      operationId: revokeProposalSession
+      security: [{ proposalBearer: [] }]
+      description: Idempotent revocation serialized with scoped proposal commits. Existing public records remain; further writes and private reads using this token fail.
+      responses:
+        "200":
+          description: Revoked, including repeated revocation; no-store.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [revoked]
+                properties:
+                  revoked: { const: true }
+        "401":
+          description: Missing, malformed or unknown session.
+  /v1/municipalities/{municipalityId}/submissions/{idempotencyKey}:
+    get:
+      operationId: lookupSubmission
+      security: [{ proposalBearer: [] }]
+      description: Original acceptance snapshot in this session and canonical municipality. A 404 does not prove an in-flight POST has stopped. Never resubmit automatically after a missing lookup.
+      parameters:
+        - $ref: '#/components/parameters/MunicipalityId'
+        - in: path
+          name: idempotencyKey
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 160, pattern: '^[A-Za-z0-9][A-Za-z0-9._:-]{7,159}$' }
+      responses:
+        "200":
+          description: Original public DTO snapshot, including a proposal later rejected; no-store.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestedProblem'
+        "400":
+          description: Invalid key or path encoding.
+        "401":
+          description: Missing or revoked session.
+        "404":
+          description: No completed submission in this scope and municipality.
+  /v1/municipalities/{municipalityId}/next-problems/{problemId}/own:
+    get:
+      operationId: getOwnSuggestedProblem
+      security: [{ proposalBearer: [] }]
+      description: Current DTO for a proposal owned by this authoritative scope, including rejected. Client userId never grants ownership.
+      parameters:
+        - $ref: '#/components/parameters/MunicipalityId'
+        - $ref: '#/components/parameters/ProblemId'
+      responses:
+        "200":
+          description: Current owned proposal; no-store.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestedProblem'
+        "401":
+          description: Missing or revoked session.
+        "404":
+          description: Missing or not owned proposal.
   /health:
     get:
       operationId: getHealth
@@ -103,6 +190,7 @@ paths:
   /v1/municipalities/{municipalityId}/next-problems:
     get:
       operationId: listNextProblems
+      security: [{}, { proposalBearer: [] }]
       parameters:
         - $ref: "#/components/parameters/MunicipalityId"
         - name: status
@@ -118,20 +206,22 @@ paths:
           in: query
           description: >-
             Local client identifier used only to compute myVote. It is
-            client-controlled and must not be treated as authentication.
+            client-controlled and must not be treated as authentication. With bearer it is ignored.
           schema:
             type: string
             maxLength: 128
             default: demo-user
       responses:
         "200":
-          description: Suggested problems for the selected user view.
+          description: Public pending/approved suggestions; rejected suggestions are excluded even when filtering for rejected.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuggestedProblemList"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ProposalSessionUnauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -140,8 +230,10 @@ paths:
           $ref: "#/components/responses/InternalError"
     post:
       operationId: submitSuggestedProblem
+      security: [{}, { proposalBearer: [] }]
       parameters:
         - $ref: "#/components/parameters/MunicipalityId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -157,6 +249,8 @@ paths:
                 $ref: "#/components/schemas/SuggestedProblem"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ProposalSessionUnauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -165,14 +259,72 @@ paths:
           $ref: "#/components/responses/Conflict"
         "413":
           $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          description: Conservative content filter refused this proposal; no entity or receipt is created. Revise the draft manually.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Three saved proposals per author and municipality in an inclusive rolling hour. Idempotent replay does not consume quota. No entity or receipt is created.
+          headers:
+            Retry-After:
+              description: Positive seconds until a new manual attempt may be accepted.
+              schema: { type: integer, minimum: 1 }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error, message, retryAfterSeconds]
+                properties:
+                  error: { type: string, enum: [submission_rate_limited] }
+                  message: { type: string }
+                  retryAfterSeconds: { type: integer, minimum: 1 }
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /v1/municipalities/{municipalityId}/next-problems/{problemId}:
+    get:
+      operationId: getSuggestedProblem
+      security: [{}, { proposalBearer: [] }]
+      description: >-
+        Read the current public pending/approved suggestion by exact municipality
+        and ID. Missing, rejected and wrong-municipality IDs return the same 404.
+        Private author access uses the separate own route and requires the authoritative session token.
+      parameters:
+        - $ref: "#/components/parameters/MunicipalityId"
+        - $ref: "#/components/parameters/ProblemId"
+        - name: userId
+          in: query
+          description: Legacy myVote personalization only; ignored when bearer is supplied. It grants no private access.
+          schema:
+            type: string
+            maxLength: 128
+            default: demo-user
+      responses:
+        "200":
+          description: Current public suggested problem.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestedProblem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ProposalSessionUnauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalError"
   /v1/municipalities/{municipalityId}/next-problems/{problemId}/votes:
     post:
       operationId: voteSuggestedProblem
+      security: [{}, { proposalBearer: [] }]
       parameters:
         - $ref: "#/components/parameters/MunicipalityId"
         - $ref: "#/components/parameters/ProblemId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -188,10 +340,14 @@ paths:
                 $ref: "#/components/schemas/SuggestedProblem"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ProposalSessionUnauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "413":
           $ref: "#/components/responses/PayloadTooLarge"
         "500":
@@ -228,6 +384,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TurnId"
         - $ref: "#/components/parameters/ProblemId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -249,6 +406,8 @@ paths:
           $ref: "#/components/responses/Conflict"
         "413":
           $ref: "#/components/responses/PayloadTooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /v1/problems/{problemId}/resolve:
     post:
       operationId: resolvePrediction
@@ -272,6 +431,11 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 components:
+  securitySchemes:
+    proposalBearer:
+      type: http
+      scheme: bearer
+      description: Opaque 32-byte base64url token issued by proposal-session. Store only its hash on the server.
   parameters:
     MunicipalityId:
       name: municipalityId
@@ -292,7 +456,26 @@ components:
       required: true
       schema:
         type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: >-
+        Stable key for one logical write. Replaying the same request with the
+        same key returns the original response; reusing it for different input
+        returns 409 idempotency_key_reused.
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 160
+        pattern: "^[A-Za-z0-9][A-Za-z0-9._:-]{7,159}$"
   responses:
+    ProposalSessionUnauthorized:
+      description: Missing, malformed, unknown or revoked proposal session.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     BadRequest:
       description: Invalid JSON, field, enum or query parameter.
       content:
@@ -312,7 +495,7 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
     Conflict:
-      description: Duplicate or incompatible domain state.
+      description: Incompatible domain state or reused idempotency key.
       content:
         application/json:
           schema:
@@ -330,6 +513,31 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
   schemas:
+    ProposalCapabilities:
+      type: object
+      additionalProperties: false
+      required: [proposalLocation, publicDetail, privateSubmissionLookup, scopedIdempotency, revocation, sessionRequiredForRecovery]
+      properties:
+        proposalLocation: { const: true }
+        publicDetail: { const: true }
+        privateSubmissionLookup: { const: true }
+        scopedIdempotency: { const: true }
+        revocation: { const: true }
+        sessionRequiredForRecovery: { const: true }
+    ProposalSession:
+      type: object
+      required: [submissionScope, capabilities]
+      properties:
+        submissionScope: { type: string, format: uuid }
+        capabilities:
+          $ref: '#/components/schemas/ProposalCapabilities'
+    ProposalSessionBootstrap:
+      allOf:
+        - $ref: '#/components/schemas/ProposalSession'
+        - type: object
+          required: [token]
+          properties:
+            token: { type: string, pattern: '^[A-Za-z0-9_-]{43}$' }
     ErrorResponse:
       type: object
       required: [error]
@@ -338,6 +546,12 @@ components:
           type: string
         message:
           type: string
+        fieldErrors:
+          description: Public field paths and stable validation codes; additive, no private moderation reasons.
+          type: object
+          additionalProperties:
+            type: string
+            enum: [invalid_text, too_long, invalid_choice, invalid_location]
     HealthResponse:
       type: object
       required: [status]
@@ -441,6 +655,7 @@ components:
         reason: { type: string }
     SuggestedProblem:
       type: object
+      additionalProperties: false
       required:
         - id
         - title
@@ -451,7 +666,6 @@ components:
         - votesDown
         - score
         - myVote
-        - submittedByUserId
         - submittedByDisplayName
         - createdAt
         - promotionRule
@@ -459,6 +673,8 @@ components:
         id: { type: string }
         title: { type: string, maxLength: 120 }
         shortDescription: { type: string, maxLength: 1000 }
+        location:
+          $ref: "#/components/schemas/NullableProposalLocation"
         category:
           $ref: "#/components/schemas/ProblemKey"
         status:
@@ -469,7 +685,6 @@ components:
         myVote:
           type: string
           enum: [none, up, down]
-        submittedByUserId: { type: string }
         submittedByDisplayName: { type: string }
         createdAt: { type: string, format: date-time }
         promotionRule:
@@ -484,13 +699,41 @@ components:
             $ref: "#/components/schemas/SuggestedProblem"
     SubmitSuggestedProblemRequest:
       type: object
+      description: >-
+        Text is trimmed and limited in Unicode code points, without truncation.
+        Location is optional only for legacy clients; new clients require an explicit
+        choice. Identical titles are accepted; similarity is advisory.
       required: [title, description, category]
       properties:
         title: { type: string, minLength: 1, maxLength: 120 }
         description: { type: string, minLength: 1, maxLength: 1000 }
+        location:
+          $ref: "#/components/schemas/NullableProposalLocation"
         category:
           $ref: "#/components/schemas/ProblemKey"
         userId: { type: string, minLength: 1, maxLength: 128 }
+    NullableProposalLocation:
+      description: Explicit place; null only for legacy proposals with no recorded place.
+      oneOf:
+        - $ref: "#/components/schemas/ProposalLocation"
+        - type: object
+          nullable: true
+          enum: [null]
+    ProposalLocation:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [kind]
+          properties:
+            kind: { type: string, enum: [municipality] }
+        - type: object
+          additionalProperties: false
+          required: [kind, label]
+          properties:
+            kind: { type: string, enum: [specific] }
+            label: { type: string, minLength: 1, maxLength: 120 }
+            civic: { type: string, maxLength: 20 }
+            reference: { type: string, maxLength: 200 }
     VoteSuggestedProblemRequest:
       type: object
       required: [vote]

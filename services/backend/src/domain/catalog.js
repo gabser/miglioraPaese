@@ -40,6 +40,7 @@ export const inputLimits = Object.freeze({
   descriptionLength: 1000,
   queryLength: 120,
   userIdLength: 128,
+  idempotencyKeyLength: 160,
 });
 
 const municipalityAliases = new Map([
@@ -84,6 +85,7 @@ export function createSuggestedProblem({
   id,
   title,
   shortDescription,
+  location = null,
   category,
   status,
   votesUp,
@@ -96,6 +98,7 @@ export function createSuggestedProblem({
     id,
     title,
     shortDescription,
+    location,
     category,
     status,
     votesUp,

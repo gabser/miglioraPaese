@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "migrations": [
+    {
+      "id": "20260715090000000",
+      "name": "20260715090000000_initial_persistence_schema",
+      "file": "20260715090000000_initial_persistence_schema.js",
+      "sha256": "47c33d43581be79f03b9b973d0a2cfe40875c4def3764448ccedd193dab0418b"
+    },
+    {
+      "id": "20260716190000000",
+      "name": "20260716190000000_write_idempotency",
+      "file": "20260716190000000_write_idempotency.js",
+      "sha256": "eca4c445ed67586cdc9f1d8145a180ad25dcd93c7ff08754c4ced73fc6ad6ede"
+    },
+    {
+      "id": "20261010110000000",
+      "name": "20261010110000000_proposal_location",
+      "file": "20261010110000000_proposal_location.js",
+      "sha256": "e347235e5df4c6ac08604d18ec552a9cf931d3748b2e46a84d0a7de0ae2c0534"
+    },
+    {
+      "id": "20261010150000000",
+      "name": "20261010150000000_proposal_sessions",
+      "file": "20261010150000000_proposal_sessions.js",
+      "sha256": "01f96be427cb8da42834c07a14ddf69df7bbe2ebf7a8b1f4e7683e60b2ceb63f"
+    },
+    {
+      "id": "20261011100000000",
+      "name": "20261011100000000_proposal_reviews",
+      "file": "20261011100000000_proposal_reviews.js",
+      "sha256": "f4804dc88890c19906fc876677fe38946ba9f1afaebf5749ae65c8c3392c6162"
+    }
+  ]
+}

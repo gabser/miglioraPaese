@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_location.dart';
 
 import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/core/network/api_exception.dart';
@@ -7,6 +8,40 @@ import 'package:fanta_comune/features/next_problems/domain/suggested_problem_sta
 import 'package:fanta_comune/features/next_problems/domain/vote_choice.dart';
 
 void main() {
+  test(
+    'maps legacy or explicit location and rejects malformed present location',
+    () {
+      expect(SuggestedProblemMapper.fromResponse(_payload()).location, isNull);
+      expect(
+        SuggestedProblemMapper.fromResponse(
+          _payload()..['location'] = null,
+        ).location,
+        isNull,
+      );
+      final place = ProposalLocation.specific(
+        label: 'Via Milano',
+        reference: 'Ingresso nord',
+      );
+      expect(
+        SuggestedProblemMapper.fromResponse(
+          _payload()..['location'] = place.toJson(),
+        ).location,
+        place,
+      );
+      for (final location in [
+        {},
+        {'kind': 'specific'},
+        {'kind': 'municipality', 'label': 'Hidden'},
+      ]) {
+        expect(
+          () => SuggestedProblemMapper.fromResponse(
+            _payload()..['location'] = location,
+          ),
+          throwsA(isA<ApiException>()),
+        );
+      }
+    },
+  );
   test('maps a complete suggested problem payload', () {
     final problem = SuggestedProblemMapper.fromResponse(_payload());
 

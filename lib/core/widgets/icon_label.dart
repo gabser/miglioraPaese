@@ -25,12 +25,13 @@ class IconLabel extends StatelessWidget {
 
     return Semantics(
       label: text,
+      excludeSemantics: true,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: iconSize),
           const SizedBox(width: AppTokens.s8),
-          Text(text, style: textTheme.bodyMedium),
+          Flexible(child: Text(text, style: textTheme.bodyMedium)),
         ],
       ),
     );

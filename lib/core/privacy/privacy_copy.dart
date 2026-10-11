@@ -15,9 +15,9 @@ class PrivacyCopy {
 
   /// Principi di privacy-by-design sintetizzati in elenco.
   static const List<String> principles = [
-    'Niente foto; titolo e descrizione della proposta sono gli unici testi liberi',
+    'Niente foto e nessun dato sensibile richiesto',
     'Nessun dato sensibile richiesto',
-    'Le preferenze demo sono cancellabili; lo stato mock si azzera ricaricando l\'app',
+    'Bozze, proposte e voti della demo restano su questo dispositivo e sono cancellabili dalla pagina Privacy',
     'Il pilot API invia ID locale, Comune, proposte e voti al server configurato',
     'Obiettivo: consapevolezza e confronto, non reclami',
   ];

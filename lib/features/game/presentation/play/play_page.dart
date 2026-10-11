@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
+import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_motion.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/animated_switcher_x.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
-import 'package:fanta_comune/core/widgets/game_banner.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
 import 'package:fanta_comune/features/civic_loop/domain/civic_loop_summary.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
@@ -63,289 +63,355 @@ class _PlayView extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isCompact = MediaQuery.of(context).size.width < 600;
     final pagePadding = isCompact ? AppTokens.s12 : AppTokens.s16;
-    final isWide = MediaQuery.of(context).size.width >= 720;
 
     return MaxWidthContainer(
-      child: BlocBuilder<PlayCubit, PlayState>(
-        builder: (context, state) {
-          final cubit = context.read<PlayCubit>();
-          final sectionGap = isCompact ? AppTokens.s8 : AppTokens.s12;
-          final problems = state.problems;
-          final hasProblems = problems.isNotEmpty;
-          final spacing = isCompact ? AppTokens.s8 : AppTokens.s12;
-
-          return AnimatedSwitcherX(
-            duration: AppMotion.normal,
-            child: state.isLoading
-                ? const Center(
-                    key: ValueKey('play-loading'),
-                    child: Padding(
-                      padding: EdgeInsets.all(AppTokens.s24),
-                      child: CircularProgressIndicator(),
-                    ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide =
+              constraints.maxWidth >= 900 &&
+              MediaQuery.textScalerOf(context).scale(14) <= 20;
+          return BlocBuilder<PlayCubit, PlayState>(
+            builder: (context, state) {
+              final cubit = context.read<PlayCubit>();
+              final sectionGap = isCompact ? AppTokens.s8 : AppTokens.s12;
+              final problems = state.problems;
+              final hasProblems = problems.isNotEmpty;
+              final completed = problems
+                  .where(
+                    (problem) => state.myPredictions.containsKey(problem.id),
                   )
-                : CustomScrollView(
-                    key: const PageStorageKey('play-scroll'),
-                    slivers: [
-                      SliverPadding(
-                        padding: EdgeInsets.all(pagePadding),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            _BoardHeader(
-                              onOpenBoard: () => context.go('/board'),
-                              hasNewCards:
-                                  state.hasPendingInsights ||
-                                  state.hasChangedPerception,
-                            ),
-                            SizedBox(
-                              height: isCompact ? AppTokens.s8 : AppTokens.s12,
-                            ),
-                            SizedBox(height: sectionGap),
-                            _TurnActionStrip(
-                              countdownLabel: _countdownLabel(state),
-                              predictionCount: state.myPredictions.length,
-                              enabled: state.myPredictions.isNotEmpty,
-                              onResolveTurn: cubit.resolveTurn,
-                            ),
-                            if (state.civicSummary != null) ...[
-                              SizedBox(height: sectionGap),
-                              _CivicLoopSummaryCard(
-                                summary: state.civicSummary!,
-                              ),
-                            ],
-                            if (state.hasPendingInsights ||
-                                state.hasChangedPerception) ...[
-                              SizedBox(height: sectionGap),
-                              AnimatedSwitcherX(
-                                duration: AppMotion.fast,
-                                child: _RetentionHintCard(
-                                  key: ValueKey(
-                                    'retention-${state.hasChangedPerception}',
-                                  ),
-                                  isChanged: state.hasChangedPerception,
-                                  onTap: cubit.markRetentionSeen,
-                                ),
-                              ),
-                            ],
-                            SizedBox(
-                              height: isCompact ? AppTokens.s12 : AppTokens.s16,
-                            ),
-                            _CardsSectionHeader(count: problems.length),
-                            if (!hasProblems)
-                              const _ActivationEmptyTurn()
-                            else
-                              SizedBox(
-                                height: isCompact
-                                    ? AppTokens.s12
-                                    : AppTokens.s16,
-                              ),
-                          ]),
-                        ),
-                      ),
-                      if (hasProblems)
-                        SliverPadding(
-                          padding: EdgeInsets.fromLTRB(
-                            pagePadding,
-                            0,
-                            pagePadding,
-                            pagePadding,
-                          ),
-                          sliver: isWide
-                              ? SliverList(
-                                  delegate: SliverChildBuilderDelegate((
-                                    context,
-                                    index,
-                                  ) {
-                                    final leftIndex = index * 2;
-                                    final rightIndex = leftIndex + 1;
-                                    final leftProblem = problems[leftIndex];
-                                    final rightProblem =
-                                        rightIndex < problems.length
-                                        ? problems[rightIndex]
-                                        : null;
-                                    final bottomPadding =
-                                        index == ((problems.length - 1) ~/ 2)
-                                        ? 0.0
-                                        : spacing;
+                  .length;
+              final spacing = isCompact ? AppTokens.s8 : AppTokens.s12;
 
-                                    return Padding(
-                                      padding: EdgeInsets.only(
-                                        bottom: bottomPadding,
+              return AnimatedSwitcherX(
+                duration: AppMotion.normal,
+                child: state.isLoading
+                    ? const Center(
+                        key: ValueKey('play-loading'),
+                        child: Padding(
+                          padding: EdgeInsets.all(AppTokens.s24),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    : CustomScrollView(
+                        key: const PageStorageKey('play-scroll'),
+                        slivers: [
+                          SliverPadding(
+                            padding: EdgeInsets.all(pagePadding),
+                            sliver: SliverList(
+                              delegate: SliverChildListDelegate([
+                                _BoardHeader(
+                                  onOpenBoard: () => context.go('/board'),
+                                  hasNewCards:
+                                      state.hasPendingInsights ||
+                                      state.hasChangedPerception,
+                                ),
+                                SizedBox(
+                                  height: isCompact
+                                      ? AppTokens.s8
+                                      : AppTokens.s12,
+                                ),
+                                SizedBox(height: sectionGap),
+                                if (hasProblems) ...[
+                                  Semantics(
+                                    liveRegion: true,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '$completed di ${problems.length} carte giocate',
+                                          key: const ValueKey('play-progress'),
+                                        ),
+                                        const SizedBox(height: AppTokens.s8),
+                                        LinearProgressIndicator(
+                                          value: completed / problems.length,
+                                          semanticsLabel:
+                                              'Carte giocate: $completed di ${problems.length}',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppTokens.s12),
+                                  _TurnActionStrip(
+                                    countdownLabel: _countdownLabel(state),
+                                    predictionCount: completed,
+                                    enabled: completed > 0,
+                                    onResolveTurn: cubit.resolveTurn,
+                                  ),
+                                ],
+                                if (state.civicSummary != null) ...[
+                                  SizedBox(height: sectionGap),
+                                  FcDisclosure(
+                                    storageId:
+                                        'play-summary-${state.civicSummary!.municipalityName}',
+                                    title: 'Riepilogo del Comune',
+                                    children: [
+                                      _CivicLoopSummaryCard(
+                                        summary: state.civicSummary!,
                                       ),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: _ProblemTile(
-                                              problem: leftProblem,
-                                              state: state,
-                                              onSelect: (problemId, choice) =>
-                                                  cubit.selectPrediction(
-                                                    problemId: problemId,
-                                                    choice: choice,
-                                                  ),
-                                              onSelectMotivations:
-                                                  (problemId, motivations) =>
-                                                      cubit.setMotivations(
+                                    ],
+                                  ),
+                                ],
+                                if (state.hasPendingInsights ||
+                                    state.hasChangedPerception) ...[
+                                  SizedBox(height: sectionGap),
+                                  AnimatedSwitcherX(
+                                    duration: AppMotion.fast,
+                                    child: _RetentionHintCard(
+                                      key: ValueKey(
+                                        'retention-${state.hasChangedPerception}',
+                                      ),
+                                      isChanged: state.hasChangedPerception,
+                                      onTap: cubit.markRetentionSeen,
+                                    ),
+                                  ),
+                                ],
+                                SizedBox(
+                                  height: isCompact
+                                      ? AppTokens.s12
+                                      : AppTokens.s16,
+                                ),
+                                _CardsSectionHeader(count: problems.length),
+                                if (!hasProblems)
+                                  const _ActivationEmptyTurn()
+                                else
+                                  SizedBox(
+                                    height: isCompact
+                                        ? AppTokens.s12
+                                        : AppTokens.s16,
+                                  ),
+                              ]),
+                            ),
+                          ),
+                          if (hasProblems)
+                            SliverPadding(
+                              padding: EdgeInsets.fromLTRB(
+                                pagePadding,
+                                0,
+                                pagePadding,
+                                pagePadding,
+                              ),
+                              sliver: isWide
+                                  ? SliverList(
+                                      delegate: SliverChildBuilderDelegate((
+                                        context,
+                                        index,
+                                      ) {
+                                        final leftIndex = index * 2;
+                                        final rightIndex = leftIndex + 1;
+                                        final leftProblem = problems[leftIndex];
+                                        final rightProblem =
+                                            rightIndex < problems.length
+                                            ? problems[rightIndex]
+                                            : null;
+                                        final bottomPadding =
+                                            index ==
+                                                ((problems.length - 1) ~/ 2)
+                                            ? 0.0
+                                            : spacing;
+
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            bottom: bottomPadding,
+                                          ),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: _ProblemTile(
+                                                  problem: leftProblem,
+                                                  position: leftIndex + 1,
+                                                  total: problems.length,
+                                                  state: state,
+                                                  onSelect:
+                                                      (problemId, choice) =>
+                                                          cubit
+                                                              .selectPrediction(
+                                                                problemId:
+                                                                    problemId,
+                                                                choice: choice,
+                                                              ),
+                                                  onSelectMotivations:
+                                                      (
+                                                        problemId,
+                                                        motivations,
+                                                      ) => cubit.setMotivations(
                                                         problemId: problemId,
                                                         motivations:
                                                             motivations,
                                                       ),
-                                              onSelectConfidence:
-                                                  (problemId, confidence) =>
-                                                      cubit.setConfidence(
+                                                  onSelectConfidence:
+                                                      (
+                                                        problemId,
+                                                        confidence,
+                                                      ) => cubit.setConfidence(
                                                         problemId: problemId,
                                                         confidence: confidence,
                                                       ),
-                                              onSelectReflectionAnswer:
-                                                  (problemId, selectedIndex) =>
-                                                      cubit.setReflectionAnswer(
-                                                        problemId: problemId,
-                                                        selectedOptionIndex:
-                                                            selectedIndex,
-                                                      ),
-                                              onRefreshProblem:
-                                                  cubit.refreshProblem,
-                                              onLoadHistory:
-                                                  cubit.loadProblemHistory,
-                                              onLoadCriticalInsights:
-                                                  cubit.loadCriticalInsights,
-                                            ),
-                                          ),
-                                          SizedBox(width: spacing),
-                                          Expanded(
-                                            child: rightProblem == null
-                                                ? const SizedBox.shrink()
-                                                : _ProblemTile(
-                                                    problem: rightProblem,
-                                                    state: state,
-                                                    onSelect:
-                                                        (
-                                                          problemId,
-                                                          choice,
-                                                        ) => cubit
-                                                            .selectPrediction(
-                                                              problemId:
-                                                                  problemId,
-                                                              choice: choice,
-                                                            ),
-                                                    onSelectMotivations:
-                                                        (
-                                                          problemId,
-                                                          motivations,
-                                                        ) => cubit
-                                                            .setMotivations(
-                                                              problemId:
-                                                                  problemId,
-                                                              motivations:
-                                                                  motivations,
-                                                            ),
-                                                    onSelectConfidence:
-                                                        (
-                                                          problemId,
-                                                          confidence,
-                                                        ) =>
-                                                            cubit.setConfidence(
-                                                              problemId:
-                                                                  problemId,
-                                                              confidence:
-                                                                  confidence,
-                                                            ),
-                                                    onSelectReflectionAnswer:
-                                                        (
-                                                          problemId,
-                                                          selectedIndex,
-                                                        ) => cubit
-                                                            .setReflectionAnswer(
+                                                  onSelectReflectionAnswer:
+                                                      (
+                                                        problemId,
+                                                        selectedIndex,
+                                                      ) => cubit
+                                                          .setReflectionAnswer(
+                                                            problemId:
+                                                                problemId,
+                                                            selectedOptionIndex:
+                                                                selectedIndex,
+                                                          ),
+                                                  onRefreshProblem:
+                                                      cubit.refreshProblem,
+                                                  onLoadHistory:
+                                                      cubit.loadProblemHistory,
+                                                  onLoadCriticalInsights: cubit
+                                                      .loadCriticalInsights,
+                                                ),
+                                              ),
+                                              SizedBox(width: spacing),
+                                              Expanded(
+                                                child: rightProblem == null
+                                                    ? const SizedBox.shrink()
+                                                    : _ProblemTile(
+                                                        problem: rightProblem,
+                                                        position:
+                                                            rightIndex + 1,
+                                                        total: problems.length,
+                                                        state: state,
+                                                        onSelect:
+                                                            (
+                                                              problemId,
+                                                              choice,
+                                                            ) => cubit
+                                                                .selectPrediction(
+                                                                  problemId:
+                                                                      problemId,
+                                                                  choice:
+                                                                      choice,
+                                                                ),
+                                                        onSelectMotivations:
+                                                            (
+                                                              problemId,
+                                                              motivations,
+                                                            ) => cubit
+                                                                .setMotivations(
+                                                                  problemId:
+                                                                      problemId,
+                                                                  motivations:
+                                                                      motivations,
+                                                                ),
+                                                        onSelectConfidence:
+                                                            (
+                                                              problemId,
+                                                              confidence,
+                                                            ) => cubit
+                                                                .setConfidence(
+                                                                  problemId:
+                                                                      problemId,
+                                                                  confidence:
+                                                                      confidence,
+                                                                ),
+                                                        onSelectReflectionAnswer:
+                                                            (
+                                                              problemId,
+                                                              selectedIndex,
+                                                            ) => cubit.setReflectionAnswer(
                                                               problemId:
                                                                   problemId,
                                                               selectedOptionIndex:
                                                                   selectedIndex,
                                                             ),
-                                                    onRefreshProblem:
-                                                        cubit.refreshProblem,
-                                                    onLoadHistory: cubit
-                                                        .loadProblemHistory,
-                                                    onLoadCriticalInsights: cubit
-                                                        .loadCriticalInsights,
-                                                  ),
+                                                        onRefreshProblem: cubit
+                                                            .refreshProblem,
+                                                        onLoadHistory: cubit
+                                                            .loadProblemHistory,
+                                                        onLoadCriticalInsights:
+                                                            cubit
+                                                                .loadCriticalInsights,
+                                                      ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    );
-                                  }, childCount: (problems.length / 2).ceil()),
-                                )
-                              : SliverList(
-                                  delegate: SliverChildBuilderDelegate((
-                                    context,
-                                    index,
-                                  ) {
-                                    final bottomPadding =
-                                        index == problems.length - 1
-                                        ? 0.0
-                                        : spacing;
-                                    final problem = problems[index];
+                                        );
+                                      }, childCount: (problems.length / 2).ceil()),
+                                    )
+                                  : SliverList(
+                                      delegate: SliverChildBuilderDelegate((
+                                        context,
+                                        index,
+                                      ) {
+                                        final bottomPadding =
+                                            index == problems.length - 1
+                                            ? 0.0
+                                            : spacing;
+                                        final problem = problems[index];
 
-                                    return Padding(
-                                      padding: EdgeInsets.only(
-                                        bottom: bottomPadding,
-                                      ),
-                                      child: _ProblemTile(
-                                        problem: problem,
-                                        state: state,
-                                        onSelect: (problemId, choice) =>
-                                            cubit.selectPrediction(
-                                              problemId: problemId,
-                                              choice: choice,
-                                            ),
-                                        onSelectMotivations:
-                                            (problemId, motivations) =>
-                                                cubit.setMotivations(
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            bottom: bottomPadding,
+                                          ),
+                                          child: _ProblemTile(
+                                            problem: problem,
+                                            position: index + 1,
+                                            total: problems.length,
+                                            state: state,
+                                            onSelect: (problemId, choice) =>
+                                                cubit.selectPrediction(
                                                   problemId: problemId,
-                                                  motivations: motivations,
+                                                  choice: choice,
                                                 ),
-                                        onSelectConfidence:
-                                            (problemId, confidence) =>
-                                                cubit.setConfidence(
-                                                  problemId: problemId,
-                                                  confidence: confidence,
-                                                ),
-                                        onSelectReflectionAnswer:
-                                            (problemId, selectedIndex) =>
-                                                cubit.setReflectionAnswer(
-                                                  problemId: problemId,
-                                                  selectedOptionIndex:
-                                                      selectedIndex,
-                                                ),
-                                        onRefreshProblem: cubit.refreshProblem,
-                                        onLoadHistory: cubit.loadProblemHistory,
-                                        onLoadCriticalInsights:
-                                            cubit.loadCriticalInsights,
-                                      ),
-                                    );
-                                  }, childCount: problems.length),
+                                            onSelectMotivations:
+                                                (problemId, motivations) =>
+                                                    cubit.setMotivations(
+                                                      problemId: problemId,
+                                                      motivations: motivations,
+                                                    ),
+                                            onSelectConfidence:
+                                                (problemId, confidence) =>
+                                                    cubit.setConfidence(
+                                                      problemId: problemId,
+                                                      confidence: confidence,
+                                                    ),
+                                            onSelectReflectionAnswer:
+                                                (problemId, selectedIndex) =>
+                                                    cubit.setReflectionAnswer(
+                                                      problemId: problemId,
+                                                      selectedOptionIndex:
+                                                          selectedIndex,
+                                                    ),
+                                            onRefreshProblem:
+                                                cubit.refreshProblem,
+                                            onLoadHistory:
+                                                cubit.loadProblemHistory,
+                                            onLoadCriticalInsights:
+                                                cubit.loadCriticalInsights,
+                                          ),
+                                        );
+                                      }, childCount: problems.length),
+                                    ),
+                            ),
+                          if (state.error != null)
+                            SliverPadding(
+                              padding: EdgeInsets.fromLTRB(
+                                pagePadding,
+                                0,
+                                pagePadding,
+                                pagePadding,
+                              ),
+                              sliver: SliverToBoxAdapter(
+                                child: Text(
+                                  state.error!,
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.error,
+                                  ),
                                 ),
-                        ),
-                      if (state.error != null)
-                        SliverPadding(
-                          padding: EdgeInsets.fromLTRB(
-                            pagePadding,
-                            0,
-                            pagePadding,
-                            pagePadding,
-                          ),
-                          sliver: SliverToBoxAdapter(
-                            child: Text(
-                              state.error!,
-                              style: textTheme.bodySmall?.copyWith(
-                                color: colorScheme.error,
                               ),
                             ),
-                          ),
-                        ),
-                    ],
-                  ),
+                        ],
+                      ),
+              );
+            },
           );
         },
       ),
@@ -396,9 +462,10 @@ class _ActivationEmptyTurn extends StatelessWidget {
               runSpacing: AppTokens.s8,
               children: _missions
                   .map(
-                    (mission) => Chip(
-                      avatar: Icon(mission.$1, size: 18),
-                      label: Text(mission.$2),
+                    (mission) => FcStatusChip(
+                      label: mission.$2,
+                      icon: mission.$1,
+                      color: AppTokens.blue,
                     ),
                   )
                   .toList(growable: false),
@@ -408,15 +475,13 @@ class _ActivationEmptyTurn extends StatelessWidget {
               spacing: AppTokens.s12,
               runSpacing: AppTokens.s8,
               children: [
-                FilledButton.icon(
+                FilledButton(
                   onPressed: () => context.go('/suggest-problem'),
-                  icon: const Icon(AppIcons.play),
-                  label: const Text(VenialCopy.activationPrimaryCta),
+                  child: const Text(VenialCopy.activationPrimaryCta),
                 ),
-                OutlinedButton.icon(
+                OutlinedButton(
                   onPressed: () => context.go('/next-problems'),
-                  icon: const Icon(AppIcons.board),
-                  label: const Text(VenialCopy.activationSecondaryCta),
+                  child: const Text(VenialCopy.activationSecondaryCta),
                 ),
               ],
             ),
@@ -429,34 +494,22 @@ class _ActivationEmptyTurn extends StatelessWidget {
 
 class _BoardHeader extends StatelessWidget {
   const _BoardHeader({required this.onOpenBoard, required this.hasNewCards});
-
   final VoidCallback onOpenBoard;
   final bool hasNewCards;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return GameBanner(
-      title: VenialCopy.playBoardHeaderTitle,
-      subtitle: VenialCopy.playBoardHeaderSubtitle,
-      stickerLabel: hasNewCards
-          ? VenialCopy.bannerNewsLabel
-          : VenialCopy.bannerTurnOpenLabel,
-      cta: TextButton.icon(
+    final municipality = context.watch<AppPrefs>().municipalityId ?? 'demo';
+    return FcSectionHeader(
+      title:
+          'Il turno di ${MunicipalityCatalog.displayNameFromId(municipality)}',
+      subtitle: hasNewCards
+          ? 'Gioco demo locale · nuovi esiti disponibili'
+          : 'Gioco demo locale · nessuna segnalazione ufficiale',
+      action: OutlinedButton(
         onPressed: onOpenBoard,
-        icon: const Icon(AppIcons.board),
-        label: const Text(VenialCopy.playBoardCta),
+        child: const Text(VenialCopy.playBoardCta),
       ),
-      image: Align(
-        alignment: Alignment.centerRight,
-        child: Icon(
-          AppIcons.board,
-          size: 96,
-          color: colorScheme.onPrimaryContainer.withOpacity(0.2),
-        ),
-      ),
-      shimmer: hasNewCards,
     );
   }
 }
@@ -464,6 +517,8 @@ class _BoardHeader extends StatelessWidget {
 class _ProblemTile extends StatelessWidget {
   const _ProblemTile({
     required this.problem,
+    required this.position,
+    required this.total,
     required this.state,
     required this.onSelect,
     required this.onSelectMotivations,
@@ -475,6 +530,8 @@ class _ProblemTile extends StatelessWidget {
   });
 
   final Problem problem;
+  final int position;
+  final int total;
   final PlayState state;
   final void Function(String problemId, PredictionChoice choice) onSelect;
   final void Function(String problemId, List<MotivationKey> motivations)
@@ -503,30 +560,43 @@ class _ProblemTile extends StatelessWidget {
       problem.id,
     );
 
-    return ProblemCard(
-      key: ValueKey(problem.id),
-      problem: problem,
-      selectedChoice: selectedChoice,
-      selectedMotivations: selectedMotivations,
-      selectedConfidence: selectedConfidence,
-      reflectionQuestion: reflectionQuestion,
-      selectedReflectionAnswer: reflectionAnswer,
-      criticalInsights: criticalInsights,
-      isCriticalInsightsLoading: isCriticalLoading,
-      onSelectChoice: (choice) => onSelect(problem.id, choice),
-      onSelectMotivations: (motivations) =>
-          onSelectMotivations(problem.id, motivations),
-      onSelectConfidence: (confidence) =>
-          onSelectConfidence(problem.id, confidence),
-      onSelectReflectionAnswer: (selectedIndex) =>
-          onSelectReflectionAnswer(problem.id, selectedIndex),
-      onRefresh: () => onRefreshProblem(problem.id),
-      onLoadCriticalInsights: () => onLoadCriticalInsights(problem.id),
-      result: result,
-      insight: insight,
-      history: history,
-      isHistoryLoading: isHistoryLoading,
-      onLoadHistory: () => onLoadHistory(problem.id),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(
+            'Problema $position di $total',
+            key: ValueKey('play-position-${problem.id}'),
+          ),
+        ),
+        const SizedBox(height: AppTokens.s8),
+        ProblemCard(
+          key: ValueKey(problem.id),
+          problem: problem,
+          selectedChoice: selectedChoice,
+          selectedMotivations: selectedMotivations,
+          selectedConfidence: selectedConfidence,
+          reflectionQuestion: reflectionQuestion,
+          selectedReflectionAnswer: reflectionAnswer,
+          criticalInsights: criticalInsights,
+          isCriticalInsightsLoading: isCriticalLoading,
+          onSelectChoice: (choice) => onSelect(problem.id, choice),
+          onSelectMotivations: (motivations) =>
+              onSelectMotivations(problem.id, motivations),
+          onSelectConfidence: (confidence) =>
+              onSelectConfidence(problem.id, confidence),
+          onSelectReflectionAnswer: (selectedIndex) =>
+              onSelectReflectionAnswer(problem.id, selectedIndex),
+          onRefresh: () => onRefreshProblem(problem.id),
+          onLoadCriticalInsights: () => onLoadCriticalInsights(problem.id),
+          result: result,
+          insight: insight,
+          history: history,
+          isHistoryLoading: isHistoryLoading,
+          onLoadHistory: () => onLoadHistory(problem.id),
+        ),
+      ],
     );
   }
 }
@@ -591,10 +661,9 @@ class _TurnActionStrip extends StatelessWidget {
               ],
             ),
           ),
-          FilledButton.icon(
+          FilledButton(
             onPressed: enabled ? onResolveTurn : null,
-            icon: const Icon(AppIcons.play),
-            label: const Text(VenialCopy.playResolveCta),
+            child: const Text(VenialCopy.playResolveCta),
           ),
         ],
       ),
@@ -611,7 +680,6 @@ class _CivicLoopSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final isCompact = MediaQuery.of(context).size.width < 620;
     final items = [
       (
         Icons.add_circle_outline,
@@ -659,25 +727,11 @@ class _CivicLoopSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(AppIcons.home, color: scheme.primary),
-              const SizedBox(width: AppTokens.s8),
-              Expanded(
-                child: Text(
-                  'Riepilogo ${summary.municipalityName}',
-                  style: textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              FcStatusChip(
-                label: summary.hasCompleteLoop ? 'Loop completo' : 'In corso',
-                color: summary.hasCompleteLoop
-                    ? AppTokens.success
-                    : AppTokens.blue,
-              ),
-            ],
+          FcSectionHeader(title: 'Riepilogo ${summary.municipalityName}'),
+          const SizedBox(height: AppTokens.s8),
+          FcStatusChip(
+            label: summary.hasCompleteLoop ? 'Loop completo' : 'In corso',
+            color: summary.hasCompleteLoop ? AppTokens.success : AppTokens.blue,
           ),
           const SizedBox(height: AppTokens.s8),
           Text(
@@ -688,23 +742,31 @@ class _CivicLoopSummaryCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTokens.s12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: items.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isCompact ? 2 : 3,
-              crossAxisSpacing: AppTokens.s8,
-              mainAxisSpacing: AppTokens.s8,
-              childAspectRatio: isCompact ? 2.35 : 2.05,
-            ),
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return _CivicMetric(
-                icon: item.$1,
-                label: item.$2,
-                value: item.$3,
-                color: item.$4,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns =
+                  constraints.maxWidth < 600 ||
+                      MediaQuery.textScalerOf(context).scale(14) > 20
+                  ? 1
+                  : 3;
+              final width =
+                  (constraints.maxWidth - AppTokens.s8 * (columns - 1)) /
+                  columns;
+              return Wrap(
+                spacing: AppTokens.s8,
+                runSpacing: AppTokens.s8,
+                children: [
+                  for (final item in items)
+                    SizedBox(
+                      width: width,
+                      child: _CivicMetric(
+                        icon: item.$1,
+                        label: item.$2,
+                        value: item.$3,
+                        color: item.$4,
+                      ),
+                    ),
+                ],
               );
             },
           ),
@@ -750,8 +812,6 @@ class _CivicMetric extends StatelessWidget {
               children: [
                 Text(
                   value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: textTheme.titleSmall?.copyWith(
                     color: scheme.onSurface,
                     fontWeight: FontWeight.w900,
@@ -759,8 +819,6 @@ class _CivicMetric extends StatelessWidget {
                 ),
                 Text(
                   label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: textTheme.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),

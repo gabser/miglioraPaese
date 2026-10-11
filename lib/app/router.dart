@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/boot/boot_screen.dart';
+import 'package:fanta_comune/features/boot/design_preview_page.dart';
 import 'package:fanta_comune/features/home/presentation/home_page.dart';
 import 'package:fanta_comune/features/game/presentation/play/play_page.dart';
 import 'package:fanta_comune/features/game/presentation/board/board_page.dart';
@@ -12,6 +13,9 @@ import 'package:fanta_comune/features/onboarding/presentation/onboarding_page.da
 import 'package:fanta_comune/features/onboarding/presentation/warm_welcome_page.dart';
 import 'package:fanta_comune/features/next_problems/presentation/next_problems_page.dart';
 import 'package:fanta_comune/features/next_problems/presentation/suggest_problem_page.dart';
+import 'package:fanta_comune/features/next_problems/presentation/proposal_receipt_page.dart';
+import 'package:fanta_comune/features/next_problems/presentation/proposal_detail_page.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_route_context.dart';
 import 'package:fanta_comune/features/profile/presentation/profile_page.dart';
 import 'package:fanta_comune/features/shell/presentation/shell_page.dart';
 
@@ -27,13 +31,33 @@ GoRouter buildRouter(AppPrefs appPrefs) {
           : state.uri.path;
 
       if (municipalityId != null && location == '/onboarding') {
-        return '/home';
+        return _selectionDestination(state, municipalityId: municipalityId);
+      }
+
+      if (ProposalRouteContext.isProposalPath(location)) {
+        final scope = ProposalRouteContext.resolve(
+          state.uri,
+          preference: municipalityId,
+        );
+        if (scope.municipalityId != null) {
+          final canonical = state.uri.replace(
+            queryParameters: {
+              ...state.uri.queryParameters,
+              'municipality': scope.municipalityId!,
+            },
+          );
+          if (canonical != state.uri) return canonical.toString();
+        }
       }
 
       return null;
     },
     routes: [
       GoRoute(path: '/boot', builder: (context, state) => const BootScreen()),
+      GoRoute(
+        path: '/design-preview',
+        builder: (context, state) => const DesignPreviewPage(),
+      ),
       GoRoute(
         path: '/welcome',
         builder: (context, state) => const WarmWelcomePage(),
@@ -44,20 +68,64 @@ GoRouter buildRouter(AppPrefs appPrefs) {
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingPage(),
+        builder: (context, state) =>
+            OnboardingPage(afterSelectionRoute: _selectionDestination(state)),
       ),
       GoRoute(
         path: '/change-municipality',
-        builder: (context, state) =>
-            const OnboardingPage(afterSelectionRoute: '/profile'),
+        builder: (context, state) => OnboardingPage(
+          afterSelectionRoute: _selectionDestination(
+            state,
+            fallback: '/profile',
+          ),
+        ),
       ),
       GoRoute(
         path: '/next-problems',
-        builder: (context, state) => const NextProblemsPage(),
+        builder: (context, state) => NextProblemsPage(
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ),
+        ),
       ),
       GoRoute(
         path: '/suggest-problem',
-        builder: (context, state) => const SuggestProblemPage(),
+        builder: (context, state) => SuggestProblemPage(
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/proposal-receipt',
+        builder: (context, state) => ProposalReceiptPage(
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/proposal-receipt/:problemId',
+        builder: (context, state) => ProposalReceiptPage(
+          problemId: state.pathParameters['problemId'],
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/next-problems/:problemId',
+        builder: (context, state) => ProposalDetailPage(
+          problemId: state.pathParameters['problemId']!,
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ),
+        ),
       ),
       GoRoute(path: '/board', builder: (context, state) => const BoardPage()),
       GoRoute(
@@ -109,4 +177,25 @@ GoRouter buildRouter(AppPrefs appPrefs) {
       ),
     ],
   );
+}
+
+String _selectionDestination(
+  GoRouterState state, {
+  String fallback = '/home',
+  String? municipalityId,
+}) {
+  final route = state.uri.queryParameters['returnTo'];
+  final destination =
+      const [
+        '/suggest-problem',
+        '/next-problems',
+        '/profile',
+        '/home',
+      ].contains(route)
+      ? route!
+      : fallback;
+  return municipalityId != null &&
+          ProposalRouteContext.isProposalPath(destination)
+      ? ProposalRouteContext.location(destination, municipalityId)
+      : destination;
 }

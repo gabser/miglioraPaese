@@ -29,7 +29,7 @@ class GameBanner extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
       child: Container(
-        height: height,
+        constraints: BoxConstraints(minHeight: height),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -66,10 +66,11 @@ class GameBanner extends StatelessWidget {
                 isCompact ? AppTokens.s16 : AppTokens.s24,
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (stickerLabel != null) _BannerPill(label: stickerLabel!),
-                  const Spacer(),
+                  const SizedBox(height: AppTokens.s16),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 560),
                     child: Text(
