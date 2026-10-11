@@ -127,7 +127,8 @@ it('persists anonymous session erasure across restarts', async () => {
         userId: 'anon:other-user',
       })
       .find((item) => item.id === suggestion.id);
-    assert.equal(retained.submittedByUserId, 'deleted');
+    assert.equal('submittedByUserId' in retained, false);
+    assert.equal(secondStore.exportState().suggestedProblems.find((item) => item.problem.id === suggestion.id).problem.submittedByUserId, 'deleted');
     assert.equal(retained.votesUp, 0);
     assert.deepEqual(
       secondStore.getPredictions({

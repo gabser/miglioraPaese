@@ -76,19 +76,27 @@ credenziali; staging deve servire app e API nello stesso sito per evitare le
 limitazioni dei cookie di terze parti.
 
 `DELETE /v1/session` rimuove voti, previsioni ed esiti associati alla sessione,
-anonimizza il collegamento delle proposte già pubblicate e scade il cookie. Il
+anonimizza il collegamento delle proposte già pubblicate, cancella le ricevute
+d’invio, revoca durevolmente la sessione e scade il cookie. Il
 testo civico moderato resta disponibile senza l'identificativo della sessione.
+Un POST proposte già autenticato ma ancora in lettura viene rifiutato se la
+revoca precede il commit; se il commit precede il reset, viene incluso
+nell’anonimizzazione. Il vecchio cookie non torna valido dopo un riavvio.
+Un GET successivo emette una sessione nuova e uno scope diverso.
 L'operazione è idempotente ed è collegata al controllo dati della build Flutter
 in modalità API.
 
 ## Moderazione e limiti del pilot
 
 - Il body JSON deve essere un oggetto ed è limitato a 64 KiB.
-- Titolo e descrizione sono limitati rispettivamente a 120 e 1000 caratteri.
+- Titolo e descrizione sono limitati rispettivamente a 120 e 1000 code point
+  Unicode dopo trim; nessun troncamento.
 - Le motivazioni sono enum note, uniche e al massimo due.
 - Le proposte con link, email, numeri di telefono, caratteri di controllo o
   termini abusivi noti vengono rifiutate con `content_rejected`.
-- Ogni identità anonima può inviare al massimo tre proposte in un'ora.
+- Ogni identità anonima può inviare al massimo tre proposte in un'ora per
+  Comune. Il confine di un'ora è inclusivo; rejected conta, richieste rifiutate
+  e replay non consumano nuovi invii.
 - In produzione i voti non approvano una proposta: un moderatore deve inviare
   una decisione `approved` o `rejected` all'endpoint amministrativo protetto.
 - La coda operativa è l'elenco `status=pending`; responsabilità, escalation e
@@ -295,3 +303,44 @@ rimuove quel legame e la chiave, archivia e revoca gli inviti.
 Il workflow manuale produce manifest e artefatti distinti per profilo/Comune/commit.
 Non esegue deploy. [Scheda go/no-go](../../docs/backend/fantasy_pilot_go_no_go.md)
 con gate mancanti, retention, identità anonima e rollback conservativo.
+
+## Proposte: luogo, ricevute e recupero
+
+Contratto completo: [proposal_submission_contract.md](../../docs/backend/proposal_submission_contract.md).
+Prima di inviare, la nuova UI legge `GET /v1/municipalities/{id}/next-problems?own=true`:
+`{items, submissionScope, capabilities: {proposalSubmission: 1}}`. Stabilisce il
+cookie firmato, verifica la capability e congela lo scope nel tentativo.
+
+Il POST mantiene la risposta oggetto-proposta: `201` alla creazione, `200` al
+replay, con `municipalityId`, `location`, `isMine` e `submissionScope` additivi.
+La nuova UI invia sempre `idempotencyKey` casuale (`[A-Za-z0-9_-]{8,128}`),
+`expectedSubmissionScope` congelato e un `location` esplicito. Il luogo è
+`{kind: "municipality"}` oppure `{kind: "specific", label, civic?, reference?}`:
+label 1–120, civico massimo 20, riferimento massimo 200 code point dopo trim.
+Intero Comune contiene solo `kind`; i valori facoltativi vuoti vengono omessi.
+Nessuna geocodifica. Omissione/null di luogo, key e precondizione resta ammessa
+soltanto per il rollout dei client legacy.
+
+La key è privata per cookie firmato × Comune canonico. Il server calcola il
+digest dei campi normalizzati; stesso comando restituisce la ricevuta originale
+prima della quota/moderazione, contenuto differente dà `409 idempotency_conflict`.
+La precondizione scope è esclusa dal digest: un cookie cambiato tra bootstrap e
+POST dà `409 submission_scope_changed` prima di ogni replay o commit, senza
+consumare quota. Lo scope è una prova di continuità, mai un’identità fornita dal client.
+
+`GET .../next-problem-submissions/{key}` restituisce `{submissionScope, receipt}`
+o `404 submission_not_found` con lo scope corrente. Un 404 non prova che un
+POST precedente sia cessato. `GET .../next-problems/{id}` legge la proposta nello
+stato attuale; la receipt resta immutabile e può conservare un vecchio pending.
+La lista pubblica contiene pending/approved; rejected è leggibile solo nel
+proprio elenco/dettaglio o dalla moderazione autorizzata. DTO utente non espone
+`submittedByUserId` o `moderationReason`; `isMine` comunica la proprietà.
+Il voto rispetta la stessa visibilità. Titoli uguali restano accettati: i suggerimenti
+di similarità sono informativi nel frontend.
+
+Snapshot JSON versione 1 e schema SQL 6 sono preservati; `submissionCommands`
+e `revokedSessions` sono collezioni additive. Proposta e comando entrano nello
+stesso write, con rollback della memoria su errore SQLite. Nessun TTL dei comandi
+nel pilot V1: reset elimina le ricevute e conserva una revoca persistita.
+`fieldErrors` è una mappa percorso → `required`, `invalid`, `too_long` nei 400;
+422 non contiene la ragione interna della moderazione.
