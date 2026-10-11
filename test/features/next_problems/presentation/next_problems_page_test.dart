@@ -69,6 +69,19 @@ void main() {
     );
   }
 
+  testWidgets('empty proposals do not imply municipality activation', (
+    tester,
+  ) async {
+    final repository = _RetryRepository()
+      ..calls = 1
+      ..forceEmpty = true;
+    await _pumpList(tester, repository, width: 390, scale: 2);
+    expect(find.text('Nessuna proposta'), findsOneWidget);
+    expect(find.text(VenialCopy.activationTitle), findsNothing);
+    expect(find.text(VenialCopy.nextProblemsActivationEmpty), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'successful vote announces success, updates count and selected semantics',
     (tester) async {
@@ -189,6 +202,7 @@ class _RetryRepository implements NextProblemsRepository {
 
   int calls = 0;
   bool failVote = true;
+  bool forceEmpty = false;
 
   @override
   Future<List<SuggestedProblem>> listNextProblems({
@@ -204,7 +218,7 @@ class _RetryRepository implements NextProblemsRepository {
         message: 'socket failed',
       );
     }
-    return query == null ? [_problem()] : [];
+    return !forceEmpty && query == null ? [_problem()] : [];
   }
 
   @override

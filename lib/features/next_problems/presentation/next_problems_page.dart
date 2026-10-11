@@ -446,7 +446,7 @@ class _NextProblemsEmpty extends StatelessWidget {
             children: [
               if (!isFiltered)
                 const FcStatusChip(
-                  label: VenialCopy.activationTitle,
+                  label: 'Nessuna proposta',
                   color: AppTokens.blue,
                   icon: AppIcons.play,
                 ),

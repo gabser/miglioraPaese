@@ -220,7 +220,7 @@ class VenialCopy {
   static const nextProblemsEmpty =
       'Per ora niente proposte. Va bene cosi\', o magari non c\'era voglia.';
   static const nextProblemsActivationEmpty =
-      'Ancora nessuna proposta qui. Il primo tema serve a far partire la mappa del Comune.';
+      'Ancora nessuna proposta qui. Puoi suggerire un tema da valutare.';
   static const nextProblemsStatusPending = 'In valutazione';
   static const nextProblemsStatusApproved = 'Approvata';
   static const nextProblemsStatusRejected = 'Non ora';
