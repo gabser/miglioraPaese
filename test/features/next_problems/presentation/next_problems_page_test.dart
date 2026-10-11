@@ -1,3 +1,4 @@
+import 'package:fanta_comune/features/next_problems/domain/proposal_location.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -60,6 +61,11 @@ void main() {
 
 class _RetryRepository implements NextProblemsRepository {
   int calls = 0;
+  @override
+  Future<SuggestedProblem> getSuggestedProblem({
+    required String municipalityId,
+    required String problemId,
+  }) async => _problem();
 
   @override
   Future<List<SuggestedProblem>> listNextProblems({
@@ -84,6 +90,7 @@ class _RetryRepository implements NextProblemsRepository {
     required String title,
     required String description,
     required ProblemKey category,
+    ProposalLocation? location,
   }) {
     throw UnimplementedError();
   }

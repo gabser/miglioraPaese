@@ -1,3 +1,4 @@
+import 'package:fanta_comune/features/next_problems/domain/proposal_location.dart';
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,32 +10,86 @@ import 'package:fanta_comune/features/next_problems/domain/suggested_problem.dar
 import 'package:fanta_comune/features/next_problems/domain/suggested_problem_status.dart';
 import 'package:fanta_comune/features/next_problems/domain/vote_choice.dart';
 import 'package:fanta_comune/features/next_problems/logic/next_problems_state.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_route_context.dart';
+
+enum VoteOutcome { succeeded, failed, ignored }
 
 class NextProblemsCubit extends Cubit<NextProblemsState> {
   NextProblemsCubit({
     required this.repository,
     required this.prefs,
+    String? municipalityId,
     this.searchDebounce = const Duration(milliseconds: 300),
-  }) : super(const NextProblemsState());
+  }) : super(
+         NextProblemsState(
+           municipalityId: ProposalRouteContext.fromPreference(
+             municipalityId ?? prefs.municipalityId,
+           ).municipalityId,
+         ),
+       ) {
+    _epoch = prefs.localData.epoch;
+    prefs.localData.addListener(_onLocalDataChanged);
+  }
 
   final NextProblemsRepository repository;
   final AppPrefs prefs;
   final Duration searchDebounce;
   Timer? _searchTimer;
   int _loadVersion = 0;
+  int _scopeVersion = 0;
+  late int _epoch;
+
+  Future<void> setMunicipality(String? value) async {
+    _searchTimer?.cancel();
+    _scopeVersion++;
+    _loadVersion++;
+    emit(
+      NextProblemsState(
+        municipalityId: ProposalRouteContext.fromPreference(
+          value,
+        ).municipalityId,
+      ),
+    );
+    await load();
+  }
+
+  void _onLocalDataChanged() {
+    if (isClosed || _epoch == prefs.localData.epoch) return;
+    _epoch = prefs.localData.epoch;
+    unawaited(setMunicipality(null));
+  }
+
+  bool _isCurrentScope(int version, int epoch) =>
+      !isClosed && version == _scopeVersion && epoch == prefs.localData.epoch;
 
   Future<void> load() async {
     final requestVersion = ++_loadVersion;
+    final scopeVersion = _scopeVersion;
+    final epoch = prefs.localData.epoch;
+    final municipality = state.municipalityId;
+    if (municipality == null) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          items: const [],
+          error: 'Scegli un Comune prima di vedere le proposte.',
+        ),
+      );
+      return;
+    }
     final query = state.query.trim();
     final filterStatus = state.filterStatus;
     emit(state.copyWith(isLoading: true, error: null));
     try {
       final items = await repository.listNextProblems(
-        municipalityId: prefs.municipalityId ?? 'demo',
+        municipalityId: municipality,
         query: query.isEmpty ? null : query,
         status: filterStatus,
       );
-      if (isClosed || requestVersion != _loadVersion) return;
+      if (!_isCurrentScope(scopeVersion, epoch) ||
+          requestVersion != _loadVersion) {
+        return;
+      }
       emit(
         state.copyWith(
           isLoading: false,
@@ -43,7 +98,10 @@ class NextProblemsCubit extends Cubit<NextProblemsState> {
         ),
       );
     } catch (error) {
-      if (isClosed || requestVersion != _loadVersion) return;
+      if (!_isCurrentScope(scopeVersion, epoch) ||
+          requestVersion != _loadVersion) {
+        return;
+      }
       emit(state.copyWith(isLoading: false, error: _userMessageFor(error)));
     }
   }
@@ -69,21 +127,35 @@ class NextProblemsCubit extends Cubit<NextProblemsState> {
     unawaited(load());
   }
 
+  Future<void> clearFilters() async {
+    _searchTimer?.cancel();
+    _loadVersion++;
+    emit(state.copyWith(query: '', filterStatus: null, error: null));
+    await load();
+  }
+
   void setSortMode(NextProblemsSortMode mode) {
     emit(state.copyWith(sortMode: mode, items: _sorted(state.items, mode)));
   }
 
-  Future<void> vote(String problemId, VoteChoice vote) async {
-    if (state.votingProblemIds.contains(problemId)) return;
+  Future<VoteOutcome> vote(String problemId, VoteChoice vote) async {
+    final municipality = state.municipalityId;
+    if (municipality == null ||
+        !state.items.any((item) => item.id == problemId)) {
+      return VoteOutcome.ignored;
+    }
+    final scopeVersion = _scopeVersion;
+    final epoch = prefs.localData.epoch;
+    if (state.votingProblemIds.contains(problemId)) return VoteOutcome.ignored;
     final updatedVoting = {...state.votingProblemIds, problemId};
-    emit(state.copyWith(votingProblemIds: updatedVoting, error: null));
+    emit(state.copyWith(votingProblemIds: updatedVoting, voteError: null));
     try {
       final updated = await repository.voteSuggestedProblem(
-        municipalityId: prefs.municipalityId ?? 'demo',
+        municipalityId: municipality,
         problemId: problemId,
         vote: vote,
       );
-      if (isClosed) return;
+      if (!_isCurrentScope(scopeVersion, epoch)) return VoteOutcome.ignored;
       final nextItems = state.items
           .map((item) => item.id == updated.id ? updated : item)
           .toList(growable: false);
@@ -94,35 +166,62 @@ class NextProblemsCubit extends Cubit<NextProblemsState> {
           error: null,
         ),
       );
+      return VoteOutcome.succeeded;
     } catch (error) {
-      if (isClosed) return;
+      if (!_isCurrentScope(scopeVersion, epoch)) return VoteOutcome.ignored;
       emit(
         state.copyWith(
-          error: _userMessageFor(error),
+          voteError:
+              error is ApiException && error.kind == ApiExceptionKind.network
+              ? 'Il voto non è stato registrato. Controlla la connessione e riprova.'
+              : 'Il voto non è stato registrato. Puoi riprovare.',
           votingProblemIds: _withoutProblemId(problemId),
         ),
       );
+      return VoteOutcome.failed;
     }
   }
 
+  Future<void> prepareProposalForm() async {
+    final source = repository;
+    if (source is! ProposalFormCapabilities) {
+      throw ApiException.configuration(
+        code: 'proposal_capabilities_missing',
+        message: 'Il repository non supporta il nuovo percorso proposte.',
+      );
+    }
+    await (source as ProposalFormCapabilities).prepareProposalForm();
+  }
+
+  /// Legacy compatibility helper. The application form uses the app-scoped
+  /// ProposalSubmissionCoordinator for persisted intent and recoverable writes.
   Future<String?> submit({
     required String title,
     required String description,
     required ProblemKey category,
+    String? municipalityId,
+    ProposalLocation? location,
   }) async {
+    final municipality = ProposalRouteContext.fromPreference(
+      municipalityId ?? state.municipalityId,
+    ).municipalityId;
+    if (municipality == null) return 'municipality_required';
+    final scopeVersion = _scopeVersion;
+    final epoch = prefs.localData.epoch;
     emit(state.copyWith(submitting: true, error: null));
     try {
       await repository.submitSuggestedProblem(
-        municipalityId: prefs.municipalityId ?? 'demo',
+        municipalityId: municipality,
         title: title,
         description: description,
         category: category,
+        location: location,
       );
-      if (isClosed) return 'generic';
+      if (!_isCurrentScope(scopeVersion, epoch)) return 'scope_changed';
       emit(state.copyWith(submitting: false));
       return null;
     } catch (error) {
-      if (isClosed) return 'generic';
+      if (!_isCurrentScope(scopeVersion, epoch)) return 'scope_changed';
       emit(state.copyWith(submitting: false, error: _userMessageFor(error)));
       if (_isDuplicateTitle(error)) {
         return 'duplicate_title';
@@ -163,6 +262,7 @@ class NextProblemsCubit extends Cubit<NextProblemsState> {
 
   @override
   Future<void> close() {
+    prefs.localData.removeListener(_onLocalDataChanged);
     _searchTimer?.cancel();
     _loadVersion++;
     return super.close();

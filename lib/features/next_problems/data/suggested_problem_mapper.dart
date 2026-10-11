@@ -1,4 +1,5 @@
 import 'package:fanta_comune/core/models/problem_key.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_location.dart';
 import 'package:fanta_comune/core/network/api_exception.dart';
 import 'package:fanta_comune/features/next_problems/domain/promotion_rule.dart';
 import 'package:fanta_comune/features/next_problems/domain/suggested_problem.dart';
@@ -6,6 +7,25 @@ import 'package:fanta_comune/features/next_problems/domain/suggested_problem_sta
 import 'package:fanta_comune/features/next_problems/domain/vote_choice.dart';
 
 class SuggestedProblemMapper {
+  static Map<String, Object?> toJson(SuggestedProblem item) => {
+    'id': item.id,
+    'title': item.title,
+    'shortDescription': item.shortDescription,
+    'location': item.location?.toJson(),
+    'category': item.category.name,
+    'createdAt': item.createdAt.toUtc().toIso8601String(),
+    'status': item.status.name,
+    'votesUp': item.votesUp,
+    'votesDown': item.votesDown,
+    'myVote': item.myVote.name,
+    'submittedByDisplayName': item.submittedByDisplayName,
+    'promotionRule': {
+      'threshold': item.promotionRule.threshold,
+      'scopeLabel': item.promotionRule.scopeLabel,
+      'reason': item.promotionRule.reason,
+    },
+  };
+
   const SuggestedProblemMapper._();
 
   static List<SuggestedProblem> listFromResponse(Object? payload) {
@@ -31,6 +51,7 @@ class SuggestedProblemMapper {
       id: _requireString(json, 'id'),
       title: _requireString(json, 'title'),
       shortDescription: _requireString(json, 'shortDescription'),
+      location: _location(json['location']),
       category: _enumValue(ProblemKey.values, json, 'category'),
       createdAt: _requireDateTime(json, 'createdAt'),
       status: _enumValue(SuggestedProblemStatus.values, json, 'status'),
@@ -51,6 +72,16 @@ class SuggestedProblemMapper {
       throw ApiException.invalidPayload('$field deve essere un oggetto.');
     }
     return Map<String, Object?>.from(value);
+  }
+
+  static ProposalLocation? _location(Object? value) {
+    try {
+      return ProposalLocation.fromJson(value);
+    } on FormatException {
+      throw ApiException.invalidPayload(
+        'location contiene un luogo non valido.',
+      );
+    }
   }
 
   static String _requireString(Map<String, Object?> json, String field) {

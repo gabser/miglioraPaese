@@ -34,14 +34,26 @@ class MunicipalityCatalog {
     if (apiDisplayName != null) return apiDisplayName;
     if (!municipalityId.startsWith('comune:')) return municipalityId;
     final name = municipalityId.substring('comune:'.length).trim();
-    return name.isEmpty ? 'Comune' : name;
+    if (name.isEmpty) return 'Comune';
+    for (final city in activeCities) {
+      if (city.toLowerCase() == name.toLowerCase()) return city;
+    }
+    return '${name[0].toUpperCase()}${name.substring(1)}';
   }
 
   static String? apiIdFor(String municipalityId) {
-    if (_displayNamesByApiId.containsKey(municipalityId)) {
-      return municipalityId;
+    final normalized = municipalityId
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceFirst(RegExp(r'^comune:\s*'), 'comune:');
+    if (_displayNamesByApiId.containsKey(normalized)) {
+      return normalized;
     }
-    return _apiIdsByLocalId[municipalityId];
+    for (final entry in _apiIdsByLocalId.entries) {
+      if (entry.key.toLowerCase() == normalized) return entry.value;
+    }
+    return null;
   }
 
   static bool supportsApi(String municipalityId) =>

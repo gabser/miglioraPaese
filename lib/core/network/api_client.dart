@@ -116,6 +116,28 @@ class ApiClient {
       final errorBody = payload is Map<String, dynamic> ? payload : null;
       final code = errorBody?['error'];
       final message = errorBody?['message'];
+      final rawFields = errorBody?['fieldErrors'];
+      final fields = <String, String>{};
+      if (rawFields is Map) {
+        const codes = {
+          'invalid_text',
+          'too_long',
+          'invalid_choice',
+          'invalid_location',
+          'invalid',
+          'required',
+        };
+        for (final entry in rawFields.entries) {
+          if (entry.key is String &&
+              entry.value is String &&
+              codes.contains(entry.value))
+            fields[entry.key as String] = entry.value as String;
+        }
+      }
+      final rawRetry = errorBody?['retryAfterSeconds'];
+      final retry = rawRetry is int
+          ? rawRetry
+          : int.tryParse(response.headers['retry-after'] ?? '');
       throw ApiException(
         kind: ApiExceptionKind.response,
         code: code is String && code.isNotEmpty ? code : 'http_error',
@@ -123,6 +145,8 @@ class ApiClient {
             ? message
             : 'Il servizio ha restituito un errore.',
         statusCode: response.statusCode,
+        retryAfterSeconds: retry != null && retry > 0 ? retry : null,
+        fieldErrors: Map.unmodifiable(fields),
       );
     }
     return payload;

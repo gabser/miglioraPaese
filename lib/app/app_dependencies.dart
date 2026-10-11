@@ -1,3 +1,9 @@
+import 'package:fanta_comune/core/persistence/local_data_store.dart';
+import 'package:fanta_comune/features/next_problems/data/proposal_draft_store.dart';
+import 'package:fanta_comune/features/next_problems/data/proposal_submission_store.dart';
+import 'package:fanta_comune/features/next_problems/data/proposal_submission_gateway.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_scope.dart';
+import 'package:fanta_comune/features/next_problems/logic/proposal_submission_coordinator.dart';
 import 'package:flutter/widgets.dart';
 import 'package:fanta_comune/features/fantasy/data/api_fantasy_repository.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
@@ -37,9 +43,19 @@ class AppDependencies extends StatelessWidget {
       providers: [
         Provider<AppConfig>.value(value: config),
         ChangeNotifierProvider<AppPrefs>.value(value: appPrefs),
+        ChangeNotifierProvider<LocalDataStore>.value(value: appPrefs.localData),
+        Provider<ProposalDraftStore>(
+          create: (_) => ProposalDraftStore(appPrefs.localData),
+        ),
         Provider<CivicLoopStore>(
-          create: (context) =>
-              CivicLoopStore(currentUserId: context.read<AppPrefs>().userId),
+          create: (context) => CivicLoopStore(
+            currentUserId: appPrefs.userId,
+            userId: () => appPrefs.userId,
+            localData: appPrefs.localData,
+            storageKey: () =>
+                'mock:${appPrefs.localData.namespace}:${ProposalScope.environmentFor(config)}',
+          ),
+          dispose: (_, store) => store.dispose(),
         ),
         Provider<http.Client>(
           create: (_) => createHttpClient(),
@@ -87,10 +103,22 @@ class AppDependencies extends StatelessWidget {
             config: config,
             currentUserId: context.read<AppPrefs>().userId,
             mockStore: context.read<CivicLoopStore>(),
+            localData: appPrefs.localData,
             apiClient:
                 config.nextProblemsDataSource == NextProblemsDataSource.api
                 ? context.read<ApiClient>()
                 : null,
+          ),
+        ),
+        ChangeNotifierProvider<ProposalSubmissionCoordinator>(
+          create: (context) => ProposalSubmissionCoordinator(
+            store: ProposalSubmissionStore(appPrefs.localData),
+            drafts: context.read<ProposalDraftStore>(),
+            gateway:
+                context.read<NextProblemsRepository>()
+                    as ProposalSubmissionGateway,
+            isMock:
+                config.nextProblemsDataSource == NextProblemsDataSource.mock,
           ),
         ),
       ],
@@ -121,6 +149,7 @@ NextProblemsRepository createNextProblemsRepository({
   required String currentUserId,
   required CivicLoopStore mockStore,
   ApiClient? apiClient,
+  LocalDataStore? localData,
 }) {
   return switch (config.nextProblemsDataSource) {
     NextProblemsDataSource.mock => MockNextProblemsRepository(
@@ -129,6 +158,7 @@ NextProblemsRepository createNextProblemsRepository({
     ),
     NextProblemsDataSource.api => ApiNextProblemsRepository(
       client: apiClient ?? (throw ArgumentError.notNull('apiClient')),
+      data: localData,
     ),
   };
 }

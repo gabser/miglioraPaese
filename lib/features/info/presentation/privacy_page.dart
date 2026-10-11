@@ -63,6 +63,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
         ? context.read<FantasyManager>()
         : null;
     try {
+      prefs.beginReset();
       if (hasRemoteData && !(fantasyManager?.isRemote ?? false)) {
         await context.read<ApiClient>().deleteJson(['v1', 'session']);
       }
