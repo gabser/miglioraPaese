@@ -43,7 +43,7 @@ void main() {
       expect(find.textContaining('Comune: Bologna'), findsOneWidget);
       expect(find.text(_problems.first.title), findsOneWidget);
       expect(find.text('Zona: ${_problems.first.zoneName}'), findsOneWidget);
-      expect(find.text('-25% andamento nella demo'), findsOneWidget);
+      expect(find.text('-25% andamento del tema'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

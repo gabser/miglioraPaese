@@ -38,7 +38,7 @@ class HomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Comune: ${MunicipalityCatalog.displayNameFromId(municipalityId)} · Gioco demo locale',
+                  'Comune: ${MunicipalityCatalog.displayNameFromId(municipalityId)} · Gioco delle previsioni',
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(height: AppTokens.s12),
@@ -123,7 +123,7 @@ class _HomeDashboard extends StatelessWidget {
         value: accuracy,
         icon: Icons.adjust,
         color: AppTokens.warning,
-        caption: 'Mock locale',
+        caption: 'Previsioni concluse',
       ),
       FcMetricCard(
         label: 'Classifica',
@@ -472,7 +472,7 @@ class _ProblemRow extends StatelessWidget {
                 ),
                 const SizedBox(height: AppTokens.s12),
                 Text(
-                  '${trend >= 0 ? '+' : ''}$trend% andamento nella demo',
+                  '${trend >= 0 ? '+' : ''}$trend% andamento del tema',
                   style: textTheme.labelSmall?.copyWith(
                     color: AppTokens.foregroundFor(status.color),
                     fontWeight: FontWeight.w800,

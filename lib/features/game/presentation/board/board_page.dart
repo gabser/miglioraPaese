@@ -151,7 +151,7 @@ class _BoardPageState extends State<BoardPage> {
                         title:
                             'Comune: ${MunicipalityCatalog.displayNameFromId(_loadedMunicipalityId!)}',
                         subtitle:
-                            '${VenialCopy.boardSubtitle} · Gioco demo locale',
+                            '${VenialCopy.boardSubtitle} · Gioco delle previsioni',
                       ),
                       const SizedBox(height: AppTokens.s16),
                       if (data.problems.isEmpty)
@@ -441,7 +441,7 @@ class _BoardTile extends StatelessWidget {
           Text('Categoria: ${AppIcons.labelForProblemKey(problem.key)}'),
           const SizedBox(height: AppTokens.s8),
           Text(
-            '${problem.trendPercent >= 0 ? '+' : ''}${problem.trendPercent}% andamento nella demo',
+            '${problem.trendPercent >= 0 ? '+' : ''}${problem.trendPercent}% andamento del tema',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppTokens.foregroundFor(color),
             ),

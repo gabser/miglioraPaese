@@ -504,8 +504,8 @@ class _BoardHeader extends StatelessWidget {
       title:
           'Il turno di ${MunicipalityCatalog.displayNameFromId(municipality)}',
       subtitle: hasNewCards
-          ? 'Gioco demo locale · nuovi esiti disponibili'
-          : 'Gioco demo locale · nessuna segnalazione ufficiale',
+          ? 'Gioco delle previsioni · nuovi esiti disponibili'
+          : 'Gioco delle previsioni · nessuna segnalazione ufficiale',
       action: OutlinedButton(
         onPressed: onOpenBoard,
         child: const Text(VenialCopy.playBoardCta),

@@ -161,7 +161,7 @@ class ProblemCard extends StatelessWidget {
             ),
             if (insight == null || insight!.totalPredictions == 0)
               const Text(
-                'Nessuna previsione aggregata disponibile nella demo.',
+                'Nessuna previsione aggregata disponibile per questo tema.',
               ),
             const SizedBox(height: AppTokens.s8),
             Wrap(
@@ -282,7 +282,7 @@ class ProblemCard extends StatelessWidget {
               const SizedBox(height: AppTokens.s16),
               FcDisclosure(
                 storageId: 'insight-${problem.id}',
-                title: 'Percezioni nella demo',
+                title: 'Percezioni aggregate',
                 children: [
                   _InsightBlock(
                     insight: insight!,

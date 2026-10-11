@@ -449,14 +449,22 @@ class MatchdayPage extends StatelessWidget {
               children: [
                 Text(
                   manager.isLocked
-                      ? '3. Attendi gli esiti verificati'
+                      ? (manager.now.isBefore(
+                              manager.matchday.observationEndsAt,
+                            )
+                            ? '3. Attendi gli esiti verificati'
+                            : '3. Consulta esiti e punti')
                       : '2. Prevedi il cambiamento',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   manager.isLocked
-                      ? 'Le scelte sono congelate. La finestra di osservazione termina il ${_dateTime(manager.matchday.observationEndsAt)}: gli esiti disponibili e le fonti sono mostrati sotto.'
+                      ? (manager.now.isBefore(
+                              manager.matchday.observationEndsAt,
+                            )
+                            ? 'Le scelte sono congelate. La finestra di osservazione termina il ${_dateTime(manager.matchday.observationEndsAt)}: gli esiti disponibili e le fonti sono mostrati sotto.'
+                            : 'L’osservazione è terminata. Consulta sotto gli esiti pubblicati e il dettaglio dei punti; per gli esiti mancanti attendi la pubblicazione della fonte.')
                       : 'Le previsioni sono facoltative e salvate quando le scegli. Per ottenere punti personali serve una formazione valida e confermata al blocco. Le motivazioni non aggiungono punti.',
                 ),
                 if (!manager.isLocked && !manager.confirmed)
@@ -815,6 +823,9 @@ class _MatchdaySummary extends StatelessWidget {
             ),
             Text(
               'Punti congelati ${result.frozenPoints} · bonus riflessione ${result.reflectionBonus} · penalità trasferimenti −${result.transferPenalty}',
+            ),
+            const Text(
+              'I punti delle carte derivano dall’esito osservato e dalle previsioni facoltative. Il capitano moltiplica i punti base per 1,5; le riflessioni confermate aggiungono il bonus previsto.',
             ),
             if (!manager.isLocked)
               const Text(

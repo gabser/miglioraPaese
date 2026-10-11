@@ -675,6 +675,10 @@ class ScoreReveal extends StatelessWidget {
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
             ),
+          if (personal)
+            Text(
+              'Esito ${score.observationPoints} · previsione ${score.predictionPoints} · riflessione ${score.reflectionPoints} punti base.',
+            ),
           if (personal && reflection != null)
             Text('Riflessione confermata: ${reflection!.label}'),
           if (personal && reflection == null) ...[

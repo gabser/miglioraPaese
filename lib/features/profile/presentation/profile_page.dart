@@ -364,7 +364,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const FcSectionHeader(
-                      title: 'La tua reputazione nella demo',
+                      title: 'La tua reputazione nelle previsioni',
                     ),
                     const SizedBox(height: AppTokens.s12),
                     Text('Punti: ${_score!.totalPoints}'),

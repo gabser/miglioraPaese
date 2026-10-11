@@ -47,7 +47,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
             FcSectionHeader(
               title: 'Classifica locale',
               subtitle:
-                  'Comune: ${MunicipalityCatalog.displayNameFromId(_municipality!)} · Gioco demo locale',
+                  'Comune: ${MunicipalityCatalog.displayNameFromId(_municipality!)} · Gioco delle previsioni',
             ),
             const SizedBox(height: AppTokens.s16),
             FcPanel(
@@ -58,7 +58,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                   Text('Punti e reputazione', style: theme.titleLarge),
                   const SizedBox(height: AppTokens.s8),
                   const Text(
-                    'Questi punteggi appartengono alla demo: non sono una valutazione ufficiale dei cittadini.',
+                    'Questi punteggi appartengono al gioco delle previsioni: non sono una valutazione ufficiale dei cittadini.',
                   ),
                   const SizedBox(height: AppTokens.s16),
                   FutureBuilder<List<LeaderboardEntry>>(
