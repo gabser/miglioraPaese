@@ -1,3 +1,5 @@
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
+import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -72,6 +74,18 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
             'La sessione anonima è legata a questo browser. Non è un account e non consente recupero su altri dispositivi.',
           ),
           const SizedBox(height: 16),
+          const FcPanel(
+            tint: AppTokens.blue,
+            child: Text(
+              'Crea una lega o inserisci un invito. La classifica usa i punti fantasy degli esiti congelati, separati da reputazione e voti alle proposte.',
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (manager.remoteLeagues.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 16),
+              child: Text('Non partecipi ancora a una lega privata.'),
+            ),
           if (manager.leagueError != null)
             Card(
               child: Padding(

@@ -54,10 +54,12 @@ class FantasyWelcomePage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Text(
-                            'Fanta Comune',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w900),
+                          Expanded(
+                            child: Text(
+                              'Fanta Comune',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w900),
+                            ),
                           ),
                         ],
                       ),
@@ -194,78 +196,87 @@ class _FantasySidebar extends StatelessWidget {
     );
     return Material(
       color: Colors.white,
-      child: Container(
+      child: SizedBox(
         width: 252,
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          border: Border(right: BorderSide(color: AppTokens.line)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
+        child: SingleChildScrollView(
+          child: Container(
+            width: 252,
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              border: Border(right: BorderSide(color: AppTokens.line)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  width: 46,
-                  height: 52,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppTokens.navy,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Text(
-                    'FC',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
+                Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 52,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppTokens.navy,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Text(
+                        'FC',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Fanta Comune',
+                            style: TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                          Text(municipality, overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                ..._destinations.indexed.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: ListTile(
+                      selected: current == item.$1,
+                      selectedTileColor: AppTokens.blueSoft,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      leading: Icon(
+                        current == item.$1
+                            ? item.$2.selectedIcon
+                            : item.$2.icon,
+                      ),
+                      title: Text(item.$2.label),
+                      onTap: () => onSelect(item.$1),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Fanta Comune',
-                        style: TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                      Text(municipality, overflow: TextOverflow.ellipsis),
-                    ],
+                const SizedBox(height: 24),
+                Card(
+                  color: AppTokens.navy,
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Text(
+                      context.watch<FantasyManager>().isRemote
+                          ? 'Sessione API\nDati sintetici. Esiti e fonti sempre distinguibili.'
+                          : 'Stagione demo\nDati mock locali e verificabilità sempre visibile.',
+                      style: TextStyle(color: Colors.white, height: 1.45),
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-            ..._destinations.indexed.map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: ListTile(
-                  selected: current == item.$1,
-                  selectedTileColor: AppTokens.blueSoft,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  leading: Icon(
-                    current == item.$1 ? item.$2.selectedIcon : item.$2.icon,
-                  ),
-                  title: Text(item.$2.label),
-                  onTap: () => onSelect(item.$1),
-                ),
-              ),
-            ),
-            const Spacer(),
-            const Card(
-              color: AppTokens.navy,
-              child: Padding(
-                padding: EdgeInsets.all(14),
-                child: Text(
-                  'Stagione demo\nDati mock locali e verificabilità sempre visibile.',
-                  style: TextStyle(color: Colors.white, height: 1.45),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -424,9 +435,37 @@ class MatchdayPage extends StatelessWidget {
         children: [
           _PageHeader(
             eyebrow: 'Giornata ${manager.matchday.number}',
-            title: 'Fai le tue previsioni',
+            title: manager.isLocked
+                ? 'Giornata bloccata'
+                : 'Fai le tue previsioni',
             subtitle:
                 'Le risposte degli altri manager restano nascoste fino al blocco.',
+          ),
+          const SizedBox(height: 16),
+          FcPanel(
+            tint: manager.isLocked ? AppTokens.warning : AppTokens.blue,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  manager.isLocked
+                      ? '3. Attendi gli esiti verificati'
+                      : '2. Prevedi il cambiamento',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  manager.isLocked
+                      ? 'Le scelte sono congelate. La finestra di osservazione termina il ${_dateTime(manager.matchday.observationEndsAt)}: gli esiti disponibili e le fonti sono mostrati sotto.'
+                      : 'Le previsioni sono facoltative e salvate quando le scegli. Per ottenere punti personali serve una formazione valida e confermata al blocco. Le motivazioni non aggiungono punti.',
+                ),
+                if (!manager.isLocked && !manager.confirmed)
+                  TextButton(
+                    onPressed: () => context.go('/squad'),
+                    child: const Text('Conferma la formazione in Squadra'),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           MatchdayProgress(
@@ -508,10 +547,16 @@ class MatchdayPage extends StatelessWidget {
           _MatchdaySummary(manager: manager),
           const SizedBox(height: 16),
           Text(
-            'Reveal e fonti · demo',
+            manager.isRemote ? 'Esiti e fonti' : 'Esiti e fonti · demo',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 8),
+          if (manager.outcomes.isEmpty)
+            const FcPanel(
+              child: Text(
+                'Nessun esito disponibile. Le previsioni restano salvate; consulta questa giornata dopo il termine dell’osservazione.',
+              ),
+            ),
           ...manager.outcomes.map(
             (outcome) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -570,6 +615,21 @@ class _MarketPageState extends State<MarketPage> {
             ),
           ),
           const SizedBox(height: 16),
+          FcPanel(
+            tint: manager.isLocked ? AppTokens.warning : AppTokens.blue,
+            child: Text(
+              manager.isLocked
+                  ? 'Mercato chiuso per questa giornata. Puoi consultare le carte: i trasferimenti restano bloccati.'
+                  : 'Scegli una carta della rosa da cedere, poi confronta la sostituta. Prima del trasferimento vedrai crediti e penalità; dopo il cambio riconferma la formazione.',
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (candidates.isEmpty)
+            const FcPanel(
+              child: Text(
+                'Nessuna carta per questo ruolo. Prova il filtro Tutti.',
+              ),
+            ),
           DropdownButtonFormField<String>(
             key: ValueKey(_outgoingId),
             isExpanded: true,
@@ -799,25 +859,36 @@ class _LeaguesPageState extends State<LeaguesPage> {
             eyebrow: 'Competizione rispettosa',
             title: 'Leghe',
             subtitle:
-                'Le formazioni avversarie diventano visibili soltanto dopo il lock.',
+                'Confronta i punti fantasy nella lega privata o del Comune. Questi dati demo sono separati da reputazione e voti delle proposte.',
           ),
           const SizedBox(height: 16),
-          SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(
-                value: false,
-                label: Text('Lega privata'),
-                icon: Icon(Icons.lock_outline),
+          const FcPanel(
+            tint: AppTokens.blue,
+            child: Text(
+              'La classifica confronta i punti fantasy. Il punteggio cooperativo del Comune è un indicatore separato: non è la somma dei voti alle proposte.',
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                label: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 150),
+                  child: const Text('Lega privata'),
+                ),
+                selected: !_municipal,
+                avatar: const Icon(Icons.lock_outline),
+                onSelected: (_) => setState(() => _municipal = false),
               ),
-              ButtonSegment(
-                value: true,
-                label: Text('Comune'),
-                icon: Icon(Icons.location_city_outlined),
+              ChoiceChip(
+                label: const Text('Comune'),
+                selected: _municipal,
+                avatar: const Icon(Icons.location_city_outlined),
+                onSelected: (_) => setState(() => _municipal = true),
               ),
             ],
-            selected: {_municipal},
-            onSelectionChanged: (value) =>
-                setState(() => _municipal = value.first),
           ),
           const SizedBox(height: 16),
           Text(league.name, style: Theme.of(context).textTheme.titleLarge),
