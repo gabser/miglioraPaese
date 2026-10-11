@@ -1,0 +1,16 @@
+{
+  "profile": "fantasy-mock",
+  "fixture": "local demo, clock actual; lock/reveal not validated here",
+  "results": [
+    {
+      "width": 390,
+      "route": "http://127.0.0.1:8899/#/squad",
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "route": "http://127.0.0.1:8899/#/squad",
+      "errors": []
+    }
+  ]
+}

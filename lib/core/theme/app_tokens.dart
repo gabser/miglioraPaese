@@ -26,6 +26,20 @@ class AppTokens {
   static const Color navyDark = Color(0xFF10245F);
   static const Color blue = Color(0xFF2F6DF0);
   static const Color blueSoft = Color(0xFFEAF1FF);
+  static const Color blueForeground = Color(0xFF18347F);
+  static const Color successForeground = Color(0xFF0F6E48);
+  static const Color warningForeground = Color(0xFF7A5600);
+  static const Color dangerForeground = Color(0xFF8A281C);
+
+  /// Foregrounds for small text on light semantic surfaces.
+  static Color foregroundFor(Color tint) {
+    if (tint == blue) return blueForeground;
+    if (tint == success) return successForeground;
+    if (tint == warning) return warningForeground;
+    if (tint == danger) return dangerForeground;
+    return ink;
+  }
+
   static const Color success = Color(0xFF1F9D6B);
   static const Color successSoft = Color(0xFFE5F7EF);
   static const Color warning = Color(0xFFD99C14);

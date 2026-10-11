@@ -1,3 +1,4 @@
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/features/fantasy/presentation/pages/remote_leagues_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -157,7 +158,11 @@ class FantasyShellPage extends StatelessWidget {
         ),
       );
     }
+    final municipality = MunicipalityCatalog.displayNameFromId(
+      context.watch<AppPrefs>().municipalityId ?? 'demo',
+    );
     return Scaffold(
+      appBar: AppBar(title: Text('Manager civico · $municipality')),
       body: SafeArea(child: navigationShell),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
@@ -307,7 +312,7 @@ class SquadPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Card(
-            color: issue == null
+            color: issue == null && manager.confirmed
                 ? AppTokens.successSoft
                 : AppTokens.warningSoft,
             child: Padding(
@@ -335,6 +340,61 @@ class SquadPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          FcPanel(
+            tint: AppTokens.blue,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  manager.isLocked
+                      ? 'Formazione bloccata'
+                      : '1. Prepara e conferma',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  manager.isLocked
+                      ? 'Consulta Giornata per gli esiti disponibili e la spiegazione dei punti. I risultati arrivano dopo la finestra di osservazione.'
+                      : 'Scegli cinque titolari e un capitano. Conferma per partecipare: potrai modificare la formazione fino al blocco del ${_dateTime(manager.matchday.locksAt)}.',
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: issue == null && !manager.isLocked && !manager.busy
+                      ? () async {
+                          final confirmed = await manager.confirmLineup();
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                confirmed
+                                    ? 'Formazione confermata per la giornata.'
+                                    : manager.persistenceError ??
+                                          'Giornata bloccata: conferma non consentita.',
+                              ),
+                            ),
+                          );
+                        }
+                      : null,
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: Text(
+                    manager.confirmed
+                        ? 'Formazione confermata'
+                        : 'Conferma formazione',
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => context.go('/matchday'),
+                  icon: const Icon(Icons.event_outlined),
+                  label: Text(
+                    manager.isLocked
+                        ? 'Consulta la giornata'
+                        : '2. Vai alle previsioni',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           SquadBoard(
             locked: manager.isLocked || manager.busy,
             starters: manager.starterCards,
@@ -345,30 +405,6 @@ class SquadPage extends StatelessWidget {
                 manager.swapCards(starterId: starterId, reserveId: reserveId),
           ),
           const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: issue == null && !manager.isLocked && !manager.busy
-                ? () async {
-                    final confirmed = await manager.confirmLineup();
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          confirmed
-                              ? 'Formazione confermata per la giornata.'
-                              : manager.persistenceError ??
-                                    'Giornata bloccata: conferma non consentita.',
-                        ),
-                      ),
-                    );
-                  }
-                : null,
-            icon: const Icon(Icons.check_circle_outline),
-            label: Text(
-              manager.confirmed
-                  ? 'Formazione confermata'
-                  : 'Conferma formazione',
-            ),
-          ),
         ],
       ),
     );
@@ -811,41 +847,53 @@ class _PageHeader extends StatelessWidget {
   final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.end,
-    children: [
-      Expanded(
-        child: Column(
+  Widget build(BuildContext context) {
+    final heading = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          eyebrow.toUpperCase(),
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: AppTokens.blueForeground,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Semantics(
+          header: true,
+          child: Text(title, style: Theme.of(context).textTheme.headlineMedium),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 600 ||
+            MediaQuery.textScalerOf(context).scale(14) > 20) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              heading,
+              if (trailing != null) ...[const SizedBox(height: 12), trailing!],
+            ],
+          );
+        }
+        return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              eyebrow.toUpperCase(),
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: AppTokens.blue,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Semantics(
-              header: true,
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
+            Expanded(child: heading),
+            if (trailing != null) ...[const SizedBox(width: 24), trailing!],
           ],
-        ),
-      ),
-      if (trailing != null) ...[const SizedBox(width: 12), trailing!],
-    ],
-  );
+        );
+      },
+    );
+  }
 }
 
 class _RemoteMotivation extends StatefulWidget {
@@ -890,3 +938,6 @@ class _RemoteMotivationState extends State<_RemoteMotivation> {
     ],
   );
 }
+
+String _dateTime(DateTime value) =>
+    '${value.day}/${value.month} alle ${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
