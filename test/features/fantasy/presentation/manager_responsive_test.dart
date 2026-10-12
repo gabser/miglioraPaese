@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fanta_comune/core/config/app_config.dart';
@@ -10,6 +11,34 @@ import '../fantasy_test_support.dart';
 import '../../../helpers/test_app.dart';
 
 void main() {
+  testWidgets('unreadable archive does not prevent using Squadra', (
+    tester,
+  ) async {
+    final h = await createHarness();
+    await (await SharedPreferences.getInstance()).setString(
+      'fantasy_demo_archive_v1',
+      '{',
+    );
+    await tester.pumpWidget(
+      buildTestApp(
+        h.prefs,
+        config: AppConfig.fromValues(fantasyModeEnabled: true),
+        fantasyManager: h.manager,
+      ),
+    );
+    await tester.pumpAndSettle();
+    GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/squad');
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    final restart = find.widgetWithText(TextButton, 'Nuova partita demo');
+    await tester.ensureVisible(restart);
+    await tester.tap(restart);
+    await tester.pumpAndSettle();
+    expect(find.text('Riprendi partita precedente'), findsOneWidget);
+    expect(h.prefs.fantasyDemoArchive.first, '{');
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('restart demo unblocks formation and exposes recovery', (
     tester,
   ) async {

@@ -296,16 +296,16 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
 
   bool get canRestartDemo => _repository is LocalFantasyRepository;
   bool get hasPreviousDemo =>
-      _repository is LocalFantasyRepository &&
-      (_repository as LocalFantasyRepository).hasPreviousDemo;
+      _repository is LocalFantasyRepository && _repository.hasPreviousDemo;
 
   Future<bool> restartDemo({bool restorePrevious = false}) async {
     if (!canRestartDemo ||
         busy ||
         _disposed ||
         _clearing ||
-        (restorePrevious && !hasPreviousDemo))
+        (restorePrevious && !hasPreviousDemo)) {
       return false;
+    }
     _submitting = true;
     _notify();
     var accepted = false;

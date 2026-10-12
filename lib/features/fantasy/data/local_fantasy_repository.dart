@@ -227,6 +227,7 @@ class LocalFantasyRepository implements FantasyRepository {
     _check(expectedRevision);
     _busy = true;
     try {
+      final archiveCorrupted = _prefs.fantasyDemoArchiveCorrupted;
       final previous = restorePrevious ? _prefs.fantasyDemoArchive.last : null;
       final day = _defaultDay();
       final seed = FantasyDemoSeed(_now(), day);
@@ -247,9 +248,11 @@ class LocalFantasyRepository implements FantasyRepository {
             );
       // Archive first: a failed write must never replace the accepted game.
       await _prefs.archiveFantasyDemo(jsonEncode(_game.savedState.toJson()));
-      final data = await _accept(next);
-      _recovery = null;
-      return data;
+      await _accept(next);
+      _recovery = archiveCorrupted
+          ? 'Archivio demo precedente illeggibile: dati originali conservati. La partita appena lasciata è recuperabile.'
+          : null;
+      return cached;
     } finally {
       _busy = false;
     }

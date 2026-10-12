@@ -192,15 +192,31 @@ class AppPrefs extends ChangeNotifier {
   }
 
   /// Previous demo games remain recoverable, independently of other local data.
-  List<String> get fantasyDemoArchive {
+  List<String>? _readFantasyDemoArchive() {
     final raw = _prefs.getString(_fantasyDemoArchiveKey);
-    return raw == null ? const [] : (jsonDecode(raw) as List).cast<String>();
+    if (raw == null) return const [];
+    try {
+      return (jsonDecode(raw) as List).cast<String>().toList();
+    } on FormatException {
+      return null;
+    } on TypeError {
+      return null;
+    }
   }
 
+  bool get fantasyDemoArchiveCorrupted => _readFantasyDemoArchive() == null;
+  List<String> get fantasyDemoArchive => _readFantasyDemoArchive() ?? const [];
+
   Future<void> archiveFantasyDemo(String state) async {
-    final archive = [...fantasyDemoArchive, state];
+    // Retain the original unreadable bytes as an opaque archive entry.
+    final archive =
+        _readFantasyDemoArchive() ??
+        [_prefs.getString(_fantasyDemoArchiveKey)!];
     await _checkedWrite(
-      () => _prefs.setString(_fantasyDemoArchiveKey, jsonEncode(archive)),
+      () => _prefs.setString(
+        _fantasyDemoArchiveKey,
+        jsonEncode([...archive, state]),
+      ),
     );
   }
 
