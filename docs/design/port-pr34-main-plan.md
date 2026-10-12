@@ -182,3 +182,8 @@ L’utente autorizza esplicitamente «Sì, integra e pubblica la demo». Questa 
 PR35 integrata squash619e833c1b3f1168744a4475cd0aa70c25848f34, albero identico allo SHA approvato56aa0c6. Backend, Flutter e deploy Pages post-merge verdi. Demo mock: https://gabser.github.io/miglioraPaese/. Il JavaScript pubblico corrisponde all’artefatto del deploy38294881640 (SHA-256113e09e00c72d6fc465a1d676343ab2440836144a76acf1d0d1d80250030752f).
 
 Una verifica online individua un testo residuo del Mercato che prometteva eventuali carte da proposte approvate. Correzione solo testuale: proposte civiche consultabili, nessuna carta Manager per invio/voti; regole immutate. Verificare la nuova pubblicazione dopo l’integrazione della correzione. Test formativo e prova hardware restano da documentare con risultati reali.
+
+
+### Correzioni emerse dal collaudo dell’utente —12 ottobre2026
+
+Il test della demo pubblicata ha prodotto riscontri reali: titoli sproporzionati, poco senso di gioco, comandi poco riconoscibili, date della giornata poco evidenti e solo un toast dopo la conferma. PR37 comprende la correzione del testo nel Mercato e l’aggiornamento della Squadra: titoli compatti, formazione/card/comandi al centro, calendario locale e stato persistente Squadra salvata con riconferma dopo modifiche. Test e render sono registrati in port-pr34-collaudo.md ed evidence/collaudo-*. La CI e la ripubblicazione conclusiva saranno registrate nel corpo PR37. Il collaudo della versione corretta e i gate umani/hardware restano da completare: non equivalgono alla review dell’agente.

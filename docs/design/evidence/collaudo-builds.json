@@ -1,0 +1,67 @@
+[
+  {
+    "profile": "legacy-mock",
+    "command": [
+      "/Users/gabrieleserra/fvm/versions/3.44.2/bin/flutter",
+      "build",
+      "web",
+      "--release",
+      "--output",
+      "build/next-legacy-mock",
+      "--dart-define=FANTASY_MODE_ENABLED=false"
+    ],
+    "exit": 0,
+    "applicationRevision": "b4bc3f18f9877fa326add4822e2de0535f8af1c4"
+  },
+  {
+    "profile": "fantasy-mock",
+    "command": [
+      "/Users/gabrieleserra/fvm/versions/3.44.2/bin/flutter",
+      "build",
+      "web",
+      "--release",
+      "--output",
+      "build/squad-feedback",
+      "--dart-define=FANTASY_MODE_ENABLED=true"
+    ],
+    "exit": 0,
+    "applicationRevision": "b4bc3f18f9877fa326add4822e2de0535f8af1c4"
+  },
+  {
+    "profile": "fantasy-api",
+    "command": [
+      "/Users/gabrieleserra/fvm/versions/3.44.2/bin/flutter",
+      "build",
+      "web",
+      "--release",
+      "--output",
+      "build/next-fantasy-api",
+      "--dart-define=FANTASY_MODE_ENABLED=true",
+      "--dart-define=GAME_DATA_SOURCE=api",
+      "--dart-define=NEXT_PROBLEMS_DATA_SOURCE=api",
+      "--dart-define=FANTASY_DATA_SOURCE=api",
+      "--dart-define=API_BASE_URL=http://127.0.0.1:8787",
+      "--dart-define=PILOT_MUNICIPALITY_ID=tuglie"
+    ],
+    "exit": 0,
+    "applicationRevision": "b4bc3f18f9877fa326add4822e2de0535f8af1c4"
+  },
+  {
+    "profile": "legacy-api",
+    "command": [
+      "/Users/gabrieleserra/fvm/versions/3.44.2/bin/flutter",
+      "build",
+      "web",
+      "--release",
+      "--dart-define=FANTASY_MODE_ENABLED=false",
+      "--dart-define=GAME_DATA_SOURCE=api",
+      "--dart-define=NEXT_PROBLEMS_DATA_SOURCE=api",
+      "--dart-define=FANTASY_DATA_SOURCE=api",
+      "--dart-define=API_BASE_URL=http://127.0.0.1:8787",
+      "--dart-define=PILOT_MUNICIPALITY_ID=tuglie"
+    ],
+    "exit": 0,
+    "applicationRevision": "b4bc3f18f9877fa326add4822e2de0535f8af1c4",
+    "log": "port-next-api-build.log"
+  }
+]
