@@ -85,3 +85,12 @@ Gate prodotto: prove umane rinviate, telefono fisico non verificato. PR35 draft,
 ### Disponibilità dispositivo e rinvio del collaudo
 
 Verifica `flutter devices`: Chrome/macOS e un iPhone wireless rilevati. Alla richiesta di una breve prova web su telefono l’utente ha scelto di rimandarla. La preview mock locale preparata per il collaudo è stata fermata; Safari non è stato aperto. Gate umano e hardware entrambi rinviati, nessuna prova su telefono o accettazione completa dichiarata. PR35 rimane draft con CI tecnica verde sul commit2d03fe4 prima di questo aggiornamento documentale. Riprendere dai collaudi, poi rivalidare main/head/CI prima di merge, demo e chiusura34.
+
+
+### Integrazione e demo per il collaudo —12 ottobre2026
+
+Autorizzazione esplicita dell’utente a integrare e pubblicare prima dei collaudi. PR35 merge squash619e833, confronto albero con head56aa0c6 senza differenze. Backend38294881627, Flutter38294881572 e Pages38294881640 SUCCESS. Pubblicato solo profilo mock Manager civico; nessun deploy API.
+
+Confronto byte per byte tra main.dart.js pubblico e artefatto GitHub Pages riuscito, HTTP200; hash registrato nel piano. Browser nuovo a390px: benvenuto, formazione confermata e conservata dopo reload; Giornata renderizzata. Il primo script di smoke si interrompeva su un confronto case-sensitive Giornata/GIORNATA: screenshot e verifica browser successiva confermano la route, non una regressione applicativa. Sessione desktop esistente: formazione già bloccata conservata senza reset, passaggio a Giornata e navigazione verso Mercato/Leghe verificati. Queste sono ispezioni dell’agente, non collaudi umani o su telefono.
+
+Rilevato nel Mercato un testo precedente che suggeriva ingresso delle proposte approvate nel mercato fantasy. Corretto il messaggio senza cambiare promozione, punti, carte o API. CI e demo conclusiva della correzione saranno registrate nel relativo corpo PR; la chiusura34 segue la verifica del port pubblicato. La prima domanda del collaudo all’utente riguarda azione iniziale e dispositivo, senza suggerire pulsanti.

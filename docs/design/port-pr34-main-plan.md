@@ -173,3 +173,12 @@ Priorità aggiunte: preservare origine e filtri tornando da bozza/ricevuta; dist
 ### Rinvio esplicito anche del collaudo sul telefono
 
 L’utente ha scelto «Rimandiamo anche la prova sul telefono». È stato rilevato un iPhone wireless, ma nessuna sessione Safari è stata avviata e nessun risultato hardware viene dichiarato. Il gate dispositivo è rinviato insieme al test formativo. Il port resta pronto tecnicamente nella PR35 draft; merge, verifica demo del port e chiusura34 attendono i gate previsti. Non interpretare il rinvio come autorizzazione a eliminarli.
+
+
+### Autorizzazione e pubblicazione per il collaudo —12 ottobre2026
+
+L’utente autorizza esplicitamente «Sì, integra e pubblica la demo». Questa decisione cambia l’ordine di merge/pubblicazione/collaudo del prompt originale. Non dichiara svolte le prove umane o sul telefono: la demo pubblicata serve al collaudo successivo.
+
+PR35 integrata squash619e833c1b3f1168744a4475cd0aa70c25848f34, albero identico allo SHA approvato56aa0c6. Backend, Flutter e deploy Pages post-merge verdi. Demo mock: https://gabser.github.io/miglioraPaese/. Il JavaScript pubblico corrisponde all’artefatto del deploy38294881640 (SHA-256113e09e00c72d6fc465a1d676343ab2440836144a76acf1d0d1d80250030752f).
+
+Una verifica online individua un testo residuo del Mercato che prometteva eventuali carte da proposte approvate. Correzione solo testuale: proposte civiche consultabili, nessuna carta Manager per invio/voti; regole immutate. Verificare la nuova pubblicazione dopo l’integrazione della correzione. Test formativo e prova hardware restano da documentare con risultati reali.

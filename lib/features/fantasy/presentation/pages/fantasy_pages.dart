@@ -742,7 +742,7 @@ class _MarketPageState extends State<MarketPage> {
                           style: TextStyle(fontWeight: FontWeight.w900),
                         ),
                         Text(
-                          'Una proposta moderata e approvata può entrare nel mercato successivo.',
+                          'Consulta le proposte civiche del Comune. Invio e voti non assegnano carte Manager.',
                         ),
                       ],
                     ),
