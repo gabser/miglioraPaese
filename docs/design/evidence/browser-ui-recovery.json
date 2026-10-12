@@ -1,0 +1,65 @@
+{
+  "applicationRevision": "cbd6928657fe538e479e4838a22c7120cf671106",
+  "browser": "154.0.8037.98",
+  "results": [
+    {
+      "width": 390,
+      "failure": "lost",
+      "postCount": 1,
+      "lookupCount": 1,
+      "oneProposal": true,
+      "sameReceipt": true,
+      "sameScope": true,
+      "httpOnly": true,
+      "receiptId": "suggested-209",
+      "path": "Flutter form → committed response fault → reload → UI lookup → receipt → live detail"
+    },
+    {
+      "width": 390,
+      "failure": "malformed",
+      "postCount": 1,
+      "lookupCount": 1,
+      "oneProposal": true,
+      "sameReceipt": true,
+      "sameScope": true,
+      "httpOnly": true,
+      "receiptId": "suggested-210",
+      "path": "Flutter form → committed response fault → reload → UI lookup → receipt → live detail"
+    },
+    {
+      "width": 1440,
+      "failure": "lost",
+      "postCount": 1,
+      "lookupCount": 1,
+      "oneProposal": true,
+      "sameReceipt": true,
+      "sameScope": true,
+      "httpOnly": true,
+      "receiptId": "suggested-211",
+      "path": "Flutter form → committed response fault → reload → UI lookup → receipt → live detail"
+    },
+    {
+      "width": 1440,
+      "failure": "malformed",
+      "postCount": 1,
+      "lookupCount": 1,
+      "oneProposal": true,
+      "sameReceipt": true,
+      "sameScope": true,
+      "httpOnly": true,
+      "receiptId": "suggested-212",
+      "path": "Flutter form → committed response fault → reload → UI lookup → receipt → live detail"
+    }
+  ],
+  "emptyStates": [
+    {
+      "width": 390,
+      "fixture": "GET list items=[] in browser; SQLite unchanged"
+    },
+    {
+      "width": 1440,
+      "fixture": "GET list items=[] in browser; SQLite unchanged"
+    }
+  ],
+  "limit": "Headless Chrome viewport; no physical device or human usability test."
+}

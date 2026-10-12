@@ -1,0 +1,31 @@
+[
+  {
+    "profile": "legacy-mock",
+    "command": [
+      "/Users/gabrieleserra/fvm/versions/3.44.2/bin/flutter",
+      "build",
+      "web",
+      "--release",
+      "--dart-define=FANTASY_MODE_ENABLED=false"
+    ],
+    "exit": 0,
+    "reason": "Final legacy Home moderation and points wording; Home recaptured390/1440."
+  },
+  {
+    "profile": "legacy-api",
+    "command": [
+      "/Users/gabrieleserra/fvm/versions/3.44.2/bin/flutter",
+      "build",
+      "web",
+      "--release",
+      "--dart-define=FANTASY_MODE_ENABLED=false",
+      "--dart-define=GAME_DATA_SOURCE=api",
+      "--dart-define=NEXT_PROBLEMS_DATA_SOURCE=api",
+      "--dart-define=FANTASY_DATA_SOURCE=api",
+      "--dart-define=API_BASE_URL=http://127.0.0.1:8787",
+      "--dart-define=PILOT_MUNICIPALITY_ID=tuglie"
+    ],
+    "exit": 0,
+    "reason": "Final legacy Home moderation and points wording; Home recaptured390/1440."
+  }
+]

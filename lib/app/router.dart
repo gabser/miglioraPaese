@@ -1,3 +1,6 @@
+import 'package:fanta_comune/features/next_problems/presentation/proposal_receipt_page.dart';
+import 'package:fanta_comune/features/next_problems/presentation/proposal_detail_page.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_route_context.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
@@ -32,13 +35,28 @@ GoRouter buildRouter(AppPrefs appPrefs, AppConfig config) {
           : state.uri.path;
 
       if (municipalityId != null && location == '/onboarding') {
-        return '/home';
+        return _selectionDestination(state, municipalityId: municipalityId);
       }
       if (config.pilotMunicipalityId != null &&
           location == '/change-municipality') {
         return '/profile';
       }
 
+      if (ProposalRouteContext.isProposalPath(location)) {
+        final scope = ProposalRouteContext.resolve(
+          state.uri,
+          preference: municipalityId,
+        );
+        if (!scope.invalid && scope.municipalityId != null) {
+          final canonical = state.uri.replace(
+            queryParameters: {
+              ...state.uri.queryParameters,
+              'municipality': scope.municipalityId!,
+            },
+          );
+          if (canonical != state.uri) return canonical.toString();
+        }
+      }
       return null;
     },
     routes: [
@@ -53,21 +71,70 @@ GoRouter buildRouter(AppPrefs appPrefs, AppConfig config) {
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingPage(),
+        builder: (context, state) => OnboardingPage(
+          afterSelectionRoute: _selectionDestination(
+            state,
+            fallback: config.fantasyModeEnabled ? '/squad' : '/home',
+          ),
+        ),
       ),
       GoRoute(
         path: '/change-municipality',
-        builder: (context, state) =>
-            const OnboardingPage(afterSelectionRoute: '/profile'),
+        builder: (context, state) => OnboardingPage(
+          afterSelectionRoute: _selectionDestination(
+            state,
+            fallback: '/profile',
+          ),
+        ),
       ),
       GoRoute(
         path: '/next-problems',
-        builder: (context, state) => const NextProblemsPage(),
+        builder: (context, state) => NextProblemsPage(
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ).restrictToPilot(config.pilotMunicipalityId),
+        ),
       ),
       GoRoute(
         path: '/suggest-problem',
-        builder: (context, state) => const SuggestProblemPage(),
+        builder: (context, state) => SuggestProblemPage(
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ).restrictToPilot(config.pilotMunicipalityId),
+        ),
       ),
+      GoRoute(
+        path: '/proposal-receipt',
+        builder: (context, state) => ProposalReceiptPage(
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ).restrictToPilot(config.pilotMunicipalityId),
+        ),
+      ),
+      GoRoute(
+        path: '/proposal-receipt/:problemId',
+        builder: (context, state) => ProposalReceiptPage(
+          problemId: state.pathParameters['problemId'],
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ).restrictToPilot(config.pilotMunicipalityId),
+        ),
+      ),
+      GoRoute(
+        path: '/next-problems/:problemId',
+        builder: (context, state) => ProposalDetailPage(
+          problemId: state.pathParameters['problemId']!,
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ).restrictToPilot(config.pilotMunicipalityId),
+        ),
+      ),
+
       GoRoute(path: '/board', builder: (context, state) => const BoardPage()),
       GoRoute(
         path: '/how-it-works',
@@ -130,11 +197,30 @@ GoRouter _buildFantasyRouter(AppPrefs appPrefs, AppConfig config) {
           ? state.matchedLocation
           : state.uri.path;
       if (municipalityId != null && location == '/onboarding') {
-        return '/squad';
+        return _selectionDestination(
+          state,
+          municipalityId: municipalityId,
+          fallback: '/squad',
+        );
       }
       if (config.pilotMunicipalityId != null &&
           location == '/change-municipality') {
         return '/profile';
+      }
+      if (ProposalRouteContext.isProposalPath(location)) {
+        final scope = ProposalRouteContext.resolve(
+          state.uri,
+          preference: municipalityId,
+        );
+        if (!scope.invalid && scope.municipalityId != null) {
+          final canonical = state.uri.replace(
+            queryParameters: {
+              ...state.uri.queryParameters,
+              'municipality': scope.municipalityId!,
+            },
+          );
+          if (canonical != state.uri) return canonical.toString();
+        }
       }
       return null;
     },
@@ -146,21 +232,70 @@ GoRouter _buildFantasyRouter(AppPrefs appPrefs, AppConfig config) {
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingPage(),
+        builder: (context, state) => OnboardingPage(
+          afterSelectionRoute: _selectionDestination(
+            state,
+            fallback: config.fantasyModeEnabled ? '/squad' : '/home',
+          ),
+        ),
       ),
       GoRoute(
         path: '/change-municipality',
-        builder: (context, state) =>
-            const OnboardingPage(afterSelectionRoute: '/profile'),
+        builder: (context, state) => OnboardingPage(
+          afterSelectionRoute: _selectionDestination(
+            state,
+            fallback: '/profile',
+          ),
+        ),
       ),
       GoRoute(
         path: '/next-problems',
-        builder: (context, state) => const NextProblemsPage(),
+        builder: (context, state) => NextProblemsPage(
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ).restrictToPilot(config.pilotMunicipalityId),
+        ),
       ),
       GoRoute(
         path: '/suggest-problem',
-        builder: (context, state) => const SuggestProblemPage(),
+        builder: (context, state) => SuggestProblemPage(
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ).restrictToPilot(config.pilotMunicipalityId),
+        ),
       ),
+      GoRoute(
+        path: '/proposal-receipt',
+        builder: (context, state) => ProposalReceiptPage(
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ).restrictToPilot(config.pilotMunicipalityId),
+        ),
+      ),
+      GoRoute(
+        path: '/proposal-receipt/:problemId',
+        builder: (context, state) => ProposalReceiptPage(
+          problemId: state.pathParameters['problemId'],
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ).restrictToPilot(config.pilotMunicipalityId),
+        ),
+      ),
+      GoRoute(
+        path: '/next-problems/:problemId',
+        builder: (context, state) => ProposalDetailPage(
+          problemId: state.pathParameters['problemId']!,
+          routeContext: ProposalRouteContext.resolve(
+            state.uri,
+            preference: appPrefs.municipalityId,
+          ).restrictToPilot(config.pilotMunicipalityId),
+        ),
+      ),
+
       GoRoute(
         path: '/how-it-works',
         builder: (context, state) => const HowItWorksPage(),
@@ -217,4 +352,26 @@ GoRouter _buildFantasyRouter(AppPrefs appPrefs, AppConfig config) {
       ),
     ],
   );
+}
+
+String _selectionDestination(
+  GoRouterState state, {
+  String fallback = '/home',
+  String? municipalityId,
+}) {
+  final route = state.uri.queryParameters['returnTo'];
+  final destination =
+      const [
+        '/suggest-problem',
+        '/next-problems',
+        '/profile',
+        '/home',
+        '/squad',
+      ].contains(route)
+      ? route!
+      : fallback;
+  return municipalityId != null &&
+          ProposalRouteContext.isProposalPath(destination)
+      ? ProposalRouteContext.location(destination, municipalityId)
+      : destination;
 }

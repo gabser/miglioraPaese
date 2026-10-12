@@ -24,7 +24,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repository = context.read<GameRepository>();
-    final prefs = context.read<AppPrefs>();
+    final prefs = context.watch<AppPrefs>();
     final municipalityId = prefs.municipalityId ?? 'demo';
 
     return FutureBuilder<_HomeSnapshot>(
@@ -37,20 +37,26 @@ class HomePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                GameBanner(
-                  title: 'Fanta Comune',
-                  subtitle:
-                      'Prevedi come si muovono i problemi della citta\', confronta le percezioni e scala la classifica locale.',
-                  stickerLabel: data == null
-                      ? 'Turno in caricamento'
-                      : _turnLabel(data.turn),
-                  shimmer: data?.predictions.isNotEmpty ?? false,
-                  cta: FilledButton.icon(
-                    onPressed: () => context.go('/play'),
-                    icon: const Icon(AppIcons.play),
-                    label: const Text('Gioca il turno'),
-                  ),
+                Text(
+                  'Comune: ${MunicipalityCatalog.displayNameFromId(municipalityId)} · Gioco delle previsioni',
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
+                const SizedBox(height: AppTokens.s12),
+                if (data != null &&
+                    data.problems.isNotEmpty &&
+                    data.activationState == MunicipalityActivationState.active)
+                  GameBanner(
+                    title: 'Fanta Comune',
+                    subtitle:
+                        'Prevedi come si muovono i problemi della citta\', confronta le percezioni e scala la classifica locale.',
+                    stickerLabel: _turnLabel(data.turn),
+                    shimmer: data.predictions.isNotEmpty,
+                    cta: FilledButton.icon(
+                      onPressed: () => context.go('/play'),
+                      icon: const Icon(AppIcons.play),
+                      label: const Text('Gioca il turno'),
+                    ),
+                  ),
                 const SizedBox(height: AppTokens.s20),
                 if (snapshot.connectionState == ConnectionState.waiting &&
                     data == null)
@@ -59,7 +65,7 @@ class HomePage extends StatelessWidget {
                   FcPanel(
                     tint: AppTokens.danger,
                     child: Text(
-                      'Impossibile caricare la dashboard: ${snapshot.error}',
+                      'Non riusciamo a caricare la dashboard. Riprova tra poco.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -83,8 +89,6 @@ class _HomeDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final isWide = width >= AppTokens.wideBreakpoint;
     if (data.activationState != MunicipalityActivationState.active ||
         data.problems.isEmpty) {
       return _MunicipalityActivationDashboard(data: data);
@@ -119,7 +123,7 @@ class _HomeDashboard extends StatelessWidget {
         value: accuracy,
         icon: Icons.adjust,
         color: AppTokens.warning,
-        caption: 'Mock locale',
+        caption: 'Previsioni concluse',
       ),
       FcMetricCard(
         label: 'Classifica',
@@ -130,42 +134,52 @@ class _HomeDashboard extends StatelessWidget {
       ),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = constraints.maxWidth >= 900 ? 4 : 2;
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: metrics.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                crossAxisSpacing: AppTokens.s12,
-                mainAxisSpacing: AppTokens.s12,
-                childAspectRatio: columns == 4 ? 1.42 : 1.12,
-              ),
-              itemBuilder: (context, index) => metrics[index],
-            );
-          },
-        ),
-        const SizedBox(height: AppTokens.s20),
-        if (isWide)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _ProblemsPanel(problems: topProblems)),
-              const SizedBox(width: AppTokens.s16),
-              SizedBox(width: 330, child: _RightRail(data: data)),
+    return LayoutBuilder(
+      builder: (context, available) {
+        final isWide = available.maxWidth >= AppTokens.wideBreakpoint;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final largeText =
+                    MediaQuery.textScalerOf(context).scale(14) > 20;
+                final columns = largeText || constraints.maxWidth < 420
+                    ? 1
+                    : constraints.maxWidth >= 900
+                    ? 4
+                    : 2;
+                final width =
+                    (constraints.maxWidth - AppTokens.s12 * (columns - 1)) /
+                    columns;
+                return Wrap(
+                  spacing: AppTokens.s12,
+                  runSpacing: AppTokens.s12,
+                  children: [
+                    for (final metric in metrics)
+                      SizedBox(width: width, child: metric),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: AppTokens.s20),
+            if (isWide)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _ProblemsPanel(problems: topProblems)),
+                  const SizedBox(width: AppTokens.s16),
+                  SizedBox(width: 330, child: _RightRail(data: data)),
+                ],
+              )
+            else ...[
+              _ProblemsPanel(problems: topProblems),
+              const SizedBox(height: AppTokens.s16),
+              _RightRail(data: data),
             ],
-          )
-        else ...[
-          _ProblemsPanel(problems: topProblems),
-          const SizedBox(height: AppTokens.s16),
-          _RightRail(data: data),
-        ],
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -179,84 +193,91 @@ class _MunicipalityActivationDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final width = MediaQuery.of(context).size.width;
-    final isWide = width >= AppTokens.wideBreakpoint;
 
     final actions = Wrap(
       spacing: AppTokens.s12,
       runSpacing: AppTokens.s8,
       children: [
-        FilledButton.icon(
-          onPressed: () => context.go('/suggest-problem'),
-          icon: const Icon(AppIcons.play),
-          label: const Text(VenialCopy.activationPrimaryCta),
+        FilledButton(
+          onPressed: () => context.push('/suggest-problem'),
+          child: const Text(VenialCopy.activationPrimaryCta),
         ),
-        OutlinedButton.icon(
-          onPressed: () => context.go('/next-problems'),
-          icon: const Icon(AppIcons.board),
-          label: const Text(VenialCopy.activationSecondaryCta),
+        OutlinedButton(
+          onPressed: () => context.push('/next-problems'),
+          child: const Text(VenialCopy.activationSecondaryCta),
         ),
       ],
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        FcPanel(
-          tint: AppTokens.blue,
-          elevated: true,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FcStatusChip(
-                label: data.municipalityName,
-                color: AppTokens.blue,
-                icon: AppIcons.home,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= AppTokens.wideBreakpoint;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FcPanel(
+              tint: AppTokens.blue,
+              elevated: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FcStatusChip(
+                    label: data.municipalityName,
+                    color: AppTokens.blue,
+                    icon: AppIcons.home,
+                  ),
+                  const SizedBox(height: AppTokens.s12),
+                  Text(
+                    data.activationState ==
+                            MunicipalityActivationState.collectingSignals
+                        ? 'Primi segnali raccolti'
+                        : VenialCopy.activationTitle,
+                    style: textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: AppTokens.s8),
+                  Text(
+                    data.activationState ==
+                            MunicipalityActivationState.collectingSignals
+                        ? '${data.civicSummary.proposedThemes} ${data.civicSummary.proposedThemes == 1 ? 'proposta locale' : 'proposte locali'}: puoi consultare la lista o aggiungere un problema.'
+                        : VenialCopy.activationSubtitle,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: AppTokens.s12),
+                  Text(
+                    VenialCopy.activationGoal,
+                    style: textTheme.labelLarge?.copyWith(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: AppTokens.s16),
+                  actions,
+                ],
               ),
-              const SizedBox(height: AppTokens.s12),
-              Text(
-                VenialCopy.activationTitle,
-                style: textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: AppTokens.s8),
-              Text(
-                VenialCopy.activationSubtitle,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: AppTokens.s12),
-              Text(
-                VenialCopy.activationGoal,
-                style: textTheme.labelLarge?.copyWith(
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+            ),
+            const SizedBox(height: AppTokens.s16),
+            if (isWide)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Expanded(child: _ActivationMissionsPanel()),
+                  SizedBox(width: AppTokens.s16),
+                  SizedBox(width: 330, child: _ActivationTrustPanel()),
+                ],
+              )
+            else ...[
+              const _ActivationMissionsPanel(),
               const SizedBox(height: AppTokens.s16),
-              actions,
+              const _ActivationTrustPanel(),
             ],
-          ),
-        ),
-        const SizedBox(height: AppTokens.s16),
-        if (isWide)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Expanded(child: _ActivationMissionsPanel()),
-              SizedBox(width: AppTokens.s16),
-              SizedBox(width: 330, child: _ActivationTrustPanel()),
-            ],
-          )
-        else ...[
-          const _ActivationMissionsPanel(),
-          const SizedBox(height: AppTokens.s16),
-          const _ActivationTrustPanel(),
-        ],
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -342,7 +363,7 @@ class _ActivationTrustPanel extends StatelessWidget {
           ),
           const SizedBox(height: AppTokens.s8),
           Text(
-            'La proposta entra nella lista dei temi. Altri cittadini possono votarla e, quando ci sono abbastanza segnali, diventa una carta del turno.',
+            'L’invio viene ricevuto e valutato. I voti sostengono la proposta; l’eventuale ingresso nel gioco delle previsioni segue le regole e la moderazione previste.',
             style: textTheme.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
               height: 1.42,
@@ -407,9 +428,6 @@ class _ProblemRow extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final status = _statusMeta(problem.status);
     final trend = problem.trendPercent;
-    final improve = problem.status == ProblemStatus.improving ? 64.0 : 34.0;
-    final stable = problem.status == ProblemStatus.stable ? 44.0 : 24.0;
-    final worsen = problem.status == ProblemStatus.worsening ? 46.0 : 12.0;
 
     return Container(
       padding: const EdgeInsets.all(AppTokens.s14),
@@ -438,17 +456,12 @@ class _ProblemRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(problem.title, style: textTheme.titleMedium),
-                    ),
-                    FcStatusChip(
-                      label: status.label,
-                      color: status.color,
-                      icon: status.icon,
-                    ),
-                  ],
+                Text(problem.title, style: textTheme.titleMedium),
+                const SizedBox(height: AppTokens.s8),
+                FcStatusChip(
+                  label: status.label,
+                  color: status.color,
+                  icon: status.icon,
                 ),
                 const SizedBox(height: AppTokens.s4),
                 Text(
@@ -458,16 +471,10 @@ class _ProblemRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppTokens.s12),
-                FcPredictionBar(
-                  improve: improve,
-                  stable: stable,
-                  worsen: worsen,
-                ),
-                const SizedBox(height: AppTokens.s8),
                 Text(
-                  '${trend >= 0 ? '+' : ''}$trend% ultimi segnali',
+                  '${trend >= 0 ? '+' : ''}$trend% andamento del tema',
                   style: textTheme.labelSmall?.copyWith(
-                    color: status.color,
+                    color: AppTokens.foregroundFor(status.color),
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -527,19 +534,14 @@ class _RightRail extends StatelessWidget {
               Text(
                 '$accuracy accuratezza · ${data.reputation.predictionsCount} previsioni',
                 style: textTheme.bodySmall?.copyWith(
-                  color: AppTokens.success,
+                  color: AppTokens.successSoft,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: AppTokens.s16),
-              LinearProgressIndicator(
-                value: (data.reputation.totalPoints % 500) / 500,
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(999),
-                backgroundColor: Colors.white.withOpacity(0.15),
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppTokens.success,
-                ),
+              Text(
+                'Punti maturati nel gioco delle previsioni',
+                style: textTheme.bodySmall?.copyWith(color: Colors.white),
               ),
             ],
           ),

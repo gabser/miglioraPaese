@@ -1,4 +1,5 @@
 import 'package:fanta_comune/core/models/problem_key.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_location.dart';
 import 'package:fanta_comune/features/next_problems/domain/promotion_rule.dart';
 import 'package:fanta_comune/features/next_problems/domain/suggested_problem_status.dart';
 import 'package:fanta_comune/features/next_problems/domain/vote_choice.dart';
@@ -16,6 +17,7 @@ class SuggestedProblem {
     required this.myVote,
     required this.submittedByDisplayName,
     required this.promotionRule,
+    this.location,
   });
 
   final String id;
@@ -29,6 +31,7 @@ class SuggestedProblem {
   final VoteChoice myVote;
   final String submittedByDisplayName;
   final PromotionRule promotionRule;
+  final ProposalLocation? location;
 
   int get score => votesUp - votesDown;
   int get approvalsNeeded =>
@@ -50,6 +53,7 @@ class SuggestedProblem {
     VoteChoice? myVote,
     String? submittedByDisplayName,
     PromotionRule? promotionRule,
+    ProposalLocation? location,
   }) {
     return SuggestedProblem(
       id: id ?? this.id,
@@ -64,6 +68,7 @@ class SuggestedProblem {
       submittedByDisplayName:
           submittedByDisplayName ?? this.submittedByDisplayName,
       promotionRule: promotionRule ?? this.promotionRule,
+      location: location ?? this.location,
     );
   }
 }

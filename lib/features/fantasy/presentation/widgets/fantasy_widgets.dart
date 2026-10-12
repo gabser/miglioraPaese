@@ -156,8 +156,8 @@ class FormIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Semantics(
     label: 'Forma civica: ${form.map((item) => item.label).join(', ')}',
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
+    child: Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text('Forma', style: Theme.of(context).textTheme.labelMedium),
         const SizedBox(width: 6),
@@ -347,7 +347,7 @@ class FantasyCard extends StatelessWidget {
                       Text('Previsione: ${prediction!.label}'),
                     ],
                   ],
-                  if (isCaptain || isReserve) ...[
+                  if ((isCaptain && !compact) || isReserve) ...[
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
@@ -495,7 +495,11 @@ class _ActionLabel extends StatelessWidget {
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
-      children: [Icon(icon), const SizedBox(width: 8), Text(label)],
+      children: [
+        Icon(icon),
+        const SizedBox(width: 8),
+        Flexible(child: Text(label)),
+      ],
     ),
   );
 }
@@ -671,6 +675,10 @@ class ScoreReveal extends StatelessWidget {
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
             ),
+          if (personal)
+            Text(
+              'Esito ${score.observationPoints} · previsione ${score.predictionPoints} · riflessione ${score.reflectionPoints} punti base.',
+            ),
           if (personal && reflection != null)
             Text('Riflessione confermata: ${reflection!.label}'),
           if (personal && reflection == null) ...[
@@ -761,30 +769,23 @@ class CommunityScore extends StatelessWidget {
     color: AppTokens.successSoft,
     child: Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.groups_outlined, size: 34, color: AppTokens.success),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Punteggio cooperativo del Comune',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Misura osservazioni verificate e partecipazione, separato dalla classifica.',
-                ),
-              ],
-            ),
+          Text(
+            'Punteggio cooperativo del Comune',
+            style: Theme.of(context).textTheme.titleMedium,
           ),
+          const SizedBox(height: 8),
           Text(
             '$value/100',
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Indicatore demo di osservazioni e partecipazione, separato dalla classifica e dai voti alle proposte.',
           ),
         ],
       ),

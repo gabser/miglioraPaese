@@ -8,8 +8,10 @@ const _filterStatusNotProvided = Object();
 
 class NextProblemsState extends Equatable {
   const NextProblemsState({
+    this.municipalityId,
     this.isLoading = false,
     this.error,
+    this.voteError,
     this.items = const <SuggestedProblem>[],
     this.query = '',
     this.filterStatus,
@@ -18,8 +20,10 @@ class NextProblemsState extends Equatable {
     this.votingProblemIds = const <String>{},
   });
 
+  final String? municipalityId;
   final bool isLoading;
   final String? error;
+  final String? voteError;
   final List<SuggestedProblem> items;
   final String query;
   final SuggestedProblemStatus? filterStatus;
@@ -30,6 +34,7 @@ class NextProblemsState extends Equatable {
   NextProblemsState copyWith({
     bool? isLoading,
     String? error,
+    String? voteError,
     List<SuggestedProblem>? items,
     String? query,
     Object? filterStatus = _filterStatusNotProvided,
@@ -38,8 +43,10 @@ class NextProblemsState extends Equatable {
     Set<String>? votingProblemIds,
   }) {
     return NextProblemsState(
+      municipalityId: municipalityId,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      voteError: voteError,
       items: items ?? this.items,
       query: query ?? this.query,
       filterStatus: identical(filterStatus, _filterStatusNotProvided)
@@ -53,8 +60,10 @@ class NextProblemsState extends Equatable {
 
   @override
   List<Object?> get props => [
+    municipalityId,
     isLoading,
     error,
+    voteError,
     items,
     query,
     filterStatus,

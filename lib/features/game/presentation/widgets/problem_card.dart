@@ -149,27 +149,33 @@ class ProblemCard extends StatelessWidget {
               improve:
                   insight?.choiceDistribution[PredictionChoice.improve]
                       ?.toDouble() ??
-                  (problem.status == ProblemStatus.improving ? 64 : 28),
+                  0,
               stable:
                   insight?.choiceDistribution[PredictionChoice.stable]
                       ?.toDouble() ??
-                  (problem.status == ProblemStatus.stable ? 52 : 24),
+                  0,
               worsen:
                   insight?.choiceDistribution[PredictionChoice.worsen]
                       ?.toDouble() ??
-                  (problem.status == ProblemStatus.worsening ? 56 : 18),
+                  0,
             ),
+            if (insight == null || insight!.totalPredictions == 0)
+              const Text(
+                'Nessuna previsione aggregata disponibile per questo tema.',
+              ),
             const SizedBox(height: AppTokens.s8),
-            Row(
+            Wrap(
+              spacing: AppTokens.s12,
+              runSpacing: AppTokens.s8,
               children: [
                 Text(
                   'Trend $trendLabel',
                   style: textTheme.labelMedium?.copyWith(
-                    color: status.color,
+                    color: AppTokens.foregroundFor(status.color),
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const Spacer(),
+
                 if (insight != null)
                   Text(
                     '${insight!.totalPredictions} previsioni',
@@ -184,15 +190,14 @@ class ProblemCard extends StatelessWidget {
               _ResultBanner(result: result!),
             ],
             const SizedBox(height: AppTokens.s16),
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    isPredictionLocked
-                        ? VenialCopy.predictionLockedTitle
-                        : VenialCopy.predictionPrompt,
-                    style: textTheme.titleSmall,
-                  ),
+                Text(
+                  isPredictionLocked
+                      ? VenialCopy.predictionLockedTitle
+                      : VenialCopy.predictionPrompt,
+                  style: textTheme.titleSmall,
                 ),
                 if (isPredictionLocked)
                   FcStatusChip(
@@ -261,27 +266,45 @@ class ProblemCard extends StatelessWidget {
             ],
             if (reflectionQuestion != null) ...[
               const SizedBox(height: AppTokens.s16),
-              _ReflectionBlock(
-                question: reflectionQuestion!,
-                selectedIndex: selectedReflectionAnswer,
-                onSelected: onSelectReflectionAnswer,
+              FcDisclosure(
+                storageId: 'reflection-${problem.id}',
+                title: 'Una domanda in più (facoltativa)',
+                children: [
+                  _ReflectionBlock(
+                    question: reflectionQuestion!,
+                    selectedIndex: selectedReflectionAnswer,
+                    onSelected: onSelectReflectionAnswer,
+                  ),
+                ],
               ),
             ],
             if (insight != null) ...[
               const SizedBox(height: AppTokens.s16),
-              _InsightBlock(
-                insight: insight!,
-                history: history,
-                isHistoryLoading: isHistoryLoading,
-                onLoadHistory: onLoadHistory,
+              FcDisclosure(
+                storageId: 'insight-${problem.id}',
+                title: 'Percezioni aggregate',
+                children: [
+                  _InsightBlock(
+                    insight: insight!,
+                    history: history,
+                    isHistoryLoading: isHistoryLoading,
+                    onLoadHistory: onLoadHistory,
+                  ),
+                ],
               ),
             ],
             if (result != null) ...[
               const SizedBox(height: AppTokens.s16),
-              _CriticalInsightsBlock(
-                insights: criticalInsights,
-                isLoading: isCriticalInsightsLoading,
-                onLoad: onLoadCriticalInsights,
+              FcDisclosure(
+                storageId: 'critical-${problem.id}',
+                title: 'Approfondisci gli esiti',
+                children: [
+                  _CriticalInsightsBlock(
+                    insights: criticalInsights,
+                    isLoading: isCriticalInsightsLoading,
+                    onLoad: onLoadCriticalInsights,
+                  ),
+                ],
               ),
             ],
           ],
@@ -315,29 +338,21 @@ class _ReflectionBlock extends StatelessWidget {
         children: [
           Text(question.prompt, style: textTheme.titleSmall),
           const SizedBox(height: AppTokens.s8),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final useFullWidth = constraints.maxWidth < 360;
-              return Wrap(
-                spacing: AppTokens.s8,
-                runSpacing: AppTokens.s8,
-                children: question.options.indexed
-                    .map((entry) {
-                      final index = entry.$1;
-                      final option = entry.$2;
-                      final selected = selectedIndex == index;
-                      return SizedBox(
-                        width: useFullWidth ? constraints.maxWidth : null,
-                        child: ChoiceChip(
-                          label: Text(option),
-                          selected: selected,
-                          onSelected: (_) => onSelected(index),
-                        ),
-                      );
-                    })
-                    .toList(growable: false),
-              );
-            },
+          Wrap(
+            spacing: AppTokens.s8,
+            runSpacing: AppTokens.s8,
+            children: question.options.indexed
+                .map((entry) {
+                  final index = entry.$1;
+                  final option = entry.$2;
+                  final selected = selectedIndex == index;
+                  return ChoiceChip(
+                    label: Text(option),
+                    selected: selected,
+                    onSelected: (_) => onSelected(index),
+                  );
+                })
+                .toList(growable: false),
           ),
           if (selectedIndex != null) ...[
             const SizedBox(height: AppTokens.s8),
@@ -384,8 +399,9 @@ class _InsightBlock extends StatelessWidget {
         children: [
           FcSectionHeader(
             title: VenialCopy.insightCardTitle,
-            subtitle:
-                '${insight.percentageForChoice(topChoice).round()}% vede "${_choiceLabel(topChoice).toLowerCase()}".',
+            subtitle: insight.totalPredictions == 0
+                ? 'Nessuna previsione aggregata disponibile'
+                : '${insight.percentageForChoice(topChoice).round()}% vede "${_choiceLabel(topChoice).toLowerCase()}".',
           ),
           const SizedBox(height: AppTokens.s12),
           FcPredictionBar(

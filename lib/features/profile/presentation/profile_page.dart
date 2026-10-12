@@ -1,7 +1,7 @@
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
@@ -27,19 +27,30 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   List<ReputationScore>? _history;
+  ReputationScore? _score;
+  String? _loadedMunicipality;
+  int _historyVersion = 0;
+  int _lensVersion = 0;
   bool _isLoading = true;
   String? _error;
   PerspectiveRole? _suggestedRole;
   bool _isLensLoading = true;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final municipality = context.watch<AppPrefs>().municipalityId ?? 'demo';
+    if (_loadedMunicipality == municipality) return;
+    _loadedMunicipality = municipality;
+    _history = null;
+    _score = null;
+    _suggestedRole = null;
     _loadHistory();
     _loadLensSuggestion();
   }
 
   Future<void> _loadHistory() async {
+    final version = ++_historyVersion;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -48,24 +59,32 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final repository = context.read<GameRepository>();
       final municipalityId = context.read<AppPrefs>().municipalityId ?? 'demo';
-      final history = await repository.getReputationHistory(
-        municipalityId: municipalityId,
-      );
-      if (!mounted) return;
+      final results = await Future.wait<Object>([
+        repository.getReputationHistory(municipalityId: municipalityId),
+        () async {
+          final turn = await repository.getCurrentTurn(municipalityId);
+          return repository.getReputationScore(turn.id);
+        }(),
+      ]);
+      if (!mounted || version != _historyVersion) return;
+      final history = results[0] as List<ReputationScore>;
+      final score = results[1] as ReputationScore;
       setState(() {
+        _score = score;
         _history = history;
         _isLoading = false;
       });
-    } catch (e) {
-      if (!mounted) return;
+    } catch (_) {
+      if (!mounted || version != _historyVersion) return;
       setState(() {
-        _error = e.toString();
+        _error = 'La reputazione non è disponibile. Puoi riprovare.';
         _isLoading = false;
       });
     }
   }
 
   Future<void> _loadLensSuggestion() async {
+    final version = ++_lensVersion;
     setState(() {
       _isLensLoading = true;
     });
@@ -73,6 +92,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final repository = context.read<GameRepository>();
       final municipalityId = context.read<AppPrefs>().municipalityId ?? 'demo';
       final turn = await repository.getCurrentTurn(municipalityId);
+      if (!mounted || version != _lensVersion) return;
       final predictions = await repository.getMyPredictions(turn.id);
       final confidences = <String, HypothesisConfidence>{};
       final motivations = <String, List<MotivationKey>>{};
@@ -89,13 +109,13 @@ class _ProfilePageState extends State<ProfilePage> {
         motivations: motivations,
         reflectionAnswers: const {},
       );
-      if (!mounted) return;
+      if (!mounted || version != _lensVersion) return;
       setState(() {
         _suggestedRole = suggested;
         _isLensLoading = false;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || version != _lensVersion) return;
       setState(() {
         _isLensLoading = false;
       });
@@ -207,180 +227,214 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const IconLabel(
-            icon: AppIcons.profile,
-            text: VenialCopy.profileTitle,
-          ),
-          SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-          FcPanel(
-            padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
-            tint: AppTokens.blue,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Comune', style: TypographyX.titleLarge(context)),
-                const SizedBox(height: AppTokens.s8),
-                Text(
-                  municipalityName,
-                  style: textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: AppTokens.s4),
-                Text(
-                  pilotLocked
-                      ? 'Questo ambiente è riservato al Comune del pilot.'
-                      : 'Cambia Comune per testare o seguire un altro territorio.',
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                if (!pilotLocked) ...[
-                  const SizedBox(height: AppTokens.s12),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: OutlinedButton.icon(
-                      onPressed: () => context.go('/change-municipality'),
-                      icon: const Icon(AppIcons.home),
-                      label: const Text('Cambia Comune'),
+      child: FcPageShell(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const IconLabel(
+              icon: AppIcons.profile,
+              text: VenialCopy.profileTitle,
+            ),
+            SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+            FcPanel(
+              padding: EdgeInsets.all(
+                isCompact ? AppTokens.s12 : AppTokens.s16,
+              ),
+              tint: AppTokens.blue,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Comune', style: TypographyX.titleLarge(context)),
+                  const SizedBox(height: AppTokens.s8),
+                  Text(
+                    municipalityName,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                ],
-              ],
-            ),
-          ),
-          SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-          FcPanel(
-            padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
-            tint: AppTokens.success,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  VenialCopy.lensSectionTitle,
-                  style: TypographyX.titleLarge(context),
-                ),
-                const SizedBox(height: AppTokens.s8),
-                Text(
-                  VenialCopy.lensSectionSubtitle,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  const SizedBox(height: AppTokens.s4),
+                  Text(
+                    pilotLocked
+                        ? 'Questo ambiente è riservato al Comune del pilot.'
+                        : 'Cambia Comune per testare o seguire un altro territorio.',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-                SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-                if (activePerspective != null)
-                  Row(
-                    children: [
-                      FcStatusChip(
-                        label: activePerspective.label,
-                        color: AppTokens.blue,
-                        icon: activePerspective.icon,
+                  const SizedBox(height: AppTokens.s12),
+                  if (!pilotLocked)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: OutlinedButton(
+                        onPressed: () => context.go('/change-municipality'),
+                        child: const Text('Cambia Comune'),
                       ),
-                      const SizedBox(width: AppTokens.s8),
-                      Expanded(
-                        child: Text(
+                    ),
+                ],
+              ),
+            ),
+            SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+            FcPanel(
+              padding: EdgeInsets.all(
+                isCompact ? AppTokens.s12 : AppTokens.s16,
+              ),
+              tint: AppTokens.success,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    VenialCopy.lensSectionTitle,
+                    style: TypographyX.titleLarge(context),
+                  ),
+                  const SizedBox(height: AppTokens.s8),
+                  Text(
+                    VenialCopy.lensSectionSubtitle,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                  if (activePerspective != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        FcStatusChip(
+                          label: activePerspective.label,
+                          color: AppTokens.blue,
+                          icon: activePerspective.icon,
+                        ),
+                        const SizedBox(height: AppTokens.s8),
+                        Text(
                           '${activePerspective.label} · ${activePerspective.shortDescription}',
                           style: textTheme.bodyMedium,
                         ),
+                      ],
+                    )
+                  else
+                    Text(
+                      VenialCopy.lensSectionEmpty,
+                      style: textTheme.bodyMedium,
+                    ),
+                  const SizedBox(height: AppTokens.s8),
+                  if (_isLensLoading)
+                    Text(
+                      VenialCopy.lensSuggestionLoading,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                  else if (_suggestedRole != null)
+                    Text(
+                      VenialCopy.lensSuggestionTemplate.replaceAll(
+                        '{role}',
+                        _suggestedRole!.label,
+                      ),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FilledButton(
+                      onPressed: () =>
+                          _showPerspectivePicker(prefs, activePerspective),
+                      child: const Text(VenialCopy.lensChangeCta),
+                    ),
+                  ),
+                  if (changesCount > 0) ...[
+                    const SizedBox(height: AppTokens.s8),
+                    Text(
+                      VenialCopy.lensChangeCountTemplate.replaceAll(
+                        '{count}',
+                        '$changesCount',
+                      ),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+            if (!_isLoading && _score != null) ...[
+              FcPanel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const FcSectionHeader(
+                      title: 'La tua reputazione nelle previsioni',
+                    ),
+                    const SizedBox(height: AppTokens.s12),
+                    Text('Punti: ${_score!.totalPoints}'),
+                    Text('Previsioni concluse: ${_score!.predictionsCount}'),
+                    Text(
+                      _score!.predictionsCount == 0
+                          ? 'Accuratezza: non disponibile, nessuna previsione conclusa.'
+                          : 'Accuratezza: ${(_score!.accuracy * 100).round()}%',
+                    ),
+                    if (_score!.predictionsCount < 6) ...[
+                      const SizedBox(height: AppTokens.s8),
+                      const Text(
+                        'Pochi dati: servono altre previsioni concluse per leggere un andamento.',
                       ),
                     ],
-                  )
-                else
-                  Text(
-                    VenialCopy.lensSectionEmpty,
-                    style: textTheme.bodyMedium,
-                  ),
-                const SizedBox(height: AppTokens.s8),
-                if (_isLensLoading)
-                  Text(
-                    VenialCopy.lensSuggestionLoading,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    TextButton(
+                      onPressed: _loadHistory,
+                      child: const Text('Aggiorna reputazione'),
                     ),
-                  )
-                else if (_suggestedRole != null)
-                  Text(
-                    VenialCopy.lensSuggestionTemplate.replaceAll(
-                      '{role}',
-                      _suggestedRole!.label,
-                    ),
-                    style: textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: FilledButton.icon(
-                    onPressed: () =>
-                        _showPerspectivePicker(prefs, activePerspective),
-                    icon: const Icon(AppIcons.profile),
-                    label: const Text(VenialCopy.lensChangeCta),
-                  ),
+                  ],
                 ),
-                if (changesCount > 0) ...[
+              ),
+              const SizedBox(height: AppTokens.s12),
+            ],
+            _ReputationHistoryCard(
+              history: _history,
+              isLoading: _isLoading,
+              error: _error,
+              onRetry: _loadHistory,
+            ),
+            SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
+            FcPanel(
+              padding: EdgeInsets.all(
+                isCompact ? AppTokens.s12 : AppTokens.s16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    VenialCopy.profileIdentityTitle,
+                    style: TypographyX.titleLarge(context),
+                  ),
                   const SizedBox(height: AppTokens.s8),
                   Text(
-                    VenialCopy.lensChangeCountTemplate.replaceAll(
-                      '{count}',
-                      '$changesCount',
-                    ),
-                    style: textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    VenialCopy.profileIdentityBody,
+                    style: textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: AppTokens.s12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => context.go('/how-it-works'),
+                      icon: const Icon(AppIcons.info),
+                      label: const Text(VenialCopy.ctaHowItWorks),
                     ),
                   ),
                 ],
-              ],
-            ),
-          ),
-          SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-          _ReputationHistoryCard(
-            history: _history,
-            isLoading: _isLoading,
-            error: _error,
-            onRetry: _loadHistory,
-          ),
-          SizedBox(height: isCompact ? AppTokens.s8 : AppTokens.s12),
-          FcPanel(
-            padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  VenialCopy.profileIdentityTitle,
-                  style: TypographyX.titleLarge(context),
-                ),
-                const SizedBox(height: AppTokens.s8),
-                Text(
-                  VenialCopy.profileIdentityBody,
-                  style: textTheme.bodyMedium,
-                ),
-                const SizedBox(height: AppTokens.s12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () => context.go('/how-it-works'),
-                    icon: const Icon(AppIcons.info),
-                    label: const Text(VenialCopy.ctaHowItWorks),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: AppTokens.s8),
-            Text(
-              _error!,
-              style: textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.error,
               ),
             ),
+            if (_error != null) ...[
+              const SizedBox(height: AppTokens.s8),
+              Text(
+                _error!,
+                style: textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -459,10 +513,12 @@ class _ReputationHistoryCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppTokens.s8),
-                Text(
-                  VenialCopy.profileHistoryLoading,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+                Flexible(
+                  child: Text(
+                    VenialCopy.profileHistoryLoading,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],
@@ -485,10 +541,10 @@ class _ReputationHistoryCard extends StatelessWidget {
               ],
             )
           else ...[
-            Row(
-              children: [
-                Expanded(
-                  child: _MiniTrendTile(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final tiles = [
+                  _MiniTrendTile(
                     title: VenialCopy.profileTrendPointsTitle,
                     color: colorScheme.primary,
                     values: points,
@@ -500,10 +556,7 @@ class _ReputationHistoryCard extends StatelessWidget {
                     ),
                     dimmed: dimmed,
                   ),
-                ),
-                const SizedBox(width: AppTokens.s12),
-                Expanded(
-                  child: _MiniTrendTile(
+                  _MiniTrendTile(
                     title: VenialCopy.profileTrendAccuracyTitle,
                     color: colorScheme.tertiary,
                     values: accuracy,
@@ -515,8 +568,24 @@ class _ReputationHistoryCard extends StatelessWidget {
                     ),
                     dimmed: dimmed,
                   ),
-                ),
-              ],
+                ];
+                final columns =
+                    constraints.maxWidth < 600 ||
+                        MediaQuery.textScalerOf(context).scale(14) > 20
+                    ? 1
+                    : 2;
+                final width =
+                    (constraints.maxWidth - AppTokens.s12 * (columns - 1)) /
+                    columns;
+                return Wrap(
+                  spacing: AppTokens.s12,
+                  runSpacing: AppTokens.s16,
+                  children: [
+                    for (final tile in tiles)
+                      SizedBox(width: width, child: tile),
+                  ],
+                );
+              },
             ),
             if (dimmed) ...[
               const SizedBox(height: AppTokens.s8),

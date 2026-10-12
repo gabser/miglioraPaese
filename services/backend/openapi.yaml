@@ -781,7 +781,7 @@ paths:
   /v1/municipalities/{municipalityId}/next-problems:
     get:
       operationId: listNextProblems
-      description: Public pending and approved proposals; own=true returns all statuses belonging to the signed cookie. Bootstrap establishes the cookie and opaque continuity scope.
+      description: Search query includes title, description, location label, civic and reference. Public pending and approved proposals; own=true returns all statuses belonging to the signed cookie. Bootstrap establishes the cookie and opaque continuity scope.
       parameters:
         - $ref: "#/components/parameters/MunicipalityId"
         - name: own
@@ -1206,6 +1206,10 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
     TooManyRequests:
+      headers:
+        Retry-After:
+          description: Minimum seconds before a new proposal command, when quota is reached. Replay bypasses quota.
+          schema: { type: integer, minimum: 1 }
       description: Anonymous identity exceeded the suggestion submission limit.
       content:
         application/json:
@@ -2332,6 +2336,7 @@ components:
             enum: [required, invalid, too_long]
         error:
           type: string
+        retryAfterSeconds: { type: integer, minimum: 1 }
         message:
           type: string
     HealthResponse:

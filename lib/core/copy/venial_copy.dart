@@ -100,7 +100,7 @@ class VenialCopy {
   static const activationSubtitle =
       'Qui non ci sono ancora carte civiche. Possiamo iniziare dai primi segnali del posto.';
   static const activationGoal =
-      'Obiettivo leggero: 5 contributi per aprire il primo turno civico.';
+      'I voti sostengono le proposte. L’eventuale ingresso nel gioco delle previsioni segue le regole del server e la moderazione richiesta.';
   static const activationPrimaryCta = 'Proponi il primo tema';
   static const activationSecondaryCta = 'Vedi temi proposti';
   static const activationOfficialHint =
@@ -214,18 +214,18 @@ class VenialCopy {
 
   static const selectionRecorded = 'Ok, registrato. Vediamo.';
 
-  static const nextProblemsHeader = 'Cosa mettiamo in gioco dopo?';
+  static const nextProblemsHeader = 'Proposte del Comune';
   static const nextProblemsIntro =
-      'Non e\' una segnalazione ufficiale. E\' una lista leggera di cose da tenere d\'occhio.';
+      'Non è una segnalazione ufficiale. Le proposte possono alimentare il gioco delle previsioni secondo le sue regole; non diventano automaticamente carte Manager né assegnano punti.';
   static const nextProblemsEmpty =
       'Per ora niente proposte. Va bene cosi\', o magari non c\'era voglia.';
   static const nextProblemsActivationEmpty =
-      'Ancora nessuna proposta qui. Il primo tema serve a far partire la mappa del Comune.';
+      'Ancora nessuna proposta qui. Puoi suggerire un tema da valutare.';
   static const nextProblemsStatusPending = 'In valutazione';
-  static const nextProblemsStatusApproved = 'In lista';
+  static const nextProblemsStatusApproved = 'Approvata';
   static const nextProblemsStatusRejected = 'Non ora';
   static const nextProblemsVoteHint = 'Ok, segnato.';
-  static const nextProblemsVoteUpLabel = 'Approvo';
+  static const nextProblemsVoteUpLabel = 'Sostengo';
   static const nextProblemsVoteDownLabel = 'Passo';
   static const nextProblemsSearchHint = 'Cerca un tema';
   static const nextProblemsFilterAll = 'Tutti';
@@ -233,10 +233,10 @@ class VenialCopy {
   static const nextProblemsSortNew = 'Nuovi';
   static const nextProblemsSortSplit = 'Divisivi';
   static const nextProblemsPendingHelper =
-      'In valutazione: vediamo se entra in gioco.';
-  static const nextProblemsPromotionTitle = 'Regola di ingresso';
+      'In valutazione: l’invio è ricevuto, l’approvazione non è garantita.';
+  static const nextProblemsPromotionTitle = 'Regola del prototipo';
   static const nextProblemsPromotionComplete =
-      'Soglia raggiunta: puo\' entrare nelle carte del turno.';
+      'Soglia di voti raggiunta. L’eventuale ingresso nel gioco delle previsioni dipende anche dalla moderazione prevista.';
   static const nextProblemsPromotionMissingSingular =
       'Manca 1 approvazione netta per entrare in lista.';
   static const nextProblemsPromotionMissingPlural =
@@ -244,17 +244,17 @@ class VenialCopy {
   static const nextProblemsProposedBy = 'Proposto da';
   static const nextProblemsVotedSnack = 'Segnato.';
 
-  static const suggestTitle = 'Proponi un tema';
+  static const suggestTitle = 'Proponi un problema';
   static const suggestSubtitle = 'E\' solo un suggerimento, senza formalita\'.';
   static const suggestOfficialHint = 'Non e\' una segnalazione ufficiale.';
   static const suggestRibbonLabel = 'Nuova proposta';
   static const suggestTitleHint = 'Titolo breve';
   static const suggestDescriptionHint =
-      'Descrivi in 140 caratteri, anche telegrafico.';
+      'Descrivi il problema e perché è importante.';
   static const suggestCategoryLabel = 'Categoria';
-  static const suggestSubmit = 'Mettilo in lista';
+  static const suggestSubmit = 'Invia proposta';
   static const suggestReviewHint =
-      'Va in valutazione. Se piace, entra in gioco.';
+      'L’invio sarà ricevuto e valutato secondo le regole previste. Nessun ingresso automatico nel gioco e nessun premio per l’invio.';
   static const suggestSuccess = 'Ok, in valutazione.';
   static const suggestCooldownHint = 'Una proposta ogni 5 minuti va bene.';
   static const suggestDuplicateHint =

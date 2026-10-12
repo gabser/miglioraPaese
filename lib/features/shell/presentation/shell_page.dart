@@ -1,3 +1,4 @@
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -25,7 +26,7 @@ class ShellPage extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
     final isWide = width >= AppTokens.desktopBreakpoint;
     final currentIndex = navigationShell.currentIndex;
-    final destinations = _destinations;
+    const destinations = _destinations;
     final municipalityId = context.watch<AppPrefs>().municipalityId ?? 'demo';
     final municipalityName = MunicipalityCatalog.displayNameFromId(
       municipalityId,
@@ -135,7 +136,7 @@ class _Sidebar extends StatelessWidget {
         color: scheme.surface,
         border: Border(right: BorderSide(color: scheme.outlineVariant)),
       ),
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTokens.s20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -197,12 +198,11 @@ class _Sidebar extends StatelessWidget {
               );
             }),
             const SizedBox(height: AppTokens.s16),
-            OutlinedButton.icon(
+            OutlinedButton(
               onPressed: () => context.go('/board'),
-              icon: const Icon(AppIcons.board),
-              label: const Text(VenialCopy.boardTitle),
+              child: const Text(VenialCopy.boardTitle),
             ),
-            const Spacer(),
+            const SizedBox(height: AppTokens.s24),
             Container(
               padding: const EdgeInsets.all(AppTokens.s16),
               decoration: BoxDecoration(
@@ -213,14 +213,20 @@ class _Sidebar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Modalità demo',
+                    context.read<AppConfig?>()?.gameDataSource ==
+                            GameDataSource.api
+                        ? 'Rehearsal API'
+                        : 'Modalità demo',
                     style: textTheme.labelMedium?.copyWith(
                       color: Colors.white.withValues(alpha: 0.68),
                     ),
                   ),
                   const SizedBox(height: AppTokens.s8),
                   Text(
-                    'Dati di gioco mock locali',
+                    context.read<AppConfig?>()?.gameDataSource ==
+                            GameDataSource.api
+                        ? 'Dati sintetici dal server'
+                        : 'Dati di gioco mock locali',
                     style: textTheme.titleSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
@@ -259,34 +265,40 @@ class _SidebarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Material(
-      color: selected ? scheme.primaryContainer : Colors.transparent,
-      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-      child: InkWell(
-        onTap: onTap,
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? scheme.primaryContainer : Colors.transparent,
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTokens.s12,
-            vertical: AppTokens.s12,
-          ),
-          child: Row(
-            children: [
-              Icon(
-                selected ? destination.selectedIcon : destination.icon,
-                color: selected ? scheme.primary : scheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: AppTokens.s12),
-              Expanded(
-                child: Text(
-                  destination.label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
-                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTokens.s12,
+              vertical: AppTokens.s12,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  selected ? destination.selectedIcon : destination.icon,
+                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: AppTokens.s12),
+                Expanded(
+                  child: Text(
+                    destination.label,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: selected
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -1,0 +1,32 @@
+[
+  {
+    "profile": "legacy-mock",
+    "command": [
+      "/Users/gabrieleserra/fvm/versions/3.44.2/bin/flutter",
+      "build",
+      "web",
+      "--release",
+      "--output",
+      "build/recheck",
+      "--dart-define=FANTASY_MODE_ENABLED=false"
+    ],
+    "exit": 0,
+    "applicationCommit": "bc1cbc4",
+    "reason": "Recheck after legacy sidebar source-label fix; screenshots unchanged in mock."
+  },
+  {
+    "profile": "fantasy-mock",
+    "command": [
+      "/Users/gabrieleserra/fvm/versions/3.44.2/bin/flutter",
+      "build",
+      "web",
+      "--release",
+      "--output",
+      "build/recheck",
+      "--dart-define=FANTASY_MODE_ENABLED=true"
+    ],
+    "exit": 0,
+    "applicationCommit": "bc1cbc4",
+    "reason": "Recheck after legacy sidebar source-label fix; screenshots unchanged in mock."
+  }
+]

@@ -1,3 +1,4 @@
+import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/features/fantasy/presentation/pages/remote_leagues_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -53,10 +54,12 @@ class FantasyWelcomePage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Text(
-                            'Fanta Comune',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w900),
+                          Expanded(
+                            child: Text(
+                              'Fanta Comune',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w900),
+                            ),
                           ),
                         ],
                       ),
@@ -157,7 +160,11 @@ class FantasyShellPage extends StatelessWidget {
         ),
       );
     }
+    final municipality = MunicipalityCatalog.displayNameFromId(
+      context.watch<AppPrefs>().municipalityId ?? 'demo',
+    );
     return Scaffold(
+      appBar: AppBar(title: Text('Manager civico · $municipality')),
       body: SafeArea(child: navigationShell),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
@@ -189,78 +196,87 @@ class _FantasySidebar extends StatelessWidget {
     );
     return Material(
       color: Colors.white,
-      child: Container(
+      child: SizedBox(
         width: 252,
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          border: Border(right: BorderSide(color: AppTokens.line)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
+        child: SingleChildScrollView(
+          child: Container(
+            width: 252,
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              border: Border(right: BorderSide(color: AppTokens.line)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  width: 46,
-                  height: 52,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppTokens.navy,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Text(
-                    'FC',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
+                Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 52,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppTokens.navy,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Text(
+                        'FC',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Fanta Comune',
+                            style: TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                          Text(municipality, overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                ..._destinations.indexed.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: ListTile(
+                      selected: current == item.$1,
+                      selectedTileColor: AppTokens.blueSoft,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      leading: Icon(
+                        current == item.$1
+                            ? item.$2.selectedIcon
+                            : item.$2.icon,
+                      ),
+                      title: Text(item.$2.label),
+                      onTap: () => onSelect(item.$1),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Fanta Comune',
-                        style: TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                      Text(municipality, overflow: TextOverflow.ellipsis),
-                    ],
+                const SizedBox(height: 24),
+                Card(
+                  color: AppTokens.navy,
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Text(
+                      context.watch<FantasyManager>().isRemote
+                          ? 'Sessione API\nDati sintetici. Esiti e fonti sempre distinguibili.'
+                          : 'Stagione demo\nDati mock locali e verificabilità sempre visibile.',
+                      style: TextStyle(color: Colors.white, height: 1.45),
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-            ..._destinations.indexed.map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: ListTile(
-                  selected: current == item.$1,
-                  selectedTileColor: AppTokens.blueSoft,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  leading: Icon(
-                    current == item.$1 ? item.$2.selectedIcon : item.$2.icon,
-                  ),
-                  title: Text(item.$2.label),
-                  onTap: () => onSelect(item.$1),
-                ),
-              ),
-            ),
-            const Spacer(),
-            const Card(
-              color: AppTokens.navy,
-              child: Padding(
-                padding: EdgeInsets.all(14),
-                child: Text(
-                  'Stagione demo\nDati mock locali e verificabilità sempre visibile.',
-                  style: TextStyle(color: Colors.white, height: 1.45),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -307,7 +323,7 @@ class SquadPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Card(
-            color: issue == null
+            color: issue == null && manager.confirmed
                 ? AppTokens.successSoft
                 : AppTokens.warningSoft,
             child: Padding(
@@ -335,6 +351,61 @@ class SquadPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          FcPanel(
+            tint: AppTokens.blue,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  manager.isLocked
+                      ? 'Formazione bloccata'
+                      : '1. Prepara e conferma',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  manager.isLocked
+                      ? 'Consulta Giornata per gli esiti disponibili e la spiegazione dei punti. I risultati arrivano dopo la finestra di osservazione.'
+                      : 'Scegli cinque titolari e un capitano. Conferma per partecipare: potrai modificare la formazione fino al blocco del ${_dateTime(manager.matchday.locksAt)}.',
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: issue == null && !manager.isLocked && !manager.busy
+                      ? () async {
+                          final confirmed = await manager.confirmLineup();
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                confirmed
+                                    ? 'Formazione confermata per la giornata.'
+                                    : manager.persistenceError ??
+                                          'Giornata bloccata: conferma non consentita.',
+                              ),
+                            ),
+                          );
+                        }
+                      : null,
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: Text(
+                    manager.confirmed
+                        ? 'Formazione confermata'
+                        : 'Conferma formazione',
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => context.go('/matchday'),
+                  icon: const Icon(Icons.event_outlined),
+                  label: Text(
+                    manager.isLocked
+                        ? 'Consulta la giornata'
+                        : '2. Vai alle previsioni',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           SquadBoard(
             locked: manager.isLocked || manager.busy,
             starters: manager.starterCards,
@@ -345,30 +416,6 @@ class SquadPage extends StatelessWidget {
                 manager.swapCards(starterId: starterId, reserveId: reserveId),
           ),
           const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: issue == null && !manager.isLocked && !manager.busy
-                ? () async {
-                    final confirmed = await manager.confirmLineup();
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          confirmed
-                              ? 'Formazione confermata per la giornata.'
-                              : manager.persistenceError ??
-                                    'Giornata bloccata: conferma non consentita.',
-                        ),
-                      ),
-                    );
-                  }
-                : null,
-            icon: const Icon(Icons.check_circle_outline),
-            label: Text(
-              manager.confirmed
-                  ? 'Formazione confermata'
-                  : 'Conferma formazione',
-            ),
-          ),
         ],
       ),
     );
@@ -388,9 +435,45 @@ class MatchdayPage extends StatelessWidget {
         children: [
           _PageHeader(
             eyebrow: 'Giornata ${manager.matchday.number}',
-            title: 'Fai le tue previsioni',
+            title: manager.isLocked
+                ? 'Giornata bloccata'
+                : 'Fai le tue previsioni',
             subtitle:
                 'Le risposte degli altri manager restano nascoste fino al blocco.',
+          ),
+          const SizedBox(height: 16),
+          FcPanel(
+            tint: manager.isLocked ? AppTokens.warning : AppTokens.blue,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  manager.isLocked
+                      ? (manager.now.isBefore(
+                              manager.matchday.observationEndsAt,
+                            )
+                            ? '3. Attendi gli esiti verificati'
+                            : '3. Consulta esiti e punti')
+                      : '2. Prevedi il cambiamento',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  manager.isLocked
+                      ? (manager.now.isBefore(
+                              manager.matchday.observationEndsAt,
+                            )
+                            ? 'Le scelte sono congelate. La finestra di osservazione termina il ${_dateTime(manager.matchday.observationEndsAt)}: gli esiti disponibili e le fonti sono mostrati sotto.'
+                            : 'L’osservazione è terminata. Consulta sotto gli esiti pubblicati e il dettaglio dei punti; per gli esiti mancanti attendi la pubblicazione della fonte.')
+                      : 'Le previsioni sono facoltative e salvate quando le scegli. Per ottenere punti personali serve una formazione valida e confermata al blocco. Le motivazioni non aggiungono punti.',
+                ),
+                if (!manager.isLocked && !manager.confirmed)
+                  TextButton(
+                    onPressed: () => context.go('/squad'),
+                    child: const Text('Conferma la formazione in Squadra'),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           MatchdayProgress(
@@ -472,10 +555,16 @@ class MatchdayPage extends StatelessWidget {
           _MatchdaySummary(manager: manager),
           const SizedBox(height: 16),
           Text(
-            'Reveal e fonti · demo',
+            manager.isRemote ? 'Esiti e fonti' : 'Esiti e fonti · demo',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 8),
+          if (manager.outcomes.isEmpty)
+            const FcPanel(
+              child: Text(
+                'Nessun esito disponibile. Le previsioni restano salvate; consulta questa giornata dopo il termine dell’osservazione.',
+              ),
+            ),
           ...manager.outcomes.map(
             (outcome) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -534,6 +623,21 @@ class _MarketPageState extends State<MarketPage> {
             ),
           ),
           const SizedBox(height: 16),
+          FcPanel(
+            tint: manager.isLocked ? AppTokens.warning : AppTokens.blue,
+            child: Text(
+              manager.isLocked
+                  ? 'Mercato chiuso per questa giornata. Puoi consultare le carte: i trasferimenti restano bloccati.'
+                  : 'Scegli una carta della rosa da cedere, poi confronta la sostituta. Prima del trasferimento vedrai crediti e penalità; dopo il cambio riconferma la formazione.',
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (candidates.isEmpty)
+            const FcPanel(
+              child: Text(
+                'Nessuna carta per questo ruolo. Prova il filtro Tutti.',
+              ),
+            ),
           DropdownButtonFormField<String>(
             key: ValueKey(_outgoingId),
             isExpanded: true,
@@ -644,7 +748,7 @@ class _MarketPageState extends State<MarketPage> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () => context.go('/next-problems'),
+                    onPressed: () => context.push('/next-problems'),
                     child: const Text('Apri proposte'),
                   ),
                 ],
@@ -720,6 +824,9 @@ class _MatchdaySummary extends StatelessWidget {
             Text(
               'Punti congelati ${result.frozenPoints} · bonus riflessione ${result.reflectionBonus} · penalità trasferimenti −${result.transferPenalty}',
             ),
+            const Text(
+              'I punti delle carte derivano dall’esito osservato e dalle previsioni facoltative. Il capitano moltiplica i punti base per 1,5; le riflessioni confermate aggiungono il bonus previsto.',
+            ),
             if (!manager.isLocked)
               const Text(
                 'Il totale sarà calcolato dalla formazione confermata al blocco e dagli esiti verificati al termine dell’osservazione.',
@@ -763,25 +870,36 @@ class _LeaguesPageState extends State<LeaguesPage> {
             eyebrow: 'Competizione rispettosa',
             title: 'Leghe',
             subtitle:
-                'Le formazioni avversarie diventano visibili soltanto dopo il lock.',
+                'Confronta i punti fantasy nella lega privata o del Comune. Questi dati demo sono separati da reputazione e voti delle proposte.',
           ),
           const SizedBox(height: 16),
-          SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(
-                value: false,
-                label: Text('Lega privata'),
-                icon: Icon(Icons.lock_outline),
+          const FcPanel(
+            tint: AppTokens.blue,
+            child: Text(
+              'La classifica confronta i punti fantasy. Il punteggio cooperativo del Comune è un indicatore separato: non è la somma dei voti alle proposte.',
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                label: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 150),
+                  child: const Text('Lega privata'),
+                ),
+                selected: !_municipal,
+                avatar: const Icon(Icons.lock_outline),
+                onSelected: (_) => setState(() => _municipal = false),
               ),
-              ButtonSegment(
-                value: true,
-                label: Text('Comune'),
-                icon: Icon(Icons.location_city_outlined),
+              ChoiceChip(
+                label: const Text('Comune'),
+                selected: _municipal,
+                avatar: const Icon(Icons.location_city_outlined),
+                onSelected: (_) => setState(() => _municipal = true),
               ),
             ],
-            selected: {_municipal},
-            onSelectionChanged: (value) =>
-                setState(() => _municipal = value.first),
           ),
           const SizedBox(height: 16),
           Text(league.name, style: Theme.of(context).textTheme.titleLarge),
@@ -811,41 +929,53 @@ class _PageHeader extends StatelessWidget {
   final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.end,
-    children: [
-      Expanded(
-        child: Column(
+  Widget build(BuildContext context) {
+    final heading = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          eyebrow.toUpperCase(),
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: AppTokens.blueForeground,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Semantics(
+          header: true,
+          child: Text(title, style: Theme.of(context).textTheme.headlineMedium),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 600 ||
+            MediaQuery.textScalerOf(context).scale(14) > 20) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              heading,
+              if (trailing != null) ...[const SizedBox(height: 12), trailing!],
+            ],
+          );
+        }
+        return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              eyebrow.toUpperCase(),
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: AppTokens.blue,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Semantics(
-              header: true,
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
+            Expanded(child: heading),
+            if (trailing != null) ...[const SizedBox(width: 24), trailing!],
           ],
-        ),
-      ),
-      if (trailing != null) ...[const SizedBox(width: 12), trailing!],
-    ],
-  );
+        );
+      },
+    );
+  }
 }
 
 class _RemoteMotivation extends StatefulWidget {
@@ -890,3 +1020,6 @@ class _RemoteMotivationState extends State<_RemoteMotivation> {
     ],
   );
 }
+
+String _dateTime(DateTime value) =>
+    '${value.day}/${value.month} alle ${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
