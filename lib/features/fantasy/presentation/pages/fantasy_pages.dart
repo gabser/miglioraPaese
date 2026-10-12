@@ -953,38 +953,59 @@ class _MatchdaySchedule extends StatelessWidget {
   final model.Matchday day;
 
   @override
-  Widget build(BuildContext context) => Wrap(
-    spacing: 12,
-    runSpacing: 8,
-    children: [
-      for (final item in [
-        ('Inizio giornata', day.startsAt),
-        ('Blocco delle scelte', day.locksAt),
-        ('Fine osservazione', day.observationEndsAt),
-      ])
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: '${item.$1}\n',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth.clamp(0.0, 680.0).toDouble();
+      final columns = MediaQuery.textScalerOf(context).scale(12) > 18 ? 1 : 3;
+      final itemWidth = (width - (columns - 1) * 8) / columns;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final item in [
+                ('Inizio giornata', day.startsAt),
+                ('Blocco delle scelte', day.locksAt),
+                ('Fine osservazione', day.observationEndsAt),
+              ])
+                Container(
+                  width: itemWidth,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.$1,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _dateTime(item.$2).replaceFirst(' alle ', ' '),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
-                TextSpan(text: '${_dateTime(item.$2)} · ora locale'),
-              ],
-            ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Orari del dispositivo',
             style: Theme.of(context).textTheme.bodySmall,
           ),
-        ),
-    ],
+        ],
+      );
+    },
   );
 }
 
