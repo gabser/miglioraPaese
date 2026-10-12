@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fanta_comune/core/config/app_config.dart';
@@ -10,6 +11,67 @@ import '../fantasy_test_support.dart';
 import '../../../helpers/test_app.dart';
 
 void main() {
+  testWidgets('unreadable archive does not prevent using Squadra', (
+    tester,
+  ) async {
+    final h = await createHarness();
+    await (await SharedPreferences.getInstance()).setString(
+      'fantasy_demo_archive_v1',
+      '{',
+    );
+    await tester.pumpWidget(
+      buildTestApp(
+        h.prefs,
+        config: AppConfig.fromValues(fantasyModeEnabled: true),
+        fantasyManager: h.manager,
+      ),
+    );
+    await tester.pumpAndSettle();
+    GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/squad');
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    final restart = find.widgetWithText(TextButton, 'Nuova partita demo');
+    await tester.ensureVisible(restart);
+    await tester.tap(restart);
+    await tester.pumpAndSettle();
+    expect(find.text('Riprendi partita precedente'), findsOneWidget);
+    expect(h.prefs.fantasyDemoArchive.first, '{');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('restart demo unblocks formation and exposes recovery', (
+    tester,
+  ) async {
+    final h = await createHarness();
+    await h.manager.confirmLineup();
+    await h.at(day.locksAt);
+    await tester.pumpWidget(
+      buildTestApp(
+        h.prefs,
+        config: AppConfig.fromValues(fantasyModeEnabled: true),
+        fantasyManager: h.manager,
+      ),
+    );
+    await tester.pumpAndSettle();
+    GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/squad');
+    await tester.pumpAndSettle();
+    final restart = find.widgetWithText(TextButton, 'Nuova partita demo');
+    await tester.ensureVisible(restart);
+    await tester.tap(restart);
+    await tester.pumpAndSettle();
+    expect(find.text('Formazione bloccata'), findsNothing);
+    expect(find.text('Formazione da confermare'), findsOneWidget);
+    expect(find.text('Riprendi partita precedente'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Conferma formazione'),
+          )
+          .onPressed,
+      isNotNull,
+    );
+  });
+
   testWidgets(
     'restored frozen formation stays locked in the progress after clock rollback',
     (tester) async {
@@ -64,6 +126,8 @@ void main() {
       await tester.ensureVisible(confirm);
       await tester.tap(confirm);
       await tester.pumpAndSettle();
+      expect(manager.canRestartDemo, isFalse);
+      expect(find.text('Nuova partita demo'), findsNothing);
       expect(manager.persistenceError, isNotNull);
       expect(manager.isLocked, isTrue);
       expect(day.isLockedAt(epoch), isFalse);

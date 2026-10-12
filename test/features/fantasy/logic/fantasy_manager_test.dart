@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fanta_comune/features/fantasy/domain/fantasy_models.dart';
@@ -7,6 +8,95 @@ import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
 import '../fantasy_test_support.dart';
 
 void main() {
+  test('unreadable demo archive is preserved when restarting', () async {
+    for (final raw in ['{', '{}', '[123]']) {
+      SharedPreferences.setMockInitialValues({'fantasy_demo_archive_v1': raw});
+      final prefs = await AppPrefs.init();
+      final manager = FantasyManager(
+        prefs,
+        now: () => epoch,
+        observeTime: false,
+      );
+      await manager.settled;
+      final before = prefs.fantasyStateJson;
+      expect(manager.hasPreviousDemo, isFalse);
+      expect(await manager.restartDemo(), isTrue);
+      expect(prefs.fantasyDemoArchive, [raw, before]);
+      expect(manager.recoveryMessage, contains('dati originali conservati'));
+      expect(await manager.restartDemo(restorePrevious: true), isTrue);
+      manager.dispose();
+    }
+  });
+
+  test('archive write failure does not replace current game', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = _ArchiveFailurePrefs(await SharedPreferences.getInstance());
+    final manager = FantasyManager(prefs, now: () => epoch, observeTime: false);
+    addTearDown(manager.dispose);
+    await manager.settled;
+    await manager.setCaptain('bus-stazione');
+    final before = prefs.fantasyStateJson;
+    expect(await manager.restartDemo(), isFalse);
+    expect(prefs.fantasyStateJson, before);
+    expect(manager.captainId, 'bus-stazione');
+    expect(prefs.fantasyDemoArchive, isEmpty);
+  });
+
+  test(
+    'new demo reopens choices, survives reload and preserves previous game',
+    () async {
+      final h = await createHarness();
+      await h.prefs.setMunicipalityId('milano');
+      await h.manager.setCaptain('bus-stazione');
+      await h.manager.confirmLineup();
+      await h.at(day.locksAt);
+      final frozen = h.prefs.fantasyStateJson;
+      expect(h.manager.isLocked, isTrue);
+      expect(await h.manager.restartDemo(), isTrue);
+      expect(h.manager.isLocked, isFalse);
+      expect(h.manager.confirmed, isFalse);
+      expect(h.manager.snapshotFor(day.id), isNull);
+      expect(h.manager.matchday.locksAt.isAfter(h.time), isTrue);
+      expect(h.prefs.municipalityId, 'milano');
+      expect(h.prefs.fantasyDemoArchive, [frozen]);
+      final restored = await h.reload();
+      expect(restored.isLocked, isFalse);
+      expect(restored.hasPreviousDemo, isTrue);
+      expect(await restored.restartDemo(restorePrevious: true), isTrue);
+      expect(restored.isLocked, isTrue);
+      expect(restored.captainId, 'bus-stazione');
+      expect(restored.snapshotFor(day.id), isNotNull);
+      expect(h.prefs.fantasyDemoArchive, hasLength(2));
+    },
+  );
+
+  test(
+    'failed new demo write keeps accepted state and recoverable archive',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = ControlledPrefs(await SharedPreferences.getInstance());
+      final manager = FantasyManager(
+        prefs,
+        now: () => epoch,
+        observeTime: false,
+      );
+      addTearDown(manager.dispose);
+      await manager.settled;
+      await manager.setCaptain('bus-stazione');
+      final before = prefs.fantasyStateJson;
+      prefs.fail = true;
+      expect(await manager.restartDemo(), isFalse);
+      expect(manager.captainId, 'bus-stazione');
+      expect(prefs.fantasyStateJson, before);
+      expect(prefs.fantasyDemoArchive, [before]);
+      expect(manager.persistenceError, isNotNull);
+      prefs.fail = false;
+      expect(await manager.restartDemo(), isTrue);
+      await prefs.clearAll();
+      expect(prefs.fantasyDemoArchive, isEmpty);
+    },
+  );
+
   test(
     'over-budget stored roster is rejected before any field is applied',
     () async {
@@ -602,4 +692,11 @@ void main() {
       );
     },
   );
+}
+
+class _ArchiveFailurePrefs extends AppPrefs {
+  _ArchiveFailurePrefs(super.prefs);
+  @override
+  Future<void> archiveFantasyDemo(String state) async =>
+      throw StateError('disk full');
 }

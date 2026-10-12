@@ -294,6 +294,44 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
     await _command(SetFantasyCaptain(id));
   }
 
+  bool get canRestartDemo => _repository is LocalFantasyRepository;
+  bool get hasPreviousDemo =>
+      _repository is LocalFantasyRepository && _repository.hasPreviousDemo;
+
+  Future<bool> restartDemo({bool restorePrevious = false}) async {
+    if (!canRestartDemo ||
+        busy ||
+        _disposed ||
+        _clearing ||
+        (restorePrevious && !hasPreviousDemo)) {
+      return false;
+    }
+    _submitting = true;
+    _notify();
+    var accepted = false;
+    _queue = _queue.then((_) async {
+      try {
+        if (_disposed || _clearing) return;
+        final data = await (_repository as LocalFantasyRepository).restartDemo(
+          expectedRevision: revision,
+          restorePrevious: restorePrevious,
+        );
+        if (_disposed || _clearing) return;
+        _apply(data);
+        persistenceError = null;
+        _failedCommand = null;
+        accepted = true;
+      } catch (error) {
+        if (!_disposed) _error(error);
+      } finally {
+        _submitting = false;
+        _notify();
+      }
+    });
+    await _queue;
+    return accepted;
+  }
+
   Future<bool> confirmLineup() =>
       _command(const ConfirmFantasyLineup(), exclusive: true);
   Future<void> setPrediction(String id, CivicTrend trend) async {

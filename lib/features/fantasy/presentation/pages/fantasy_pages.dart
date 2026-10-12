@@ -429,6 +429,30 @@ class SquadPage extends StatelessWidget {
               ],
             ),
           ),
+          if (manager.canRestartDemo) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: [
+                TextButton.icon(
+                  onPressed: manager.busy ? null : () => manager.restartDemo(),
+                  icon: const Icon(Icons.replay),
+                  label: const Text('Nuova partita demo'),
+                ),
+                if (manager.hasPreviousDemo)
+                  TextButton(
+                    onPressed: manager.busy
+                        ? null
+                        : () => manager.restartDemo(restorePrevious: true),
+                    child: const Text('Riprendi partita precedente'),
+                  ),
+              ],
+            ),
+            const Text(
+              'Riparti con scelte aperte. La partita precedente resta recuperabile.',
+            ),
+          ],
           const SizedBox(height: 16),
           SquadBoard(
             locked: manager.isLocked || manager.busy,
