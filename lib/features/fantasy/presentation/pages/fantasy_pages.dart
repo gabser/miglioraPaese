@@ -510,7 +510,9 @@ class MatchdayPage extends StatelessWidget {
           const SizedBox(height: 16),
           MatchdayProgress(
             now: manager.now,
-            locked: manager.matchday.isLockedAt(manager.now),
+            locked:
+                manager.snapshotFor(manager.matchday.id) != null ||
+                manager.matchday.isLockedAt(manager.now),
             completed: manager.predictionsCompleted,
             total: manager.starterIds.length,
             locksAt: manager.matchday.locksAt,
