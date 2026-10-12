@@ -306,6 +306,7 @@ class SquadPage extends StatelessWidget {
     final manager = context.watch<FantasyManager>();
     if (!manager.hasData) return const FantasyLoadingPage();
     final issue = manager.lineupIssue;
+    final saved = manager.confirmed && manager.persistenceError == null;
     return FantasyPage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -315,97 +316,120 @@ class SquadPage extends StatelessWidget {
                 '${manager.season.name} · Giornata ${manager.season.currentMatchday}/${manager.season.totalMatchdays}',
             title: 'La mia squadra',
             subtitle:
-                'Otto priorità locali e cinque titolari. Senza formazione valida e confermata al blocco non ricevi punti. Dopo ogni cambio, conferma di nuovo.',
+                'Schiera le priorità del Comune e metti alla prova le tue previsioni.',
             trailing: CreditPill(
               credits: manager.budgetRemaining,
               label: 'crediti rimasti',
             ),
           ),
-          const SizedBox(height: 16),
-          Card(
-            color: issue == null && manager.confirmed
-                ? AppTokens.successSoft
-                : AppTokens.warningSoft,
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  Icon(
-                    issue == null
-                        ? Icons.check_circle_outline
-                        : Icons.info_outline,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      manager.isLocked
-                          ? 'Giornata bloccata: formazione e previsioni non sono più modificabili.'
-                          : issue ??
-                                (manager.confirmed
-                                    ? 'Formazione confermata. Puoi modificarla fino al blocco.'
-                                    : 'Formazione completa e pronta per la conferma.'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          _MatchdaySchedule(day: manager.matchday),
+          const SizedBox(height: 12),
           FcPanel(
-            tint: AppTokens.blue,
+            padding: const EdgeInsets.all(12),
+            tint: manager.persistenceError != null
+                ? AppTokens.warning
+                : saved
+                ? AppTokens.success
+                : AppTokens.blue,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  manager.isLocked
-                      ? 'Formazione bloccata'
-                      : '1. Prepara e conferma',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  manager.isLocked
-                      ? 'Consulta Giornata per gli esiti disponibili e la spiegazione dei punti. I risultati arrivano dopo la finestra di osservazione.'
-                      : 'Scegli cinque titolari e un capitano. Conferma per partecipare: potrai modificare la formazione fino al blocco del ${_dateTime(manager.matchday.locksAt)}.',
-                ),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: issue == null && !manager.isLocked && !manager.busy
-                      ? () async {
-                          final confirmed = await manager.confirmLineup();
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                confirmed
-                                    ? 'Formazione confermata per la giornata.'
-                                    : manager.persistenceError ??
-                                          'Giornata bloccata: conferma non consentita.',
-                              ),
-                            ),
-                          );
-                        }
-                      : null,
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: Text(
-                    manager.confirmed
-                        ? 'Formazione confermata'
-                        : 'Conferma formazione',
+                Semantics(
+                  liveRegion: true,
+                  child: Row(
+                    children: [
+                      Icon(
+                        manager.persistenceError != null
+                            ? Icons.error_outline
+                            : manager.isLocked
+                            ? Icons.lock_outline
+                            : saved
+                            ? Icons.check_circle
+                            : Icons.groups_outlined,
+                        color: manager.persistenceError != null
+                            ? AppTokens.danger
+                            : saved
+                            ? AppTokens.success
+                            : AppTokens.blueForeground,
+                        size: 26,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          manager.persistenceError != null
+                              ? 'Salvataggio non completato'
+                              : manager.isLocked
+                              ? 'Formazione bloccata'
+                              : issue ??
+                                    (saved
+                                        ? 'Squadra salvata'
+                                        : 'Formazione da confermare'),
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                TextButton.icon(
-                  onPressed: () => context.go('/matchday'),
-                  icon: const Icon(Icons.event_outlined),
-                  label: Text(
-                    manager.isLocked
-                        ? 'Consulta la giornata'
-                        : '2. Vai alle previsioni',
-                  ),
+                const SizedBox(height: 6),
+                Text(
+                  manager.persistenceError != null
+                      ? 'Usa Riprova salvataggio prima di continuare. Lo stato della giornata resta da verificare.'
+                      : manager.isLocked
+                      ? 'Le scelte sono congelate. Consulta Giornata per gli esiti e i punti.'
+                      : saved
+                      ? 'Parteciperai con questi titolari al blocco. Ogni modifica richiede una nuova conferma.'
+                      : 'Usa Sostituisci per far entrare una riserva. Scegli il capitano: vale ×1,5 punti.',
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    FilledButton.icon(
+                      onPressed:
+                          issue == null &&
+                              !manager.confirmed &&
+                              !manager.isLocked &&
+                              !manager.busy
+                          ? () async {
+                              final confirmed = await manager.confirmLineup();
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    confirmed
+                                        ? 'Formazione confermata per la giornata.'
+                                        : manager.persistenceError ??
+                                              'Giornata bloccata: conferma non consentita.',
+                                  ),
+                                ),
+                              );
+                            }
+                          : null,
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: Text(
+                        manager.confirmed
+                            ? 'Formazione confermata'
+                            : 'Conferma formazione',
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => context.go('/matchday'),
+                      icon: const Icon(Icons.event_outlined),
+                      label: Text(
+                        manager.isLocked
+                            ? 'Consulta la giornata'
+                            : 'Vai alle previsioni',
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           SquadBoard(
             locked: manager.isLocked || manager.busy,
             starters: manager.starterCards,
@@ -435,20 +459,26 @@ class MatchdayPage extends StatelessWidget {
         children: [
           _PageHeader(
             eyebrow: 'Giornata ${manager.matchday.number}',
-            title: manager.isLocked
+            title: manager.persistenceError != null
+                ? 'Giornata da verificare'
+                : manager.isLocked
                 ? 'Giornata bloccata'
                 : 'Fai le tue previsioni',
             subtitle:
                 'Le risposte degli altri manager restano nascoste fino al blocco.',
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          _MatchdaySchedule(day: manager.matchday),
+          const SizedBox(height: 12),
           FcPanel(
             tint: manager.isLocked ? AppTokens.warning : AppTokens.blue,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  manager.isLocked
+                  manager.persistenceError != null
+                      ? 'Stato della giornata da verificare'
+                      : manager.isLocked
                       ? (manager.now.isBefore(
                               manager.matchday.observationEndsAt,
                             )
@@ -459,7 +489,9 @@ class MatchdayPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  manager.isLocked
+                  manager.persistenceError != null
+                      ? 'Gli ultimi dati non sono confermati. Usa Riprova salvataggio prima di continuare.'
+                      : manager.isLocked
                       ? (manager.now.isBefore(
                               manager.matchday.observationEndsAt,
                             )
@@ -478,7 +510,7 @@ class MatchdayPage extends StatelessWidget {
           const SizedBox(height: 16),
           MatchdayProgress(
             now: manager.now,
-            locked: manager.isLocked || manager.busy,
+            locked: manager.matchday.isLockedAt(manager.now),
             completed: manager.predictionsCompleted,
             total: manager.starterIds.length,
             locksAt: manager.matchday.locksAt,
@@ -916,6 +948,46 @@ class _LeaguesPageState extends State<LeaguesPage> {
   }
 }
 
+class _MatchdaySchedule extends StatelessWidget {
+  const _MatchdaySchedule({required this.day});
+  final model.Matchday day;
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 12,
+    runSpacing: 8,
+    children: [
+      for (final item in [
+        ('Inizio giornata', day.startsAt),
+        ('Blocco delle scelte', day.locksAt),
+        ('Fine osservazione', day.observationEndsAt),
+      ])
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '${item.$1}\n',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                TextSpan(text: '${_dateTime(item.$2)} · ora locale'),
+              ],
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+    ],
+  );
+}
+
 class _PageHeader extends StatelessWidget {
   const _PageHeader({
     required this.eyebrow,
@@ -943,12 +1015,17 @@ class _PageHeader extends StatelessWidget {
         const SizedBox(height: 4),
         Semantics(
           header: true,
-          child: Text(title, style: Theme.of(context).textTheme.headlineMedium),
+          child: Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontSize: 24),
+          ),
         ),
         const SizedBox(height: 8),
         Text(
           subtitle,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
@@ -1021,5 +1098,7 @@ class _RemoteMotivationState extends State<_RemoteMotivation> {
   );
 }
 
-String _dateTime(DateTime value) =>
-    '${value.day}/${value.month} alle ${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+String _dateTime(DateTime value) {
+  final local = value.toLocal();
+  return '${local.day}/${local.month} alle ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+}
