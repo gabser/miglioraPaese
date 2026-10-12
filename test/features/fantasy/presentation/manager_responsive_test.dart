@@ -11,6 +11,30 @@ import '../../../helpers/test_app.dart';
 
 void main() {
   testWidgets(
+    'restored frozen formation stays locked in the progress after clock rollback',
+    (tester) async {
+      final h = await createHarness();
+      await h.manager.confirmLineup();
+      await h.at(day.locksAt);
+      await h.at(epoch);
+      expect(day.isLockedAt(epoch), isFalse);
+      expect(h.manager.snapshotFor(day.id), isNotNull);
+      await tester.pumpWidget(
+        buildTestApp(
+          h.prefs,
+          config: AppConfig.fromValues(fantasyModeEnabled: true),
+          fantasyManager: h.manager,
+        ),
+      );
+      await tester.pumpAndSettle();
+      GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/matchday');
+      await tester.pumpAndSettle();
+      expect(find.text('Giornata bloccata'), findsOneWidget);
+      expect(find.text('Formazione bloccata'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'API save failure blocks controls without claiming a scheduled lock',
     (tester) async {
       final h = await createHarness();
