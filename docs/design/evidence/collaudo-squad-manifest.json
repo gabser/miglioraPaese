@@ -1,0 +1,35 @@
+{
+  "applicationCommit": "b4bc3f18f9877fa326add4822e2de0535f8af1c4",
+  "libDartTreeSha256": "7b59340aa408dd6ab62226efa3f0fc65e6cfde9c7044563db966e605ca4385d0",
+  "hashMethod": "Sorted lib/*.dart recursive paths; path + NUL + bytes + NUL",
+  "profile": "fantasy-mock release",
+  "browser": "Chrome",
+  "clock": "real browser clock; persisted demo matchday from local test context",
+  "captures": [
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "before": "collaudo-squad-before-390.jpg",
+      "savedAfterReload": "collaudo-squad-saved-390.jpg"
+    },
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "before": "collaudo-squad-before-1440.jpg",
+      "savedAfterReload": "collaudo-squad-saved-1440.jpg"
+    }
+  ],
+  "verified": [
+    "captain change requires reconfirmation",
+    "confirmation is persistent after reload",
+    "keyboard opens swap menu and selects a reserve",
+    "swap requires reconfirmation",
+    "initial lineup controls visible in real browser at390px"
+  ],
+  "physicalDevice": false,
+  "humanAcceptance": "User reported initial problems; corrected build not yet retested by user"
+}

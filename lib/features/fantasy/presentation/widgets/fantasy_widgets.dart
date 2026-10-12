@@ -399,26 +399,38 @@ class SquadBoard extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text('Titolari · 5', style: Theme.of(context).textTheme.titleLarge),
+      Text(
+        'Titolari · ${starters.length}',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
       const SizedBox(height: 8),
       _CardGrid(
         cards: starters,
-        builder: (card) => FantasyCard(
+        builder: (card) => _SquadCard(
           card: card,
-          compact: true,
+          position: starters.indexOf(card) + 1,
           isCaptain: card.id == captainId,
           footer: Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               OutlinedButton.icon(
-                onPressed: locked ? null : () => onCaptain(card.id),
-                icon: const Icon(Icons.star_outline),
-                label: const Text('Capitano'),
+                key: ValueKey('squad-captain-${card.id}'),
+                style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
+                onPressed: locked || card.id == captainId
+                    ? null
+                    : () => onCaptain(card.id),
+                icon: Icon(
+                  card.id == captainId ? Icons.star : Icons.star_outline,
+                ),
+                label: Text(
+                  card.id == captainId ? 'Capitano scelto' : 'Scegli capitano',
+                ),
               ),
               PopupMenuButton<String>(
+                key: ValueKey('squad-swap-${card.id}'),
                 enabled: !locked,
-                tooltip: 'Metti in panchina',
+                tooltip: 'Sostituisci ${card.title} con una riserva',
                 onSelected: (reserveId) => onSwap(card.id, reserveId),
                 itemBuilder: (context) => reserves
                     .map(
@@ -428,9 +440,10 @@ class SquadBoard extends StatelessWidget {
                       ),
                     )
                     .toList(),
-                child: const _ActionLabel(
+                child: _ActionLabel(
                   icon: Icons.swap_horiz,
                   label: 'Sostituisci',
+                  enabled: !locked,
                 ),
               ),
             ],
@@ -438,15 +451,137 @@ class SquadBoard extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 20),
-      Text('Riserve · 3', style: Theme.of(context).textTheme.titleLarge),
+      Text(
+        'Riserve · ${reserves.length}',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      const SizedBox(height: 4),
+      const Text(
+        'Per far entrare una riserva, usa Sostituisci sulla carta di un titolare.',
+      ),
       const SizedBox(height: 8),
       _CardGrid(
         cards: reserves,
         maxColumns: 3,
-        builder: (card) =>
-            FantasyCard(card: card, compact: true, isReserve: true),
+        builder: (card) => _SquadReserve(card: card),
       ),
     ],
+  );
+}
+
+class _SquadCard extends StatelessWidget {
+  const _SquadCard({
+    required this.card,
+    required this.position,
+    required this.isCaptain,
+    required this.footer,
+  });
+  final model.FantasyCard card;
+  final int position;
+  final bool isCaptain;
+  final Widget footer;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = roleColor(card.role);
+    final theme = Theme.of(context).textTheme;
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      label: 'Titolare $position',
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+          side: BorderSide(
+            color: isCaptain ? AppTokens.navy : color.withValues(alpha: 0.3),
+            width: isCaptain ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              color: color.withValues(alpha: 0.1),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Icon(roleIcon(card.role), color: color, size: 20),
+                  Text(
+                    'IN CAMPO · $position',
+                    style: theme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (isCaptain) const CaptainBadge(),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(card.title, style: theme.titleMedium),
+                  const SizedBox(height: 3),
+                  Text(card.zone, style: theme.bodySmall),
+                  const SizedBox(height: 10),
+                  footer,
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      RoleBadge(role: card.role, compact: true),
+                      CreditPill(credits: card.price, label: 'cr'),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  FormIndicator(form: card.form),
+                ],
+              ),
+            ),
+            _UrbanScene(
+              keyName: card.illustrationKey,
+              role: card.role,
+              height: 40,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SquadReserve extends StatelessWidget {
+  const _SquadReserve({required this.card});
+  final model.FantasyCard card;
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(card.title, style: Theme.of(context).textTheme.titleSmall),
+          Text(card.zone, style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              RoleBadge(role: card.role, compact: true),
+              CreditPill(credits: card.price, label: 'cr'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          FormIndicator(form: card.form),
+        ],
+      ),
+    ),
   );
 }
 
@@ -481,25 +616,41 @@ class _CardGrid extends StatelessWidget {
 }
 
 class _ActionLabel extends StatelessWidget {
-  const _ActionLabel({required this.icon, required this.label});
+  const _ActionLabel({
+    required this.icon,
+    required this.label,
+    this.enabled = true,
+  });
   final IconData icon;
   final String label;
+  final bool enabled;
 
   @override
-  Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: 48),
-    padding: const EdgeInsets.symmetric(horizontal: 12),
-    decoration: BoxDecoration(
-      border: Border.all(color: Theme.of(context).colorScheme.outline),
-      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon),
-        const SizedBox(width: 8),
-        Flexible(child: Text(label)),
-      ],
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    enabled: enabled,
+    child: Container(
+      constraints: const BoxConstraints(minHeight: 48),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: enabled ? null : Theme.of(context).disabledColor),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: enabled ? null : Theme.of(context).disabledColor,
+              ),
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
