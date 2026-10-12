@@ -31,6 +31,7 @@ class AppPrefs extends ChangeNotifier {
               _lastSeenTurnIdKey,
               _insightSignaturesKey,
               _fantasyStateKey,
+              _fantasyDemoArchiveKey,
               ..._prefs.getKeys().where(
                 (key) => key.startsWith('fantasy_receipt_'),
               ),
@@ -54,6 +55,7 @@ class AppPrefs extends ChangeNotifier {
   static const _lastSeenTurnIdKey = 'last_seen_turn_id';
   static const _insightSignaturesKey = 'insight_signatures';
   static const _fantasyStateKey = 'fantasy_manager_state_v1';
+  static const _fantasyDemoArchiveKey = 'fantasy_demo_archive_v1';
 
   /// Inizializza le preferenze condivise e restituisce il wrapper.
   static Future<AppPrefs> init() async {
@@ -187,6 +189,19 @@ class AppPrefs extends ChangeNotifier {
 
   Future<void> setFantasyStateJson(String value) async {
     await _checkedWrite(() => _prefs.setString(_fantasyStateKey, value));
+  }
+
+  /// Previous demo games remain recoverable, independently of other local data.
+  List<String> get fantasyDemoArchive {
+    final raw = _prefs.getString(_fantasyDemoArchiveKey);
+    return raw == null ? const [] : (jsonDecode(raw) as List).cast<String>();
+  }
+
+  Future<void> archiveFantasyDemo(String state) async {
+    final archive = [...fantasyDemoArchive, state];
+    await _checkedWrite(
+      () => _prefs.setString(_fantasyDemoArchiveKey, jsonEncode(archive)),
+    );
   }
 
   // Only an idempotent command receipt is stored remotely, never a draft or score.

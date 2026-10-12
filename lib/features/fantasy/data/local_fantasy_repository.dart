@@ -218,6 +218,43 @@ class LocalFantasyRepository implements FantasyRepository {
     }
   }
 
+  bool get hasPreviousDemo => _prefs.fantasyDemoArchive.isNotEmpty;
+
+  Future<FantasyData> restartDemo({
+    required int expectedRevision,
+    bool restorePrevious = false,
+  }) async {
+    _check(expectedRevision);
+    _busy = true;
+    try {
+      final previous = restorePrevious ? _prefs.fantasyDemoArchive.last : null;
+      final day = _defaultDay();
+      final seed = FantasyDemoSeed(_now(), day);
+      final next = previous == null
+          ? FantasyGame(
+              matchday: day,
+              cards: List.unmodifiable(seed.cards),
+              outcomes: List.unmodifiable(seed.seedOutcomes()),
+              leagues: List.unmodifiable(seed.seedLeagues()),
+              now: _now,
+              usingDemoOutcomes: true,
+            )
+          : _copy(
+              FantasySavedState.fromJson(
+                (jsonDecode(previous) as Map).cast<String, dynamic>(),
+                day,
+              ),
+            );
+      // Archive first: a failed write must never replace the accepted game.
+      await _prefs.archiveFantasyDemo(jsonEncode(_game.savedState.toJson()));
+      final data = await _accept(next);
+      _recovery = null;
+      return data;
+    } finally {
+      _busy = false;
+    }
+  }
+
   @override
   Future<FantasyData> clear() async {
     _check(_revision);

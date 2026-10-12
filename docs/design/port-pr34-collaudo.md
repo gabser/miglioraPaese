@@ -33,3 +33,10 @@ Catture reali Chrome390×844 e1440×900, prima e dopo conferma; la cattura salva
 Review indipendente codice: nessun rilievo residuo; correttoP2 relativo all’errore API presentato come lock. Review visiva separata: gerarchia, stato salvato e controlli visibili, nessun problema bloccante nelle quattro catture. Osservazioni non bloccanti da riprendere nel collaudo: su mobile la formazione richiede comunque scroll e Forma/frecce può richiedere una legenda del significato storico. Non dedurre comprensione o divertimento da questi controlli.
 
 Il collaudo dell’utente sulla versione corretta resta da ripetere dopo la pubblicazione. Hardware non dichiarato, nessuna prova con3–5 persone nuove attestata. Preservati regole, dati, punteggi, sessioni e profiliAPI; pubblicazione solo mock.
+
+
+### Ripetizione del collaudo — 12 ottobre 2026
+
+L’utente segnala che la partita mock salvata ha raggiunto il blocco e chiede «inizia una nuova partita demo». Ricaricare preserva correttamente il calendario precedente ma impedisce di ripetere conferma e modifiche. Squadra espone ora Nuova partita demo soltanto per il repository locale: crea una formazione non confermata e una nuova finestra di scelte, archiviando prima lo stato precedente. Riprendi partita precedente recupera l’ultimo stato archiviato; anche la partita lasciata viene archiviata. Comune, preferenze, proposte e ricevute non vengono azzerati. L’archivio è locale e viene cancellato dal reset generale già disponibile. API e regole temporali restano invariati.
+
+Verifiche specifiche: ripartenza da snapshot congelato, persistenza dopo ricostruzione del manager, recupero della formazione precedente, mancata sostituzione dello stato accettato quando fallisce la scrittura, isolamento dei profili API e azionabilità responsive. Questo è un comando per ripetere la demo, non una certificazione di intuibilità o una prova su telefono fisico.
