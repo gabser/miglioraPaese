@@ -49,6 +49,7 @@ void main() {
       ),
     );
     await pumpRoutingFrame(tester);
+    await tester.ensureVisible(find.text('Crea la tua squadra'));
     await tester.tap(find.text('Crea la tua squadra'));
     await pumpRoutingFrame(tester);
     await tester.tap(find.text('Giornata'));
@@ -66,8 +67,12 @@ void main() {
     expect(h.manager.motivations['buche-centro'], 'Segnale dal quartiere');
     await h.at(day.locksAt);
     await tester.pump();
-    expect(tester.widget<TextFormField>(field).enabled, isFalse);
-    expect(find.text('Segnale dal quartiere'), findsOneWidget);
+    expect(field, findsNothing);
+    expect(find.byType(ChoiceChip), findsNothing);
+    expect(
+      find.text('La tua motivazione: Segnale dal quartiere'),
+      findsOneWidget,
+    );
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
@@ -100,13 +105,16 @@ void main() {
           ),
         );
         await pumpRoutingFrame(tester);
+        await tester.ensureVisible(find.text('Crea la tua squadra'));
         await tester.tap(find.text('Crea la tua squadra'));
         await pumpRoutingFrame(tester);
         await tester.tap(find.text('Mercato'));
         await pumpRoutingFrame(tester);
         await tester.tap(find.byType(DropdownButtonFormField<String>));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Pulizia del parco · 11 cr').last);
+        await tester.tap(
+          find.text('Pulizia del parco · Valore: 11 crediti').last,
+        );
         await tester.pumpAndSettle();
         final blockedCard = find.byWidgetPredicate(
           (w) => w is FantasyCard && w.card.id == 'ciclabile-est',
@@ -161,7 +169,10 @@ void main() {
         );
         await tester.tap(find.text('Giornata'));
         await pumpRoutingFrame(tester);
-        expect(find.text('Formazione bloccata'), findsOneWidget);
+        expect(
+          find.textContaining('Previsioni chiuse · Si gioca!'),
+          findsOneWidget,
+        );
         expect(
           tester
               .widgetList<ChoiceChip>(find.byType(ChoiceChip))
@@ -202,6 +213,7 @@ void main() {
       ),
     );
     await pumpRoutingFrame(tester);
+    await tester.ensureVisible(find.text('Crea la tua squadra'));
     await tester.tap(find.text('Crea la tua squadra'));
     await pumpRoutingFrame(tester);
     await tester.tap(find.text('Mercato'));
@@ -244,6 +256,7 @@ void main() {
       ),
     );
     await pumpRoutingFrame(tester);
+    await tester.ensureVisible(find.text('Crea la tua squadra'));
     await tester.tap(find.text('Crea la tua squadra'));
     await pumpRoutingFrame(tester);
     time = day.locksAt;
@@ -276,6 +289,7 @@ void main() {
         ),
       );
       await pumpRoutingFrame(tester);
+      await tester.ensureVisible(find.text('Crea la tua squadra'));
       await tester.tap(find.text('Crea la tua squadra'));
       await pumpRoutingFrame(tester);
       GoRouter.of(tester.element(find.text('La mia squadra'))).go('/privacy');
@@ -309,6 +323,7 @@ void main() {
       ),
     );
     await pumpRoutingFrame(tester);
+    await tester.ensureVisible(find.text('Crea la tua squadra'));
     await tester.tap(find.text('Crea la tua squadra'));
     await pumpRoutingFrame(tester);
     expect(find.textContaining('Salvataggio non riuscito'), findsOneWidget);
@@ -338,6 +353,7 @@ void main() {
     );
     expect(find.text('Crea la tua squadra'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Crea la tua squadra'));
     await tester.tap(find.text('Crea la tua squadra'));
     await pumpRoutingFrame(tester);
 
@@ -357,6 +373,7 @@ void main() {
 
     await tester.pumpWidget(buildTestApp(prefs, config: config));
     await pumpRoutingFrame(tester);
+    await tester.ensureVisible(find.text('Crea la tua squadra'));
     await tester.tap(find.text('Crea la tua squadra'));
     await pumpRoutingFrame(tester);
 
@@ -368,8 +385,11 @@ void main() {
 
     await tester.tap(find.text('Giornata'));
     await pumpRoutingFrame(tester);
-    expect(find.text('Fai le tue previsioni'), findsOneWidget);
-    expect(find.text('0/5 previsioni inserite'), findsOneWidget);
+    expect(find.textContaining('Fai le tue previsioni'), findsOneWidget);
+    expect(
+      find.textContaining('0 previsioni inserite su 5 titolari'),
+      findsOneWidget,
+    );
   });
 
   for (final viewport in const {
@@ -388,6 +408,7 @@ void main() {
       await pumpRoutingFrame(tester);
       expect(tester.takeException(), isNull);
 
+      await tester.ensureVisible(find.text('Crea la tua squadra'));
       await tester.tap(find.text('Crea la tua squadra'));
       await pumpRoutingFrame(tester);
       expect(find.text('La mia squadra'), findsOneWidget);

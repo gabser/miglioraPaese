@@ -154,36 +154,46 @@ class FormIndicator extends StatelessWidget {
   final List<model.CivicTrend> form;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: 'Andamento recente: ${form.map((item) => item.label).join(', ')}',
-    child: Wrap(
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        Text(
-          'Andamento recente',
-          style: Theme.of(context).textTheme.labelMedium,
-        ),
-        const SizedBox(width: 6),
-        ...form.map(
-          (trend) => Padding(
-            padding: const EdgeInsets.only(left: 3),
-            child: Icon(
-              switch (trend) {
-                model.CivicTrend.improves => Icons.arrow_upward,
-                model.CivicTrend.stable => Icons.remove,
-                model.CivicTrend.worsens => Icons.arrow_downward,
-              },
-              size: 17,
-              color: switch (trend) {
-                model.CivicTrend.improves => AppTokens.success,
-                model.CivicTrend.stable => AppTokens.warning,
-                model.CivicTrend.worsens => AppTokens.danger,
-              },
-            ),
-          ),
-        ),
-      ],
-    ),
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Come è cambiato il problema',
+        style: Theme.of(context).textTheme.labelLarge,
+      ),
+      const Text(
+        'Storico disponibile: descrive i cambiamenti passati, non la tua previsione.',
+      ),
+      if (form.isEmpty) const Text('Storico non disponibile.'),
+      Wrap(
+        spacing: 10,
+        runSpacing: 6,
+        children: form
+            .map(
+              (trend) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ExcludeSemantics(
+                    child: Icon(switch (trend) {
+                      model.CivicTrend.improves => Icons.arrow_upward,
+                      model.CivicTrend.stable => Icons.arrow_forward,
+                      model.CivicTrend.worsens => Icons.arrow_downward,
+                    }, size: 17),
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(switch (trend) {
+                      model.CivicTrend.improves => 'Migliorato',
+                      model.CivicTrend.stable => 'Stabile',
+                      model.CivicTrend.worsens => 'Peggiorato',
+                    }),
+                  ),
+                ],
+              ),
+            )
+            .toList(),
+      ),
+    ],
   );
 }
 
@@ -231,7 +241,9 @@ class CaptainBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Capitano, punteggio moltiplicato per 1,5',
+    label:
+        'Capitano: i punti della carta sono moltiplicati per 1,5. Per esempio, 8 punti diventano 12. Anche la riflessione entra nel calcolo; il totale viene arrotondato.',
+    excludeSemantics: true,
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
@@ -239,7 +251,7 @@ class CaptainBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        'C · ×1,5',
+        'Capitano · punti ×1,5',
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           color: Colors.white,
           fontWeight: FontWeight.w900,
@@ -294,7 +306,10 @@ class FantasyCard extends StatelessWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       RoleBadge(role: card.role, compact: true),
-                      CreditPill(credits: card.price, label: 'cr'),
+                      Text(
+                        'Valore: ${card.price} crediti',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -312,17 +327,8 @@ class FantasyCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  if (compact)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        FormIndicator(form: card.form),
-                        if (isCaptain) const CaptainBadge(),
-                      ],
-                    )
-                  else ...[
-                    FormIndicator(form: card.form),
+                  FormIndicator(form: card.form),
+                  if (!compact) ...[
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -349,7 +355,7 @@ class FantasyCard extends StatelessWidget {
                       Text('Previsione: ${prediction!.label}'),
                     ],
                   ],
-                  if ((isCaptain && !compact) || isReserve) ...[
+                  if (isCaptain || isReserve) ...[
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
@@ -364,6 +370,30 @@ class FantasyCard extends StatelessWidget {
                       ],
                     ),
                   ],
+                  if (isCaptain)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text:
+                                  'Il capitano moltiplica per 1,5 i punti della carta: 8 ',
+                            ),
+                            WidgetSpan(
+                              alignment: PlaceholderAlignment.middle,
+                              child: Icon(Icons.arrow_forward, size: 17),
+                            ),
+                            TextSpan(
+                              text:
+                                  ' 12 punti. Anche la riflessione entra nel calcolo; il totale viene arrotondato.',
+                            ),
+                          ],
+                        ),
+                        semanticsLabel:
+                            'Il capitano moltiplica per 1,5 i punti della carta: 8 punti diventano 12 punti. Anche la riflessione entra nel calcolo; il totale viene arrotondato.',
+                      ),
+                    ),
                   if (footer != null) ...[
                     const SizedBox(height: 10),
                     const Divider(height: 1),
@@ -538,7 +568,10 @@ class _SquadCard extends StatelessWidget {
                     runSpacing: 8,
                     children: [
                       RoleBadge(role: card.role, compact: true),
-                      CreditPill(credits: card.price, label: 'cr'),
+                      Text(
+                        'Valore: ${card.price} crediti',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -576,7 +609,10 @@ class _SquadReserve extends StatelessWidget {
             runSpacing: 8,
             children: [
               RoleBadge(role: card.role, compact: true),
-              CreditPill(credits: card.price, label: 'cr'),
+              Text(
+                'Valore: ${card.price} crediti',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -663,6 +699,7 @@ class MarketComparison extends StatelessWidget {
     required this.incoming,
     required this.onConfirm,
     required this.penalty,
+    required this.availableCredits,
     this.outgoingPrice,
     this.incomingPrice,
     super.key,
@@ -671,25 +708,37 @@ class MarketComparison extends StatelessWidget {
   final model.FantasyCard incoming;
   final VoidCallback? onConfirm;
   final int penalty;
+  final int availableCredits;
   final int? outgoingPrice;
   final int? incomingPrice;
 
   @override
   Widget build(BuildContext context) => AlertDialog(
+    scrollable: true,
     title: const Text('Confronta il trasferimento'),
     content: Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _ComparisonRow(label: 'Esce', card: outgoing, price: outgoingPrice),
         const Divider(height: 24),
         _ComparisonRow(label: 'Entra', card: incoming, price: incomingPrice),
         const SizedBox(height: 12),
+        Text('Credito disponibile: $availableCredits crediti'),
         Text(
-          'Differenza: ${(incomingPrice ?? incoming.price) - (outgoingPrice ?? outgoing.price)} crediti',
+          'Valore recuperato dalla cessione: +${outgoingPrice ?? outgoing.price} crediti',
         ),
         Text(
+          'Costo della nuova carta: −${incomingPrice ?? incoming.price} crediti',
+        ),
+        Text(
+          'Saldo finale: ${availableCredits + (outgoingPrice ?? outgoing.price) - (incomingPrice ?? incoming.price)} crediti',
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        const Divider(height: 24),
+        Text(
           penalty == 0
-              ? 'Trasferimento gratuito'
+              ? 'Penalità in punti: nessuna'
               : 'Penalità: −$penalty punti nella giornata',
         ),
       ],
@@ -711,16 +760,14 @@ class _ComparisonRow extends StatelessWidget {
   final model.FantasyCard card;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      SizedBox(width: 52, child: Text(label)),
-      Expanded(
-        child: Text(
-          card.title,
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
+      Text(
+        '$label: ${card.title}',
+        style: const TextStyle(fontWeight: FontWeight.w700),
       ),
-      CreditPill(credits: price ?? card.price, label: 'cr'),
+      Text('Valore: ${price ?? card.price} crediti'),
     ],
   );
 }
