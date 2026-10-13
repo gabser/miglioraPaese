@@ -186,7 +186,7 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
         persistenceError =
             isRemote &&
                 (_repository as RemoteFantasyRepository).hasPendingTransfer
-            ? 'Trasferimento da verificare: premi Riprova.'
+            ? 'Il cambio di carte è da verificare. Premi Riprova salvataggio.'
             : null;
       }
     } catch (error) {
@@ -201,7 +201,7 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
     persistenceError = error is FantasyFailure
         ? error.message
         : error is ApiException
-        ? '${error.message} Stato di sola lettura: Riprova.'
+        ? '${error.message} Puoi solo consultare i dati. Premi Riprova salvataggio.'
         : 'Operazione non riuscita. Riprova.';
   }
 
@@ -421,7 +421,7 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
                   isRemote &&
                       (_repository as RemoteFantasyRepository)
                           .hasPendingTransfer
-                  ? 'Trasferimento da verificare: premi Riprova.'
+                  ? 'Il cambio di carte è da verificare. Premi Riprova salvataggio.'
                   : null;
               _pollDelay = 30000;
             }

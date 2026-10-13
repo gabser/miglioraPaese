@@ -1,3 +1,4 @@
+import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +33,7 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Annulla'),
+              child: const Text(VenialCopy.cancelCta),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
@@ -68,7 +69,7 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const Text(
-            'Classifica personale dal server, visibile da tre competitori. Punteggio cooperativo non disponibile.',
+            'La classifica online è visibile con almeno 3 giocatori in gara. Il punteggio cooperativo non è disponibile.',
           ),
           const Text(
             'La sessione anonima è legata a questo browser. Non è un account e non consente recupero su altri dispositivi.',
@@ -77,7 +78,7 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
           const FcPanel(
             tint: AppTokens.blue,
             child: Text(
-              'Crea una lega o inserisci un invito. La classifica usa i punti fantasy degli esiti congelati, separati da reputazione e voti alle proposte.',
+              'Crea una lega o usa un invito. La classifica confronta i punti delle squadre dagli esiti fissati al termine dell’osservazione. Non usa la reputazione né i voti alle proposte.',
             ),
           ),
           const SizedBox(height: 16),
@@ -130,11 +131,11 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                         : () async {
                             if (await confirm(
                                   'Creare la lega?',
-                                  'Il server assegnerà pseudonimi automatici. Dopo il primo lock della stagione si entra come spettatori.',
+                                  'Il servizio assegna un nome automatico a ogni giocatore. Dopo il primo blocco della stagione puoi entrare solo come spettatore.',
                                 ) &&
                                 mounted) {
                               if (await manager.createLeague(template)) {
-                                accepted('Lega creata sul server.');
+                                accepted('Lega creata.');
                               }
                             }
                           },
@@ -158,14 +159,14 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                         : () async {
                             if (await confirm(
                                   'Entrare nella lega?',
-                                  'L’ingresso competitivo è consentito prima del primo lock. Un ingresso successivo è da spettatore.',
+                                  'Puoi entrare in gara prima del primo blocco della stagione. Dopo, entri come spettatore.',
                                 ) &&
                                 mounted) {
                               if (await manager.joinLeague(
                                 tokenController.text.trim(),
                               )) {
                                 tokenController.clear();
-                                accepted('Adesione accettata dal server.');
+                                accepted('Sei entrato nella lega.');
                               }
                             }
                           },
@@ -212,7 +213,7 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                             : () async {
                                 if (!await confirm(
                                   'Generare un nuovo invito?',
-                                  'Tutti gli inviti precedenti saranno revocati. Il codice scade entro 24 ore: condividilo solo con il gruppo pilot autorizzato.',
+                                  'I vecchi inviti smettono di funzionare. Il nuovo codice scade entro 24 ore: condividilo solo con il gruppo autorizzato alla prova online.',
                                 )) {
                                   return;
                                 }
@@ -271,7 +272,7 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                                 'Uscire dalla lega?',
                                 league.isOwner
                                     ? 'La lega sarà archiviata e tutti gli inviti revocati. Le squadre degli altri membri resteranno conservate.'
-                                    : 'La tua squadra e i tuoi punti personali resteranno conservati. Un eventuale rientro dopo il lock sarà da spettatore.',
+                                    : 'La tua squadra e i tuoi punti restano salvati. Se rientri dopo il blocco, partecipi come spettatore.',
                               )) {
                                 return;
                               }
@@ -281,7 +282,7 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                                     () => invites.remove(league.table.id),
                                   );
                                 }
-                                accepted('Uscita accettata dal server.');
+                                accepted('Hai lasciato la lega.');
                               }
                             },
                       child: const Text('Esci dalla lega'),

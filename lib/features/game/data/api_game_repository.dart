@@ -278,7 +278,7 @@ class ApiGameRepository implements GameRepository {
     if (apiId == null) {
       throw ApiException.configuration(
         code: 'unsupported_municipality',
-        message: 'Il Comune selezionato non e\' ancora disponibile via API.',
+        message: 'Questo Comune non è ancora disponibile online.',
       );
     }
     return ['v1', 'municipalities', apiId, resource];

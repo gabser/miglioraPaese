@@ -83,7 +83,7 @@ void main() {
 
     expect(find.text('Tuglie'), findsOneWidget);
     expect(
-      find.text('Questo ambiente è riservato al Comune del pilot.'),
+      find.text('Questa prova online è riservata a un solo Comune.'),
       findsOneWidget,
     );
     expect(find.text('Cambia Comune'), findsNothing);

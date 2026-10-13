@@ -60,7 +60,7 @@ class ApiNextProblemsRepository
     if (id == null)
       throw ApiException.configuration(
         code: 'unsupported_municipality',
-        message: 'Il Comune selezionato non è ancora disponibile via API.',
+        message: 'Questo Comune non è ancora disponibile online.',
       );
     return ['v1', 'municipalities', id, 'next-problems'];
   }
@@ -69,7 +69,9 @@ class ApiNextProblemsRepository
     if (payload is! Map<String, dynamic> ||
         payload['submissionScope'] is! String ||
         (payload['submissionScope'] as String).isEmpty) {
-      throw ApiException.invalidPayload('Scope server non valido.');
+      throw ApiException.invalidPayload(
+        'La sessione ricevuta dal servizio non è valida.',
+      );
     }
     return payload['submissionScope'] as String;
   }
@@ -102,7 +104,8 @@ class ApiNextProblemsRepository
         (payload['capabilities'] as Map)['proposalSubmission'] != 1) {
       throw ApiException.configuration(
         code: 'proposal_capabilities_missing',
-        message: 'Questo server non supporta ancora l’invio recuperabile.',
+        message:
+            'Il servizio non supporta il recupero degli invii. Non puoi inviare da questa pagina.',
       );
     }
     _expected(payload, expectedScope);

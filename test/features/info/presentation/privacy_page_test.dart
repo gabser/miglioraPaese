@@ -35,9 +35,10 @@ void main() {
     await tester.pumpWidget(_testApp(prefs, config, apiClient));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Elimina dati e riparti'));
     await tester.tap(find.text('Elimina dati e riparti'));
     await tester.pumpAndSettle();
-    expect(find.text('Eliminare i dati del pilot?'), findsOneWidget);
+    expect(find.text('Eliminare i dati online?'), findsOneWidget);
     await tester.tap(find.text('Elimina e riparti'));
     await tester.pumpAndSettle();
 
@@ -70,6 +71,7 @@ void main() {
     await tester.pumpWidget(_testApp(prefs, config, apiClient));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Elimina dati e riparti'));
     await tester.tap(find.text('Elimina dati e riparti'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Elimina e riparti'));

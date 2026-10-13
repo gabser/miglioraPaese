@@ -77,7 +77,7 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (_) {
       if (!mounted || version != _historyVersion) return;
       setState(() {
-        _error = 'La reputazione non è disponibile. Puoi riprovare.';
+        _error = 'I punti delle previsioni non sono disponibili. Riprova.';
         _isLoading = false;
       });
     }
@@ -255,8 +255,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: AppTokens.s4),
                   Text(
                     pilotLocked
-                        ? 'Questo ambiente è riservato al Comune del pilot.'
-                        : 'Cambia Comune per testare o seguire un altro territorio.',
+                        ? 'Questa prova online è riservata a un solo Comune.'
+                        : 'Scegli un altro Comune da seguire.',
                     style: textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -371,8 +371,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     Text('Previsioni concluse: ${_score!.predictionsCount}'),
                     Text(
                       _score!.predictionsCount == 0
-                          ? 'Accuratezza: non disponibile, nessuna previsione conclusa.'
-                          : 'Accuratezza: ${(_score!.accuracy * 100).round()}%',
+                          ? 'Previsioni corrette: non ancora disponibili. Nessuna previsione conclusa.'
+                          : 'Previsioni corrette: ${(_score!.accuracy * 100).round()}%',
                     ),
                     if (_score!.predictionsCount < 6) ...[
                       const SizedBox(height: AppTokens.s8),

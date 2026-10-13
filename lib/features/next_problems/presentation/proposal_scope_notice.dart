@@ -60,12 +60,12 @@ class ProposalScopeNotice extends StatelessWidget {
                     child: Text(
                       pilot == null
                           ? 'Scegli il Comune'
-                          : 'Torna alle proposte del Comune pilot',
+                          : 'Torna alle proposte del Comune della prova',
                     ),
                   ),
                   TextButton(
                     onPressed: () => context.go('/home'),
-                    child: const Text('Torna alla home'),
+                    child: const Text('Torna all’inizio'),
                   ),
                 ],
               ),

@@ -108,7 +108,9 @@ class FantasyGame {
       FantasySavedState.resultKey(dayId, cardId);
 
   String? get lineupIssue {
-    if (_squadIds.length != 8) return 'La rosa deve contenere 8 carte.';
+    if (_squadIds.length != 8) {
+      return 'La squadra deve avere 8 carte.';
+    }
     for (final role in FantasyRole.values) {
       if (squadCards.where((card) => card.role == role).length < 2) {
         return 'Servono almeno 2 carte per il ruolo ${role.label}.';
@@ -182,7 +184,9 @@ class FantasyGame {
     if (isLocked) return 'Mercato chiuso: giornata bloccata.';
     if (!_squadIds.contains(outgoingId)) return 'Carta da cedere non valida.';
     if (!_known(incomingId)) return 'Carta da acquistare non valida.';
-    if (_squadIds.contains(incomingId)) return 'La carta è già nella rosa.';
+    if (_squadIds.contains(incomingId)) {
+      return 'Hai già questa carta nella squadra.';
+    }
     final incoming = cardById(incomingId);
     final issue = purchaseIssue(incoming);
     if (issue != null) return issue;

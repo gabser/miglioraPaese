@@ -32,7 +32,7 @@ class LocalFantasyRepository implements FantasyRepository {
         _game = _copy(_game.savedState);
       } catch (_) {
         _recovery =
-            'Dati demo incompatibili: partita ripristinata. Conferma nuovamente la formazione.';
+            'I dati della partita demo non sono leggibili. È stata avviata una partita iniziale: conferma di nuovo la formazione.';
       }
     }
   }
@@ -250,7 +250,7 @@ class LocalFantasyRepository implements FantasyRepository {
       await _prefs.archiveFantasyDemo(jsonEncode(_game.savedState.toJson()));
       await _accept(next);
       _recovery = archiveCorrupted
-          ? 'Archivio demo precedente illeggibile: dati originali conservati. La partita appena lasciata è recuperabile.'
+          ? 'L’archivio demo precedente non è leggibile. I dati originali sono conservati. Puoi recuperare la partita che hai appena lasciato.'
           : null;
       return cached;
     } finally {

@@ -200,7 +200,7 @@ String _motivationLabelForChoice(
     (PredictionChoice.stable, MotivationKey.personalExperience) =>
       'Lo vedo uguale',
     (PredictionChoice.stable, MotivationKey.seasonality) =>
-      'Succede spesso cosi',
+      'Succede spesso così',
     (PredictionChoice.stable, MotivationKey.unmetPromises) =>
       'Non vedo segnali nuovi',
     (PredictionChoice.worsen, MotivationKey.recentDecline) => 'Sta peggiorando',

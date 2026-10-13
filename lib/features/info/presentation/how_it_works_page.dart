@@ -41,14 +41,33 @@ class HowItWorksPage extends StatelessWidget {
                           _StepCard(
                             stepNumber: 2,
                             title:
-                                'Fai previsioni: Migliora / Stabile / Peggiora',
+                                'Scegli una carta: migliora, resta stabile o peggiora?',
                           ),
                           _StepCard(
                             stepNumber: 3,
-                            title:
-                                'Guadagna reputazione e confrontati in classifica',
+                            title: 'Confronta esiti e punti in classifica',
                           ),
                         ],
+                      ),
+                      const SizedBox(height: AppTokens.s16),
+                      const Text(
+                        'Le carte descrivono i problemi del Comune. Il tabellone ti mostra le carte e le tue previsioni.',
+                      ),
+                      const SizedBox(height: AppTokens.s12),
+                      const Text(
+                        'Il turno è il periodo di gioco. Controlla la scadenza indicata prima di fare le tue scelte.',
+                      ),
+                      const SizedBox(height: AppTokens.s12),
+                      const Text(
+                        'Nel gioco con la squadra, la formazione è la scelta di 5 titolari tra le tue 8 carte. Le altre 3 sono riserve. Scegli un capitano: i suoi punti base valgono ×1,5. Conferma la formazione prima del blocco. Se la cambi, conferma di nuovo.',
+                      ),
+                      const SizedBox(height: AppTokens.s12),
+                      const Text(
+                        'Una previsione dice come pensi che andrà: migliora, resta stabile o peggiora. Un voto sostiene o contrasta una proposta. Inviare una proposta aggiunge un problema da seguire: non assegna carte alla squadra né punti.',
+                      ),
+                      const SizedBox(height: AppTokens.s12),
+                      const Text(
+                        'Gli esiti danno i punti secondo le regole del gioco. La classifica confronta i punteggi. I punti della squadra e la reputazione delle previsioni individuali sono separati.',
                       ),
                       const SizedBox(height: AppTokens.s16),
                       Container(

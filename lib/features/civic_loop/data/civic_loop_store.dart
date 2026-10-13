@@ -443,7 +443,7 @@ class CivicLoopStore {
       threshold: promotionThreshold,
       scopeLabel: '$municipalityName · $categoryName',
       reason:
-          'Regola demo configurabile: in questo Comune basta 1 approvazione netta per testare il passaggio in lista.',
+          'Nella demo di questo Comune basta 1 voto netto a favore: voti a favore meno voti contrari. Raggiunta la soglia, la proposta entra nella lista del gioco delle previsioni.',
     );
   }
 
@@ -480,7 +480,7 @@ class CivicLoopStore {
     final seeds = <(String, String, ProblemKey)>[
       (
         'Buche ovunque',
-        'Strade con crateri ovunque, serve una missione.',
+        'Ci sono buche lungo diverse strade del centro.',
         ProblemKey.potholes,
       ),
       (
@@ -495,7 +495,7 @@ class CivicLoopStore {
       ),
       (
         'Bus fantasma',
-        'Passano quando vogliono, o forse no.',
+        'I bus arrivano spesso in ritardo rispetto agli orari.',
         ProblemKey.transport,
       ),
       (
@@ -503,25 +503,25 @@ class CivicLoopStore {
         'Giri infiniti per un posto libero.',
         ProblemKey.parking,
       ),
-      ('Decoro ballerino', 'Centro curato, periferie meno.', ProblemKey.decor),
+      ('Spazi poco curati', 'Centro curato, periferie meno.', ProblemKey.decor),
       (
         'Rumore notturno',
         'Tra motorini e locali, si dorme poco.',
         ProblemKey.noise,
       ),
       (
-        'Verde in pausa',
+        'Aree verdi trascurate',
         'Aree verdi trascurate o poco curate.',
         ProblemKey.green,
       ),
       (
         'Sicurezza stradale',
-        'Attraversamenti che sembrano missioni.',
+        'Attraversare vicino alle scuole è difficile.',
         ProblemKey.safety,
       ),
       (
-        'Cantieri eterni',
-        'Lavori che non finiscono mai.',
+        'Cantieri ancora aperti',
+        'I lavori sono in corso da molto tempo.',
         ProblemKey.construction,
       ),
       ('Code in ufficio', 'Tempi lunghi agli sportelli.', ProblemKey.queues),

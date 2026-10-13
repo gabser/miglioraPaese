@@ -48,15 +48,15 @@ void main() {
         final listContext = tester.element(find.text('Proposte del Comune'));
         final cubit = listContext.read<NextProblemsCubit>();
         await tester.enterText(find.byType(TextField).first, 'parco');
-        await tester.tap(find.widgetWithText(ChoiceChip, 'Approvata'));
-        await tester.tap(find.text('Nuovi'));
+        await tester.tap(find.widgetWithText(ChoiceChip, 'Nel gioco'));
+        await tester.tap(find.text('Più recenti'));
         await tester.pumpAndSettle();
         expect(cubit.state.query, 'parco');
         expect(cubit.state.filterStatus, SuggestedProblemStatus.approved);
         expect(cubit.state.sortMode, NextProblemsSortMode.newest);
         await tester.tap(find.byIcon(Icons.add));
         await tester.pumpAndSettle();
-        await tester.tap(find.byTooltip('Torna ai temi'));
+        await tester.tap(find.byTooltip('Torna alle proposte'));
         await tester.pumpAndSettle();
         expect(
           tester
@@ -67,7 +67,7 @@ void main() {
         );
         expect(
           tester
-              .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Approvata'))
+              .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Nel gioco'))
               .selected,
           isTrue,
         );
@@ -91,7 +91,7 @@ void main() {
         );
         expect(
           tester
-              .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Approvata'))
+              .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Nel gioco'))
               .selected,
           isTrue,
         );

@@ -75,7 +75,7 @@ void main() {
       choice: PredictionChoice.worsen,
     );
     expect(repository.upsertCalls, 1);
-    expect(cubit.state.error, contains('gia\' stata giocata'));
+    expect(cubit.state.error, contains('già stata giocata'));
 
     await cubit.setMotivations(
       problemId: 'problem-1',

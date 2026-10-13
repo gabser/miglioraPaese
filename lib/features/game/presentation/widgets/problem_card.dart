@@ -169,7 +169,7 @@ class ProblemCard extends StatelessWidget {
               runSpacing: AppTokens.s8,
               children: [
                 Text(
-                  'Trend $trendLabel',
+                  'Andamento $trendLabel',
                   style: textTheme.labelMedium?.copyWith(
                     color: AppTokens.foregroundFor(status.color),
                     fontWeight: FontWeight.w900,

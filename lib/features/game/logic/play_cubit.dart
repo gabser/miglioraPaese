@@ -246,7 +246,7 @@ class PlayCubit extends Cubit<PlayState> {
     if (turnId == null) return;
     final previousChoice = state.myPredictions[problemId];
     if (previousChoice != null) {
-      emit(state.copyWith(error: 'Questa carta e\' gia\' stata giocata.'));
+      emit(state.copyWith(error: 'Questa carta è già stata giocata.'));
       return;
     }
 

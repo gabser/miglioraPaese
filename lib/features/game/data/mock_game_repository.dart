@@ -290,16 +290,16 @@ class MockGameRepository implements GameRepository {
     final templates =
         <({String prompt, List<String> options, String followUp})>[
           (
-            prompt: 'Quando pensi a questo problema, cosa pesa di piu\'?',
+            prompt: 'Quando pensi a questo problema, cosa pesa di più?',
             options: [
               'Esperienze recenti',
               'Segnali contrastanti',
-              'Poca visibilita\' dei cambiamenti',
+              'Poca visibilità dei cambiamenti',
             ],
-            followUp: 'Ok, segnato. Non e\' un test.',
+            followUp: 'Risposta scelta.',
           ),
           (
-            prompt: 'Quale segnale ti farebbe cambiare idea piu\' in fretta?',
+            prompt: 'Quale segnale ti farebbe cambiare idea più in fretta?',
             options: [
               'Nuove segnalazioni in zona',
               'Interventi visibili',
@@ -313,9 +313,9 @@ class MockGameRepository implements GameRepository {
             options: [
               'Da una storia personale',
               'Da un confronto con altri quartieri',
-              'Da un trend che noto spesso',
+              'Da un andamento che noto spesso',
             ],
-            followUp: 'Perfetto, qui non c\'e\' una risposta giusta.',
+            followUp: 'Risposta scelta.',
           ),
         ];
     final template = templates[random.nextInt(templates.length)];
@@ -455,7 +455,7 @@ class MockGameRepository implements GameRepository {
       } else {
         insights.add(
           const CriticalInsight(
-            headline: 'Qui si e\' ragionato un po\'.',
+            headline: 'Qui si è ragionato un po\'.',
             supporting:
                 'Le persone hanno cercato coerenza nei segnali disponibili.',
           ),
@@ -478,15 +478,15 @@ class MockGameRepository implements GameRepository {
     } else if (reflectionIndex == 1) {
       insights.add(
         const CriticalInsight(
-          headline: 'C\'e\' chi guarda il potenziale.',
-          supporting: 'Il focus e\' su segnali di miglioramento possibili.',
+          headline: 'C\'è chi guarda il potenziale.',
+          supporting: 'Guardi i segnali di un possibile miglioramento.',
         ),
       );
     } else {
       insights.add(
         const CriticalInsight(
-          headline: 'C\'e\' chi guarda tempi e processo.',
-          supporting: 'La lettura passa da priorita\' e coordinamento.',
+          headline: 'C\'è chi guarda tempi e processo.',
+          supporting: 'La lettura passa da priorità e coordinamento.',
         ),
       );
     }

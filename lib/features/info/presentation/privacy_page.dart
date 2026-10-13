@@ -1,3 +1,4 @@
+import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:flutter/material.dart';
 import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
 import 'package:fanta_comune/core/config/app_config.dart';
@@ -36,17 +37,17 @@ class _PrivacyPageState extends State<PrivacyPage> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Eliminare i dati del pilot?'),
+          title: const Text('Eliminare i dati online?'),
           content: const Text(
-            'Saranno cancellati voti, previsioni ed esiti associati alla '
+            'Saranno cancellati voti, previsioni, esiti, squadra e partecipazione alle leghe associati alla '
             'sessione anonima. Le proposte pubblicate resteranno senza un '
-            'collegamento alla sessione. Verranno azzerate anche le '
-            'preferenze locali.',
+            'collegamento alla sessione. Le leghe che hai creato saranno archiviate e i loro inviti revocati. Le squadre degli altri resteranno salvate. Verranno azzerate anche le '
+            'preferenze locali, la partita demo e le partite conservate, le proposte demo, le bozze e le ricevute.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Annulla'),
+              child: const Text(VenialCopy.cancelCta),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -82,7 +83,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
       if (!context.mounted) return;
       setState(
         () => _clearError =
-            'Cancellazione non completata: ${error is ApiException ? error.message : 'Riprova la cancellazione.'} Riprova.',
+            'Cancellazione non completata: ${error is ApiException ? error.message : 'Riprova.'}',
       );
     } finally {
       if (mounted) setState(() => _clearing = false);
@@ -135,8 +136,8 @@ class _PrivacyPageState extends State<PrivacyPage> {
                       const SizedBox(height: AppTokens.s12),
                       Text(
                         hasRemoteData
-                            ? 'Puoi eliminare i dati associati alla sessione anonima del pilot e azzerare le preferenze locali.'
-                            : 'Puoi azzerare le preferenze locali e ripartire in qualsiasi momento.',
+                            ? 'Puoi eliminare i dati della tua sessione anonima online e quelli locali. Le proposte pubblicate restano, senza il collegamento alla sessione.'
+                            : 'Puoi cancellare i dati su questo dispositivo: preferenze, partita demo, partite conservate, proposte demo, bozze e ricevute. Poi riparti dall’inizio.',
                         style: textTheme.bodyMedium,
                       ),
                       const SizedBox(height: AppTokens.s12),
@@ -160,7 +161,7 @@ class _PrivacyPageState extends State<PrivacyPage> {
                               ? 'Cancellazione in corso…'
                               : hasRemoteData
                               ? 'Elimina dati e riparti'
-                              : 'Azzera preferenze e riparti',
+                              : 'Elimina dati e riparti',
                         ),
                       ),
                     ],

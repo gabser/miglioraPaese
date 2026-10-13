@@ -287,7 +287,7 @@ class _BootScreenState extends State<BootScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Micro-animazioni coordinate',
+                                            'Prova i cambi di schermata',
                                             style: textTheme.titleMedium
                                                 ?.copyWith(
                                                   color: colorScheme
@@ -296,8 +296,7 @@ class _BootScreenState extends State<BootScreen> {
                                           ),
                                           const SizedBox(height: AppTokens.s8),
                                           Text(
-                                            'Ingressi morbidi con fade + slide per comunicare cambi di stato senza distrazioni. '
-                                            'Le durate e le curve derivano da AppMotion per un feeling premium su Web.',
+                                            'I contenuti compaiono e si spostano quando apri o chiudi i dettagli.',
                                             style: textTheme.bodyMedium
                                                 ?.copyWith(
                                                   color: colorScheme
@@ -319,7 +318,10 @@ class _BootScreenState extends State<BootScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Components demo', style: textTheme.titleLarge),
+                        Text(
+                          'Prova gli stati delle carte',
+                          style: textTheme.titleLarge,
+                        ),
                         const SizedBox(height: AppTokens.s12),
                         Wrap(
                           spacing: AppTokens.s12,

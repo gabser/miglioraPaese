@@ -154,7 +154,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
       setState(() {
         _capabilitiesReady = false;
         _capabilityError =
-            'Non riesco a verificare il servizio proposte. La bozza resta su questo dispositivo.';
+            'Il servizio proposte non è raggiungibile. La bozza resta su questo dispositivo.';
       });
     }
   }
@@ -244,7 +244,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
       DraftSaveStatus.saving => 'Salvataggio della bozza…',
       DraftSaveStatus.saved => 'Bozza salvata su questo dispositivo.',
       DraftSaveStatus.failed =>
-        'Non riesco a salvare la bozza. Mantieni aperta questa pagina e riprova.',
+        'Bozza non salvata. Tieni aperta questa pagina e riprova.',
       DraftSaveStatus.reset =>
         'Dati locali azzerati. Scegli di nuovo il Comune.',
       null => 'Scegli il Comune prima di compilare la proposta.',
@@ -262,7 +262,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
         if (status == DraftSaveStatus.failed)
           TextButton(
             onPressed: _draftController!.retry,
-            child: const Text('Riprova il salvataggio'),
+            child: const Text(VenialCopy.retrySaveCta),
           ),
       ],
     );
@@ -598,7 +598,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
             Text('Proposta: ${receipt.title}'),
             Text('Luogo: ${view.intent!.location.displayLabel}'),
             const Text(
-              'Questa è la conferma dell’invio, non un’approvazione o una segnalazione ufficiale.',
+              'La proposta è stata ricevuta. Non è una segnalazione ufficiale e non entra automaticamente nel gioco.',
             ),
             TextButton(
               onPressed: () => context.push(
@@ -649,7 +649,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                 if (view.status == SubmissionStatus.receiptUnsaved)
                   FilledButton(
                     onPressed: () => _submissionAction(scope, 'save'),
-                    child: const Text('Salva la conferma'),
+                    child: const Text('Salva la ricevuta'),
                   )
                 else ...[
                   FilledButton(
@@ -755,7 +755,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
         FcDisclosure(
           storageId: 'proposal-place-details:${_draftController?.scope.key}',
           controller: _optionalDetails,
-          title: 'Riferimenti facoltativi',
+          title: 'Aggiungi dettagli del luogo',
           children: [
             TextFormField(
               key: const ValueKey('proposal-location-civic'),
@@ -933,7 +933,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: _leave,
-          tooltip: 'Torna ai temi',
+          tooltip: 'Torna alle proposte',
           icon: const Icon(AppIcons.back),
         ),
         title: const Text(VenialCopy.appTitle),
@@ -978,7 +978,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                           if (cooldown != null) ...[
                             const SizedBox(height: AppTokens.s8),
                             Text(
-                              'Modalità demo: puoi inviare una nuova proposta in questo Comune dopo cinque minuti dall’ultimo invio. La bozza resta modificabile.',
+                              'Nella demo puoi inviare una proposta per Comune ogni 5 minuti. Nel frattempo puoi modificare la bozza.',
                             ),
                           ],
                           if (!_capabilitiesReady) ...[
