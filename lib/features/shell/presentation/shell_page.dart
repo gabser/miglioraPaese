@@ -215,7 +215,7 @@ class _Sidebar extends StatelessWidget {
                   Text(
                     context.read<AppConfig?>()?.gameDataSource ==
                             GameDataSource.api
-                        ? 'Rehearsal API'
+                        ? 'Prova online'
                         : 'Modalità demo',
                     style: textTheme.labelMedium?.copyWith(
                       color: Colors.white.withValues(alpha: 0.68),
@@ -225,8 +225,8 @@ class _Sidebar extends StatelessWidget {
                   Text(
                     context.read<AppConfig?>()?.gameDataSource ==
                             GameDataSource.api
-                        ? 'Dati sintetici dal server'
-                        : 'Dati di gioco mock locali',
+                        ? 'Dati di esempio online'
+                        : 'Dati di gioco demo sul dispositivo',
                     style: textTheme.titleSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,

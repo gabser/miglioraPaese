@@ -1,78 +1,89 @@
 class VenialCopy {
+  static const cancelCta = 'Annulla';
+  static const confirmLineupCta = 'Conferma formazione';
+  static const lineupLockedLabel = 'Formazione bloccata';
+  static const lineupSavedLabel = 'Formazione salvata';
+  static const retrySaveCta = 'Riprova salvataggio';
+  static const newDemoCta = 'Nuova partita demo';
+  static const recoverDemoCta = 'Riprendi partita precedente';
+
   static const appTitle = 'Fanta Comune';
-  static const navHome = 'Home';
+  static const navHome = 'Inizio';
   static const navPlay = 'Gioca';
   static const navLeaderboard = 'Classifica';
   static const navProfile = 'Profilo';
 
-  static const bootStickerLabel = 'SentiNel';
-  static const bootHeroRibbon = 'Starter card';
+  static const bootStickerLabel = 'Demo';
+  static const bootHeroRibbon = 'Prima carta';
   static const bootHeroTitle = 'Fanta Comune';
-  static const bootHeroSubtitle = 'Gioco civico leggero, carta e timbri.';
-  static const bootHeroNote = 'Bootstrap completato. Pronto per iniziare.';
-  static const bootPrimaryCta = 'Vai al tabellone';
-  static const bootResetCta = 'Reset preferenze';
-  static const bootInfoTitle = 'Info & privacy';
+  static const bootHeroSubtitle =
+      'Scegli le carte e prova a prevedere come andrà.';
+  static const bootHeroNote = 'Tutto pronto. Puoi iniziare.';
+  static const bootPrimaryCta = 'Vai all’inizio';
+  static const bootResetCta = 'Elimina dati locali';
+  static const bootInfoTitle = 'Come funziona e privacy';
   static const bootInfoCtaHow = 'Come funziona';
   static const bootInfoCtaPrivacy = 'Privacy';
-  static const bootIconsTitle = 'Icon set';
+  static const bootIconsTitle = 'Icone';
   static const bootIconsSubtitle =
-      'Icone centralizzate per navigazione e problemi.';
-  static const bootIconsTabsTitle = 'Tab principali';
+      'Le icone ti aiutano a riconoscere pagine e problemi.';
+  static const bootIconsTabsTitle = 'Pagine principali';
   static const bootIconsProblemsTitle = 'Tipologie di problema';
-  static const bootMotionTitle = 'Motion demo';
-  static const bootMotionToggle = 'Mostra dettagli motion demo';
+  static const bootMotionTitle = 'Prova le animazioni';
+  static const bootMotionToggle = 'Mostra i dettagli delle animazioni';
   static const bootMotionSubtitle =
-      'Transizioni coordinate con AnimatedSwitcherX e token di motion.';
+      'Guarda come cambiano i contenuti quando apri i dettagli.';
 
-  static const welcomeStep1Title = 'Partiamo piano?';
-  static const welcomeStep1Subtitle = 'Qui non devi fare granché.';
-  static const welcomeStep1Cta = 'Ok';
+  static const welcomeStep1Title = 'Guarda le carte';
+  static const welcomeStep1Subtitle =
+      'Ogni carta racconta un problema del Comune.';
+  static const welcomeStep1Cta = 'Continua';
 
-  static const welcomeStep2Title = 'Dai un\'idea su come potrebbe andare.';
+  static const welcomeStep2Title = 'Come pensi che andrà?';
   static const welcomeStep2Subtitle =
-      'Poi vediamo com\'e\' andata, senza pressione.';
-  static const welcomeStep2Cta = 'Va bene';
+      'Scegli: migliora, resta stabile o peggiora. Poi confronta gli esiti.';
+  static const welcomeStep2Cta = 'Continua';
 
-  static const welcomeStep3Title = 'Vuoi partire subito?';
-  static const welcomeStep3Subtitle = 'Scelta rapida, zero drammi.';
-  static const welcomeStep3Play = 'Vai a giocare';
-  static const welcomeStep3Municipality = 'Scegli Comune';
+  static const welcomeStep3Title = 'Da dove vuoi iniziare?';
+  static const welcomeStep3Subtitle = 'Prova il gioco o scegli il tuo Comune.';
+  static const welcomeStep3Play = 'Prova il gioco';
+  static const welcomeStep3Municipality = 'Scegli il Comune';
   static const welcomeSkip = 'Salta';
   static const onboardingSkip = 'Salta';
   static const welcomeProgressLabel = 'Passo {step}';
   static const welcomeLandingTitle = 'Fanta Comune';
   static const welcomeLandingSubtitle =
-      'Gioca un turno civico in due minuti: scegli, confronta, rientra quando vuoi.';
-  static const welcomeEnterTitle = 'Entra nel turno';
-  static const welcomeEnterSubtitle = 'Vai subito alle carte mock di oggi.';
-  static const welcomeTutorialTitle = 'Mini tutorial';
+      'Scegli una carta, fai una previsione e confronta il risultato.';
+  static const welcomeEnterTitle = 'Gioca un turno';
+  static const welcomeEnterSubtitle = 'Prova le carte di esempio della demo.';
+  static const welcomeTutorialTitle = 'Scopri le regole';
   static const welcomeTutorialSubtitle =
-      'Quattro schermate leggere per capire il gioco.';
-  static const welcomeProfileTitle = 'Crea profilo';
+      'Quattro passi per capire come giocare.';
+  static const welcomeProfileTitle = 'Apri il profilo';
   static const welcomeProfileSubtitle =
-      'Mock profilo locale, reputazione e preferenze.';
+      'Guarda punti e preferenze salvati sul dispositivo.';
 
-  static const onboardingStep1Title = 'Niente di complicato.';
-  static const onboardingStep1Subtitle = 'Davvero.';
-  static const onboardingStep1Bullet = 'Basta guardare e scegliere, se ti va.';
-  static const onboardingStep1Cta = 'Ok, continuo';
+  static const onboardingStep1Title = 'Una carta, un problema';
+  static const onboardingStep1Subtitle = 'Parti da quello che conosci.';
+  static const onboardingStep1Bullet = 'Scegli una carta del tuo Comune.';
+  static const onboardingStep1Cta = 'Continua';
 
-  static const onboardingStep2Title = 'Qui non sistemiamo nulla.';
-  static const onboardingStep2Subtitle = 'Lo sappiamo, tranquillo.';
-  static const onboardingStep2Bullet = 'Vediamo solo che idea ti sei fatto.';
-  static const onboardingStep2Cta = 'Va bene così';
+  static const onboardingStep2Title = 'Fai una previsione';
+  static const onboardingStep2Subtitle = 'Migliora, resta stabile o peggiora?';
+  static const onboardingStep2Bullet =
+      'La tua scelta dice come pensi che andrà. Non risolve il problema.';
+  static const onboardingStep2Cta = 'Continua';
 
-  static const onboardingStep3Title = 'Regole leggere, zero prediche.';
-  static const onboardingStep3Subtitle = 'Tre cose e basta.';
+  static const onboardingStep3Title = 'Spiega la tua scelta';
+  static const onboardingStep3Subtitle = 'Quali segnali hai notato?';
   static const onboardingStep3Bullet =
-      'Niente sermoni, solo una previsione semplice.';
-  static const onboardingStep3Cta = 'Ci sono';
+      'Puoi indicare perché hai fatto quella previsione.';
+  static const onboardingStep3Cta = 'Continua';
 
-  static const onboardingStep4Title = 'Quando ci prendi, si vede.';
-  static const onboardingStep4Subtitle =
-      'E\' un gioco: a volte ci prende, a volte no.';
-  static const onboardingStep4Bullet = 'Tu scegli, il tempo risponde.';
+  static const onboardingStep4Title = 'Confronta il risultato';
+  static const onboardingStep4Subtitle = 'Vediamo se ci hai preso.';
+  static const onboardingStep4Bullet =
+      'Quando il turno è risolto, trovi esiti e punti.';
   static const onboardingStep4Cta = 'Inizia a giocare';
   static const onboardingProgressLabel = 'Passo {step}';
   static const onboardingRibbonLabel = 'Comune';
@@ -80,42 +91,41 @@ class VenialCopy {
 
   static const playHeader = 'Gioca le carte del turno';
   static const playIntro =
-      'Scegli una carta, fai una previsione e indica perche.';
+      'Scegli una carta, fai una previsione e indica perché.';
   static const playCardsTitle = 'Carte da giocare';
   static const playCardsSubtitle =
       '{count} situazioni aperte: scegli se migliorano, restano stabili o peggiorano.';
   static const playBoardHeaderTitle = 'Turno di oggi';
   static const playBoardHeaderSubtitle =
-      'Le carte sono problemi civici mock. Fai una scommessa leggera, poi confronti gli esiti.';
+      'Ogni carta descrive un problema di esempio. Prevedi come andrà e confronta gli esiti.';
   static const playBoardCta = 'Vedi tabellone';
   static const bannerNewsLabel = 'Nuove carte';
   static const bannerTurnOpenLabel = 'Turno aperto';
   static const playResolveCardTitle = 'Esiti del turno';
   static const playResolveCta = 'Scopri esiti';
   static const playResolveDisabledHint =
-      'Gioca almeno una carta per sbloccare gli esiti mock.';
-  static const playEmpty =
-      'Per ora niente di urgente. Se ti va, torna piu\' tardi.';
+      'Fai almeno una previsione per vedere gli esiti della demo.';
+  static const playEmpty = 'Non ci sono carte da giocare.';
   static const activationTitle = 'Comune in attivazione';
   static const activationSubtitle =
-      'Qui non ci sono ancora carte civiche. Possiamo iniziare dai primi segnali del posto.';
+      'Qui non ci sono ancora carte. Puoi proporre un problema del tuo Comune.';
   static const activationGoal =
-      'I voti sostengono le proposte. L’eventuale ingresso nel gioco delle previsioni segue le regole del server e la moderazione richiesta.';
+      'I voti sostengono le proposte. Il passaggio al gioco delle previsioni segue le regole del servizio.';
   static const activationPrimaryCta = 'Proponi il primo tema';
   static const activationSecondaryCta = 'Vedi temi proposti';
   static const activationOfficialHint =
-      'Non e\' una segnalazione ufficiale al Comune: e\' una mappa civica in costruzione.';
+      'La proposta resta nel gioco: non è una segnalazione ufficiale al Comune.';
   static const activationMissionsTitle = 'Prime cose da osservare';
   static const activationMissionPotholes = 'Buche o marciapiedi rovinati';
   static const activationMissionLighting = 'Zone buie o lampioni spenti';
   static const activationMissionWaste = 'Rifiuti abbandonati';
   static const activationMissionGreen = 'Verde pubblico trascurato';
   static const activationMissionSafety = 'Attraversamenti poco sicuri';
-  static const playNextProblemsTitle = 'Hai un\'altra idea in mente?';
+  static const playNextProblemsTitle = 'Manca un problema?';
   static const playNextProblemsBody =
-      'Non risolviamo nulla, ma scegliamo cosa tenere d\'occhio.';
+      'Proponi un tema o vota quelli che vuoi seguire.';
   static const playSuggestCta = 'Proponi un problema';
-  static const playVoteCta = 'Vota i prossimi';
+  static const playVoteCta = 'Vota le proposte';
   static const playTabLabel = 'Gioca';
   static const playCountdownDaysTemplate = 'Chiude tra {days} giorni';
   static const playCountdownHoursTemplate = 'Chiude tra {hours} ore';
@@ -124,129 +134,135 @@ class VenialCopy {
   static const confidenceGutFeeling = 'A sensazione';
   static const confidenceConsidered = 'Ci ho pensato';
   static const confidenceConvinced = 'Abbastanza convinto';
-  static const reflectionTitle = 'Una domanda al volo (10 secondi)';
-  static const reflectionNotATest = 'Non e\' un test.';
-  static const reflectionNoRightAnswer = 'Qui non c\'e\' una risposta giusta.';
-  static const reflectionGutOk = 'Va bene anche rispondere a pelle.';
+  static const reflectionTitle = 'Quale segnale hai notato?';
+  static const reflectionNotATest =
+      'Scegli la risposta più vicina alla tua esperienza.';
+  static const reflectionNoRightAnswer =
+      'Le risposte raccontano il tuo punto di vista.';
+  static const reflectionGutOk = 'Puoi rispondere anche a sensazione.';
   static const criticalInsightsTitle = 'Punti di vista';
-  static const criticalInsightsDisclaimer = 'Niente giudizi: solo prospettive.';
-  static const criticalInsightsLoading = 'Raccogliamo prospettive diverse...';
+  static const criticalInsightsDisclaimer =
+      'Confronta i punti di vista di chi ha giocato.';
+  static const criticalInsightsLoading = 'Caricamento dei punti di vista…';
   static const criticalInsightsLowSignal =
-      'Troppo presto per dire. Ma e\' interessante vedere le differenze.';
-  static const lensSectionTitle = 'La tua lente';
+      'Ci sono ancora poche risposte per confrontare i punti di vista.';
+  static const lensSectionTitle = 'Il tuo punto di vista';
   static const lensSectionSubtitle =
-      'Una lente e\' solo un modo di leggere i segnali.';
-  static const lensSectionEmpty = 'Scegli una lente, se ti va.';
-  static const lensSuggestionLoading = 'Cerchiamo una lente che ti somiglia...';
-  static const lensSuggestionTemplate = 'Se ti va, potresti provare: {role}.';
+      'La lente descrive i segnali a cui dai più peso.';
+  static const lensSectionEmpty = 'Scegli come guardare i problemi.';
+  static const lensSuggestionLoading = 'Caricamento del suggerimento…';
+  static const lensSuggestionTemplate = 'Puoi provare la lente {role}.';
   static const lensChangeCta = 'Cambia lente';
-  static const lensChangeCountTemplate =
-      'Cambiare idea e\' una skill. ({count})';
+  static const lensChangeCountTemplate = 'Hai cambiato lente {count} volte.';
   static const lensPickerTitle = 'Scegli una lente';
   static const lensPickerSubtitle =
-      'Puoi cambiarla quando vuoi, senza giudizi.';
-  static const lensChangedSnack = 'Ok, oggi guardiamo le cose cosi\'.';
-  static const retentionPendingTitle = 'Qualcosa si e\' mosso?';
+      'Scegli i segnali che vuoi seguire. Puoi cambiare lente.';
+  static const lensChangedSnack = 'Lente aggiornata.';
+  static const retentionPendingTitle = 'Gli esiti sono pronti';
   static const retentionPendingBody =
-      'Se ti va, dai un\'occhiata agli esiti del turno.';
-  static const retentionChangedTitle = 'Non tutti la pensano allo stesso modo?';
+      'Confronta le tue previsioni con gli esiti del turno.';
+  static const retentionChangedTitle = 'Le opinioni sono cambiate';
   static const retentionChangedBody =
-      'Le percezioni sembrano muoversi: curiosita\' legittima.';
-  static const retentionCta = 'Guarda se ti va';
-  static const retentionStickerPending = 'Piccola novita\'';
-  static const retentionStickerChanged = 'Spostamento lento';
+      'Guarda come sono cambiate le previsioni.';
+  static const retentionCta = 'Guarda gli esiti';
+  static const retentionStickerPending = 'Nuovi esiti';
+  static const retentionStickerChanged = 'Opinioni cambiate';
 
-  static const predictionPrompt = 'Se dovessi azzardare...';
+  static const predictionPrompt = 'Come pensi che andrà?';
   static const predictionLockedTitle = 'Carta giocata';
   static const predictionLockedBody =
-      'Hai registrato il voto per questo turno. La previsione non si cambia.';
-  static const motivationPrompt = 'Cosa ti fa pensare cosi\'?';
-  static const motivationHelper = 'Due parole, se ti va. Anche a pelle.';
+      'Hai salvato la previsione per questo turno. Non puoi cambiarla.';
+  static const motivationPrompt = 'Perché pensi che andrà così?';
+  static const motivationHelper = 'Indica i segnali che hai notato.';
   static const choiceImproveLabel = 'Migliora';
   static const choiceStableLabel = 'Stabile';
   static const choiceWorsenLabel = 'Peggiora';
-  static const problemUpdatedTemplate = 'Aggiornato {hours}h fa';
+  static const problemUpdatedTemplate = 'Aggiornato {hours} ore fa';
   static const problemRefreshTooltip = 'Aggiorna';
   static const boardTileLabel = 'Casella';
   static const boardTileStatusLabel = 'Stato';
 
-  static const insightHeadlineTemplate =
-      'Sembra che circa il {percentage}% pensi che {verb}.';
+  static const insightHeadlineTemplate = 'Il {percentage}% prevede che {verb}.';
   static const insightDisclaimer = 'Percezioni, non dati ufficiali.';
-  static const insightLowSignalHeadline = 'Troppo presto per dirlo.';
-  static const insightLowSignalDetail = 'Stiamo ancora annusando l\'aria.';
-  static const insightNoMotivation = 'Per ora ognuno la vede a modo suo.';
-  static const insightMotivationPrefix = 'Motivi piu\' citati: {labels}';
+  static const insightLowSignalHeadline = 'Ancora poche previsioni';
+  static const insightLowSignalDetail =
+      'Servono altre previsioni per confrontare le opinioni.';
+  static const insightNoMotivation = 'Non emerge ancora un motivo comune.';
+  static const insightMotivationPrefix = 'Motivi più citati: {labels}';
   static const insightHistoryShow = 'Apri cronologia';
   static const insightHistoryHide = 'Chiudi cronologia';
-  static const insightHistoryLoading = 'Carichiamo i segnali recenti...';
-  static const insightHistoryPrompt = 'Apri se vuoi sfogliare il trend.';
-  static const insightCardTitle = 'Carta: percezione del momento';
+  static const insightHistoryLoading = 'Caricamento delle previsioni recenti…';
+  static const insightHistoryPrompt =
+      'Apri la cronologia per vedere cosa è cambiato.';
+  static const insightCardTitle = 'Le previsioni su questa carta';
   static const stampPerceptionsLabel = 'PERCEZIONI';
   static const stampResultLabel = 'ESITO';
 
   static const reputationTitle = 'Come sta andando';
   static const reputationHelper =
-      'Non e\' una scienza, solo un indicatore leggero.';
+      'Punti e precisione delle tue previsioni concluse.';
   static const reputationPointsLabel = 'Punti';
-  static const reputationAccuracyLabel = 'Accuratezza';
+  static const reputationAccuracyLabel = 'Previsioni corrette';
   static const reputationPredictionsLabel = 'Previsioni';
 
   static const trendHeadingTemplate = 'Andamento (ultimi {turns} turni)';
-  static const trendLowDataLabel = 'Trend in formazione';
+  static const trendLowDataLabel = 'Ancora pochi dati';
   static const trendLowDataHelper =
-      'Servono ancora alcuni segnali per capirci qualcosa.';
-  static const trendLowDataQuick = 'Troppo presto per dirlo.';
+      'Servono altri turni per mostrare un andamento.';
+  static const trendLowDataQuick = 'Ancora pochi dati.';
   static const trendFlatImprove = 'Sembra stabile sul miglioramento.';
-  static const trendFlatStable = 'Stabilita\' percepita, senza scossoni.';
-  static const trendFlatWorsen = 'Timori stabili, senza scossoni.';
-  static const trendUpImprove = 'Si vede piu\' fiducia in un miglioramento.';
-  static const trendUpStable = 'Cresce la sensazione di stabilita\'.';
-  static const trendUpWorsen = 'Aumenta chi teme un peggioramento.';
-  static const trendDownImprove = 'Meno fiducia nel miglioramento.';
-  static const trendDownStable = 'Meno persone la vedono stabile.';
-  static const trendDownWorsen = 'Calano i timori di peggioramento.';
+  static const trendFlatStable = 'Le previsioni di stabilità restano costanti.';
+  static const trendFlatWorsen =
+      'Le previsioni di peggioramento restano costanti.';
+  static const trendUpImprove = 'Aumenta chi prevede un miglioramento.';
+  static const trendUpStable = 'Aumenta chi prevede stabilità.';
+  static const trendUpWorsen = 'Aumenta chi prevede un peggioramento.';
+  static const trendDownImprove = 'Cala chi prevede un miglioramento.';
+  static const trendDownStable = 'Cala chi prevede stabilità.';
+  static const trendDownWorsen = 'Cala chi prevede un peggioramento.';
 
-  static const resultCorrect = 'Ci stava, forse.';
-  static const resultPartial = 'Mezza presa, ci sta.';
-  static const resultWrong = 'Questa volta no. Capita.';
-  static const resultPending = 'In attesa di conferma.';
+  static const resultCorrect = 'Previsione centrata. Bel colpo!';
+  static const resultPartial = 'Ci hai preso a metà.';
+  static const resultWrong = 'Questa volta è andata diversamente.';
+  static const resultPending = 'Esito non ancora disponibile.';
 
-  static const selectionRecorded = 'Ok, registrato. Vediamo.';
+  static const selectionRecorded = 'Previsione salvata.';
 
   static const nextProblemsHeader = 'Proposte del Comune';
   static const nextProblemsIntro =
-      'Non è una segnalazione ufficiale. Le proposte possono alimentare il gioco delle previsioni secondo le sue regole; non diventano automaticamente carte Manager né assegnano punti.';
+      'Proponi un problema o vota quelli che vuoi seguire. Le proposte possono entrare nel gioco delle previsioni secondo le sue regole. Invio e voti non assegnano carte alla squadra né punti. Non è una segnalazione ufficiale al Comune.';
   static const nextProblemsEmpty =
-      'Per ora niente proposte. Va bene cosi\', o magari non c\'era voglia.';
+      'Non ci sono proposte. Puoi essere il primo a proporre un tema.';
   static const nextProblemsActivationEmpty =
-      'Ancora nessuna proposta qui. Puoi suggerire un tema da valutare.';
-  static const nextProblemsStatusPending = 'In valutazione';
-  static const nextProblemsStatusApproved = 'Approvata';
-  static const nextProblemsStatusRejected = 'Non ora';
-  static const nextProblemsVoteHint = 'Ok, segnato.';
+      'Non ci sono ancora proposte per questo Comune. Proponi un tema.';
+  static const nextProblemsStatusPending = 'Raccolta voti';
+  static const nextProblemsStatusApproved = 'Nel gioco';
+  static const nextProblemsStatusRejected = 'Non accolta';
+  static const nextProblemsVoteHint =
+      'Puoi cambiare voto o premere di nuovo per toglierlo.';
   static const nextProblemsVoteUpLabel = 'Sostengo';
-  static const nextProblemsVoteDownLabel = 'Passo';
+  static const nextProblemsVoteDownLabel = 'Non sostengo';
   static const nextProblemsSearchHint = 'Cerca un tema';
   static const nextProblemsFilterAll = 'Tutti';
-  static const nextProblemsSortHot = 'Caldi';
-  static const nextProblemsSortNew = 'Nuovi';
-  static const nextProblemsSortSplit = 'Divisivi';
+  static const nextProblemsSortHot = 'Più sostenuti';
+  static const nextProblemsSortNew = 'Più recenti';
+  static const nextProblemsSortSplit = 'Voti divisi';
   static const nextProblemsPendingHelper =
-      'In valutazione: l’invio è ricevuto, l’approvazione non è garantita.';
-  static const nextProblemsPromotionTitle = 'Regola del prototipo';
+      'Proposta ricevuta. La raccolta voti è aperta; il passaggio al gioco segue le regole del servizio.';
+  static const nextProblemsPromotionTitle = 'Soglia di voti';
   static const nextProblemsPromotionComplete =
-      'Soglia di voti raggiunta. L’eventuale ingresso nel gioco delle previsioni dipende anche dalla moderazione prevista.';
+      'Soglia raggiunta. Il passaggio al gioco delle previsioni segue le regole del servizio.';
   static const nextProblemsPromotionMissingSingular =
-      'Manca 1 approvazione netta per entrare in lista.';
+      'Manca 1 voto netto a favore per raggiungere la soglia.';
   static const nextProblemsPromotionMissingPlural =
-      'Mancano {count} approvazioni nette per entrare in lista.';
-  static const nextProblemsProposedBy = 'Proposto da';
-  static const nextProblemsVotedSnack = 'Segnato.';
+      'Mancano {count} voti netti a favore per raggiungere la soglia.';
+  static const nextProblemsProposedBy = 'Proposta di';
+  static const nextProblemsVotedSnack = 'Voto salvato.';
 
   static const suggestTitle = 'Proponi un problema';
-  static const suggestSubtitle = 'E\' solo un suggerimento, senza formalita\'.';
-  static const suggestOfficialHint = 'Non e\' una segnalazione ufficiale.';
+  static const suggestSubtitle =
+      'Racconta un problema che vuoi seguire nel tuo Comune.';
+  static const suggestOfficialHint = 'Non è una segnalazione ufficiale.';
   static const suggestRibbonLabel = 'Nuova proposta';
   static const suggestTitleHint = 'Titolo breve';
   static const suggestDescriptionHint =
@@ -254,78 +270,78 @@ class VenialCopy {
   static const suggestCategoryLabel = 'Categoria';
   static const suggestSubmit = 'Invia proposta';
   static const suggestReviewHint =
-      'L’invio sarà ricevuto e valutato secondo le regole previste. Nessun ingresso automatico nel gioco e nessun premio per l’invio.';
-  static const suggestSuccess = 'Ok, in valutazione.';
-  static const suggestCooldownHint = 'Una proposta ogni 5 minuti va bene.';
+      'Inviare una proposta non la fa entrare automaticamente nel gioco e non assegna punti.';
+  static const suggestSuccess = 'Proposta ricevuta.';
+  static const suggestCooldownHint = 'Puoi inviare una proposta ogni 5 minuti.';
   static const suggestDuplicateHint =
-      'Sembra gia\' in lista. Vuoi votarlo invece?';
-  static const suggestMissingFields = 'Serve un titolo e due righe, se ti va.';
-  static const suggestTooLong = 'Restiamo brevi, promesso.';
-  static const suggestGenericError = 'Qualcosa si e\' impuntato. Riprova.';
+      'C’è già una proposta con questo titolo. Puoi votarla.';
+  static const suggestMissingFields = 'Inserisci titolo e descrizione.';
+  static const suggestTooLong =
+      'Accorcia il testo: rispetta il limite indicato nel campo.';
+  static const suggestGenericError = 'Invio non riuscito. Riprova.';
 
   static const onboardingTitle = 'Scegli il tuo Comune';
   static const onboardingSubtitle =
-      'Seleziona il Comune per sbloccare il gioco.';
+      'Scegli dove vuoi giocare e seguire le proposte.';
   static const onboardingSearchHint = 'Cerca il tuo Comune';
   static const onboardingCitySelectTemplate = 'Seleziona {city}';
 
   static const homeWelcomeTitle = 'Benvenuto su {app}';
-  static const homeCardTitle = 'La tua plancia leggera';
-  static const homeCardBody =
-      'Qui potresti trovare spunti, missioni e curiosita\'.';
+  static const homeCardTitle = 'Il tuo tabellone';
+  static const homeCardBody = 'Trovi carte, previsioni e proposte del Comune.';
   static const homeBannerTitle = 'Benvenuto su {app}';
   static const homeBannerSubtitle =
-      'Una plancia leggera, qualche carta, zero fretta.';
+      'Scegli una carta e prova a prevedere come andrà.';
   static const homeBannerSticker = 'Carta iniziale';
   static const homeBannerCta = 'Apri il tabellone';
-  static const homePlayCardTitle = 'Pronto per un giro?';
+  static const homePlayCardTitle = 'Giochiamo un turno?';
   static const homePlayCardBody =
-      'Se ti va, pesca una carta del turno e guarda che aria tira.';
+      'Apri le carte del turno e fai le tue previsioni.';
   static const homePlayCardCta = 'Entra nel turno';
   static const ctaHowItWorks = 'Come funziona';
 
   static const profileTitle = 'Profilo';
-  static const profileIdentityTitle = 'Identita\' e preferenze';
+  static const profileIdentityTitle = 'Le tue preferenze';
   static const profileIdentityBody =
-      'Impostazioni e piccole scelte personali, niente di serio.';
-  static const profileHistoryLoading = 'Carichiamo il tuo storico...';
+      'Scegli il Comune e il tuo punto di vista.';
+  static const profileHistoryLoading = 'Caricamento dei tuoi risultati…';
   static const retryCta = 'Riprova';
   static const profileTrendPointsTitle = 'Punti totali';
   static const profileTrendPointsUp = 'Punti in crescita costante.';
   static const profileTrendPointsDown = 'Punti in leggera flessione.';
   static const profileTrendPointsFlat = 'Punti stabili negli ultimi turni.';
-  static const profileTrendAccuracyTitle = 'Accuratezza';
+  static const profileTrendAccuracyTitle = 'Previsioni corrette';
   static const profileTrendAccuracyUp = 'Precisione in crescita.';
   static const profileTrendAccuracyDown = 'Precisione in lieve calo.';
-  static const profileTrendAccuracyFlat = 'Precisione stabile e coerente.';
+  static const profileTrendAccuracyFlat = 'La precisione resta stabile.';
 
   static const boardTitle = 'Tabellone';
-  static const boardSubtitle = 'Una vista d\'insieme, senza fretta.';
-  static const boardEmpty = 'Per ora il tabellone e\' tranquillo.';
+  static const boardSubtitle = 'Guarda tutte le carte e le tue previsioni.';
+  static const boardEmpty = 'Non ci sono carte sul tabellone.';
   static const boardActivationEmpty =
-      'Il tabellone e\' ancora da costruire: parti da un tema che vedi davvero nel tuo Comune.';
-  static const boardNewsTitle = 'Novita\' sul tabellone';
-  static const boardNewsEmpty = 'Nessuna novita\' urgente. Si gioca piano.';
+      'Non ci sono ancora carte. Proponi un problema del tuo Comune.';
+  static const boardNewsTitle = 'Novità sul tabellone';
+  static const boardNewsEmpty = 'Nessuna novità sul tabellone.';
   static const boardNewsPendingTurn = 'Esiti da rivedere';
   static const boardNewsPendingTurnBody =
-      'C\'e\' un turno risolto che aspetta uno sguardo.';
-  static const boardNewsShifted = 'Percezioni mosse';
+      'Il turno è risolto: puoi guardare gli esiti.';
+  static const boardNewsShifted = 'Previsioni cambiate';
   static const boardNewsShiftedBody =
-      'Qualcosa e\' cambiato nel modo in cui la gente vede.';
+      'Le previsioni degli altri giocatori sono cambiate.';
   static const boardNewsProposals = 'Nuove proposte';
   static const boardNewsProposalsBody =
-      'Qualcuno ha messo sul tavolo nuovi temi.';
+      'Ci sono nuovi temi da leggere e votare.';
   static const boardTokensTitle = 'I tuoi segnalini';
   static const boardTokensEmpty =
       'Gioca un turno per piazzare i primi segnalini.';
-  static const boardTokensCaption = 'Token = tua scelta sul tabellone.';
+  static const boardTokensCaption =
+      'Ogni segnalino mostra la tua previsione su una carta.';
   static const boardLegendLabel = 'Legenda';
-  static const boardLegendBody = 'Token = tua scelta';
+  static const boardLegendBody = 'Segnalino = la tua previsione';
   static const boardZoneLabel = 'Quartiere';
   static const boardCardOfDayTitle = 'Carta del giorno';
-  static const boardCardOfDayBody =
-      'Una casella a cui dare un\'occhiata, senza fretta.';
-  static const boardShowcaseTitle = 'Vetrina prossimi problemi';
+  static const boardCardOfDayBody = 'Guarda questa carta e fai una previsione.';
+  static const boardShowcaseTitle = 'Proposte da seguire';
   static const boardShowcaseBody =
-      'Spazio pronto per nuove carte, quando arrivano.';
+      'Qui trovi i temi proposti per i prossimi turni.';
 }

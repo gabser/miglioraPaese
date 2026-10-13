@@ -1,0 +1,362 @@
+Resolving dependencies...
+Downloading packages...
+  bloc 8.1.4 (9.2.1 available)
+  clock 1.1.2 (1.1.3 available)
+  equatable 2.0.8 (3.0.0 available)
+  flutter_bloc 8.1.6 (9.1.1 available)
+  flutter_lints 3.0.2 (6.0.0 available)
+  go_router 14.8.1 (18.0.2 available)
+  intl 0.20.2 (0.20.3 available)
+  lints 3.0.0 (6.1.0 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.0 (1.19.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.26 (2.4.28 available)
+  shared_preferences_foundation 2.5.6 (2.5.7 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  test_api 0.7.11 (0.7.15 available)
+  vector_graphics 1.2.2 (1.2.3 available)
+  vector_graphics_compiler 1.2.6 (1.3.1 available)
+  vector_math 2.2.0 (2.4.3 available)
+  vm_service 15.2.0 (15.3.0 available)
+  xml 7.0.1 (7.1.0 available)
+Got dependencies!
+23 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/network/api_client_test.dart
+00:00 +0: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/network/api_client_test.dart: decodes successful JSON and preserves base path and query
+00:00 +1: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/network/api_client_test.dart: preserves structured backend errors
+00:00 +2: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/network/api_client_test.dart: sends PUT requests as JSON
+00:00 +3: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/network/api_client_test.dart: sends DELETE requests without inventing a request body
+00:00 +4: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/network/api_client_test.dart: rejects malformed success JSON
+00:00 +5: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/network/api_client_test.dart: keeps non-JSON server errors typed as retryable responses
+00:00 +6: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/network/api_client_test.dart: turns a slow request into a typed timeout
+00:00 +7: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/models/municipality_catalog_test.dart: maps only explicit local municipality IDs to API IDs
+00:00 +8: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/models/municipality_catalog_test.dart: renders API municipality IDs with their display name
+00:00 +9: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/persistence/local_data_store_test.dart: serializes changes and reconstructs an isolated snapshot with the same namespace
+00:00 +10: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/persistence/local_data_store_test.dart: failed write never publishes or replaces committed data and can be retried
+00:00 +11: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/persistence/local_data_store_test.dart: reset waits for in-flight data and prevents queued or late work from resurrecting it
+00:00 +12: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/persistence/local_data_store_test.dart: a failed clear reports failure and blocks mutations until a successful retry
+00:00 +13: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/persistence/local_data_store_test.dart: corrupt data is preserved rather than overwritten and explicit reset recovers the store
+00:00 +14: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/widgets/fc_widgets_test.dart: small semantic text has sufficient contrast on tinted surfaces
+00:00 +15: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/widgets/fc_widgets_test.dart: token artifact matches runtime typography and layout
+00:00 +16: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/widgets/fc_widgets_test.dart: token artifact matches runtime typography and layout
+00:00 +17: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/widgets/fc_widgets_test.dart: token artifact matches runtime typography and layout
+00:00 +18: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/widgets/fc_widgets_test.dart: token artifact matches runtime typography and layout
+00:00 +19: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/widgets/fc_widgets_test.dart: token artifact matches runtime typography and layout
+00:00 +20: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/widgets/fc_widgets_test.dart: token artifact matches runtime typography and layout
+00:00 +21: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/widgets/fc_widgets_test.dart: token artifact matches runtime typography and layout
+00:00 +22: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/widgets/fc_widgets_test.dart: status wraps at 200% and section title is a single heading
+00:00 +23: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/core/widgets/fc_widgets_test.dart: zero values stay neutral and absent segments are excluded
+00:01 +24: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/welcome_flow_test.dart: municipality onboarding is optional and returns home
+00:01 +25: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/welcome_flow_test.dart: municipality onboarding is optional and returns home
+00:01 +26: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/welcome_flow_test.dart: municipality onboarding is optional and returns home
+00:01 +27: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/welcome_flow_test.dart: municipality onboarding is optional and returns home
+00:01 +28: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/welcome_flow_test.dart: municipality onboarding is optional and returns home
+00:01 +29: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/welcome_flow_test.dart: municipality onboarding is optional and returns home
+00:01 +30: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/welcome_flow_test.dart: municipality onboarding is optional and returns home
+00:01 +31: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/welcome_flow_test.dart: municipality onboarding is optional and returns home
+00:01 +32: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +33: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +34: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +35: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +36: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +37: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +38: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +39: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +40: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +41: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +42: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +43: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +44: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +45: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +46: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +47: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +48: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +49: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +50: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +51: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +52: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +53: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +54: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +55: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +56: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:02 +57: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/civic_loop/civic_loop_persistence_test.dart: reset cancels pending persistence and delayed game writes, then empties both providers
+00:03 +58: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +59: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +60: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +61: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +62: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +63: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +64: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +65: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +66: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +67: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +68: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +69: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +70: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +71: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +72: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +73: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +74: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +75: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +76: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +77: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 320.0 with large text
+00:03 +78: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: long board cards and controls fit at 320.0 with 200% text
+00:03 +79: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/info/presentation/privacy_page_test.dart: API mode confirms and deletes remote data before local prefs
+00:03 +80: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/profile/presentation/profile_leaderboard_test.dart: profile displays current numeric score and low data at 320.0
+00:03 +81: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/profile/presentation/profile_leaderboard_test.dart: profile displays current numeric score and low data at 320.0
+00:03 +82: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: real empty board gives observable categories and proposal navigation at 320.0
+00:03 +83: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: real empty board gives observable categories and proposal navigation at 320.0
+00:03 +84: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: real empty board gives observable categories and proposal navigation at 320.0
+00:03 +85: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 390.0 with large text
+00:03 +86: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/profile/presentation/profile_leaderboard_test.dart: empty leaderboard proposes an actionable next step at 320.0
+00:03 +87: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/profile/presentation/profile_leaderboard_test.dart: empty leaderboard proposes an actionable next step at 320.0
+00:03 +88: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play without cards offers a proposal rather than fabricated progress at 390.0
+00:03 +89: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play without cards offers a proposal rather than fabricated progress at 390.0
+00:03 +90: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/profile/presentation/profile_leaderboard_test.dart: profile displays current numeric score and low data at 390.0
+00:03 +91: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: long board cards and controls fit at 1440.0 with 200% text
+00:03 +92: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: long board cards and controls fit at 1440.0 with 200% text
+00:04 +93: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +94: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +95: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +96: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +97: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +98: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +99: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +100: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +101: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +102: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +103: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +104: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +105: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/play_page_test.dart: Play shows real progress and optional summary at 1440.0 with large text
+00:04 +106: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/profile/presentation/profile_leaderboard_test.dart: profile displays current numeric score and low data at 1440.0
+00:04 +107: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/profile/presentation/profile_leaderboard_test.dart: profile displays current numeric score and low data at 1440.0
+00:04 +108: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/profile/presentation/profile_leaderboard_test.dart: profile displays current numeric score and low data at 1440.0
+00:04 +109: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +110: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +111: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +112: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +113: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +114: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +115: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +116: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +117: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +118: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +119: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +120: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/game/presentation/board_page_test.dart: search empty resets, category filters, and title sorting changes order
+00:04 +121: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/logic/proposal_similarity_controller_test.dart: same title in different places remains advisory; category/rejected excluded and legacy location remains unknown
+00:04 +122: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/logic/proposal_similarity_controller_test.dart: same place alone does not imply similarity and comparison ranks readable unique ids only
+00:04 +123: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/logic/proposal_similarity_controller_test.dart: late query cannot replace newer review or acknowledged decision; edits invalidate consent
+00:04 +124: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/logic/proposal_similarity_controller_test.dart: failed lookup allows explicit continuation, without asserting no similar issues exist
+00:04 +125: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/logic/proposal_similarity_controller_test.dart: reset and dispose invalidate pending comparison without late notification
+00:04 +126: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/logic/proposal_draft_controller_test.dart: raw over-limit drafts and incomplete location survive wrapper/controller reconstruction
+00:04 +127: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/logic/proposal_draft_controller_test.dart: scope isolates municipalities, source, API origin/path and installation
+00:04 +128: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/logic/proposal_draft_controller_test.dart: an old successful submission cannot delete a newer draft from another controller
+00:04 +129: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/logic/proposal_draft_controller_test.dart: failed writes never say saved, retry persists the same revision and exit flush waits for new edits
+00:04 +130: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/logic/proposal_draft_controller_test.dart: dispose allows pending saves to finish, reset cancels them and leaves no recovered draft
+00:04 +131: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/logic/proposal_draft_controller_test.dart: corrupt draft does not claim restoration or overwrite its original data
+00:04 +132: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:04 +133: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:04 +134: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:04 +135: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:04 +136: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:04 +137: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:05 +138: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:05 +139: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:05 +140: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:05 +141: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:05 +142: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:05 +143: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:05 +144: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:05 +145: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:05 +146: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with lost reply refresh restart lookup preserves one immutable receipt
+00:05 +147: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with malformed201 refresh restart lookup preserves one immutable receipt
+00:05 +148: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with malformed201 refresh restart lookup preserves one immutable receipt
+00:05 +149: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with malformed201 refresh restart lookup preserves one immutable receipt
+00:05 +150: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with malformed201 refresh restart lookup preserves one immutable receipt
+00:05 +151: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/data/api_proposal_recovery_test.dart: SQLite commit with malformed201 refresh restart lookup preserves one immutable receipt
+00:05 +152: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +153: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +154: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +155: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +156: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +157: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +158: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +159: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +160: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +161: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +162: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +163: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +164: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +165: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +166: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +167: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +168: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +169: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +170: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +171: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +172: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +173: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +174: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +175: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +176: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +177: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +178: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +179: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +180: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +181: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +182: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +183: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +184: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +185: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +186: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +187: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +188: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +189: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +190: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +191: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +192: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +193: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +194: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +195: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +196: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +197: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +198: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +199: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +200: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +201: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +202: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +203: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +204: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +205: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +206: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +207: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +208: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +209: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +210: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +211: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +212: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +213: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +214: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +215: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +216: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +217: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +218: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +219: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +220: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +221: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +222: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +223: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +224: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +225: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +226: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +227: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +228: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +229: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +230: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +231: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:06 +232: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: manual place survives reconstruction and reaches mock list, detail and promoted card
+00:07 +233: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_route_flow_test.dart: filters and originating page survive cancel and receipt in fantasy=false
+00:07 +234: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_route_flow_test.dart: filters and originating page survive cancel and receipt in fantasy=false
+00:07 +235: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_route_flow_test.dart: filters and originating page survive cancel and receipt in fantasy=false
+00:07 +236: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_route_flow_test.dart: filters and originating page survive cancel and receipt in fantasy=false
+00:07 +237: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_route_flow_test.dart: filters and originating page survive cancel and receipt in fantasy=false
+00:07 +238: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/suggest_problem_page_test.dart: specific place without civic is reviewed, editable and submitted explicitly
+00:07 +239: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/suggest_problem_page_test.dart: specific place without civic is reviewed, editable and submitted explicitly
+00:07 +240: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/logic/fantasy_remote_leagues_test.dart: three independent managers share a complete remote season day and private ranking
+00:07 +241: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/logic/fantasy_remote_leagues_test.dart: three independent managers share a complete remote season day and private ranking
+00:07 +242: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/logic/fantasy_remote_leagues_test.dart: three independent managers share a complete remote season day and private ranking
+00:07 +243: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/logic/fantasy_remote_leagues_test.dart: three independent managers share a complete remote season day and private ranking
+00:08 +244: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/logic/fantasy_remote_leagues_test.dart: three independent managers share a complete remote season day and private ranking
+00:08 +245: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/logic/fantasy_remote_leagues_test.dart: three independent managers share a complete remote season day and private ranking
+00:08 +246: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_route_flow_test.dart: filters and originating page survive cancel and receipt in fantasy=true
+00:08 +247: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_route_flow_test.dart: filters and originating page survive cancel and receipt in fantasy=true
+00:08 +248: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_route_flow_test.dart: filters and originating page survive cancel and receipt in fantasy=true
+00:08 +249: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_route_flow_test.dart: filters and originating page survive cancel and receipt in fantasy=true
+00:08 +250: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: old successful submission preserves a newer edited draft
+00:08 +251: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_draft_flow_test.dart: old successful submission preserves a newer edited draft
+00:08 +252: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/suggest_problem_page_test.dart: required kind, label and optional Unicode limits preserve input and block review
+00:08 +253: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/suggest_problem_page_test.dart: required kind, label and optional Unicode limits preserve input and block review
+00:09 +254: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/suggest_problem_page_test.dart: required kind, label and optional Unicode limits preserve input and block review
+00:09 +255: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/suggest_problem_page_test.dart: required kind, label and optional Unicode limits preserve input and block review
+00:09 +256: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/suggest_problem_page_test.dart: required kind, label and optional Unicode limits preserve input and block review
+00:09 +257: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/suggest_problem_page_test.dart: required kind, label and optional Unicode limits preserve input and block review
+00:09 +258: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/suggest_problem_page_test.dart: required kind, label and optional Unicode limits preserve input and block review
+00:09 +259: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/suggest_problem_page_test.dart: required kind, label and optional Unicode limits preserve input and block review
+00:09 +260: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_route_flow_test.dart: URL municipality stays visible through prefs changes, submit and list/form navigation
+00:09 +261: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/next_problems/presentation/proposal_route_flow_test.dart: URL municipality stays visible through prefs changes, submit and list/form navigation
+00:09 +262: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:09 +263: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:09 +264: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:09 +265: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:09 +266: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:09 +267: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:09 +268: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:09 +269: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:10 +270: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:10 +271: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:10 +272: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:10 +273: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:10 +274: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:10 +275: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:10 +276: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:10 +277: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:10 +278: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:10 +279: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(390.0, 844.0)
+00:10 +280: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/fantasy_flow_test.dart: motivation input is saved and becomes read only at lock
+00:10 +281: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/fantasy_flow_test.dart: motivation input is saved and becomes read only at lock
+00:11 +282: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/fantasy_flow_test.dart: motivation input is saved and becomes read only at lock
+00:11 +283: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/data/api_fantasy_repository_test.dart: remote accepted state renders all areas at Size(1024.0, 768.0)
+00:11 +284: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/manager_responsive_test.dart: unreadable archive does not prevent using Squadra
+00:11 +285: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/manager_responsive_test.dart: unreadable archive does not prevent using Squadra
+00:11 +286: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/manager_responsive_test.dart: unreadable archive does not prevent using Squadra
+00:11 +287: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/municipality_activation_repository_test.dart: mock game repository exposes an empty activation state for new towns
+00:11 +288: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/municipality_activation_repository_test.dart: mock game repository exposes an empty activation state for new towns
+00:11 +289: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/municipality_activation_repository_test.dart: mock game repository exposes an empty activation state for new towns
+00:12 +290: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/municipality_activation_repository_test.dart: mock game repository exposes an empty activation state for new towns
+00:12 +291: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/municipality_activation_repository_test.dart: mock game repository exposes an empty activation state for new towns
+00:12 +292: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/fantasy_flow_test.dart: tablet: extra transfer, source availability, lock and reflection
+00:12 +293: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/fantasy_flow_test.dart: tablet: extra transfer, source availability, lock and reflection
+00:12 +294: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/fantasy_flow_test.dart: tablet: extra transfer, source availability, lock and reflection
+00:12 +295: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode false
+00:12 +296: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode false
+00:12 +297: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode false
+00:13 +298: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode false
+00:13 +299: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode false
+00:13 +300: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode false
+00:13 +301: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode false
+00:13 +302: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode false
+00:13 +303: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode false
+00:13 +304: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode false
+00:13 +305: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode false
+00:13 +306: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/e2e/play_turn_flow_test.dart: user enters, predicts and resolves a complete mock turn
+00:13 +307: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/e2e/play_turn_flow_test.dart: user enters, predicts and resolves a complete mock turn
+00:13 +308: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/e2e/play_turn_flow_test.dart: user enters, predicts and resolves a complete mock turn
+00:14 +309: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/municipality_activation_repository_test.dart: mock game repository locks the main prediction after first vote
+00:14 +310: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/municipality_activation_repository_test.dart: mock game repository locks the main prediction after first vote
+00:14 +311: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/municipality_activation_repository_test.dart: mock game repository locks the main prediction after first vote
+00:14 +312: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/municipality_activation_repository_test.dart: mock game repository locks the main prediction after first vote
+00:14 +313: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode true
+00:14 +314: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 2.0, squad mode true
+00:14 +315: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/manager_responsive_test.dart: Manager areas remain actionable at width 899.0 and 200.0% text
+00:14 +316: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 390.0 at 2.0, squad mode false
+00:15 +317: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 390.0 at 2.0, squad mode false
+00:15 +318: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/manager_responsive_test.dart: Manager areas remain actionable at width 1120.0 and 200.0% text
+00:15 +319: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 390.0 at 2.0, squad mode true
+00:15 +320: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 390.0 at 2.0, squad mode true
+00:15 +321: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 390.0 at 2.0, squad mode true
+00:15 +322: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/features/fantasy/presentation/manager_responsive_test.dart: Manager areas remain actionable at width 390.0 and 400.0% text
+00:16 +323: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 720.0 at 2.0, squad mode false
+00:16 +324: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 720.0 at 2.0, squad mode true
+00:16 +325: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 1440.0 at 2.0, squad mode false
+00:16 +326: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 1440.0 at 2.0, squad mode true
+00:17 +327: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 4.0, squad mode false
+00:17 +328: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 320.0 at 4.0, squad mode true
+00:17 +329: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 390.0 at 4.0, squad mode false
+00:18 +330: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: copy routes 390.0 at 4.0, squad mode true
+00:18 +331: /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart: (tearDownAll)
+00:18 +331: All tests passed!

@@ -643,7 +643,7 @@ class _TurnActionStrip extends StatelessWidget {
                 Text(
                   predictionCount == 0
                       ? VenialCopy.playResolveDisabledHint
-                      : '$predictionCount carte giocate. Puoi scoprire gli esiti mock.',
+                      : 'Hai giocato $predictionCount carte. Puoi vedere gli esiti della demo.',
                   style: textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -689,7 +689,7 @@ class _CivicLoopSummaryCard extends StatelessWidget {
       ),
       (
         Icons.how_to_vote_outlined,
-        'Confermate',
+        'Nel gioco',
         summary.confirmedThemes.toString(),
         AppTokens.success,
       ),
@@ -719,8 +719,8 @@ class _CivicLoopSummaryCard extends StatelessWidget {
       ),
     ];
     final body = summary.topThemeTitle == null
-        ? 'Nessun tema promosso nel turno: proponi o conferma una priorita\'.'
-        : 'Tema piu\' votato tra le carte: ${summary.topThemeTitle}. Il turno puo\' contenere piu\' carte civiche.';
+        ? 'Non ci sono ancora carte dalle proposte in questo turno. Proponi un problema o vota una proposta.'
+        : 'Tema più votato tra le carte: ${summary.topThemeTitle}. Il turno può contenere più carte civiche.';
 
     return FcPanel(
       padding: const EdgeInsets.all(AppTokens.s14),
@@ -730,7 +730,7 @@ class _CivicLoopSummaryCard extends StatelessWidget {
           FcSectionHeader(title: 'Riepilogo ${summary.municipalityName}'),
           const SizedBox(height: AppTokens.s8),
           FcStatusChip(
-            label: summary.hasCompleteLoop ? 'Loop completo' : 'In corso',
+            label: summary.hasCompleteLoop ? 'Percorso completato' : 'In corso',
             color: summary.hasCompleteLoop ? AppTokens.success : AppTokens.blue,
           ),
           const SizedBox(height: AppTokens.s8),

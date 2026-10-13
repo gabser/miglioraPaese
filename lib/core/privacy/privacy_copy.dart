@@ -1,25 +1,21 @@
-/// Copy centralizzato per messaggi di privacy e tono del prodotto.
+/// Informazioni sui dati usati dal gioco.
 class PrivacyCopy {
   const PrivacyCopy._();
 
-  /// Nome dell'applicazione.
   static const String appName = 'Fanta Comune';
-
-  /// Micropitch breve per spiegare lo scopo del gioco civico.
   static const String micropitch =
       'Il Fantacalcio dei problemi del tuo Comune.';
-
-  /// Avvertenza che chiarisce il carattere probabilistico e non ufficiale.
   static const String disclaimer =
-      'È un gioco probabilistico basato su percezioni aggregate: non è una segnalazione ufficiale e non certifica la realtà.';
+      'Fai previsioni e confronta le opinioni di chi gioca. Non è una segnalazione ufficiale al Comune e non certifica le condizioni reali.';
 
-  /// Principi di privacy-by-design sintetizzati in elenco.
   static const List<String> principles = [
-    'Niente foto; titolo e descrizione della proposta sono gli unici testi liberi',
-    'Nessun dato sensibile richiesto',
-    'Le preferenze demo sono cancellabili; lo stato mock si azzera ricaricando l\'app',
-    'Il pilot usa una sessione anonima firmata; l\'ID locale non è accettato come identità dal server',
-    'Voti, previsioni ed esiti del pilot associati alla sessione possono essere cancellati',
-    'Obiettivo: consapevolezza e confronto, non reclami',
+    'Non puoi caricare foto. Puoi scrivere titolo, descrizione, luogo e riferimenti della proposta, e una motivazione per la previsione della squadra.',
+    'Non ti vengono richiesti dati sensibili.',
+    'La demo salva dati sul dispositivo. Chiudere o ricaricare l’app non cancella i dati salvati. Puoi eliminarli da questa pagina.',
+    'La prova online usa una sessione anonima verificata dal servizio. Il codice locale del dispositivo non basta per identificarti online.',
+    'La sessione online è legata a questo browser: non è un account e non puoi recuperarla su un altro dispositivo.',
+    'Puoi cancellare voti, previsioni, esiti, squadra e partecipazione alle leghe collegati alla sessione online. Le proposte pubblicate restano senza il collegamento alla sessione.',
+    'Se cancelli i dati online, le leghe che hai creato vengono archiviate e i loro inviti revocati. Le squadre degli altri membri restano salvate.',
+    'Il gioco serve a osservare e confrontare i punti di vista. Per un reclamo o una segnalazione ufficiale, usa i canali del Comune.',
   ];
 }

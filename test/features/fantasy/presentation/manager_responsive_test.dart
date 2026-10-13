@@ -134,7 +134,7 @@ void main() {
       expect(find.text('Salvataggio non completato'), findsOneWidget);
       expect(find.text('Formazione bloccata'), findsNothing);
       expect(find.textContaining('Le scelte sono congelate'), findsNothing);
-      expect(find.text('Squadra salvata'), findsNothing);
+      expect(find.text('Formazione salvata'), findsNothing);
       expect(tester.widget<FilledButton>(confirm).onPressed, isNull);
       expect(
         tester
@@ -180,7 +180,7 @@ void main() {
         await tester.tap(confirm);
         await tester.pumpAndSettle();
         await tester.pump(const Duration(seconds: 5));
-        expect(find.text('Squadra salvata'), findsOneWidget);
+        expect(find.text('Formazione salvata'), findsOneWidget);
         final restored = await h.reload();
         await tester.pumpWidget(
           buildTestApp(h.prefs, config: config, fantasyManager: restored),
@@ -188,7 +188,7 @@ void main() {
         await tester.pumpAndSettle();
         GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/squad');
         await tester.pumpAndSettle();
-        expect(find.text('Squadra salvata'), findsOneWidget);
+        expect(find.text('Formazione salvata'), findsOneWidget);
         final captain = find.byKey(
           const ValueKey('squad-captain-bus-stazione'),
         );
@@ -197,7 +197,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(restored.captainId, 'bus-stazione');
         expect(restored.confirmed, isFalse);
-        expect(find.text('Squadra salvata'), findsNothing);
+        expect(find.text('Formazione salvata'), findsNothing);
         await tester.ensureVisible(find.text('Formazione da confermare'));
         await tester.pumpAndSettle();
         await tester.ensureVisible(confirm);
@@ -221,15 +221,25 @@ void main() {
     );
   }
 
-  for (final width in [320.0, 390.0, 720.0, 899.0, 900.0, 1120.0, 1440.0]) {
+  for (final (width, scale) in [
+    (320.0, 2.0),
+    (390.0, 2.0),
+    (720.0, 2.0),
+    (899.0, 2.0),
+    (900.0, 2.0),
+    (1120.0, 2.0),
+    (1440.0, 2.0),
+    (320.0, 4.0),
+    (390.0, 4.0),
+  ]) {
     testWidgets(
-      'Manager areas remain actionable at width $width and200% text',
+      'Manager areas remain actionable at width $width and ${scale * 100}% text',
       (tester) async {
         tester.view.physicalSize = Size(width, 900);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
-        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        tester.platformDispatcher.textScaleFactorTestValue = scale;
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
         final h = await createHarness();
         await h.prefs.setMunicipalityId('comune:Tuglie');
@@ -242,7 +252,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         final router = GoRouter.of(
-          tester.element(find.text('Crea la tua rosa')),
+          tester.element(find.text('Crea la tua squadra')),
         );
         for (final route in ['/squad', '/matchday', '/market', '/leagues']) {
           router.go(route);

@@ -22,7 +22,10 @@ void main() {
       expect(manager.hasPreviousDemo, isFalse);
       expect(await manager.restartDemo(), isTrue);
       expect(prefs.fantasyDemoArchive, [raw, before]);
-      expect(manager.recoveryMessage, contains('dati originali conservati'));
+      expect(
+        manager.recoveryMessage,
+        contains('dati originali sono conservati'),
+      );
       expect(await manager.restartDemo(restorePrevious: true), isTrue);
       manager.dispose();
     }

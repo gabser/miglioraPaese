@@ -359,7 +359,7 @@ class ProposalSubmissionCoordinator extends ChangeNotifier {
         SubmissionStatus.receiptUnsaved,
         intent: accepted,
         message:
-            'Il servizio ha ricevuto la proposta, ma la conferma non è salvata qui. Riprova il salvataggio, senza inviare di nuovo.',
+            'Il servizio ha ricevuto la proposta, ma la ricevuta non è salvata su questo dispositivo. Riprova il salvataggio senza inviare di nuovo.',
       );
       _publish(intent.scope, result);
       return result;
@@ -429,7 +429,7 @@ class ProposalSubmissionCoordinator extends ChangeNotifier {
     try {
       saved = await store.save(record, epoch: epoch);
     } catch (_) {
-      message += ' Non riesco ad aggiornare lo storico locale.';
+      message += ' Lo storico sul dispositivo non è stato aggiornato.';
     }
     if (!_valid(intent.scope, epoch))
       return const SubmissionView(SubmissionStatus.reset);
@@ -495,7 +495,7 @@ class ProposalSubmissionCoordinator extends ChangeNotifier {
         view.status,
         intent: view.intent,
         message:
-            'Non riesco a salvare l’abbandono. L’invio resta da verificare.',
+            'La scelta di abbandonare non è stata salvata. L’invio resta da verificare.',
       );
       if (_valid(scope, epoch)) _publish(scope, result);
       return result;

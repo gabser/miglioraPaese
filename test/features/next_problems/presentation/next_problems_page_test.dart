@@ -28,17 +28,21 @@ void main() {
           OutlinedButton,
           VenialCopy.nextProblemsVoteUpLabel,
         );
-        await tester.ensureVisible(vote);
+        await tester.scrollUntilVisible(
+          vote,
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
         await tester.pumpAndSettle();
         await tester.tap(vote);
         await tester.pumpAndSettle();
-        expect(find.text('Segnato.'), findsNothing);
+        expect(find.text('Voto salvato.'), findsNothing);
         expect(
           find.textContaining('Il voto non è stato registrato'),
           findsOneWidget,
         );
         expect(find.text('Illuminazione al parco'), findsOneWidget);
-        expect(find.text('Temi non disponibili'), findsNothing);
+        expect(find.text('Proposte non disponibili'), findsNothing);
         expect(tester.takeException(), isNull);
       },
     );
@@ -100,12 +104,16 @@ void main() {
         OutlinedButton,
         VenialCopy.nextProblemsVoteUpLabel,
       );
-      await tester.ensureVisible(vote);
+      await tester.scrollUntilVisible(
+        vote,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       expect(tester.getSize(vote).height, greaterThanOrEqualTo(48));
       await tester.tap(vote);
       await tester.pumpAndSettle();
-      expect(find.text('Segnato.'), findsOneWidget);
+      expect(find.text('Voto salvato.'), findsOneWidget);
       final selected = find.bySemanticsLabel(
         '${VenialCopy.nextProblemsVoteUpLabel} per Illuminazione al parco, 1 voti',
       );
@@ -145,7 +153,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Temi non disponibili'), findsOneWidget);
+    expect(find.text('Proposte non disponibili'), findsOneWidget);
     expect(find.textContaining('Controlla la connessione'), findsOneWidget);
     expect(find.text('Riprova'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -158,7 +166,7 @@ void main() {
 
     expect(repository.calls, 2);
     expect(find.text('Illuminazione al parco'), findsOneWidget);
-    expect(find.text('Temi non disponibili'), findsNothing);
+    expect(find.text('Proposte non disponibili'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

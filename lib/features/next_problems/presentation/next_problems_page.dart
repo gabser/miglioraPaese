@@ -89,7 +89,7 @@ class _NextProblemsView extends StatelessWidget {
           },
           tooltip: (GoRouter.maybeOf(context)?.canPop() ?? false)
               ? 'Torna indietro'
-              : 'Torna alla home',
+              : 'Torna all’inizio',
           icon: const Icon(AppIcons.back),
         ),
         title: const Text(VenialCopy.appTitle),
@@ -395,7 +395,7 @@ class _NextProblemsError extends StatelessWidget {
               ),
               const SizedBox(height: AppTokens.s12),
               Text(
-                'Temi non disponibili',
+                'Proposte non disponibili',
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),

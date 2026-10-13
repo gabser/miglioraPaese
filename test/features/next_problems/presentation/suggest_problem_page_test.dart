@@ -205,7 +205,7 @@ void main() {
         find.byKey(const ValueKey('proposal-location-label')),
         'Via 8 Marzo',
       );
-      final optional = find.text('Riferimenti facoltativi');
+      final optional = find.text('Aggiungi dettagli del luogo');
       await tester.ensureVisible(optional);
       await tester.pumpAndSettle();
       await tester.tap(optional);
@@ -275,7 +275,7 @@ void main() {
       await _send(tester);
       expect(find.text('Usa al massimo 120 caratteri.'), findsOneWidget);
       await tester.enterText(label, 'Via Milano');
-      final optional = find.text('Riferimenti facoltativi');
+      final optional = find.text('Aggiungi dettagli del luogo');
       await tester.ensureVisible(optional);
       await tester.pumpAndSettle();
       await tester.tap(optional);
@@ -473,7 +473,7 @@ void main() {
           find.byKey(const ValueKey('proposal-location-label')),
           'Parco ${'L' * 110}',
         );
-        final details = find.text('Riferimenti facoltativi');
+        final details = find.text('Aggiungi dettagli del luogo');
         await tester.ensureVisible(details);
         await tester.pumpAndSettle();
         await tester.ensureVisible(details);

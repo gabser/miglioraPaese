@@ -1,3 +1,4 @@
+import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/features/fantasy/presentation/pages/remote_leagues_page.dart';
 import 'package:flutter/material.dart';
@@ -65,7 +66,7 @@ class FantasyWelcomePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 32),
                       Text(
-                        'Costruisci la tua squadra di priorità locali.',
+                        'Crea una squadra con le carte dei problemi del Comune.',
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
                               fontWeight: FontWeight.w900,
@@ -74,7 +75,7 @@ class FantasyWelcomePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Schiera, prevedi, scopri come cambia il Comune.',
+                        'Scegli i titolari, fai le previsioni e confronta gli esiti.',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -87,7 +88,7 @@ class FantasyWelcomePage extends StatelessWidget {
                           FilledButton.icon(
                             onPressed: () => context.go('/squad'),
                             icon: const Icon(Icons.groups_outlined),
-                            label: const Text('Crea la tua rosa'),
+                            label: const Text('Crea la tua squadra'),
                           ),
                           OutlinedButton.icon(
                             onPressed: () => context.go('/squad'),
@@ -98,7 +99,7 @@ class FantasyWelcomePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       const Text(
-                        'Dati demo locali: nessuna informazione rappresenta una condizione reale certificata.',
+                        'Nella demo carte ed esiti sono esempi salvati sul dispositivo. Non descrivono condizioni reali verificate.',
                       ),
                     ],
                   );
@@ -164,7 +165,7 @@ class FantasyShellPage extends StatelessWidget {
       context.watch<AppPrefs>().municipalityId ?? 'demo',
     );
     return Scaffold(
-      appBar: AppBar(title: Text('Manager civico · $municipality')),
+      appBar: AppBar(title: Text('La tua squadra · $municipality')),
       body: SafeArea(child: navigationShell),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
@@ -268,8 +269,8 @@ class _FantasySidebar extends StatelessWidget {
                     padding: const EdgeInsets.all(14),
                     child: Text(
                       context.watch<FantasyManager>().isRemote
-                          ? 'Sessione API\nDati sintetici. Esiti e fonti sempre distinguibili.'
-                          : 'Stagione demo\nDati mock locali e verificabilità sempre visibile.',
+                          ? 'Servizio online\nDati di esempio. Ogni esito indica la sua fonte.'
+                          : 'Stagione demo\nDati di esempio salvati sul dispositivo.',
                       style: TextStyle(color: Colors.white, height: 1.45),
                     ),
                   ),
@@ -316,7 +317,7 @@ class SquadPage extends StatelessWidget {
                 '${manager.season.name} · Giornata ${manager.season.currentMatchday}/${manager.season.totalMatchdays}',
             title: 'La mia squadra',
             subtitle:
-                'Schiera le priorità del Comune e metti alla prova le tue previsioni.',
+                'La formazione è la tua scelta di 5 titolari e un capitano. La squadra comprende anche 3 riserve.',
             trailing: CreditPill(
               credits: manager.budgetRemaining,
               label: 'crediti rimasti',
@@ -360,10 +361,10 @@ class SquadPage extends StatelessWidget {
                           manager.persistenceError != null
                               ? 'Salvataggio non completato'
                               : manager.isLocked
-                              ? 'Formazione bloccata'
+                              ? VenialCopy.lineupLockedLabel
                               : issue ??
                                     (saved
-                                        ? 'Squadra salvata'
+                                        ? VenialCopy.lineupSavedLabel
                                         : 'Formazione da confermare'),
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
@@ -374,12 +375,12 @@ class SquadPage extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   manager.persistenceError != null
-                      ? 'Usa Riprova salvataggio prima di continuare. Lo stato della giornata resta da verificare.'
+                      ? 'Premi Riprova salvataggio. Finché non riesce, non puoi modificare le scelte. Lo stato della giornata è da verificare.'
                       : manager.isLocked
-                      ? 'Le scelte sono congelate. Consulta Giornata per gli esiti e i punti.'
+                      ? 'Non puoi più cambiare le scelte. Apri Giornata per vedere esiti e punti.'
                       : saved
-                      ? 'Parteciperai con questi titolari al blocco. Ogni modifica richiede una nuova conferma.'
-                      : 'Usa Sostituisci per far entrare una riserva. Scegli il capitano: vale ×1,5 punti.',
+                      ? 'Al blocco giocherai con questi titolari. Se cambi formazione o capitano, conferma di nuovo.'
+                      : 'Usa Sostituisci per cambiare un titolare con una riserva. Scegli il capitano: i suoi punti base valgono ×1,5.',
                 ),
                 const SizedBox(height: 10),
                 Wrap(
@@ -402,7 +403,7 @@ class SquadPage extends StatelessWidget {
                                     confirmed
                                         ? 'Formazione confermata per la giornata.'
                                         : manager.persistenceError ??
-                                              'Giornata bloccata: conferma non consentita.',
+                                              'La giornata è bloccata. Non puoi confermare la formazione.',
                                   ),
                                 ),
                               );
@@ -412,7 +413,7 @@ class SquadPage extends StatelessWidget {
                       label: Text(
                         manager.confirmed
                             ? 'Formazione confermata'
-                            : 'Conferma formazione',
+                            : VenialCopy.confirmLineupCta,
                       ),
                     ),
                     OutlinedButton.icon(
@@ -438,19 +439,19 @@ class SquadPage extends StatelessWidget {
                 TextButton.icon(
                   onPressed: manager.busy ? null : () => manager.restartDemo(),
                   icon: const Icon(Icons.replay),
-                  label: const Text('Nuova partita demo'),
+                  label: const Text(VenialCopy.newDemoCta),
                 ),
                 if (manager.hasPreviousDemo)
                   TextButton(
                     onPressed: manager.busy
                         ? null
                         : () => manager.restartDemo(restorePrevious: true),
-                    child: const Text('Riprendi partita precedente'),
+                    child: const Text(VenialCopy.recoverDemoCta),
                   ),
               ],
             ),
             const Text(
-              'Riparti con scelte aperte. La partita precedente resta recuperabile.',
+              'La nuova demo riparte con una squadra iniziale e scelte aperte. Su questo dispositivo resta la partita che lasci: squadra, formazione, previsioni, motivazioni, trasferimenti, esiti e punti. Puoi riprenderla con i suoi blocchi e orari. Anche la partita che lasci al recupero viene conservata. Comune e proposte restano salvati.',
             ),
           ],
           const SizedBox(height: 16),
@@ -489,7 +490,7 @@ class MatchdayPage extends StatelessWidget {
                 ? 'Giornata bloccata'
                 : 'Fai le tue previsioni',
             subtitle:
-                'Le risposte degli altri manager restano nascoste fino al blocco.',
+                'Le previsioni degli altri giocatori restano nascoste fino al blocco.',
           ),
           const SizedBox(height: 12),
           _MatchdaySchedule(day: manager.matchday),
@@ -506,22 +507,22 @@ class MatchdayPage extends StatelessWidget {
                       ? (manager.now.isBefore(
                               manager.matchday.observationEndsAt,
                             )
-                            ? '3. Attendi gli esiti verificati'
+                            ? '3. Attendi gli esiti'
                             : '3. Consulta esiti e punti')
-                      : '2. Prevedi il cambiamento',
+                      : '2. Fai le previsioni',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   manager.persistenceError != null
-                      ? 'Gli ultimi dati non sono confermati. Usa Riprova salvataggio prima di continuare.'
+                      ? 'Il salvataggio è da verificare. Premi Riprova salvataggio prima di continuare.'
                       : manager.isLocked
                       ? (manager.now.isBefore(
                               manager.matchday.observationEndsAt,
                             )
-                            ? 'Le scelte sono congelate. La finestra di osservazione termina il ${_dateTime(manager.matchday.observationEndsAt)}: gli esiti disponibili e le fonti sono mostrati sotto.'
-                            : 'L’osservazione è terminata. Consulta sotto gli esiti pubblicati e il dettaglio dei punti; per gli esiti mancanti attendi la pubblicazione della fonte.')
-                      : 'Le previsioni sono facoltative e salvate quando le scegli. Per ottenere punti personali serve una formazione valida e confermata al blocco. Le motivazioni non aggiungono punti.',
+                            ? 'Non puoi più cambiare le scelte. L’osservazione termina il ${_dateTime(manager.matchday.observationEndsAt)}. Sotto trovi gli esiti disponibili e le fonti.'
+                            : 'L’osservazione è finita. Sotto trovi gli esiti pubblicati e i punti. Per gli esiti mancanti, attendi la pubblicazione della fonte.')
+                      : 'Ogni previsione si salva quando la scegli ed è facoltativa. Per ottenere punti, conferma una formazione valida prima del blocco. Le motivazioni non aggiungono punti.',
                 ),
                 if (!manager.isLocked && !manager.confirmed)
                   TextButton(
@@ -554,7 +555,7 @@ class MatchdayPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Come cambierà nella finestra indicata?',
+                      'Come andrà nel periodo indicato?',
                       style: TextStyle(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 8),
@@ -577,7 +578,7 @@ class MatchdayPage extends StatelessWidget {
                     const SizedBox(height: 6),
                     ExpansionTile(
                       tilePadding: EdgeInsets.zero,
-                      title: const Text('Aggiungi una motivazione facoltativa'),
+                      title: const Text('Spiega la previsione, se vuoi'),
                       children: [
                         if (manager.isRemote)
                           _RemoteMotivation(
@@ -620,7 +621,7 @@ class MatchdayPage extends StatelessWidget {
           if (manager.outcomes.isEmpty)
             const FcPanel(
               child: Text(
-                'Nessun esito disponibile. Le previsioni restano salvate; consulta questa giornata dopo il termine dell’osservazione.',
+                'Non ci sono ancora esiti. Le previsioni restano salvate. Torna dopo la fine dell’osservazione.',
               ),
             ),
           ...manager.outcomes.map(
@@ -674,7 +675,7 @@ class _MarketPageState extends State<MarketPage> {
                 '${manager.transfersRemaining} trasferimenti gratuiti rimasti',
             title: 'Mercato',
             subtitle:
-                'Due trasferimenti gratuiti per giornata, poi −4 punti ciascuno. Il mercato chiude al blocco. Le carte sono condivise fra manager.',
+                'Puoi cambiare 2 carte gratis per giornata. Ogni cambio successivo costa 4 punti. Il mercato chiude al blocco. Anche gli altri giocatori possono avere le stesse carte.',
             trailing: CreditPill(
               credits: manager.budgetRemaining,
               label: 'crediti',
@@ -685,8 +686,8 @@ class _MarketPageState extends State<MarketPage> {
             tint: manager.isLocked ? AppTokens.warning : AppTokens.blue,
             child: Text(
               manager.isLocked
-                  ? 'Mercato chiuso per questa giornata. Puoi consultare le carte: i trasferimenti restano bloccati.'
-                  : 'Scegli una carta della rosa da cedere, poi confronta la sostituta. Prima del trasferimento vedrai crediti e penalità; dopo il cambio riconferma la formazione.',
+                  ? 'Il mercato è chiuso per questa giornata. Puoi guardare le carte, ma non cambiarle.'
+                  : 'Scegli una carta da cedere e confrontala con quella da acquistare. Controlla crediti e penalità prima del cambio. Poi conferma di nuovo la formazione.',
             ),
           ),
           const SizedBox(height: 16),
@@ -800,7 +801,7 @@ class _MarketPageState extends State<MarketPage> {
                           style: TextStyle(fontWeight: FontWeight.w900),
                         ),
                         Text(
-                          'Consulta le proposte civiche del Comune. Invio e voti non assegnano carte Manager.',
+                          'Leggi e vota le proposte del Comune. Invio e voti non aggiungono carte alla squadra.',
                         ),
                       ],
                     ),
@@ -880,10 +881,10 @@ class _MatchdaySummary extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             Text(
-              'Punti congelati ${result.frozenPoints} · bonus riflessione ${result.reflectionBonus} · penalità trasferimenti −${result.transferPenalty}',
+              'Punti dagli esiti ${result.frozenPoints} · bonus riflessione ${result.reflectionBonus} · penalità trasferimenti −${result.transferPenalty}',
             ),
             const Text(
-              'I punti delle carte derivano dall’esito osservato e dalle previsioni facoltative. Il capitano moltiplica i punti base per 1,5; le riflessioni confermate aggiungono il bonus previsto.',
+              'Ogni carta dà punti per l’esito e per la previsione, se l’hai fatta. Il capitano moltiplica i punti base per 1,5. Le riflessioni confermate aggiungono il loro bonus.',
             ),
             if (!manager.isLocked)
               const Text(
@@ -895,7 +896,7 @@ class _MatchdaySummary extends StatelessWidget {
               ),
             Text(
               manager.isRemote
-                  ? 'Dati sintetici dal server · ${manager.summaryStatus(manager.matchday.id) == 'final' ? 'Definitivo' : 'Provvisorio'}. Punteggio cooperativo non disponibile.'
+                  ? 'Dati di esempio online · ${manager.summaryStatus(manager.matchday.id) == 'final' ? 'Definitivo' : 'Provvisorio'}. Punteggio cooperativo non disponibile.'
                   : 'Dati demo locali. Il punteggio cooperativo è separato.',
             ),
           ],
@@ -925,16 +926,16 @@ class _LeaguesPageState extends State<LeaguesPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const _PageHeader(
-            eyebrow: 'Competizione rispettosa',
+            eyebrow: 'Le tue classifiche',
             title: 'Leghe',
             subtitle:
-                'Confronta i punti fantasy nella lega privata o del Comune. Questi dati demo sono separati da reputazione e voti delle proposte.',
+                'Confronta i punti della squadra nella lega privata o del Comune. Nella demo sono esempi. Sono separati dai punti delle previsioni individuali e dai voti alle proposte.',
           ),
           const SizedBox(height: 16),
           const FcPanel(
             tint: AppTokens.blue,
             child: Text(
-              'La classifica confronta i punti fantasy. Il punteggio cooperativo del Comune è un indicatore separato: non è la somma dei voti alle proposte.',
+              'La classifica confronta i punti delle squadre. Il punteggio cooperativo descrive la partecipazione del Comune: è separato e non somma i voti alle proposte.',
             ),
           ),
           const SizedBox(height: 16),

@@ -1,0 +1,44 @@
+Resolving dependencies...
+Downloading packages...
+  bloc 8.1.4 (9.2.1 available)
+  clock 1.1.2 (1.1.3 available)
+  equatable 2.0.8 (3.0.0 available)
+  flutter_bloc 8.1.6 (9.1.1 available)
+  flutter_lints 3.0.2 (6.0.0 available)
+  go_router 14.8.1 (18.0.2 available)
+  intl 0.20.2 (0.20.3 available)
+  lints 3.0.0 (6.1.0 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.0 (1.19.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.26 (2.4.28 available)
+  shared_preferences_foundation 2.5.6 (2.5.7 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  test_api 0.7.11 (0.7.15 available)
+  vector_graphics 1.2.2 (1.2.3 available)
+  vector_graphics_compiler 1.2.6 (1.3.1 available)
+  vector_math 2.2.0 (2.4.3 available)
+  vm_service 15.2.0 (15.3.0 available)
+  xml 7.0.1 (7.1.0 available)
+Got dependencies!
+23 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading /Users/gabrieleserra/.codex/worktrees/riscrittura-testi/miglioraPaese/test/copy_responsive_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: copy routes 320.0 at 2.0, squad mode false
+00:01 +1: copy routes 320.0 at 2.0, squad mode true
+00:02 +2: copy routes 390.0 at 2.0, squad mode false
+00:03 +3: copy routes 390.0 at 2.0, squad mode true
+00:04 +4: copy routes 720.0 at 2.0, squad mode false
+00:04 +5: copy routes 720.0 at 2.0, squad mode true
+00:05 +6: copy routes 1440.0 at 2.0, squad mode false
+00:07 +7: copy routes 1440.0 at 2.0, squad mode true
+00:08 +8: copy routes 320.0 at 4.0, squad mode false
+00:09 +9: copy routes 320.0 at 4.0, squad mode true
+00:09 +10: copy routes 390.0 at 4.0, squad mode false
+00:10 +11: copy routes 390.0 at 4.0, squad mode true
+00:10 +12: (tearDownAll)
+00:10 +12: All tests passed!

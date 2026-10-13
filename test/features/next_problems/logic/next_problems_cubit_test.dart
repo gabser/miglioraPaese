@@ -170,7 +170,7 @@ void main() {
 
     expect(result, 'duplicate_title');
     expect(cubit.state.submitting, isFalse);
-    expect(cubit.state.error, contains('Esiste gia\''));
+    expect(cubit.state.error, contains('Esiste già'));
     await cubit.close();
   });
 

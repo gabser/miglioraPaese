@@ -1,3 +1,4 @@
+import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
@@ -59,7 +60,7 @@ class FantasyPage extends StatelessWidget {
                               onPressed: manager.busy
                                   ? null
                                   : manager.retrySave,
-                              child: const Text('Riprova salvataggio'),
+                              child: const Text(VenialCopy.retrySaveCta),
                             ),
                           ],
                         ),
@@ -72,8 +73,8 @@ class FantasyPage extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
                 context.watch<FantasyManager>().isRemote
-                    ? 'Rehearsal API · dati sintetici. Sessione anonima legata al browser: nessun recupero su altri dispositivi.'
-                    : 'Demo locale · carte, fonti e classifiche simulate.',
+                    ? 'Prova online · dati di esempio. La sessione anonima è legata a questo browser. Non puoi recuperarla su altri dispositivi.'
+                    : 'Demo sul dispositivo · carte, fonti e classifiche sono esempi.',
               ),
             ),
             child,
@@ -112,7 +113,6 @@ class RoleBadge extends StatelessWidget {
             Flexible(
               child: Text(
                 role.label,
-                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: color,
                   fontWeight: FontWeight.w800,
@@ -155,11 +155,14 @@ class FormIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Forma civica: ${form.map((item) => item.label).join(', ')}',
+    label: 'Andamento recente: ${form.map((item) => item.label).join(', ')}',
     child: Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Text('Forma', style: Theme.of(context).textTheme.labelMedium),
+        Text(
+          'Andamento recente',
+          style: Theme.of(context).textTheme.labelMedium,
+        ),
         const SizedBox(width: 6),
         ...form.map(
           (trend) => Padding(
@@ -212,7 +215,6 @@ class SourceBadge extends StatelessWidget {
         Flexible(
           child: Text(
             status.label,
-            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: color,
               fontWeight: FontWeight.w700,
@@ -286,20 +288,18 @@ class FantasyCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Expanded(
-                        child: RoleBadge(role: card.role, compact: true),
-                      ),
-                      const SizedBox(width: 8),
+                      RoleBadge(role: card.role, compact: true),
                       CreditPill(credits: card.price, label: 'cr'),
                     ],
                   ),
                   const SizedBox(height: 10),
                   Text(
                     card.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
@@ -313,9 +313,11 @@ class FantasyCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   if (compact)
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
-                        Expanded(child: FormIndicator(form: card.form)),
+                        FormIndicator(form: card.form),
                         if (isCaptain) const CaptainBadge(),
                       ],
                     )
@@ -457,7 +459,7 @@ class SquadBoard extends StatelessWidget {
       ),
       const SizedBox(height: 4),
       const Text(
-        'Per far entrare una riserva, usa Sostituisci sulla carta di un titolare.',
+        'Premi Sostituisci su un titolare per far entrare una riserva.',
       ),
       const SizedBox(height: 8),
       _CardGrid(
@@ -695,7 +697,7 @@ class MarketComparison extends StatelessWidget {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Annulla'),
+        child: const Text(VenialCopy.cancelCta),
       ),
       FilledButton(onPressed: onConfirm, child: const Text('Conferma')),
     ],
@@ -742,7 +744,7 @@ class MatchdayProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     final remaining = locksAt.difference(now);
     final time = locked
-        ? 'Formazione bloccata'
+        ? VenialCopy.lineupLockedLabel
         : '${remaining.inDays}g ${remaining.inHours.remainder(24)}h al blocco';
     return Card(
       color: AppTokens.navy,
@@ -817,7 +819,7 @@ class ScoreReveal extends StatelessWidget {
           const Divider(height: 24),
           if (!personal)
             const Text(
-              'Esempio demo o esito non valido per la tua formazione: nessun punto personale.',
+              'Questo esito è un esempio demo o non vale per la tua formazione. Non ti assegna punti.',
             ),
           if (personal)
             Text(
@@ -866,7 +868,7 @@ class LeagueTable extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.all(20),
           child: Text(
-            'La classifica sarà visibile al raggiungimento della soglia minima di partecipazione.',
+            'La classifica compare quando ci sono abbastanza partecipanti.',
           ),
         ),
       );
@@ -881,28 +883,49 @@ class LeagueTable extends StatelessWidget {
                   horizontal: 16,
                   vertical: 12,
                 ),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 42,
-                      child: Text(
-                        '#${entry.rank}',
-                        style: const TextStyle(fontWeight: FontWeight.w900),
+                child: MediaQuery.textScalerOf(context).scale(14) > 28
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '#${entry.rank}',
+                            style: const TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                          Text(
+                            entry.displayName,
+                            style: TextStyle(
+                              fontWeight: entry.isCurrentUser
+                                  ? FontWeight.w900
+                                  : FontWeight.w600,
+                            ),
+                          ),
+                          Text('${entry.points} pt'),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          SizedBox(
+                            width: 42,
+                            child: Text(
+                              '#${entry.rank}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              entry.displayName,
+                              style: TextStyle(
+                                fontWeight: entry.isCurrentUser
+                                    ? FontWeight.w900
+                                    : FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Text('${entry.points} pt'),
+                        ],
                       ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        entry.displayName,
-                        style: TextStyle(
-                          fontWeight: entry.isCurrentUser
-                              ? FontWeight.w900
-                              : FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Text('${entry.points} pt'),
-                  ],
-                ),
               ),
             )
             .toList(),
@@ -936,7 +959,7 @@ class CommunityScore extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Indicatore demo di osservazioni e partecipazione, separato dalla classifica e dai voti alle proposte.',
+            'Questo valore demo descrive osservazioni e partecipazione. È separato dalla classifica e dai voti alle proposte.',
           ),
         ],
       ),

@@ -59,7 +59,10 @@ void main() {
       addTearDown(manager.dispose);
       await manager.settled;
       expect(manager.hasData, isFalse);
-      expect(manager.persistenceError, contains('Comune pilot'));
+      expect(
+        manager.persistenceError,
+        contains('Comune previsto per questa prova'),
+      );
     },
   );
   test(
@@ -295,7 +298,7 @@ void main() {
         ),
       );
       await pumpRoutingFrame(tester);
-      await tester.tap(find.text('Crea la tua rosa'));
+      await tester.tap(find.text('Crea la tua squadra'));
       await pumpRoutingFrame(tester);
       for (final label in ['Giornata', 'Mercato', 'Leghe', 'Squadra']) {
         await tester.tap(find.text(label).last);
@@ -325,7 +328,7 @@ void main() {
           expect(tester.takeException(), isNull);
         }
       }
-      expect(find.textContaining('Rehearsal API'), findsOneWidget);
+      expect(find.textContaining('Prova online'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }

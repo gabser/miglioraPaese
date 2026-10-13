@@ -56,10 +56,13 @@ class ApiFantasyRepository
       }
       rethrow;
     } on FormatException catch (e) {
-      throw ApiException.invalidPayload('Dati fantasy non validi.', cause: e);
+      throw ApiException.invalidPayload(
+        'I dati della squadra non sono leggibili.',
+        cause: e,
+      );
     } on TypeError catch (e) {
       throw ApiException.invalidPayload(
-        'Contratto fantasy non valido.',
+        'I dati ricevuti non sono compatibili con il gioco.',
         cause: e,
       );
     }
@@ -70,7 +73,8 @@ class ApiFantasyRepository
     if (municipalityId.isEmpty) {
       throw ApiException.configuration(
         code: 'fantasy_municipality_required',
-        message: 'Configura il Comune pilot per le API fantasy.',
+        message:
+            'Per giocare online serve il Comune previsto per questa prova.',
       );
     }
     _deleted = false;
@@ -138,7 +142,7 @@ class ApiFantasyRepository
     if (hasPendingTransfer) {
       throw const FantasyFailure(
         FantasyFailureKind.busy,
-        'Verifica il trasferimento precedente con Riprova.',
+        'Premi Riprova salvataggio per verificare il cambio di carte precedente.',
       );
     }
     final v = FantasyApiMapper.object(
@@ -248,7 +252,7 @@ class ApiFantasyRepository
       case StartFantasyMatchday():
         throw const FantasyFailure(
           FantasyFailureKind.invalidCommand,
-          'Il calendario è gestito dal server.',
+          'Il calendario online è deciso dal servizio.',
         );
       default:
         final starters = [...state.starterIds],

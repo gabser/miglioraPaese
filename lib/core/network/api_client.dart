@@ -154,7 +154,7 @@ class ApiClient {
 
   Object? _decodeJson(http.Response response) {
     if (response.body.trim().isEmpty) {
-      throw ApiException.invalidPayload('La risposta JSON e\' vuota.');
+      throw ApiException.invalidPayload('Il servizio ha risposto senza dati.');
     }
     try {
       return jsonDecode(response.body);
