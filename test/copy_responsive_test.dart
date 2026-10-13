@@ -140,7 +140,7 @@ void main() {
           await h.at(day.observationEndsAt);
           router.go('/matchday');
           await tester.pumpAndSettle();
-          expect(find.text('Formazione bloccata'), findsOneWidget);
+          expect(find.textContaining('Consulta esiti e punti'), findsOneWidget);
           final outcome = find.text('Esito osservato: Stabile');
           await tester.ensureVisible(outcome);
           await tester.pumpAndSettle();
