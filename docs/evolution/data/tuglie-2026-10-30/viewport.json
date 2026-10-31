@@ -1,0 +1,37 @@
+{
+  "municipalityId": "tuglie",
+  "localMunicipalityId": "comune:Tuglie",
+  "name": "Tuglie",
+  "istat_code_from_osm": "075089",
+  "crs": "WGS84 / OGC:CRS84 (longitude, latitude)",
+  "centre": [
+    18.098125,
+    40.073821
+  ],
+  "centre_source_url": "https://www.openstreetmap.org/node/68530020",
+  "centre_role": "admin_centre in OSM relation 40254, not the townhall",
+  "retrieved_on": "2026-10-30",
+  "license": "ODbL-1.0",
+  "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+  "attribution": "© OpenStreetMap contributors",
+  "initial_zoom_fallback": 15,
+  "initial_fit_bounds": [
+    18.085,
+    40.065,
+    18.11,
+    40.09
+  ],
+  "initial_fit_bounds_method": "editorial research rectangle enclosing all sample points; not an administrative boundary",
+  "fit_padding_logical_pixels": 32,
+  "municipality_bounds": [
+    18.0707304,
+    40.0616618,
+    18.1154809,
+    40.09806
+  ],
+  "proposed_zoom_range": [
+    12,
+    19
+  ],
+  "note": "Fit bounds after layout; keep centre as fallback. Full municipality extent is a separate action. Flutter LatLng expects latitude then longitude."
+}

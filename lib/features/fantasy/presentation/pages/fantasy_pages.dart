@@ -1,3 +1,4 @@
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/features/fantasy/presentation/pages/remote_leagues_page.dart';
@@ -7,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
+import 'package:fanta_comune/core/widgets/municipality_sign.dart';
 import 'package:fanta_comune/features/fantasy/domain/fantasy_models.dart'
     hide FantasyCard;
 import 'package:fanta_comune/features/fantasy/domain/fantasy_models.dart'
@@ -312,6 +314,25 @@ class SquadPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          MunicipalitySign(
+            name: MunicipalityCatalog.displayNameFromId(
+              context.watch<AppPrefs>().municipalityId ?? 'demo',
+            ),
+          ),
+          if ((context.read<AppConfig?>()?.tuglieMapEnabled ?? false) &&
+              MunicipalityCatalog.apiIdFor(
+                    context.watch<AppPrefs>().municipalityId ?? '',
+                  ) ==
+                  'tuglie')
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: () => context.go('/map?municipality=tuglie'),
+                icon: const Icon(Icons.map_outlined),
+                label: const Text('Mappa / Elenco di Tuglie'),
+              ),
+            ),
+          const SizedBox(height: AppTokens.s16),
           _PageHeader(
             eyebrow:
                 '${manager.season.name} · Giornata ${manager.season.currentMatchday}/${manager.season.totalMatchdays}',
@@ -478,70 +499,20 @@ class MatchdayPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final manager = context.watch<FantasyManager>();
     if (!manager.hasData) return const FantasyLoadingPage();
+    final currentOutcomes = <CardOutcome>[];
+    final previousOutcomes = <String, List<CardOutcome>>{};
+    for (final outcome in manager.outcomes) {
+      if (outcome.matchdayId == manager.matchday.id) {
+        currentOutcomes.add(outcome);
+      } else {
+        previousOutcomes.putIfAbsent(outcome.matchdayId, () => []).add(outcome);
+      }
+    }
     return FantasyPage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _PageHeader(
-            eyebrow: 'Giornata ${manager.matchday.number}',
-            title: manager.persistenceError != null
-                ? 'Giornata da verificare'
-                : manager.isLocked
-                ? 'Giornata bloccata'
-                : 'Fai le tue previsioni',
-            subtitle:
-                'Le previsioni degli altri giocatori restano nascoste fino al blocco.',
-          ),
-          const SizedBox(height: 12),
-          _MatchdaySchedule(day: manager.matchday),
-          const SizedBox(height: 12),
-          FcPanel(
-            tint: manager.isLocked ? AppTokens.warning : AppTokens.blue,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  manager.persistenceError != null
-                      ? 'Stato della giornata da verificare'
-                      : manager.isLocked
-                      ? (manager.now.isBefore(
-                              manager.matchday.observationEndsAt,
-                            )
-                            ? '3. Attendi gli esiti'
-                            : '3. Consulta esiti e punti')
-                      : '2. Fai le previsioni',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  manager.persistenceError != null
-                      ? 'Il salvataggio è da verificare. Premi Riprova salvataggio prima di continuare.'
-                      : manager.isLocked
-                      ? (manager.now.isBefore(
-                              manager.matchday.observationEndsAt,
-                            )
-                            ? 'Non puoi più cambiare le scelte. L’osservazione termina il ${_dateTime(manager.matchday.observationEndsAt)}. Sotto trovi gli esiti disponibili e le fonti.'
-                            : 'L’osservazione è finita. Sotto trovi gli esiti pubblicati e i punti. Per gli esiti mancanti, attendi la pubblicazione della fonte.')
-                      : 'Ogni previsione si salva quando la scegli ed è facoltativa. Per ottenere punti, conferma una formazione valida prima del blocco. Le motivazioni non aggiungono punti.',
-                ),
-                if (!manager.isLocked && !manager.confirmed)
-                  TextButton(
-                    onPressed: () => context.go('/squad'),
-                    child: const Text('Conferma la formazione in Squadra'),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          MatchdayProgress(
-            now: manager.now,
-            locked:
-                manager.snapshotFor(manager.matchday.id) != null ||
-                manager.matchday.isLockedAt(manager.now),
-            completed: manager.predictionsCompleted,
-            total: manager.starterIds.length,
-            locksAt: manager.matchday.locksAt,
-          ),
+          _DayOverview(manager: manager),
           const SizedBox(height: 16),
           ...manager.starterCards.map(
             (card) => Padding(
@@ -551,62 +522,82 @@ class MatchdayPage extends StatelessWidget {
                 compact: true,
                 isCaptain: card.id == manager.captainId,
                 prediction: manager.predictions[card.id],
-                footer: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Come andrà nel periodo indicato?',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: CivicTrend.values
-                          .map(
-                            (trend) => ChoiceChip(
-                              label: Text(trend.label),
-                              selected: manager.predictions[card.id] == trend,
-                              onSelected: manager.isLocked || manager.busy
-                                  ? null
-                                  : (_) =>
-                                        manager.setPrediction(card.id, trend),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                    const SizedBox(height: 6),
-                    ExpansionTile(
-                      tilePadding: EdgeInsets.zero,
-                      title: const Text('Spiega la previsione, se vuoi'),
-                      children: [
-                        if (manager.isRemote)
-                          _RemoteMotivation(
-                            manager: manager,
-                            cardId: card.id,
-                            key: ValueKey(
-                              'remote-${manager.matchday.id}-${card.id}',
-                            ),
-                          )
-                        else
-                          TextFormField(
-                            key: ValueKey(
-                              'motivation-${manager.matchday.id}-${card.id}',
-                            ),
-                            initialValue: manager.motivations[card.id] ?? '',
-                            enabled: !manager.isLocked && !manager.loading,
-                            onChanged: (text) =>
-                                manager.setMotivation(card.id, text),
-                            maxLines: 2,
-                            decoration: const InputDecoration(
-                              hintText:
-                                  'Quale segnale ti ha portato a questa previsione?',
-                            ),
+                footer: manager.isLocked
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            manager.predictions[card.id] == null
+                                ? 'Non hai inserito una previsione'
+                                : 'La tua previsione: ${manager.predictions[card.id]!.label}',
                           ),
-                      ],
-                    ),
-                  ],
-                ),
+                          if ((manager.motivations[card.id] ?? '').isNotEmpty)
+                            Text(
+                              'La tua motivazione: ${manager.motivations[card.id]}',
+                            ),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Come andrà nel periodo indicato?',
+                            style: TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: CivicTrend.values
+                                .map(
+                                  (trend) => ChoiceChip(
+                                    label: Text(trend.label),
+                                    selected:
+                                        manager.predictions[card.id] == trend,
+                                    onSelected: manager.isLocked || manager.busy
+                                        ? null
+                                        : (_) => manager.setPrediction(
+                                            card.id,
+                                            trend,
+                                          ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                          const SizedBox(height: 6),
+                          ExpansionTile(
+                            tilePadding: EdgeInsets.zero,
+                            title: const Text('Spiega la previsione, se vuoi'),
+                            children: [
+                              if (manager.isRemote)
+                                _RemoteMotivation(
+                                  manager: manager,
+                                  cardId: card.id,
+                                  key: ValueKey(
+                                    'remote-${manager.matchday.id}-${card.id}',
+                                  ),
+                                )
+                              else
+                                TextFormField(
+                                  key: ValueKey(
+                                    'motivation-${manager.matchday.id}-${card.id}',
+                                  ),
+                                  initialValue:
+                                      manager.motivations[card.id] ?? '',
+                                  enabled:
+                                      !manager.isLocked && !manager.loading,
+                                  onChanged: (text) =>
+                                      manager.setMotivation(card.id, text),
+                                  maxLines: 2,
+                                  decoration: const InputDecoration(
+                                    hintText:
+                                        'Quale segnale ti ha portato a questa previsione?',
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
               ),
             ),
           ),
@@ -618,32 +609,68 @@ class MatchdayPage extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 8),
-          if (manager.outcomes.isEmpty)
+          if (currentOutcomes.isEmpty)
             const FcPanel(
               child: Text(
-                'Non ci sono ancora esiti. Le previsioni restano salvate. Torna dopo la fine dell’osservazione.',
+                'Non ci sono ancora esiti per questa giornata. Saranno visibili qui quando disponibili.',
               ),
             ),
-          ...manager.outcomes.map(
-            (outcome) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: ScoreReveal(
-                card: manager.cardById(outcome.cardId),
-                outcome: outcome,
-                score: manager.scoreFor(outcome),
-                prediction: manager.predictionFor(outcome),
-                personal: manager.hasPersonalResult(outcome),
-                reflection: manager.reflectionFor(outcome),
-                onReflection: manager.busy
-                    ? null
-                    : (answer) => manager.submitReflection(outcome, answer),
-              ),
+          for (final outcome in currentOutcomes)
+            _MatchdayOutcome(manager: manager, outcome: outcome),
+          if (previousOutcomes.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: const Text('Esiti delle giornate precedenti'),
+              children: [
+                for (final entry in previousOutcomes.entries)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          manager.snapshotFor(entry.key) != null
+                              ? 'Giornata ${manager.snapshotFor(entry.key)!.matchday.number}'
+                              : 'Giornata precedente',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      for (final outcome in entry.value)
+                        _MatchdayOutcome(manager: manager, outcome: outcome),
+                    ],
+                  ),
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );
   }
+}
+
+class _MatchdayOutcome extends StatelessWidget {
+  const _MatchdayOutcome({required this.manager, required this.outcome});
+
+  final FantasyManager manager;
+  final CardOutcome outcome;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: ScoreReveal(
+      card: manager.cardById(outcome.cardId),
+      outcome: outcome,
+      score: manager.scoreFor(outcome),
+      prediction: manager.predictionFor(outcome),
+      personal: manager.hasPersonalResult(outcome),
+      reflection: manager.reflectionFor(outcome),
+      onReflection: manager.busy
+          ? null
+          : (answer) => manager.submitReflection(outcome, answer),
+    ),
+  );
 }
 
 class MarketPage extends StatefulWidget {
@@ -678,7 +705,7 @@ class _MarketPageState extends State<MarketPage> {
                 'Puoi cambiare 2 carte gratis per giornata. Ogni cambio successivo costa 4 punti. Il mercato chiude al blocco. Anche gli altri giocatori possono avere le stesse carte.',
             trailing: CreditPill(
               credits: manager.budgetRemaining,
-              label: 'crediti',
+              label: 'crediti disponibili',
             ),
           ),
           const SizedBox(height: 16),
@@ -690,6 +717,8 @@ class _MarketPageState extends State<MarketPage> {
                   : 'Scegli una carta da cedere e confrontala con quella da acquistare. Controlla crediti e penalità prima del cambio. Poi conferma di nuovo la formazione.',
             ),
           ),
+          const SizedBox(height: 12),
+          const _CreditsHelp(),
           const SizedBox(height: 16),
           if (candidates.isEmpty)
             const FcPanel(
@@ -709,7 +738,7 @@ class _MarketPageState extends State<MarketPage> {
                   (card) => DropdownMenuItem(
                     value: card.id,
                     child: Text(
-                      '${card.title} · ${card.price} cr',
+                      '${card.title} · Valore: ${card.price} crediti',
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -836,6 +865,7 @@ class _MarketPageState extends State<MarketPage> {
           outgoing: outgoing,
           incoming: incoming,
           penalty: penalty,
+          availableCredits: current.budgetRemaining,
           outgoingPrice: quote?.outgoingPrice,
           incomingPrice: quote?.incomingPrice,
           onConfirm: current.busy
@@ -863,6 +893,123 @@ class _MarketPageState extends State<MarketPage> {
   }
 }
 
+class _DayOverview extends StatelessWidget {
+  const _DayOverview({required this.manager});
+  final FantasyManager manager;
+
+  @override
+  Widget build(BuildContext context) {
+    final day = manager.matchday;
+    // A saved lock must remain visible even after the device clock rolls back.
+    final locked =
+        manager.snapshotFor(day.id) != null || day.isLockedAt(manager.now);
+    final ended =
+        !manager.now.isBefore(day.observationEndsAt) ||
+        manager.outcomes.any((o) => o.matchdayId == day.id);
+    final results = manager.outcomes.where((o) => o.matchdayId == day.id);
+    final available = manager.starterIds
+        .where(
+          (id) => results.any(
+            (o) =>
+                o.cardId == id &&
+                o.sourceStatus == FantasySourceStatus.verified,
+          ),
+        )
+        .length;
+    final waiting = manager.starterIds.length - available;
+    final error = manager.persistenceError != null;
+    return FcPanel(
+      tint: error ? AppTokens.warning : AppTokens.blue,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            header: true,
+            liveRegion: true,
+            child: Text(
+              'Giornata ${day.number} · ${error
+                  ? 'Stato da verificare'
+                  : ended
+                  ? 'Consulta esiti e punti'
+                  : locked
+                  ? 'Previsioni chiuse · Si gioca!'
+                  : 'Fai le tue previsioni'}',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            error
+                ? 'Il salvataggio è da verificare. Premi Riprova salvataggio prima di continuare.'
+                : ended
+                ? 'Il periodo di gioco è terminato. Puoi consultare gli esiti pubblicati e i punti. Se hai un risultato personale, puoi aggiungere una riflessione.'
+                : locked
+                ? 'Formazione e previsioni sono chiuse. Ora si osserva come cambiano i problemi.'
+                : 'Puoi scegliere o cambiare le previsioni e la formazione. Ogni previsione è facoltativa e si salva quando la scegli. Le motivazioni non aggiungono punti.',
+          ),
+          if (!error) ...[
+            const SizedBox(height: 8),
+            Text(
+              ended
+                  ? 'Esiti dei tuoi titolari: $available disponibili · $waiting ancora attesi.${waiting > 0 ? ' Per gli esiti mancanti non è indicata una data di pubblicazione.' : ' Tutti gli esiti dei titolari sono disponibili.'}'
+                  : locked
+                  ? 'Prossima scadenza: termina il periodo di gioco il ${_dateTime(day.observationEndsAt)}.'
+                  : 'Prossima scadenza: scegli entro il ${_dateTime(day.locksAt)}.',
+            ),
+            Text(
+              '${manager.predictionsCompleted} previsioni inserite su ${manager.starterIds.length} titolari. Le previsioni non sono obbligatorie e non costano crediti.',
+            ),
+            if (!locked && !manager.confirmed)
+              TextButton(
+                onPressed: manager.busy ? null : () => context.go('/squad'),
+                child: const Text(
+                  'Conferma la formazione in Squadra per ottenere punti',
+                ),
+              ),
+            if (locked && !manager.scoreForMatchday(day.id).eligible)
+              const Text(
+                'Formazione non valida o non confermata al blocco: nessun punto personale.',
+              ),
+          ],
+          const SizedBox(height: 12),
+          _MatchdaySchedule(
+            day: day,
+            active: error
+                ? null
+                : ended
+                ? 2
+                : locked
+                ? 1
+                : 0,
+          ),
+          const SizedBox(height: 8),
+          const _CreditsHelp(),
+        ],
+      ),
+    );
+  }
+}
+
+class _CreditsHelp extends StatelessWidget {
+  const _CreditsHelp();
+  @override
+  Widget build(BuildContext context) => const Material(
+    type: MaterialType.transparency,
+    child: ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: Text('Crediti e cambi: come funzionano?'),
+      children: [
+        Padding(
+          padding: EdgeInsets.only(bottom: 12),
+          child: Text(
+            'I crediti sono il budget virtuale della squadra: non sono denaro né finanziamenti al Comune. Parti da 100 crediti: il valore delle 8 carte della squadra viene sottratto dal budget. Fare previsioni non costa crediti. Quando cambi una carta, recuperi il suo valore e spendi il valore della nuova carta. Puoi fare 2 cambi per giornata senza penalità in punti; ogni cambio successivo toglie 4 punti, non crediti. Dopo un cambio, conferma di nuovo la formazione prima della chiusura.',
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 class _MatchdaySummary extends StatelessWidget {
   const _MatchdaySummary({required this.manager});
   final FantasyManager manager;
@@ -884,15 +1031,11 @@ class _MatchdaySummary extends StatelessWidget {
               'Punti dagli esiti ${result.frozenPoints} · bonus riflessione ${result.reflectionBonus} · penalità trasferimenti −${result.transferPenalty}',
             ),
             const Text(
-              'Ogni carta dà punti per l’esito e per la previsione, se l’hai fatta. Il capitano moltiplica i punti base per 1,5. Le riflessioni confermate aggiungono il loro bonus.',
+              'Ogni carta dà punti per l’esito e per la previsione, se l’hai fatta. Le riflessioni confermate aggiungono il loro bonus. Il capitano moltiplica per 1,5 i punti della carta, inclusa la riflessione, con arrotondamento del totale.',
             ),
             if (!manager.isLocked)
               const Text(
                 'Il totale sarà calcolato dalla formazione confermata al blocco e dagli esiti verificati al termine dell’osservazione.',
-              ),
-            if (manager.isLocked && !result.eligible)
-              const Text(
-                'Formazione non valida o non confermata al blocco: nessun punto personale.',
               ),
             Text(
               manager.isRemote
@@ -976,14 +1119,19 @@ class _LeaguesPageState extends State<LeaguesPage> {
 }
 
 class _MatchdaySchedule extends StatelessWidget {
-  const _MatchdaySchedule({required this.day});
+  const _MatchdaySchedule({required this.day, this.active});
+  final int? active;
   final model.Matchday day;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final width = constraints.maxWidth.clamp(0.0, 680.0).toDouble();
-      final columns = MediaQuery.textScalerOf(context).scale(12) > 18 ? 1 : 3;
+      final columns =
+          constraints.maxWidth < 500 ||
+              MediaQuery.textScalerOf(context).scale(12) > 18
+          ? 1
+          : 3;
       final itemWidth = (width - (columns - 1) * 8) / columns;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -993,15 +1141,17 @@ class _MatchdaySchedule extends StatelessWidget {
             runSpacing: 8,
             children: [
               for (final item in [
-                ('Inizio giornata', day.startsAt),
-                ('Blocco delle scelte', day.locksAt),
-                ('Fine osservazione', day.observationEndsAt),
+                ('Si apre la giornata', day.startsAt, 0),
+                ('Ultimo momento per scegliere', day.locksAt, 1),
+                ('Termina il periodo di gioco', day.observationEndsAt, 2),
               ])
                 Container(
                   width: itemWidth,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
+                    color: active == item.$3
+                        ? AppTokens.blueSoft
+                        : Theme.of(context).colorScheme.surface,
                     border: Border.all(
                       color: Theme.of(context).colorScheme.outlineVariant,
                     ),
@@ -1010,6 +1160,12 @@ class _MatchdaySchedule extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (active == item.$3)
+                        Text(switch (item.$3) {
+                          0 => 'Fase attiva · Scelte aperte',
+                          1 => 'Fase attiva · Si gioca!',
+                          _ => 'Fase attiva · Esiti e punti',
+                        }, style: const TextStyle(fontWeight: FontWeight.w800)),
                       Text(
                         item.$1,
                         style: Theme.of(context).textTheme.labelMedium
@@ -1148,5 +1304,5 @@ class _RemoteMotivationState extends State<_RemoteMotivation> {
 
 String _dateTime(DateTime value) {
   final local = value.toLocal();
-  return '${local.day}/${local.month} alle ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  return '${local.day}/${local.month}/${local.year} alle ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
 }

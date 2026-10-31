@@ -26,7 +26,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.44.2"
+          flutter-version: "3.47.5"
           cache: true
 
       - name: Install dependencies
@@ -38,7 +38,9 @@ jobs:
       - name: Build mock demo
         run: >-
           flutter build web --release --base-href "/miglioraPaese/"
-          --dart-define=FANTASY_MODE_ENABLED=true
+          --dart-define=FANTASY_MODE_ENABLED=false
+          --dart-define=TUGLIE_MAP_ENABLED=true
+          --dart-define=PILOT_MUNICIPALITY_ID=tuglie
           --dart-define=FANTASY_DATA_SOURCE=mock
           --dart-define=GAME_DATA_SOURCE=mock
           --dart-define=NEXT_PROBLEMS_DATA_SOURCE=mock

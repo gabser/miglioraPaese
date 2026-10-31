@@ -27,9 +27,9 @@ void main() {
     GoRouter.of(context).go('/onboarding');
     await pumpRoutingFrame(tester);
 
-    expect(find.text('Milano'), findsOneWidget);
+    expect(find.text('MILANO'), findsOneWidget);
 
-    await tester.tap(find.text('Milano'));
+    await tester.tap(find.text('MILANO'));
     await pumpRoutingFrame(tester);
     await tester.pump(const Duration(seconds: 2));
 
@@ -59,8 +59,8 @@ void main() {
     await tester.tap(find.text('Cambia Comune'));
     await pumpRoutingFrame(tester);
 
-    expect(find.text('Milano'), findsOneWidget);
-    expect(find.text('Roma'), findsOneWidget);
+    expect(find.text('MILANO'), findsOneWidget);
+    expect(find.text('ROMA'), findsOneWidget);
   });
 
   testWidgets('pilot profile keeps the configured municipality locked', (
@@ -81,7 +81,7 @@ void main() {
     router.go('/profile');
     await pumpRoutingFrame(tester);
 
-    expect(find.text('Tuglie'), findsOneWidget);
+    expect(find.text('TUGLIE'), findsOneWidget);
     expect(
       find.text('Questa prova online è riservata a un solo Comune.'),
       findsOneWidget,

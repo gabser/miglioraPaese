@@ -1,0 +1,73 @@
+{
+  "checked_on": "2026-10-30",
+  "repository": {
+    "head": "1fad162218e758efa3a556790e42b335a6196959",
+    "scope": "local worktree including existing modifications and untracked files",
+    "web_directory": true,
+    "android_directory": false,
+    "ios_directory": false,
+    "flutter_on_path": false,
+    "sdk_fvm_metadata": {
+      "flutter": "3.47.5",
+      "dart": "3.13.4"
+    },
+    "app_builds_run": false,
+    "flutter_tests_run": false
+  },
+  "flutter_map": {
+    "source_url": "https://pub.dev/api/packages/flutter_map",
+    "version": "8.3.2",
+    "published_at": "2026-08-27T21:34:57.558084Z",
+    "environment": {
+      "sdk": ">=3.6.0 <4.0.0",
+      "flutter": ">=3.27.0"
+    },
+    "dependencies": {
+      "async": "^2.11.0",
+      "collection": "^1.18.0",
+      "dart_earcut": "^1.1.0",
+      "dart_polylabel2": "^1.0.0",
+      "flutter": {
+        "sdk": "flutter"
+      },
+      "http": "^1.5.0",
+      "latlong2": ">=0.9.1 <0.11.0",
+      "meta": "^1.11.0",
+      "path": "^1.9.0",
+      "path_provider": "^2.1.5",
+      "proj4dart": ">=2.1.0 <4.0.0",
+      "uuid": "^4.5.1"
+    },
+    "installed_in_project": false
+  },
+  "maplibre_gl": {
+    "source_url": "https://pub.dev/packages/maplibre_gl",
+    "version_observed": "0.27.1",
+    "license_observed": "BSD-3-Clause",
+    "installed_in_project": false,
+    "note": "Documentation review only; requirements from current official README. No dependency resolution or platform builds."
+  },
+  "tile_service_probe": {
+    "method": "HEAD",
+    "url": "https://tile.openstreetmap.org/15/18031/12397.png",
+    "status": 200,
+    "selected_response_headers": {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "GET, HEAD, OPTIONS",
+      "etag": "\"4fcea0fbd63371572eabc94b3e7b443a\"",
+      "cache-control": "max-age=11132, stale-while-revalidate=604800, stale-if-error=604800",
+      "expires": "Mon, 26 Oct 2026 18:50:37 GMT",
+      "content-type": "image/png",
+      "age": "362228",
+      "date": "Fri, 30 Oct 2026 20:22:13 GMT"
+    },
+    "image_downloaded": false,
+    "note": "Single response; no viewport rendering, no SLA/availability or browser compatibility claim."
+  },
+  "limitations": [
+    "Default sandbox could not resolve Overpass host; public read-only GETs performed with approved network access.",
+    "Overpass secondary endpoint timed out; primary supplied the relation.",
+    "Several guessed documentation paths failed in web reader; accessible official pages, package metadata and upstream guide used instead.",
+    "No field survey, independent authoritative boundary validation or Flutter runtime testing."
+  ]
+}

@@ -91,8 +91,11 @@ void main() {
       await tester.pumpAndSettle();
       GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/matchday');
       await tester.pumpAndSettle();
-      expect(find.text('Giornata bloccata'), findsOneWidget);
-      expect(find.text('Formazione bloccata'), findsOneWidget);
+      expect(
+        find.textContaining('Previsioni chiuse · Si gioca!'),
+        findsOneWidget,
+      );
+      expect(find.byType(ChoiceChip), findsNothing);
     },
   );
 
@@ -146,8 +149,11 @@ void main() {
       );
       GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/matchday');
       await tester.pumpAndSettle();
-      expect(find.text('Giornata da verificare'), findsOneWidget);
-      expect(find.text('Giornata bloccata'), findsNothing);
+      expect(find.textContaining('Stato da verificare'), findsOneWidget);
+      expect(
+        find.textContaining('Previsioni chiuse · Si gioca!'),
+        findsNothing,
+      );
       expect(find.text('Formazione bloccata'), findsNothing);
       expect(find.textContaining('Le scelte sono congelate'), findsNothing);
     },
@@ -169,9 +175,15 @@ void main() {
         await tester.pumpAndSettle();
         GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/squad');
         await tester.pumpAndSettle();
-        expect(find.textContaining('Inizio giornata'), findsOneWidget);
-        expect(find.textContaining('Blocco delle scelte'), findsOneWidget);
-        expect(find.textContaining('Fine osservazione'), findsOneWidget);
+        expect(find.textContaining('Si apre la giornata'), findsOneWidget);
+        expect(
+          find.textContaining('Ultimo momento per scegliere'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('Termina il periodo di gioco'),
+          findsOneWidget,
+        );
         final confirm = find.widgetWithText(
           FilledButton,
           'Conferma formazione',
@@ -272,7 +284,10 @@ void main() {
         await h.at(day.locksAt);
         router.go('/matchday');
         await tester.pumpAndSettle();
-        expect(find.text('Giornata bloccata'), findsOneWidget);
+        expect(
+          find.textContaining('Previsioni chiuse · Si gioca!'),
+          findsOneWidget,
+        );
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
       },

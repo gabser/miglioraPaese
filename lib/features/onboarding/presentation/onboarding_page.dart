@@ -9,6 +9,7 @@ import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/theme/typography_x.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
+import 'package:fanta_comune/core/widgets/municipality_sign.dart';
 
 /// Schermata di onboarding per scegliere il Comune di riferimento.
 class OnboardingPage extends StatefulWidget {
@@ -121,38 +122,27 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           padding: const EdgeInsets.symmetric(
                             vertical: AppTokens.s8,
                           ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(
-                              AppTokens.radius,
-                            ),
-                            onTap: () => _selectCity(context, city),
-                            child: Semantics(
-                              label: VenialCopy.onboardingCitySelectTemplate
-                                  .replaceAll('{city}', city),
-                              button: true,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: AppTokens.s12,
-                                  horizontal: AppTokens.s8,
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(AppIcons.play),
-                                    const SizedBox(width: AppTokens.s12),
-                                    Expanded(
-                                      child: Text(
-                                        MunicipalityCatalog.activeCities
-                                                .contains(city)
-                                            ? city
-                                            : 'Attiva $city',
-                                        style: textTheme.titleMedium,
-                                      ),
-                                    ),
-                                    const Icon(Icons.chevron_right),
-                                  ],
-                                ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              MunicipalitySign(
+                                name: city,
+                                compact: true,
+                                onTap: () => _selectCity(context, city),
+                                semanticLabel: VenialCopy
+                                    .onboardingCitySelectTemplate
+                                    .replaceAll('{city}', city),
                               ),
-                            ),
+                              if (!MunicipalityCatalog.activeCities.contains(
+                                city,
+                              )) ...[
+                                const SizedBox(height: AppTokens.s4),
+                                Text(
+                                  'Attiva $city',
+                                  style: textTheme.bodySmall,
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ),

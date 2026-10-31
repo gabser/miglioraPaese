@@ -324,7 +324,7 @@ void main() {
         router.routeInformationProvider.value.uri.path,
         '/change-municipality',
       );
-      await tester.tap(find.text('Bologna'));
+      await tester.tap(find.text('BOLOGNA'));
       await tester.pumpAndSettle();
       expect(router.routeInformationProvider.value.uri.path, '/next-problems');
       expect(
@@ -377,7 +377,7 @@ void main() {
       expect(repository.listMunicipalities, isEmpty);
       await tester.tap(find.text('Scegli il Comune'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Bologna'));
+      await tester.tap(find.text('BOLOGNA'));
       await tester.pumpAndSettle();
       expect(
         router

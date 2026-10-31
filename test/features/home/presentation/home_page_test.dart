@@ -22,10 +22,7 @@ void main() {
         '$city home uses real local state without overflow at ${size.width}',
         (tester) async {
           await _pumpHome(tester, city: city, size: size, scale: 2);
-          expect(
-            find.text('Comune: $city · Gioco delle previsioni'),
-            findsOneWidget,
-          );
+          expect(find.text(city.toUpperCase()), findsOneWidget);
           if (city == 'Pincara') {
             expect(find.text('Gioca il turno'), findsNothing);
             expect(find.text('Proponi il primo tema'), findsOneWidget);

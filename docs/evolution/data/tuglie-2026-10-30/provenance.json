@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "retrieved_on": "2026-10-30",
+  "municipalityId": "tuglie",
+  "source_dataset": "OpenStreetMap",
+  "license": "ODbL-1.0",
+  "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+  "attribution": "© OpenStreetMap contributors",
+  "attribution_url": "https://www.openstreetmap.org/copyright",
+  "requests": [
+    {
+      "url": "https://overpass-api.de/api/interpreter",
+      "purpose": "Find relation named Tuglie with administrative boundary; out tags bb",
+      "status": "success",
+      "query": "[out:json][timeout:25];relation[\"boundary\"=\"administrative\"][\"name\"=\"Tuglie\"];out tags bb;",
+      "osm_base_timestamp": "2026-10-30T20:18:36Z"
+    },
+    {
+      "url": "https://overpass.kumi.systems/api/interpreter",
+      "purpose": "Fallback for relation lookup while primary response pending",
+      "status": "timeout",
+      "retained_data": false
+    },
+    {
+      "url": "https://www.openstreetmap.org/api/0.6/map?bbox=18.09,40.12,18.11,40.14",
+      "purpose": "Initial candidate rectangle, rejected because it contains Seclì rather than Tuglie",
+      "status": "success_rejected_wrong_area",
+      "retained_data": false
+    },
+    {
+      "url": "https://www.openstreetmap.org/api/0.6/map?bbox=18.085,40.065,18.11,40.09",
+      "purpose": "Small local extract for POI selection",
+      "status": "success"
+    },
+    {
+      "url": "https://www.openstreetmap.org/api/0.6/relation/40254/full",
+      "purpose": "Municipal boundary and admin centre",
+      "status": "success"
+    }
+  ],
+  "selection": "9 named POIs in the Tuglie centre/Montegrappa rectangle; no completeness claim; 4 nodes and 5 closed ways; no duplicate train stop_position nodes.",
+  "transformations": [
+    "Original WGS84 node coordinates retained without reprojection; output longitude, latitude.",
+    "For 5 closed POI ways: planar polygon area centroid in lon/lat after translating to first vertex, rounded to 7 decimal places; point-in-polygon checked. Display anchor, not entrance or measured survey point.",
+    "Municipal outer ways joined by matching node IDs, reversing as needed; exterior oriented counterclockwise. No simplification or invented closure; no inner rings in this relation.",
+    "Categories mapped from original OSM tags; names copied unchanged. Piazzale Montegrappa is tagged leisure=park, not independently verified as a square.",
+    "Only selected objects and geometry dependencies retained; unrelated roads/buildings omitted. No civic content invented or associated."
+  ],
+  "quality": {
+    "field_verified": false,
+    "authoritative_boundary": false,
+    "precision_metres": null,
+    "missing": [
+      "Entrances, current opening/access conditions and positional accuracy",
+      "Independent municipal confirmation of all POIs",
+      "Detailed buildings/heights coverage, outside scope"
+    ],
+    "refresh": "Manual source-version comparison before pilot; retain immutable snapshots, review changed/deleted OSM objects; no runtime calls to editing API/Overpass."
+  },
+  "content_separation": {
+    "real_places": true,
+    "content_links": [],
+    "synthetic_missions_assigned": false,
+    "note": "Existing synthetic mission/place IDs must not be equated to these OSM IDs."
+  },
+  "artifacts": [
+    {
+      "path": "places.geojson",
+      "sha256": "eb77b19baf2436c4e76875ea6ab7e0dea1541fb09dfb7aaa2938c58c0284232f",
+      "bytes": 13322
+    },
+    {
+      "path": "boundary.geojson",
+      "sha256": "ddee52bee921d2b5bbbd06cbcfb7acafe54d030331f96be4fab3d80245741aab",
+      "bytes": 27422
+    },
+    {
+      "path": "viewport.json",
+      "sha256": "e693a21ce17bdf6431d39eeb94dd1010b120833f109ef674a36c000f4ca3fe4c",
+      "bytes": 1111
+    },
+    {
+      "path": "source-snapshot.json",
+      "sha256": "37acc30cbf630ac09643f01bd92cbe7d3727b58be63e681b375247255d8c8034",
+      "bytes": 91376
+    },
+    {
+      "path": "research-evidence.json",
+      "sha256": "e98d5d1edda7f90b0a71458b4d360181bd2a1296269fb79609fe8dbae2a9803c",
+      "bytes": 2643
+    }
+  ]
+}
