@@ -66,4 +66,6 @@ jobs:
 
       - name: Test backend
         working-directory: services/backend
+        env:
+          SKIP_LOOPBACK_BACKUP_TESTS: "true"
         run: npm test

@@ -72,7 +72,7 @@ integrationTest('real PostgreSQL backup before HTTP account/guest fantasy erase,
   const bytes=await readFile(path.join(backup,'database.dump'));await writeFile(path.join(backup,'database.dump'),bytes.subarray(0,100));await assert.rejects(restore(backup),/Incomplete/);
   await accounts.logout(account.token);await assert.rejects(accounts.me(account.token),e=>e.statusCode===401);
  }finally{await store.close();for(const target of restored){const admin=new URL(target);admin.pathname='/postgres';const c=new pg.Client({connectionString:admin.href});await c.connect();try{await c.query('DROP DATABASE IF EXISTS '+target.pathname.slice(1)+' WITH (FORCE)');}finally{await c.end();}}}
-});
+},{requiresLocalBackup:true});
 integrationTest('retention removes complete/incomplete/chunks/orphans with fault retry, expiry access denial and another account intact',async()=>{
  let time=Date.parse('2026-10-14T10:00:00Z');const store=await createTestStore({now:()=>time}),root=await privateRoot('retention'),storage=createLocalProofStorage({root});
  try{

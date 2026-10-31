@@ -4,9 +4,10 @@ import { Readable } from 'node:stream';
 import { createApp, createPostgresStore } from '../../src/server.js';
 import { createFantasyStore } from '../../src/application/fantasy/store.js';
 import { runPostgresMigrations } from '../../src/persistence/postgres/migrator.js';
-export function integrationTest(name, callback) {
+export function integrationTest(name, callback, {requiresLocalBackup=false}={}) {
   const scoring=name.startsWith('matches all 48');
-  return it(name,{skip:!scoring&&!process.env.TEST_DATABASE_URL?'TEST_DATABASE_URL is not configured.':false},callback);
+  const skip=!scoring&&!process.env.TEST_DATABASE_URL?'TEST_DATABASE_URL is not configured.':requiresLocalBackup&&process.env.SKIP_LOOPBACK_BACKUP_TESTS==='true'?'Backup tests require a loopback PostgreSQL server and local PostgreSQL 17 tools.':false;
+  return it(name,{skip},callback);
 }
 const quiet={debug(){},info(){},warn(){},error(){}};
 export async function createTestStore(options={}) {
