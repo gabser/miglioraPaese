@@ -47,23 +47,30 @@ export async function runPostgresMigrations(options = {}) {
     options.artifactDigest ?? (await computeMigrationArtifactDigest());
   return withMigrationCoordinator(attestationDatabaseUrl, async (client) => {
     const before = await verifyDatabaseMigrationState(client, manifest);
-    const migrated = await runner({
-      databaseUrl,
-      migrationsTable: 'pgmigrations',
-      migrationsSchema: 'public',
-      schema: 'public',
-      dir: migrationsDirectory,
-      ignorePattern: '^manifest\\.json$',
-      checkOrder: true,
-      direction,
-      count: direction === 'down' ? (options.count ?? 1) : options.count,
-      singleTransaction: true,
-      noLock: false,
-      fake: false,
-      createSchema: false,
-      createMigrationsSchema: false,
-      logger: options.logger ?? console,
-    });
+    const migrationClient = new Client({ connectionString: databaseUrl });
+    await migrationClient.connect();
+    let migrated;
+    try {
+      migrated = await runner({
+        dbClient: migrationClient,
+        migrationsTable: 'pgmigrations',
+        migrationsSchema: 'public',
+        schema: 'public',
+        dir: migrationsDirectory,
+        ignorePattern: '^manifest\\.json$',
+        checkOrder: true,
+        direction,
+        count: direction === 'down' ? (options.count ?? 1) : options.count,
+        singleTransaction: true,
+        noLock: false,
+        fake: false,
+        createSchema: false,
+        createMigrationsSchema: false,
+        logger: options.logger ?? console,
+      });
+    } finally {
+      await migrationClient.end();
+    }
 
     const appliedAfter = await readAppliedMigrations(client);
     const appliedAfterByName = new Map(
