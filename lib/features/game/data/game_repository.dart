@@ -100,3 +100,18 @@ abstract class GameRepository {
     required int? userReflectionIndex,
   });
 }
+
+/// Optional repository capabilities consumed before presenting an action.
+abstract interface class GameRepositoryCapabilities {
+  bool get supportsReflection;
+  bool get supportsSignals;
+}
+
+extension GameCapabilitySupport on GameRepository {
+  bool get supportsReflection => this is GameRepositoryCapabilities
+      ? (this as GameRepositoryCapabilities).supportsReflection
+      : true;
+  bool get supportsSignals => this is GameRepositoryCapabilities
+      ? (this as GameRepositoryCapabilities).supportsSignals
+      : true;
+}

@@ -22,9 +22,7 @@ class FcPanel extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final radius = BorderRadius.circular(AppTokens.radius);
     final panel = AnimatedContainer(
-      duration: MediaQuery.disableAnimationsOf(context)
-          ? Duration.zero
-          : const Duration(milliseconds: 160),
+      duration: const Duration(milliseconds: 160),
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: radius,

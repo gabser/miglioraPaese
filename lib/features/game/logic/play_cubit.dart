@@ -44,6 +44,7 @@ class PlayCubit extends Cubit<PlayState> {
   Future<Map<String, ReflectionQuestion>> _loadReflectionQuestionsForProblems(
     Iterable<String> problemIds,
   ) async {
+    if (!repository.supportsReflection) return const {};
     final targets = problemIds.toSet();
     final preserved = Map<String, ReflectionQuestion>.fromEntries(
       state.reflectionQuestions.entries.where(
@@ -246,7 +247,7 @@ class PlayCubit extends Cubit<PlayState> {
     if (turnId == null) return;
     final previousChoice = state.myPredictions[problemId];
     if (previousChoice != null) {
-      emit(state.copyWith(error: 'Questa carta è già stata giocata.'));
+      emit(state.copyWith(error: 'Questa carta e\' gia\' stata giocata.'));
       return;
     }
 

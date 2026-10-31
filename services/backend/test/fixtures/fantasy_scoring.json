@@ -1,0 +1,818 @@
+[
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": null,
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 0,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 4,
+      "reflectionBonus": 0,
+      "total": 4
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": null,
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 0,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 4,
+      "reflectionBonus": 1,
+      "total": 5
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": null,
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 0,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 6,
+      "reflectionBonus": 0,
+      "total": 6
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": null,
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 0,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 6,
+      "reflectionBonus": 2,
+      "total": 8
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "improves",
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 4,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 8,
+      "reflectionBonus": 0,
+      "total": 8
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "improves",
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 4,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 8,
+      "reflectionBonus": 1,
+      "total": 9
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "improves",
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 4,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 12,
+      "reflectionBonus": 0,
+      "total": 12
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "improves",
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 4,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 12,
+      "reflectionBonus": 2,
+      "total": 14
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "stable",
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 2,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 6,
+      "reflectionBonus": 0,
+      "total": 6
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "stable",
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 2,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 6,
+      "reflectionBonus": 1,
+      "total": 7
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "stable",
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 2,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 9,
+      "reflectionBonus": 0,
+      "total": 9
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "stable",
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 2,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 9,
+      "reflectionBonus": 2,
+      "total": 11
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "worsens",
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 0,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 4,
+      "reflectionBonus": 0,
+      "total": 4
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "worsens",
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 0,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 4,
+      "reflectionBonus": 1,
+      "total": 5
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "worsens",
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 0,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 6,
+      "reflectionBonus": 0,
+      "total": 6
+    }
+  },
+  {
+    "input": {
+      "observed": "improves",
+      "prediction": "worsens",
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 4,
+      "predictionPoints": 0,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 6,
+      "reflectionBonus": 2,
+      "total": 8
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": null,
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 0,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 1,
+      "reflectionBonus": 0,
+      "total": 1
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": null,
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 0,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 1,
+      "reflectionBonus": 1,
+      "total": 2
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": null,
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 0,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 2,
+      "reflectionBonus": 0,
+      "total": 2
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": null,
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 0,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 2,
+      "reflectionBonus": 1,
+      "total": 3
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "improves",
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 2,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 3,
+      "reflectionBonus": 0,
+      "total": 3
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "improves",
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 2,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 3,
+      "reflectionBonus": 1,
+      "total": 4
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "improves",
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 2,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 5,
+      "reflectionBonus": 0,
+      "total": 5
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "improves",
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 2,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 5,
+      "reflectionBonus": 1,
+      "total": 6
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "stable",
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 4,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 5,
+      "reflectionBonus": 0,
+      "total": 5
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "stable",
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 4,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 5,
+      "reflectionBonus": 1,
+      "total": 6
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "stable",
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 4,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 8,
+      "reflectionBonus": 0,
+      "total": 8
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "stable",
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 4,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 8,
+      "reflectionBonus": 1,
+      "total": 9
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "worsens",
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 2,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 3,
+      "reflectionBonus": 0,
+      "total": 3
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "worsens",
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 2,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 3,
+      "reflectionBonus": 1,
+      "total": 4
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "worsens",
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 2,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 5,
+      "reflectionBonus": 0,
+      "total": 5
+    }
+  },
+  {
+    "input": {
+      "observed": "stable",
+      "prediction": "worsens",
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 1,
+      "predictionPoints": 2,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 5,
+      "reflectionBonus": 1,
+      "total": 6
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": null,
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 0,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 0,
+      "reflectionBonus": 0,
+      "total": 0
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": null,
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 0,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 0,
+      "reflectionBonus": 1,
+      "total": 1
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": null,
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 0,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 0,
+      "reflectionBonus": 0,
+      "total": 0
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": null,
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 0,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 0,
+      "reflectionBonus": 2,
+      "total": 2
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "improves",
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 0,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 0,
+      "reflectionBonus": 0,
+      "total": 0
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "improves",
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 0,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 0,
+      "reflectionBonus": 1,
+      "total": 1
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "improves",
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 0,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 0,
+      "reflectionBonus": 0,
+      "total": 0
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "improves",
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 0,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 0,
+      "reflectionBonus": 2,
+      "total": 2
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "stable",
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 2,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 2,
+      "reflectionBonus": 0,
+      "total": 2
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "stable",
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 2,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 2,
+      "reflectionBonus": 1,
+      "total": 3
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "stable",
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 2,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 3,
+      "reflectionBonus": 0,
+      "total": 3
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "stable",
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 2,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 3,
+      "reflectionBonus": 2,
+      "total": 5
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "worsens",
+      "captain": false,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 4,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1,
+      "frozenTotal": 4,
+      "reflectionBonus": 0,
+      "total": 4
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "worsens",
+      "captain": false,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 4,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1,
+      "frozenTotal": 4,
+      "reflectionBonus": 1,
+      "total": 5
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "worsens",
+      "captain": true,
+      "reflection": false
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 4,
+      "reflectionPoints": 0,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 6,
+      "reflectionBonus": 0,
+      "total": 6
+    }
+  },
+  {
+    "input": {
+      "observed": "worsens",
+      "prediction": "worsens",
+      "captain": true,
+      "reflection": true
+    },
+    "expected": {
+      "observationPoints": 0,
+      "predictionPoints": 4,
+      "reflectionPoints": 1,
+      "captainMultiplier": 1.5,
+      "frozenTotal": 6,
+      "reflectionBonus": 2,
+      "total": 8
+    }
+  }
+]

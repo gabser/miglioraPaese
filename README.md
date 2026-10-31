@@ -31,7 +31,7 @@ confrontare esiti e percezioni aggregate.
 
 ## Stack e struttura
 
-- Flutter 3.44.2 / Dart 3.12;
+- Flutter 3.47.5 / Dart 3.12;
 - go_router, flutter_bloc, provider e shared_preferences;
 - design system locale in **lib/core/theme** e **lib/core/widgets**;
 - API HTTP Node.js 24 con SQLite nativo in **services/backend**;
@@ -192,7 +192,7 @@ npm test
 docker build --tag migliorapaese/backend:local .
 ~~~
 
-La CI esegue gli stessi gate con Flutter 3.44.2 e Node.js 24.
+La CI esegue gli stessi gate con Flutter 3.47.5 e Node.js 24.
 
 ## Demo web
 

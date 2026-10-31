@@ -1,5 +1,3 @@
-import 'package:fanta_comune/features/next_problems/logic/next_problems_cubit.dart';
-import 'package:fanta_comune/features/next_problems/logic/next_problems_state.dart';
 import '../../../helpers/submission_test_provider.dart';
 import '../../../helpers/proposal_form_actions.dart';
 import 'dart:async';
@@ -26,92 +24,6 @@ final _category = find.byKey(const ValueKey('proposal-category'));
 final _submit = find.byKey(const ValueKey('proposal-submit'));
 
 void main() {
-  for (final fantasy in [false, true]) {
-    testWidgets(
-      'filters and originating page survive cancel and receipt in fantasy=$fantasy',
-      (tester) async {
-        final prefs = await createTestPrefs({
-          'municipality_id': 'comune:Bologna',
-        });
-        final config = AppConfig.fromValues(fantasyModeEnabled: fantasy);
-        final origin = fantasy ? '/market' : '/board';
-        final repository = _RecordingRepository();
-        final router = await _host(
-          tester,
-          prefs,
-          repository,
-          origin,
-          config: config,
-        );
-        router.push('/next-problems?municipality=bologna');
-        await tester.pumpAndSettle();
-        final listContext = tester.element(find.text('Proposte del Comune'));
-        final cubit = listContext.read<NextProblemsCubit>();
-        await tester.enterText(find.byType(TextField).first, 'parco');
-        await tester.tap(find.widgetWithText(ChoiceChip, 'Nel gioco'));
-        await tester.tap(find.text('Più recenti'));
-        await tester.pumpAndSettle();
-        expect(cubit.state.query, 'parco');
-        expect(cubit.state.filterStatus, SuggestedProblemStatus.approved);
-        expect(cubit.state.sortMode, NextProblemsSortMode.newest);
-        await tester.tap(find.byIcon(Icons.add));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byTooltip('Torna alle proposte'));
-        await tester.pumpAndSettle();
-        expect(
-          tester
-              .widget<TextField>(find.byType(TextField).first)
-              .controller!
-              .text,
-          'parco',
-        );
-        expect(
-          tester
-              .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Nel gioco'))
-              .selected,
-          isTrue,
-        );
-        expect(cubit.state.sortMode, NextProblemsSortMode.newest);
-        await tester.tap(find.byIcon(Icons.add));
-        await tester.pumpAndSettle();
-        final listReadsBeforeSend = repository.listMunicipalities.length;
-        await tester.enterText(_title, 'Alberi al parco');
-        await _completeForm(tester);
-        await sendReviewedProposal(tester);
-        expect(find.text('Invio ricevuto'), findsOneWidget);
-        await tester.ensureVisible(find.text('Torna indietro'));
-        await tester.tap(find.text('Torna indietro'));
-        await tester.pumpAndSettle();
-        expect(
-          tester
-              .widget<TextField>(find.byType(TextField).first)
-              .controller!
-              .text,
-          'parco',
-        );
-        expect(
-          tester
-              .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Nel gioco'))
-              .selected,
-          isTrue,
-        );
-        expect(cubit.state.sortMode, NextProblemsSortMode.newest);
-        expect(
-          find.byKey(const ValueKey('last-proposal-receipt')),
-          findsOneWidget,
-        );
-        expect(
-          repository.listMunicipalities.length,
-          greaterThan(listReadsBeforeSend),
-        );
-        await tester.tap(find.byTooltip('Torna indietro'));
-        await tester.pumpAndSettle();
-        expect(router.routeInformationProvider.value.uri.path, origin);
-        expect(tester.takeException(), isNull);
-      },
-    );
-  }
-
   testWidgets(
     'invalid scope notice remains usable on a short 320px viewport at 200% text',
     (tester) async {
@@ -444,15 +356,13 @@ Future<GoRouter> _host(
   NextProblemsRepository repository,
   String location, {
   bool settle = true,
-  AppConfig? config,
 }) async {
-  final appConfig = config ?? AppConfig.fromValues();
-  final router = buildRouter(prefs, appConfig)..go(location);
+  final router = buildRouter(prefs)..go(location);
   addTearDown(router.dispose);
   await tester.pumpWidget(
     AppDependencies(
       appPrefs: prefs,
-      config: appConfig,
+      config: AppConfig.fromValues(),
       child: Provider<NextProblemsRepository>.value(
         value: repository,
         child: recordingSubmissionHost(

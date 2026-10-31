@@ -1,0 +1,396 @@
+{
+  "idempotencyKey": "local-synthetic-january-v1",
+  "municipalityId": "tuglie",
+  "season": {
+    "id": "synthetic-calendar-tuglie-2027-january",
+    "name": "Synthetic weekly return fixture",
+    "startsAt": "2027-01-01T00:00:00.000Z",
+    "endsAt": "2027-01-16T00:00:00.000Z",
+    "catalogVersion": 1,
+    "synthetic": true
+  },
+  "cards": [
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-buche-centro",
+      "title": "Buche sulle vie centrali",
+      "zone": "Centro",
+      "role": "mobility",
+      "price": 13,
+      "form": [
+        "stable",
+        "worsens",
+        "improves"
+      ],
+      "observationWindow": "7 giorni",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 74,
+      "illustrationKey": "road",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-bus-stazione",
+      "title": "Regolarità bus stazione",
+      "zone": "Stazione",
+      "role": "mobility",
+      "price": 12,
+      "form": [
+        "improves",
+        "stable",
+        "stable"
+      ],
+      "observationWindow": "7 giorni",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 68,
+      "illustrationKey": "bus",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-attraversamenti-scuole",
+      "title": "Attraversamenti scolastici",
+      "zone": "Zona scuole",
+      "role": "mobility",
+      "price": 10,
+      "form": [
+        "stable",
+        "improves",
+        "improves"
+      ],
+      "observationWindow": "5 giorni",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 61,
+      "illustrationKey": "crosswalk",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-ciclabile-est",
+      "title": "Continuità pista ciclabile",
+      "zone": "Quartiere Est",
+      "role": "mobility",
+      "price": 9,
+      "form": [
+        "worsens",
+        "stable",
+        "stable"
+      ],
+      "observationWindow": "7 giorni",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 39,
+      "illustrationKey": "bike",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-parco-nord",
+      "title": "Pulizia del parco",
+      "zone": "Parco Nord",
+      "role": "environment",
+      "price": 11,
+      "form": [
+        "stable",
+        "improves",
+        "improves"
+      ],
+      "observationWindow": "7 giorni",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 70,
+      "illustrationKey": "park",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-rifiuti-mercato",
+      "title": "Rifiuti dopo il mercato",
+      "zone": "Piazza Mercato",
+      "role": "environment",
+      "price": 12,
+      "form": [
+        "worsens",
+        "stable",
+        "improves"
+      ],
+      "observationWindow": "3 giorni",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 82,
+      "illustrationKey": "waste",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-alberi-viale",
+      "title": "Cura degli alberi del viale",
+      "zone": "Viale Europa",
+      "role": "environment",
+      "price": 8,
+      "form": [
+        "stable",
+        "stable",
+        "improves"
+      ],
+      "observationWindow": "14 giorni",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 44,
+      "illustrationKey": "tree",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-fontanelle-ovest",
+      "title": "Fontanelle funzionanti",
+      "zone": "Quartiere Ovest",
+      "role": "environment",
+      "price": 7,
+      "form": [
+        "improves",
+        "stable",
+        "worsens"
+      ],
+      "observationWindow": "7 giorni",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 36,
+      "illustrationKey": "water",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-lampioni-sud",
+      "title": "Lampioni attivi",
+      "zone": "Quartiere Sud",
+      "role": "servicesAndSafety",
+      "price": 10,
+      "form": [
+        "improves",
+        "improves",
+        "stable"
+      ],
+      "observationWindow": "7 notti",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 77,
+      "illustrationKey": "light",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-sportello-anagrafe",
+      "title": "Attesa allo sportello",
+      "zone": "Municipio",
+      "role": "servicesAndSafety",
+      "price": 9,
+      "form": [
+        "stable",
+        "stable",
+        "improves"
+      ],
+      "observationWindow": "5 giorni",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 49,
+      "illustrationKey": "office",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-fermata-accessibile",
+      "title": "Accessibilità fermata",
+      "zone": "Via Roma",
+      "role": "servicesAndSafety",
+      "price": 8,
+      "form": [
+        "worsens",
+        "stable",
+        "improves"
+      ],
+      "observationWindow": "7 giorni",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 57,
+      "illustrationKey": "stop",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-biblioteca-orari",
+      "title": "Apertura biblioteca",
+      "zone": "Centro civico",
+      "role": "servicesAndSafety",
+      "price": 6,
+      "form": [
+        "stable",
+        "improves",
+        "stable"
+      ],
+      "observationWindow": "7 giorni",
+      "sourceStatus": "pending",
+      "sourceLabel": "Synthetic fixture only; no source ratification",
+      "popularity": 32,
+      "illustrationKey": "library",
+      "availability": "available",
+      "version": 1,
+      "isDemo": true
+    }
+  ],
+  "matchdays": [
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-day-1",
+      "number": 1,
+      "startsAt": "2027-01-01T00:00:00.000Z",
+      "locksAt": "2027-01-02T00:00:00.000Z",
+      "observationEndsAt": "2027-01-03T00:00:00.000Z",
+      "closeAt": "2027-01-04T00:00:00.000Z"
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-day-2",
+      "number": 2,
+      "startsAt": "2027-01-08T00:00:00.000Z",
+      "locksAt": "2027-01-09T00:00:00.000Z",
+      "observationEndsAt": "2027-01-10T00:00:00.000Z",
+      "closeAt": "2027-01-11T00:00:00.000Z"
+    }
+  ],
+  "missions": [
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-mission-1",
+      "matchdayId": "synthetic-calendar-tuglie-2027-january-day-1",
+      "cardId": "synthetic-calendar-tuglie-2027-january-buche-centro",
+      "zoneId": "synthetic-centre",
+      "title": "Synthetic control week 1",
+      "area": {
+        "label": "Synthetic public place",
+        "boundary": "Local test fixture only",
+        "public": true
+      },
+      "placeId": "synthetic-calendar-tuglie-2027-january-place",
+      "durationMinutes": 15,
+      "protocol": {
+        "id": "synthetic-calendar-tuglie-2027-january-protocol-1",
+        "version": 1,
+        "instructions": [
+          "Count synthetic visible items in the same delimited area"
+        ],
+        "photoPoints": [],
+        "minPhotos": 0,
+        "indicator": "Synthetic visible items",
+        "unit": "items",
+        "threshold": 0,
+        "lowerIsBetter": true,
+        "measurementDefinition": {
+          "minValue": 0,
+          "maxValue": 100,
+          "integerOnly": true
+        }
+      },
+      "windows": [
+        {
+          "id": "synthetic-calendar-tuglie-2027-january-window-1",
+          "startsAt": "2027-01-02T00:00:00.000Z",
+          "endsAt": "2027-01-03T00:00:00.000Z",
+          "capacity": 20
+        }
+      ],
+      "baseline": {
+        "value": 10,
+        "unit": "items",
+        "measuredAt": "2026-10-01T00:00:00.000Z",
+        "label": "Synthetic baseline",
+        "provenance": "Handwritten local fixture only; no operational ratification"
+      }
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-mission-2",
+      "matchdayId": "synthetic-calendar-tuglie-2027-january-day-2",
+      "cardId": "synthetic-calendar-tuglie-2027-january-buche-centro",
+      "zoneId": "synthetic-centre",
+      "title": "Synthetic control week 2",
+      "area": {
+        "label": "Synthetic public place",
+        "boundary": "Local test fixture only",
+        "public": true
+      },
+      "placeId": "synthetic-calendar-tuglie-2027-january-place",
+      "durationMinutes": 15,
+      "protocol": {
+        "id": "synthetic-calendar-tuglie-2027-january-protocol-2",
+        "version": 1,
+        "instructions": [
+          "Count synthetic visible items in the same delimited area"
+        ],
+        "photoPoints": [],
+        "minPhotos": 0,
+        "indicator": "Synthetic visible items",
+        "unit": "items",
+        "threshold": 0,
+        "lowerIsBetter": true,
+        "measurementDefinition": {
+          "minValue": 0,
+          "maxValue": 100,
+          "integerOnly": true
+        }
+      },
+      "windows": [
+        {
+          "id": "synthetic-calendar-tuglie-2027-january-window-2",
+          "startsAt": "2027-01-09T00:00:00.000Z",
+          "endsAt": "2027-01-10T00:00:00.000Z",
+          "capacity": 20
+        }
+      ],
+      "baseline": {
+        "value": 10,
+        "unit": "items",
+        "measuredAt": "2026-10-01T00:00:00.000Z",
+        "label": "Synthetic baseline",
+        "provenance": "Handwritten local fixture only; no operational ratification"
+      }
+    }
+  ],
+  "coverageGoals": [
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-goal-1",
+      "matchdayId": "synthetic-calendar-tuglie-2027-january-day-1",
+      "title": "Cover the shared synthetic place",
+      "version": 1,
+      "targets": [
+        {
+          "placeId": "synthetic-calendar-tuglie-2027-january-place",
+          "startsAt": "2027-01-02T00:00:00.000Z",
+          "endsAt": "2027-01-03T00:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "synthetic-calendar-tuglie-2027-january-goal-2",
+      "matchdayId": "synthetic-calendar-tuglie-2027-january-day-2",
+      "title": "Cover the shared synthetic place",
+      "version": 1,
+      "targets": [
+        {
+          "placeId": "synthetic-calendar-tuglie-2027-january-place",
+          "startsAt": "2027-01-09T00:00:00.000Z",
+          "endsAt": "2027-01-10T00:00:00.000Z"
+        }
+      ]
+    }
+  ]
+}

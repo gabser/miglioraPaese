@@ -476,11 +476,11 @@ class _ActivationEmptyTurn extends StatelessWidget {
               runSpacing: AppTokens.s8,
               children: [
                 FilledButton(
-                  onPressed: () => context.push('/suggest-problem'),
+                  onPressed: () => context.go('/suggest-problem'),
                   child: const Text(VenialCopy.activationPrimaryCta),
                 ),
                 OutlinedButton(
-                  onPressed: () => context.push('/next-problems'),
+                  onPressed: () => context.go('/next-problems'),
                   child: const Text(VenialCopy.activationSecondaryCta),
                 ),
               ],
@@ -504,8 +504,8 @@ class _BoardHeader extends StatelessWidget {
       title:
           'Il turno di ${MunicipalityCatalog.displayNameFromId(municipality)}',
       subtitle: hasNewCards
-          ? 'Gioco delle previsioni · nuovi esiti disponibili'
-          : 'Gioco delle previsioni · nessuna segnalazione ufficiale',
+          ? 'Gioco demo locale · nuovi esiti disponibili'
+          : 'Gioco demo locale · nessuna segnalazione ufficiale',
       action: OutlinedButton(
         onPressed: onOpenBoard,
         child: const Text(VenialCopy.playBoardCta),
@@ -643,7 +643,7 @@ class _TurnActionStrip extends StatelessWidget {
                 Text(
                   predictionCount == 0
                       ? VenialCopy.playResolveDisabledHint
-                      : 'Hai giocato $predictionCount carte. Puoi vedere gli esiti della demo.',
+                      : '$predictionCount carte giocate. Puoi scoprire gli esiti mock.',
                   style: textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -689,7 +689,7 @@ class _CivicLoopSummaryCard extends StatelessWidget {
       ),
       (
         Icons.how_to_vote_outlined,
-        'Nel gioco',
+        'Confermate',
         summary.confirmedThemes.toString(),
         AppTokens.success,
       ),
@@ -719,8 +719,8 @@ class _CivicLoopSummaryCard extends StatelessWidget {
       ),
     ];
     final body = summary.topThemeTitle == null
-        ? 'Non ci sono ancora carte dalle proposte in questo turno. Proponi un problema o vota una proposta.'
-        : 'Tema più votato tra le carte: ${summary.topThemeTitle}. Il turno può contenere più carte civiche.';
+        ? 'Nessun tema promosso nel turno: proponi o conferma una priorita\'.'
+        : 'Tema piu\' votato tra le carte: ${summary.topThemeTitle}. Il turno puo\' contenere piu\' carte civiche.';
 
     return FcPanel(
       padding: const EdgeInsets.all(AppTokens.s14),
@@ -730,7 +730,7 @@ class _CivicLoopSummaryCard extends StatelessWidget {
           FcSectionHeader(title: 'Riepilogo ${summary.municipalityName}'),
           const SizedBox(height: AppTokens.s8),
           FcStatusChip(
-            label: summary.hasCompleteLoop ? 'Percorso completato' : 'In corso',
+            label: summary.hasCompleteLoop ? 'Loop completo' : 'In corso',
             color: summary.hasCompleteLoop ? AppTokens.success : AppTokens.blue,
           ),
           const SizedBox(height: AppTokens.s8),

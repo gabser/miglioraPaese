@@ -1,5 +1,3 @@
-import 'package:fanta_comune/core/config/app_config.dart';
-import 'package:fanta_comune/features/next_problems/domain/proposal_route_context.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -20,7 +18,6 @@ class ProposalScopeNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pilot = context.read<AppConfig?>()?.pilotMunicipalityId;
     return Scaffold(
       appBar: AppBar(title: const Text('Fanta Comune')),
       body: SafeArea(
@@ -43,29 +40,18 @@ class ProposalScopeNotice extends StatelessWidget {
                   const SizedBox(height: AppTokens.s16),
                   FilledButton(
                     onPressed: () => context.go(
-                      pilot != null
-                          ? ProposalRouteContext.location(
-                              '/next-problems',
-                              pilot,
-                            )
-                          : Uri(
-                              path:
-                                  context.read<AppPrefs>().municipalityId ==
-                                      null
-                                  ? '/onboarding'
-                                  : '/change-municipality',
-                              queryParameters: {'returnTo': returnTo},
-                            ).toString(),
+                      Uri(
+                        path: context.read<AppPrefs>().municipalityId == null
+                            ? '/onboarding'
+                            : '/change-municipality',
+                        queryParameters: {'returnTo': returnTo},
+                      ).toString(),
                     ),
-                    child: Text(
-                      pilot == null
-                          ? 'Scegli il Comune'
-                          : 'Torna alle proposte del Comune della prova',
-                    ),
+                    child: const Text('Scegli il Comune'),
                   ),
                   TextButton(
                     onPressed: () => context.go('/home'),
-                    child: const Text('Torna all’inizio'),
+                    child: const Text('Torna alla home'),
                   ),
                 ],
               ),

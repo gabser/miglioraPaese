@@ -16,10 +16,14 @@ class FantasyData {
     this.scores = const {},
     this.summaries = const {},
     this.summaryStatuses = const {},
+    this.resultRevisions = const {},
+    this.coverage = const {},
   }) : cards = List.unmodifiable(cards),
        outcomes = List.unmodifiable(outcomes),
        leagues = List.unmodifiable(leagues);
 
+  final Map<String, int> resultRevisions;
+  final Map<String, Map<String, dynamic>> coverage;
   final FantasySeason? season;
   final Map<String, ScoreBreakdown> scores;
   final Map<String, MatchdayScore> summaries;

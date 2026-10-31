@@ -108,9 +108,7 @@ class FantasyGame {
       FantasySavedState.resultKey(dayId, cardId);
 
   String? get lineupIssue {
-    if (_squadIds.length != 8) {
-      return 'La squadra deve avere 8 carte.';
-    }
+    if (_squadIds.length != 8) return 'La rosa deve contenere 8 carte.';
     for (final role in FantasyRole.values) {
       if (squadCards.where((card) => card.role == role).length < 2) {
         return 'Servono almeno 2 carte per il ruolo ${role.label}.';
@@ -184,9 +182,7 @@ class FantasyGame {
     if (isLocked) return 'Mercato chiuso: giornata bloccata.';
     if (!_squadIds.contains(outgoingId)) return 'Carta da cedere non valida.';
     if (!_known(incomingId)) return 'Carta da acquistare non valida.';
-    if (_squadIds.contains(incomingId)) {
-      return 'Hai già questa carta nella squadra.';
-    }
+    if (_squadIds.contains(incomingId)) return 'La carta è già nella rosa.';
     final incoming = cardById(incomingId);
     final issue = purchaseIssue(incoming);
     if (issue != null) return issue;
@@ -261,6 +257,8 @@ class FantasyGame {
       eligible: hasPersonalResult(outcome),
       captain: snapshot?.captainId == outcome.cardId,
       reflection: reflectionFor(outcome) != null,
+      rulesVersion: snapshot?.matchday.rulesVersion ?? matchday.rulesVersion,
+      disposition: published?.disposition,
     );
   }
 
@@ -329,7 +327,8 @@ class FantasyGame {
       if (snapshot != null &&
           !now.isBefore(snapshot.matchday.observationEndsAt) &&
           !outcome.sourceDate.isAfter(now) &&
-          outcome.sourceStatus == FantasySourceStatus.verified &&
+          (outcome.authoritativePublication ||
+              outcome.sourceStatus == FantasySourceStatus.verified) &&
           !_revealed.containsKey(key)) {
         _revealed[key] = outcome;
         changed = true;
@@ -459,7 +458,8 @@ class FantasyGame {
       require(
         _known(outcome.cardId) &&
             state.snapshots.containsKey(outcome.matchdayId) &&
-            outcome.sourceStatus == FantasySourceStatus.verified,
+            (outcome.authoritativePublication ||
+                outcome.sourceStatus == FantasySourceStatus.verified),
       );
     }
     for (final key in state.reflections.keys) {

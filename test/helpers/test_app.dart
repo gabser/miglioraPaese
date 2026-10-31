@@ -1,5 +1,6 @@
-import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,8 +22,12 @@ Widget buildTestApp(
   return AppDependencies(
     appPrefs: prefs,
     config: config ?? AppConfig.fromValues(),
-    fantasyManager: fantasyManager,
-    child: const App(),
+    child: fantasyManager == null
+        ? const App()
+        : ChangeNotifierProvider<FantasyManager>.value(
+            value: fantasyManager,
+            child: const App(),
+          ),
   );
 }
 

@@ -23,7 +23,7 @@ void main() {
         (tester) async {
           await _pumpHome(tester, city: city, size: size, scale: 2);
           expect(
-            find.text('Comune: $city · Gioco delle previsioni'),
+            find.text('Comune: $city · Gioco demo locale'),
             findsOneWidget,
           );
           if (city == 'Pincara') {
@@ -31,9 +31,9 @@ void main() {
             expect(find.text('Proponi il primo tema'), findsOneWidget);
           } else {
             expect(find.text('Gioca il turno'), findsOneWidget);
-            expect(find.textContaining('andamento del tema'), findsWidgets);
+            expect(find.textContaining('andamento nella demo'), findsWidgets);
             expect(
-              find.text('Punti maturati nel gioco delle previsioni'),
+              find.text('Punti maturati nella demo locale'),
               findsOneWidget,
             );
           }

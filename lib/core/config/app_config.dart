@@ -9,14 +9,58 @@ enum GameDataSource { mock, api }
 class AppConfig {
   AppConfig({
     required this.nextProblemsDataSource,
-    required this.gameDataSource,
-    required this.fantasyModeEnabled,
+    this.gameDataSource = GameDataSource.mock,
+    this.fantasyModeEnabled = false,
+    this.accountModeEnabled = false,
+    this.missionsModeEnabled = false,
+    this.reviewModeEnabled = false,
+    this.measurementsModeEnabled = false,
+    this.leagueContinuityModeEnabled = false,
+    this.cooperationModeEnabled = false,
     this.fantasyDataSource = FantasyDataSource.mock,
+    this.tuglieMapEnabled = false,
+    this.mapTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    this.mapProviderAttribution = '',
+    this.mapProviderAttributionUrl = '',
     required Uri apiBaseUrl,
     String? pilotMunicipalityId,
     this.apiTimeout = const Duration(seconds: 8),
-  }) : apiBaseUrl = _validateApiBaseUrl(apiBaseUrl),
-       pilotMunicipalityId = _validatePilotMunicipalityId(pilotMunicipalityId);
+    String? candidateId,
+  }) : candidateId = _validateCandidateId(candidateId),
+       apiBaseUrl = _validateApiBaseUrl(apiBaseUrl),
+       pilotMunicipalityId = _validatePilotMunicipalityId(pilotMunicipalityId) {
+    if (cooperationModeEnabled &&
+        (!measurementsModeEnabled ||
+            !reviewModeEnabled ||
+            !missionsModeEnabled ||
+            !accountModeEnabled ||
+            !fantasyModeEnabled ||
+            fantasyDataSource != FantasyDataSource.api)) {
+      throw ArgumentError(
+        "La cooperazione richiede account, missioni, revisione, misurazioni e fantasy API.",
+      );
+    }
+    if (leagueContinuityModeEnabled &&
+        (!fantasyModeEnabled || fantasyDataSource != FantasyDataSource.api)) {
+      throw ArgumentError(
+        "La continuità delle leghe richiede fantasy API esplicito.",
+      );
+    }
+    if (measurementsModeEnabled &&
+        (!reviewModeEnabled ||
+            !missionsModeEnabled ||
+            !accountModeEnabled ||
+            !fantasyModeEnabled ||
+            fantasyDataSource != FantasyDataSource.api)) {
+      throw ArgumentError(
+        'Le misurazioni richiedono revisione, missioni, account e fantasy API.',
+      );
+    }
+    if (reviewModeEnabled && (!missionsModeEnabled || !accountModeEnabled))
+      throw ArgumentError(
+        'La revisione richiede missioni e account espliciti.',
+      );
+  }
 
   factory AppConfig.fromEnvironment() {
     const dataSource = String.fromEnvironment(
@@ -33,20 +77,60 @@ class AppConfig {
     );
     const apiBaseUrl = String.fromEnvironment(
       'API_BASE_URL',
-      defaultValue: 'http://localhost:8787',
+      defaultValue: 'http://127.0.0.1:8787',
     );
     const pilotMunicipalityId = String.fromEnvironment('PILOT_MUNICIPALITY_ID');
+    const missionsModeEnabled = bool.fromEnvironment(
+      'MISSIONS_MODE_ENABLED',
+      defaultValue: false,
+    );
+    const measurementsModeEnabled = bool.fromEnvironment(
+      'MEASUREMENTS_MODE_ENABLED',
+      defaultValue: false,
+    );
+    const reviewModeEnabled = bool.fromEnvironment(
+      'REVIEW_MODE_ENABLED',
+      defaultValue: false,
+    );
+    const accountModeEnabled = bool.fromEnvironment(
+      'ACCOUNT_MODE_ENABLED',
+      defaultValue: false,
+    );
     const fantasyModeEnabled = bool.fromEnvironment(
       'FANTASY_MODE_ENABLED',
-      defaultValue: true,
+      defaultValue: false,
     );
     return AppConfig.fromValues(
+      candidateId: const String.fromEnvironment('CANDIDATE_ID'),
+      cooperationModeEnabled: const bool.fromEnvironment(
+        "COOPERATION_MODE_ENABLED",
+        defaultValue: false,
+      ),
+      tuglieMapEnabled: const bool.fromEnvironment('TUGLIE_MAP_ENABLED'),
+      mapTileUrl: const String.fromEnvironment(
+        'MAP_TILE_URL',
+        defaultValue: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      ),
+      mapProviderAttribution: const String.fromEnvironment(
+        'MAP_PROVIDER_ATTRIBUTION',
+      ),
+      mapProviderAttributionUrl: const String.fromEnvironment(
+        'MAP_PROVIDER_ATTRIBUTION_URL',
+      ),
       nextProblemsDataSource: dataSource,
       gameDataSource: gameDataSource,
       fantasyDataSource: fantasyDataSource,
       apiBaseUrl: apiBaseUrl,
       pilotMunicipalityId: pilotMunicipalityId,
       fantasyModeEnabled: fantasyModeEnabled,
+      accountModeEnabled: accountModeEnabled,
+      missionsModeEnabled: missionsModeEnabled,
+      reviewModeEnabled: reviewModeEnabled,
+      measurementsModeEnabled: measurementsModeEnabled,
+      leagueContinuityModeEnabled: const bool.fromEnvironment(
+        "LEAGUE_CONTINUITY_MODE_ENABLED",
+        defaultValue: false,
+      ),
     );
   }
 
@@ -54,11 +138,30 @@ class AppConfig {
     String nextProblemsDataSource = 'mock',
     String gameDataSource = 'mock',
     String fantasyDataSource = 'mock',
-    String apiBaseUrl = 'http://localhost:8787',
+    String apiBaseUrl = 'http://127.0.0.1:8787',
     String? pilotMunicipalityId,
     bool fantasyModeEnabled = false,
+    bool accountModeEnabled = false,
+    bool missionsModeEnabled = false,
+    bool reviewModeEnabled = false,
+    bool measurementsModeEnabled = false,
+    bool leagueContinuityModeEnabled = false,
+    bool cooperationModeEnabled = false,
+    bool tuglieMapEnabled = false,
+    String mapTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    String mapProviderAttribution = '',
+    String mapProviderAttributionUrl = '',
     Duration apiTimeout = const Duration(seconds: 8),
+    String? candidateId,
   }) {
+    if (reviewModeEnabled && (!missionsModeEnabled || !accountModeEnabled))
+      throw ArgumentError(
+        'La revisione richiede missioni e account espliciti.',
+      );
+    if (missionsModeEnabled && !accountModeEnabled)
+      throw ArgumentError(
+        'Le missioni richiedono ACCOUNT_MODE_ENABLED esplicito.',
+      );
     final nextProblemsSource = switch (nextProblemsDataSource
         .trim()
         .toLowerCase()) {
@@ -89,9 +192,20 @@ class AppConfig {
       gameDataSource: gameSource,
       fantasyDataSource: fantasySource,
       fantasyModeEnabled: fantasyModeEnabled,
+      accountModeEnabled: accountModeEnabled,
+      missionsModeEnabled: missionsModeEnabled,
+      reviewModeEnabled: reviewModeEnabled,
+      measurementsModeEnabled: measurementsModeEnabled,
+      leagueContinuityModeEnabled: leagueContinuityModeEnabled,
+      cooperationModeEnabled: cooperationModeEnabled,
+      tuglieMapEnabled: tuglieMapEnabled,
+      mapTileUrl: mapTileUrl,
+      mapProviderAttribution: mapProviderAttribution,
+      mapProviderAttributionUrl: mapProviderAttributionUrl,
       apiBaseUrl: Uri.parse(apiBaseUrl),
       pilotMunicipalityId: pilotMunicipalityId,
       apiTimeout: apiTimeout,
+      candidateId: candidateId,
     );
   }
 
@@ -99,9 +213,30 @@ class AppConfig {
   final GameDataSource gameDataSource;
   final FantasyDataSource fantasyDataSource;
   final bool fantasyModeEnabled;
+  final bool accountModeEnabled;
+  final bool missionsModeEnabled;
+  final bool reviewModeEnabled;
+  final bool measurementsModeEnabled;
+  final bool leagueContinuityModeEnabled;
+  final bool cooperationModeEnabled;
+  final bool tuglieMapEnabled;
+  final String mapTileUrl;
+  final String mapProviderAttribution;
+  final String mapProviderAttributionUrl;
   final Uri apiBaseUrl;
   final String? pilotMunicipalityId;
   final Duration apiTimeout;
+  final String? candidateId;
+
+  static String? _validateCandidateId(String? value) {
+    if (value == null || value.isEmpty) return null;
+    if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(value)) {
+      throw ArgumentError(
+        'CANDIDATE_ID deve essere un digest SHA256 esadecimale minuscolo.',
+      );
+    }
+    return value;
+  }
 
   static Uri _validateApiBaseUrl(Uri value) {
     if (!value.hasScheme ||

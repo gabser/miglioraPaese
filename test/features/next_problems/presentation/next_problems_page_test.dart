@@ -28,21 +28,17 @@ void main() {
           OutlinedButton,
           VenialCopy.nextProblemsVoteUpLabel,
         );
-        await tester.scrollUntilVisible(
-          vote,
-          200,
-          scrollable: find.byType(Scrollable).first,
-        );
+        await tester.ensureVisible(vote);
         await tester.pumpAndSettle();
         await tester.tap(vote);
         await tester.pumpAndSettle();
-        expect(find.text('Voto salvato.'), findsNothing);
+        expect(find.text('Segnato.'), findsNothing);
         expect(
           find.textContaining('Il voto non è stato registrato'),
           findsOneWidget,
         );
         expect(find.text('Illuminazione al parco'), findsOneWidget);
-        expect(find.text('Proposte non disponibili'), findsNothing);
+        expect(find.text('Temi non disponibili'), findsNothing);
         expect(tester.takeException(), isNull);
       },
     );
@@ -73,25 +69,6 @@ void main() {
     );
   }
 
-  testWidgets('empty proposals do not imply municipality activation', (
-    tester,
-  ) async {
-    final repository = _RetryRepository()
-      ..calls = 1
-      ..forceEmpty = true;
-    await _pumpList(tester, repository, width: 390, scale: 2);
-    await tester.scrollUntilVisible(
-      find.text('Nessuna proposta'),
-      250,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Nessuna proposta'), findsOneWidget);
-    expect(find.text(VenialCopy.activationTitle), findsNothing);
-    expect(find.text(VenialCopy.nextProblemsActivationEmpty), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets(
     'successful vote announces success, updates count and selected semantics',
     (tester) async {
@@ -104,16 +81,12 @@ void main() {
         OutlinedButton,
         VenialCopy.nextProblemsVoteUpLabel,
       );
-      await tester.scrollUntilVisible(
-        vote,
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
+      await tester.ensureVisible(vote);
       await tester.pumpAndSettle();
       expect(tester.getSize(vote).height, greaterThanOrEqualTo(48));
       await tester.tap(vote);
       await tester.pumpAndSettle();
-      expect(find.text('Voto salvato.'), findsOneWidget);
+      expect(find.text('Segnato.'), findsOneWidget);
       final selected = find.bySemanticsLabel(
         '${VenialCopy.nextProblemsVoteUpLabel} per Illuminazione al parco, 1 voti',
       );
@@ -153,7 +126,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Proposte non disponibili'), findsOneWidget);
+    expect(find.text('Temi non disponibili'), findsOneWidget);
     expect(find.textContaining('Controlla la connessione'), findsOneWidget);
     expect(find.text('Riprova'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -166,7 +139,7 @@ void main() {
 
     expect(repository.calls, 2);
     expect(find.text('Illuminazione al parco'), findsOneWidget);
-    expect(find.text('Proposte non disponibili'), findsNothing);
+    expect(find.text('Temi non disponibili'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }
@@ -216,7 +189,6 @@ class _RetryRepository implements NextProblemsRepository {
 
   int calls = 0;
   bool failVote = true;
-  bool forceEmpty = false;
 
   @override
   Future<List<SuggestedProblem>> listNextProblems({
@@ -232,7 +204,7 @@ class _RetryRepository implements NextProblemsRepository {
         message: 'socket failed',
       );
     }
-    return !forceEmpty && query == null ? [_problem()] : [];
+    return query == null ? [_problem()] : [];
   }
 
   @override

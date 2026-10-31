@@ -1,10 +1,9 @@
-import 'package:fanta_comune/core/copy/venial_copy.dart';
-import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/features/fantasy/presentation/pages/remote_leagues_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/features/fantasy/domain/fantasy_models.dart'
@@ -55,18 +54,16 @@ class FantasyWelcomePage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Fanta Comune',
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w900),
-                            ),
+                          Text(
+                            'Fanta Comune',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w900),
                           ),
                         ],
                       ),
                       const SizedBox(height: 32),
                       Text(
-                        'Crea una squadra con le carte dei problemi del Comune.',
+                        'Costruisci la tua squadra di priorità locali.',
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
                               fontWeight: FontWeight.w900,
@@ -75,7 +72,7 @@ class FantasyWelcomePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Scegli i titolari, fai le previsioni e confronta gli esiti.',
+                        'Schiera, prevedi, scopri come cambia il Comune.',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -88,7 +85,7 @@ class FantasyWelcomePage extends StatelessWidget {
                           FilledButton.icon(
                             onPressed: () => context.go('/squad'),
                             icon: const Icon(Icons.groups_outlined),
-                            label: const Text('Crea la tua squadra'),
+                            label: const Text('Crea la tua rosa'),
                           ),
                           OutlinedButton.icon(
                             onPressed: () => context.go('/squad'),
@@ -98,8 +95,10 @@ class FantasyWelcomePage extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      const Text(
-                        'Nella demo carte ed esiti sono esempi salvati sul dispositivo. Non descrivono condizioni reali verificate.',
+                      Text(
+                        manager.isRemote
+                            ? 'Dati demo dal server: nessuna informazione rappresenta una condizione reale certificata.'
+                            : 'Dati demo locali: nessuna informazione rappresenta una condizione reale certificata.',
                       ),
                     ],
                   );
@@ -161,11 +160,7 @@ class FantasyShellPage extends StatelessWidget {
         ),
       );
     }
-    final municipality = MunicipalityCatalog.displayNameFromId(
-      context.watch<AppPrefs>().municipalityId ?? 'demo',
-    );
     return Scaffold(
-      appBar: AppBar(title: Text('La tua squadra · $municipality')),
       body: SafeArea(child: navigationShell),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
@@ -197,85 +192,97 @@ class _FantasySidebar extends StatelessWidget {
     );
     return Material(
       color: Colors.white,
-      child: SizedBox(
+      child: Container(
         width: 252,
-        child: SingleChildScrollView(
-          child: Container(
-            width: 252,
-            padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              border: Border(right: BorderSide(color: AppTokens.line)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 46,
-                      height: 52,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppTokens.navy,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Text(
-                        'FC',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          border: Border(right: BorderSide(color: AppTokens.line)),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 52,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppTokens.navy,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Text(
+                          'FC',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Fanta Comune',
-                            style: TextStyle(fontWeight: FontWeight.w900),
-                          ),
-                          Text(municipality, overflow: TextOverflow.ellipsis),
-                        ],
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Fanta Comune',
+                              style: TextStyle(fontWeight: FontWeight.w900),
+                            ),
+                            Text(municipality, overflow: TextOverflow.ellipsis),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                ..._destinations.indexed.map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: ListTile(
-                      selected: current == item.$1,
-                      selectedTileColor: AppTokens.blueSoft,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  ..._destinations.indexed.map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: ListTile(
+                        selected: current == item.$1,
+                        selectedTileColor: AppTokens.blueSoft,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        leading: Icon(
+                          current == item.$1
+                              ? item.$2.selectedIcon
+                              : item.$2.icon,
+                        ),
+                        title: Text(item.$2.label),
+                        onTap: () => onSelect(item.$1),
                       ),
-                      leading: Icon(
-                        current == item.$1
-                            ? item.$2.selectedIcon
-                            : item.$2.icon,
-                      ),
-                      title: Text(item.$2.label),
-                      onTap: () => onSelect(item.$1),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                Card(
-                  color: AppTokens.navy,
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Text(
-                      context.watch<FantasyManager>().isRemote
-                          ? 'Servizio online\nDati di esempio. Ogni esito indica la sua fonte.'
-                          : 'Stagione demo\nDati di esempio salvati sul dispositivo.',
-                      style: TextStyle(color: Colors.white, height: 1.45),
+                  if ((context.read<AppConfig?>()?.tuglieMapEnabled ?? false) &&
+                      MunicipalityCatalog.apiIdFor(
+                            prefs.municipalityId ?? '',
+                          ) ==
+                          'tuglie')
+                    ListTile(
+                      leading: const Icon(Icons.map_outlined),
+                      title: const Text('Mappa / Elenco'),
+                      onTap: () => context.go('/map?municipality=tuglie'),
+                    ),
+                  const SizedBox(height: 24),
+                  Card(
+                    color: AppTokens.navy,
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Text(
+                        context.watch<FantasyManager>().isRemote
+                            ? 'Stagione demo\nStato e calendario verificati dal server.'
+                            : 'Stagione demo\nDati mock locali e verificabilità sempre visibile.',
+                        style: TextStyle(color: Colors.white, height: 1.45),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -307,7 +314,6 @@ class SquadPage extends StatelessWidget {
     final manager = context.watch<FantasyManager>();
     if (!manager.hasData) return const FantasyLoadingPage();
     final issue = manager.lineupIssue;
-    final saved = manager.confirmed && manager.persistenceError == null;
     return FantasyPage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -317,143 +323,54 @@ class SquadPage extends StatelessWidget {
                 '${manager.season.name} · Giornata ${manager.season.currentMatchday}/${manager.season.totalMatchdays}',
             title: 'La mia squadra',
             subtitle:
-                'La formazione è la tua scelta di 5 titolari e un capitano. La squadra comprende anche 3 riserve.',
+                'Otto priorità locali e cinque titolari. Senza formazione valida e confermata al blocco non ricevi punti. Dopo ogni cambio, conferma di nuovo.',
             trailing: CreditPill(
               credits: manager.budgetRemaining,
               label: 'crediti rimasti',
             ),
           ),
-          const SizedBox(height: 12),
-          _MatchdaySchedule(day: manager.matchday),
-          const SizedBox(height: 12),
-          FcPanel(
-            padding: const EdgeInsets.all(12),
-            tint: manager.persistenceError != null
-                ? AppTokens.warning
-                : saved
-                ? AppTokens.success
-                : AppTokens.blue,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Semantics(
-                  liveRegion: true,
-                  child: Row(
-                    children: [
-                      Icon(
-                        manager.persistenceError != null
-                            ? Icons.error_outline
-                            : manager.isLocked
-                            ? Icons.lock_outline
-                            : saved
-                            ? Icons.check_circle
-                            : Icons.groups_outlined,
-                        color: manager.persistenceError != null
-                            ? AppTokens.danger
-                            : saved
-                            ? AppTokens.success
-                            : AppTokens.blueForeground,
-                        size: 26,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          manager.persistenceError != null
-                              ? 'Salvataggio non completato'
-                              : manager.isLocked
-                              ? VenialCopy.lineupLockedLabel
-                              : issue ??
-                                    (saved
-                                        ? VenialCopy.lineupSavedLabel
-                                        : 'Formazione da confermare'),
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                    ],
+          if ((context.read<AppConfig?>()?.tuglieMapEnabled ?? false) &&
+              MunicipalityCatalog.apiIdFor(
+                    context.watch<AppPrefs>().municipalityId ?? '',
+                  ) ==
+                  'tuglie')
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: () => context.go('/map?municipality=tuglie'),
+                icon: const Icon(Icons.map_outlined),
+                label: const Text('Mappa / Elenco di Tuglie'),
+              ),
+            ),
+          const SizedBox(height: 16),
+          Card(
+            color: issue == null
+                ? AppTokens.successSoft
+                : AppTokens.warningSoft,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  Icon(
+                    issue == null
+                        ? Icons.check_circle_outline
+                        : Icons.info_outline,
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  manager.persistenceError != null
-                      ? 'Premi Riprova salvataggio. Finché non riesce, non puoi modificare le scelte. Lo stato della giornata è da verificare.'
-                      : manager.isLocked
-                      ? 'Non puoi più cambiare le scelte. Apri Giornata per vedere esiti e punti.'
-                      : saved
-                      ? 'Al blocco giocherai con questi titolari. Se cambi formazione o capitano, conferma di nuovo.'
-                      : 'Usa Sostituisci per cambiare un titolare con una riserva. Scegli il capitano: i suoi punti base valgono ×1,5.',
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    FilledButton.icon(
-                      onPressed:
-                          issue == null &&
-                              !manager.confirmed &&
-                              !manager.isLocked &&
-                              !manager.busy
-                          ? () async {
-                              final confirmed = await manager.confirmLineup();
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    confirmed
-                                        ? 'Formazione confermata per la giornata.'
-                                        : manager.persistenceError ??
-                                              'La giornata è bloccata. Non puoi confermare la formazione.',
-                                  ),
-                                ),
-                              );
-                            }
-                          : null,
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: Text(
-                        manager.confirmed
-                            ? 'Formazione confermata'
-                            : VenialCopy.confirmLineupCta,
-                      ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      manager.isLocked
+                          ? 'Giornata bloccata: formazione e previsioni non sono più modificabili.'
+                          : issue ??
+                                (manager.confirmed
+                                    ? 'Formazione confermata. Puoi modificarla fino al blocco.'
+                                    : 'Formazione completa e pronta per la conferma.'),
                     ),
-                    OutlinedButton.icon(
-                      onPressed: () => context.go('/matchday'),
-                      icon: const Icon(Icons.event_outlined),
-                      label: Text(
-                        manager.isLocked
-                            ? 'Consulta la giornata'
-                            : 'Vai alle previsioni',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
-          if (manager.canRestartDemo) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              children: [
-                TextButton.icon(
-                  onPressed: manager.busy ? null : () => manager.restartDemo(),
-                  icon: const Icon(Icons.replay),
-                  label: const Text(VenialCopy.newDemoCta),
-                ),
-                if (manager.hasPreviousDemo)
-                  TextButton(
-                    onPressed: manager.busy
-                        ? null
-                        : () => manager.restartDemo(restorePrevious: true),
-                    child: const Text(VenialCopy.recoverDemoCta),
-                  ),
-              ],
-            ),
-            const Text(
-              'La nuova demo riparte con una squadra iniziale e scelte aperte. Su questo dispositivo resta la partita che lasci: squadra, formazione, previsioni, motivazioni, trasferimenti, esiti e punti. Puoi riprenderla con i suoi blocchi e orari. Anche la partita che lasci al recupero viene conservata. Comune e proposte restano salvati.',
-            ),
-          ],
           const SizedBox(height: 16),
           SquadBoard(
             locked: manager.isLocked || manager.busy,
@@ -465,6 +382,30 @@ class SquadPage extends StatelessWidget {
                 manager.swapCards(starterId: starterId, reserveId: reserveId),
           ),
           const SizedBox(height: 20),
+          FilledButton.icon(
+            onPressed: issue == null && !manager.isLocked && !manager.busy
+                ? () async {
+                    final confirmed = await manager.confirmLineup();
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          confirmed
+                              ? 'Formazione confermata per la giornata.'
+                              : manager.persistenceError ??
+                                    'Giornata bloccata: conferma non consentita.',
+                        ),
+                      ),
+                    );
+                  }
+                : null,
+            icon: const Icon(Icons.check_circle_outline),
+            label: Text(
+              manager.confirmed
+                  ? 'Formazione confermata'
+                  : 'Conferma formazione',
+            ),
+          ),
         ],
       ),
     );
@@ -484,60 +425,14 @@ class MatchdayPage extends StatelessWidget {
         children: [
           _PageHeader(
             eyebrow: 'Giornata ${manager.matchday.number}',
-            title: manager.persistenceError != null
-                ? 'Giornata da verificare'
-                : manager.isLocked
-                ? 'Giornata bloccata'
-                : 'Fai le tue previsioni',
+            title: 'Fai le tue previsioni',
             subtitle:
-                'Le previsioni degli altri giocatori restano nascoste fino al blocco.',
-          ),
-          const SizedBox(height: 12),
-          _MatchdaySchedule(day: manager.matchday),
-          const SizedBox(height: 12),
-          FcPanel(
-            tint: manager.isLocked ? AppTokens.warning : AppTokens.blue,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  manager.persistenceError != null
-                      ? 'Stato della giornata da verificare'
-                      : manager.isLocked
-                      ? (manager.now.isBefore(
-                              manager.matchday.observationEndsAt,
-                            )
-                            ? '3. Attendi gli esiti'
-                            : '3. Consulta esiti e punti')
-                      : '2. Fai le previsioni',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  manager.persistenceError != null
-                      ? 'Il salvataggio è da verificare. Premi Riprova salvataggio prima di continuare.'
-                      : manager.isLocked
-                      ? (manager.now.isBefore(
-                              manager.matchday.observationEndsAt,
-                            )
-                            ? 'Non puoi più cambiare le scelte. L’osservazione termina il ${_dateTime(manager.matchday.observationEndsAt)}. Sotto trovi gli esiti disponibili e le fonti.'
-                            : 'L’osservazione è finita. Sotto trovi gli esiti pubblicati e i punti. Per gli esiti mancanti, attendi la pubblicazione della fonte.')
-                      : 'Ogni previsione si salva quando la scegli ed è facoltativa. Per ottenere punti, conferma una formazione valida prima del blocco. Le motivazioni non aggiungono punti.',
-                ),
-                if (!manager.isLocked && !manager.confirmed)
-                  TextButton(
-                    onPressed: () => context.go('/squad'),
-                    child: const Text('Conferma la formazione in Squadra'),
-                  ),
-              ],
-            ),
+                'Le risposte degli altri manager restano nascoste fino al blocco.',
           ),
           const SizedBox(height: 16),
           MatchdayProgress(
             now: manager.now,
-            locked:
-                manager.snapshotFor(manager.matchday.id) != null ||
-                manager.matchday.isLockedAt(manager.now),
+            locked: manager.isLocked || manager.busy,
             completed: manager.predictionsCompleted,
             total: manager.starterIds.length,
             locksAt: manager.matchday.locksAt,
@@ -555,7 +450,7 @@ class MatchdayPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Come andrà nel periodo indicato?',
+                      'Come cambierà nella finestra indicata?',
                       style: TextStyle(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 8),
@@ -578,7 +473,7 @@ class MatchdayPage extends StatelessWidget {
                     const SizedBox(height: 6),
                     ExpansionTile(
                       tilePadding: EdgeInsets.zero,
-                      title: const Text('Spiega la previsione, se vuoi'),
+                      title: const Text('Aggiungi una motivazione facoltativa'),
                       children: [
                         if (manager.isRemote)
                           _RemoteMotivation(
@@ -614,16 +509,10 @@ class MatchdayPage extends StatelessWidget {
           _MatchdaySummary(manager: manager),
           const SizedBox(height: 16),
           Text(
-            manager.isRemote ? 'Esiti e fonti' : 'Esiti e fonti · demo',
+            'Reveal e fonti · demo',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 8),
-          if (manager.outcomes.isEmpty)
-            const FcPanel(
-              child: Text(
-                'Non ci sono ancora esiti. Le previsioni restano salvate. Torna dopo la fine dell’osservazione.',
-              ),
-            ),
           ...manager.outcomes.map(
             (outcome) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -675,28 +564,13 @@ class _MarketPageState extends State<MarketPage> {
                 '${manager.transfersRemaining} trasferimenti gratuiti rimasti',
             title: 'Mercato',
             subtitle:
-                'Puoi cambiare 2 carte gratis per giornata. Ogni cambio successivo costa 4 punti. Il mercato chiude al blocco. Anche gli altri giocatori possono avere le stesse carte.',
+                'Due trasferimenti gratuiti per giornata, poi −4 punti ciascuno. Il mercato chiude al blocco. Le carte sono condivise fra manager.',
             trailing: CreditPill(
               credits: manager.budgetRemaining,
               label: 'crediti',
             ),
           ),
           const SizedBox(height: 16),
-          FcPanel(
-            tint: manager.isLocked ? AppTokens.warning : AppTokens.blue,
-            child: Text(
-              manager.isLocked
-                  ? 'Il mercato è chiuso per questa giornata. Puoi guardare le carte, ma non cambiarle.'
-                  : 'Scegli una carta da cedere e confrontala con quella da acquistare. Controlla crediti e penalità prima del cambio. Poi conferma di nuovo la formazione.',
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (candidates.isEmpty)
-            const FcPanel(
-              child: Text(
-                'Nessuna carta per questo ruolo. Prova il filtro Tutti.',
-              ),
-            ),
           DropdownButtonFormField<String>(
             key: ValueKey(_outgoingId),
             isExpanded: true,
@@ -801,13 +675,13 @@ class _MarketPageState extends State<MarketPage> {
                           style: TextStyle(fontWeight: FontWeight.w900),
                         ),
                         Text(
-                          'Leggi e vota le proposte del Comune. Invio e voti non aggiungono carte alla squadra.',
+                          'Una proposta moderata e approvata può entrare nel mercato successivo.',
                         ),
                       ],
                     ),
                   ),
                   TextButton(
-                    onPressed: () => context.push('/next-problems'),
+                    onPressed: () => context.go('/next-problems'),
                     child: const Text('Apri proposte'),
                   ),
                 ],
@@ -881,11 +755,58 @@ class _MatchdaySummary extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             Text(
-              'Punti dagli esiti ${result.frozenPoints} · bonus riflessione ${result.reflectionBonus} · penalità trasferimenti −${result.transferPenalty}',
+              'Punti congelati ${result.frozenPoints} · bonus riflessione ${result.reflectionBonus} · penalità trasferimenti −${result.transferPenalty}',
             ),
-            const Text(
-              'Ogni carta dà punti per l’esito e per la previsione, se l’hai fatta. Il capitano moltiplica i punti base per 1,5. Le riflessioni confermate aggiungono il loro bonus.',
-            ),
+            if (manager.revisionFor(manager.matchday.id) case final revision?)
+              Text('Revisione risultato: $revision'),
+            if (manager.coverageFor(manager.matchday.id) case final coverage?)
+              Text(
+                'Copertura personale: ${coverage['evaluableCards']}/${coverage['expectedCards']} carte valutabili · ${coverage['closedUndeterminableCards']} non determinabili',
+              ),
+            if (manager.isRemote &&
+                manager.revisionFor(manager.matchday.id) != null)
+              TextButton(
+                onPressed: () async {
+                  final history = await manager.resultsHistory(
+                    manager.matchday.id,
+                  );
+                  if (!context.mounted || history == null) return;
+                  await showDialog<void>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Revisioni del risultato'),
+                      content: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Revisione corrente: ${history['currentRevision']}',
+                            ),
+                            const Text('Originale conservato separatamente.'),
+                            for (final item in history['items'] as List)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                child: Text(
+                                  'Revisione ${item['resultRevision']} · ${item['at']}\nTotale: ${item['summary']['total']} · valutazioni: ${item['evaluationVersions']}',
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Chiudi'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: const Text('Consulta storico del risultato'),
+              ),
             if (!manager.isLocked)
               const Text(
                 'Il totale sarà calcolato dalla formazione confermata al blocco e dagli esiti verificati al termine dell’osservazione.',
@@ -896,7 +817,7 @@ class _MatchdaySummary extends StatelessWidget {
               ),
             Text(
               manager.isRemote
-                  ? 'Dati di esempio online · ${manager.summaryStatus(manager.matchday.id) == 'final' ? 'Definitivo' : 'Provvisorio'}. Punteggio cooperativo non disponibile.'
+                  ? 'Dati sintetici dal server · ${manager.summaryStatus(manager.matchday.id) == 'final' ? 'Definitivo' : 'Provvisorio'}. Punteggio cooperativo non disponibile.'
                   : 'Dati demo locali. Il punteggio cooperativo è separato.',
             ),
           ],
@@ -926,39 +847,28 @@ class _LeaguesPageState extends State<LeaguesPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const _PageHeader(
-            eyebrow: 'Le tue classifiche',
+            eyebrow: 'Competizione rispettosa',
             title: 'Leghe',
             subtitle:
-                'Confronta i punti della squadra nella lega privata o del Comune. Nella demo sono esempi. Sono separati dai punti delle previsioni individuali e dai voti alle proposte.',
+                'Le formazioni avversarie diventano visibili soltanto dopo il lock.',
           ),
           const SizedBox(height: 16),
-          const FcPanel(
-            tint: AppTokens.blue,
-            child: Text(
-              'La classifica confronta i punti delle squadre. Il punteggio cooperativo descrive la partecipazione del Comune: è separato e non somma i voti alle proposte.',
-            ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ChoiceChip(
-                label: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 150),
-                  child: const Text('Lega privata'),
-                ),
-                selected: !_municipal,
-                avatar: const Icon(Icons.lock_outline),
-                onSelected: (_) => setState(() => _municipal = false),
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(
+                value: false,
+                label: Text('Lega privata'),
+                icon: Icon(Icons.lock_outline),
               ),
-              ChoiceChip(
-                label: const Text('Comune'),
-                selected: _municipal,
-                avatar: const Icon(Icons.location_city_outlined),
-                onSelected: (_) => setState(() => _municipal = true),
+              ButtonSegment(
+                value: true,
+                label: Text('Comune'),
+                icon: Icon(Icons.location_city_outlined),
               ),
             ],
+            selected: {_municipal},
+            onSelectionChanged: (value) =>
+                setState(() => _municipal = value.first),
           ),
           const SizedBox(height: 16),
           Text(league.name, style: Theme.of(context).textTheme.titleLarge),
@@ -975,67 +885,6 @@ class _LeaguesPageState extends State<LeaguesPage> {
   }
 }
 
-class _MatchdaySchedule extends StatelessWidget {
-  const _MatchdaySchedule({required this.day});
-  final model.Matchday day;
-
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final width = constraints.maxWidth.clamp(0.0, 680.0).toDouble();
-      final columns = MediaQuery.textScalerOf(context).scale(12) > 18 ? 1 : 3;
-      final itemWidth = (width - (columns - 1) * 8) / columns;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final item in [
-                ('Inizio giornata', day.startsAt),
-                ('Blocco delle scelte', day.locksAt),
-                ('Fine osservazione', day.observationEndsAt),
-              ])
-                Container(
-                  width: itemWidth,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.$1,
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _dateTime(item.$2).replaceFirst(' alle ', ' '),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Orari del dispositivo',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-      );
-    },
-  );
-}
-
 class _PageHeader extends StatelessWidget {
   const _PageHeader({
     required this.eyebrow,
@@ -1049,58 +898,41 @@ class _PageHeader extends StatelessWidget {
   final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) {
-    final heading = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          eyebrow.toUpperCase(),
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: AppTokens.blueForeground,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Semantics(
-          header: true,
-          child: Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontSize: 24),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          subtitle,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 600 ||
-            MediaQuery.textScalerOf(context).scale(14) > 20) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              heading,
-              if (trailing != null) ...[const SizedBox(height: 12), trailing!],
-            ],
-          );
-        }
-        return Row(
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      Expanded(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: heading),
-            if (trailing != null) ...[const SizedBox(width: 24), trailing!],
+            Text(
+              eyebrow.toUpperCase(),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: AppTokens.blue,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Semantics(
+              header: true,
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
-        );
-      },
-    );
-  }
+        ),
+      ),
+      if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+    ],
+  );
 }
 
 class _RemoteMotivation extends StatefulWidget {
@@ -1144,9 +976,4 @@ class _RemoteMotivationState extends State<_RemoteMotivation> {
       ),
     ],
   );
-}
-
-String _dateTime(DateTime value) {
-  final local = value.toLocal();
-  return '${local.day}/${local.month} alle ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
 }

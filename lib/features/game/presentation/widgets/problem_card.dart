@@ -161,7 +161,7 @@ class ProblemCard extends StatelessWidget {
             ),
             if (insight == null || insight!.totalPredictions == 0)
               const Text(
-                'Nessuna previsione aggregata disponibile per questo tema.',
+                'Nessuna previsione aggregata disponibile nella demo.',
               ),
             const SizedBox(height: AppTokens.s8),
             Wrap(
@@ -169,7 +169,7 @@ class ProblemCard extends StatelessWidget {
               runSpacing: AppTokens.s8,
               children: [
                 Text(
-                  'Andamento $trendLabel',
+                  'Trend $trendLabel',
                   style: textTheme.labelMedium?.copyWith(
                     color: AppTokens.foregroundFor(status.color),
                     fontWeight: FontWeight.w900,
@@ -282,7 +282,7 @@ class ProblemCard extends StatelessWidget {
               const SizedBox(height: AppTokens.s16),
               FcDisclosure(
                 storageId: 'insight-${problem.id}',
-                title: 'Percezioni aggregate',
+                title: 'Percezioni nella demo',
                 children: [
                   _InsightBlock(
                     insight: insight!,

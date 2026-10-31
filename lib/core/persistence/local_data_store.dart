@@ -11,14 +11,9 @@ abstract interface class LocalDataBackend {
 }
 
 class SharedPreferencesLocalBackend implements LocalDataBackend {
-  SharedPreferencesLocalBackend(
-    this.prefs, {
-    this.resetKeys,
-    this.resetKeyPrefixes = const {},
-  });
+  SharedPreferencesLocalBackend(this.prefs, {this.resetKeys});
   final SharedPreferences prefs;
   final Set<String>? resetKeys;
-  final Set<String> resetKeyPrefixes;
   @override
   String? readString(String key) => prefs.getString(key);
   @override
@@ -40,10 +35,7 @@ class SharedPreferencesLocalBackend implements LocalDataBackend {
     if (resetKeys == null) {
       result = await prefs.clear();
     } else {
-      for (final key in {
-        ...resetKeys!,
-        ...prefs.getKeys().where((key) => resetKeyPrefixes.any(key.startsWith)),
-      }) {
+      for (final key in resetKeys!) {
         if (prefs.containsKey(key) && !await prefs.remove(key)) result = false;
       }
     }
@@ -137,6 +129,14 @@ class LocalDataStore extends ChangeNotifier {
     if (_corrupt) throw const LocalDataCorruptException();
   }
 
+  /// Feature coordinators can find their own durable commands without exposing values.
+  List<String> keysWithPrefix(String prefix) {
+    _checkReadable();
+    return List.unmodifiable(
+      _entries.keys.where((key) => key.startsWith(prefix)),
+    );
+  }
+
   Object? read(String entryKey) {
     _checkReadable();
     return _clone(_entries[entryKey]);
@@ -162,9 +162,11 @@ class LocalDataStore extends ChangeNotifier {
     String entryKey,
     LocalDataMutation<T> Function(Object?) update, {
     int? expectedEpoch,
+    void Function()? check,
   }) {
     final capturedEpoch = expectedEpoch ?? _epoch;
     return run(() async {
+      check?.call();
       _checkReadable();
       final mutation = update(_clone(_entries[entryKey]));
       final next = Map<String, Object?>.from(_entries);
@@ -182,6 +184,28 @@ class LocalDataStore extends ChangeNotifier {
       if (!await backend.writeString(key, encoded))
         throw const LocalDataWriteException();
       if (capturedEpoch != _epoch) throw const LocalDataResetException();
+      try {
+        check?.call();
+      } catch (_) {
+        // A feature scope changed during the durable write. Restore the
+        // previous snapshot before releasing the serialized mutation queue.
+        final previous = jsonEncode({
+          'version': 1,
+          'epoch': _epoch,
+          'namespace': _namespace,
+          'entries': _entries,
+        });
+        try {
+          if (!await backend.writeString(key, previous)) {
+            throw const LocalDataWriteException();
+          }
+        } catch (_) {
+          _resetFailed = true;
+          _notify();
+          throw const LocalDataWriteException();
+        }
+        rethrow;
+      }
       _entries = next;
       _revision++;
       _notify();
@@ -190,12 +214,6 @@ class LocalDataStore extends ChangeNotifier {
   }
 
   Future<void> flush() => _tail;
-
-  void invalidateForReset() {
-    _epoch++;
-    _resetFailed = true;
-    _notify();
-  }
 
   /// Immediately invalidates old work, then clears after any in-flight write.
   /// A failed reset blocks new writes until reset is retried successfully.

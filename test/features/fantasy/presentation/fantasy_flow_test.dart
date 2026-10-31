@@ -33,7 +33,7 @@ void main() {
       );
       expect(find.text('Fonte in attesa'), findsOneWidget);
       expect(find.text('Fonte verificata'), findsNothing);
-      expect(find.textContaining('Non ti assegna punti'), findsOneWidget);
+      expect(find.textContaining('nessun punto personale'), findsOneWidget);
     },
   );
 
@@ -49,11 +49,11 @@ void main() {
       ),
     );
     await pumpRoutingFrame(tester);
-    await tester.tap(find.text('Crea la tua squadra'));
+    await tester.tap(find.text('Crea la tua rosa'));
     await pumpRoutingFrame(tester);
     await tester.tap(find.text('Giornata'));
     await pumpRoutingFrame(tester);
-    final expand = find.text('Spiega la previsione, se vuoi').first;
+    final expand = find.text('Aggiungi una motivazione facoltativa').first;
     await tester.ensureVisible(expand);
     await tester.tap(expand);
     await tester.pumpAndSettle();
@@ -100,7 +100,7 @@ void main() {
           ),
         );
         await pumpRoutingFrame(tester);
-        await tester.tap(find.text('Crea la tua squadra'));
+        await tester.tap(find.text('Crea la tua rosa'));
         await pumpRoutingFrame(tester);
         await tester.tap(find.text('Mercato'));
         await pumpRoutingFrame(tester);
@@ -202,7 +202,7 @@ void main() {
       ),
     );
     await pumpRoutingFrame(tester);
-    await tester.tap(find.text('Crea la tua squadra'));
+    await tester.tap(find.text('Crea la tua rosa'));
     await pumpRoutingFrame(tester);
     await tester.tap(find.text('Mercato'));
     await pumpRoutingFrame(tester);
@@ -244,7 +244,7 @@ void main() {
       ),
     );
     await pumpRoutingFrame(tester);
-    await tester.tap(find.text('Crea la tua squadra'));
+    await tester.tap(find.text('Crea la tua rosa'));
     await pumpRoutingFrame(tester);
     time = day.locksAt;
     await tester.pump(const Duration(seconds: 1));
@@ -276,14 +276,14 @@ void main() {
         ),
       );
       await pumpRoutingFrame(tester);
-      await tester.tap(find.text('Crea la tua squadra'));
+      await tester.tap(find.text('Crea la tua rosa'));
       await pumpRoutingFrame(tester);
       GoRouter.of(tester.element(find.text('La mia squadra'))).go('/privacy');
       await pumpRoutingFrame(tester);
-      await tester.ensureVisible(find.text('Elimina dati e riparti'));
-      await tester.tap(find.text('Elimina dati e riparti'));
+      await tester.ensureVisible(find.text('Azzera dati locali e riparti'));
+      await tester.tap(find.text('Azzera dati locali e riparti'));
       await tester.pumpAndSettle();
-      expect(find.text('Crea la tua squadra'), findsOneWidget);
+      expect(find.text('Crea la tua rosa'), findsOneWidget);
       expect(h.prefs.fantasyStateJson, isNull);
       expect(h.manager.predictions, isEmpty);
       expect(tester.takeException(), isNull);
@@ -309,7 +309,7 @@ void main() {
       ),
     );
     await pumpRoutingFrame(tester);
-    await tester.tap(find.text('Crea la tua squadra'));
+    await tester.tap(find.text('Crea la tua rosa'));
     await pumpRoutingFrame(tester);
     expect(find.textContaining('Salvataggio non riuscito'), findsOneWidget);
     prefs.fail = false;
@@ -333,12 +333,12 @@ void main() {
     await pumpRoutingFrame(tester);
 
     expect(
-      find.text('Crea una squadra con le carte dei problemi del Comune.'),
+      find.text('Costruisci la tua squadra di priorità locali.'),
       findsOneWidget,
     );
-    expect(find.text('Crea la tua squadra'), findsOneWidget);
+    expect(find.text('Crea la tua rosa'), findsOneWidget);
 
-    await tester.tap(find.text('Crea la tua squadra'));
+    await tester.tap(find.text('Crea la tua rosa'));
     await pumpRoutingFrame(tester);
 
     expect(find.text('La mia squadra'), findsOneWidget);
@@ -357,7 +357,7 @@ void main() {
 
     await tester.pumpWidget(buildTestApp(prefs, config: config));
     await pumpRoutingFrame(tester);
-    await tester.tap(find.text('Crea la tua squadra'));
+    await tester.tap(find.text('Crea la tua rosa'));
     await pumpRoutingFrame(tester);
 
     expect(find.text('Squadra'), findsOneWidget);
@@ -388,7 +388,7 @@ void main() {
       await pumpRoutingFrame(tester);
       expect(tester.takeException(), isNull);
 
-      await tester.tap(find.text('Crea la tua squadra'));
+      await tester.tap(find.text('Crea la tua rosa'));
       await pumpRoutingFrame(tester);
       expect(find.text('La mia squadra'), findsOneWidget);
       expect(tester.takeException(), isNull);

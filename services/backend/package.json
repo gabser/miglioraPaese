@@ -1,6 +1,6 @@
 {
   "name": "@migliorapaese/backend",
-  "version": "0.11.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,14 +8,19 @@
   },
   "scripts": {
     "dev": "node src/server.js",
-    "dev:tuglie": "node scripts/start_tuglie_local.js",
+    "migrate:down": "node scripts/migrate.js down",
+    "migrate:up": "node scripts/migrate.js up",
+    "migrate:verify": "node scripts/migrate.js verify",
+    "migrations:verify-history": "node scripts/verify-migration-history.js",
+    "migrations:verify": "node scripts/verify-migration-manifest.js",
+    "seed:local": "node scripts/seed.js local",
     "start": "NODE_ENV=production node src/server.js",
-    "backup": "node scripts/backup.js",
-    "verify-database": "node scripts/verify_database.js",
-    "rehearse-restore": "node scripts/rehearse_restore.js",
-    "rehearse-fantasy": "node scripts/rehearse_fantasy.js",
-    "smoke": "node scripts/smoke.js",
-    "publish-fantasy-outcome": "node scripts/publish_fantasy_outcome.js",
-    "test": "node --test"
+    "test": "node --test --test-concurrency=1"
+  },
+  "dependencies": {
+    "pg": "8.22.0"
+  },
+  "devDependencies": {
+    "node-pg-migrate": "8.0.4"
   }
 }

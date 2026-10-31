@@ -13,6 +13,7 @@ import 'package:fanta_comune/features/civic_loop/data/civic_loop_store.dart';
 import 'package:fanta_comune/features/next_problems/data/api_next_problems_repository.dart';
 import 'package:fanta_comune/features/next_problems/data/mock_next_problems_repository.dart';
 import 'package:fanta_comune/features/next_problems/data/proposal_draft_store.dart';
+import 'package:fanta_comune/features/next_problems/data/proposal_session_store.dart';
 import 'package:fanta_comune/features/next_problems/data/proposal_submission_gateway.dart';
 import 'package:fanta_comune/features/next_problems/data/proposal_submission_store.dart';
 import 'package:fanta_comune/features/next_problems/domain/proposal_draft.dart';
@@ -24,6 +25,7 @@ import 'package:fanta_comune/features/next_problems/domain/suggested_problem.dar
 import 'package:fanta_comune/features/next_problems/domain/suggested_problem_status.dart';
 import 'package:fanta_comune/features/next_problems/domain/vote_choice.dart';
 import '../../../helpers/memory_local_backend.dart';
+import '../data/proposal_session_store_test.dart' as fixture;
 
 SuggestedProblem accepted(ProposalSubmissionIntent intent, {String? title}) =>
     SuggestedProblem(
@@ -53,10 +55,7 @@ class Gateway implements ProposalSubmissionGateway {
   Future<SuggestedProblem> Function(ProposalSubmissionIntent)? onSubmit;
   Object? lookupError;
   @override
-  Future<String> prepareSubmissionScope({
-    String? expectedScope,
-    String? municipalityId,
-  }) async {
+  Future<String> prepareSubmissionScope({String? expectedScope}) async {
     prepares++;
     if (expectedScope != null && expectedScope != serverScope)
       throw ApiException.configuration(
@@ -658,22 +657,15 @@ void main() {
       Map<String, Object?>? committed;
       final transport = MockClient((request) async {
         requests.add(request);
-        expect(request.headers.containsKey('Authorization'), isFalse);
-        if (request.method == 'GET' &&
-            request.url.path.endsWith('/next-problems')) {
+        if (request.url.path.endsWith('/proposal-session'))
           return http.Response(
-            jsonEncode({
-              'items': [],
-              'submissionScope': 'opaque-main-scope',
-              'capabilities': {'proposalSubmission': 1},
-            }),
-            200,
+            jsonEncode(fixture.response(bootstrap: request.method == 'POST')),
+            request.method == 'POST' ? 201 : 200,
           );
-        }
+        expect(request.headers['Authorization'], 'Bearer ${fixture.token}');
         if (request.method == 'POST') {
           final body = jsonDecode(request.body) as Map<String, dynamic>;
           committed = {
-            'submissionScope': 'opaque-main-scope',
             'id': 'actual-api-id',
             'title': body['title'],
             'shortDescription': body['description'],
@@ -693,13 +685,7 @@ void main() {
           };
           return http.Response('{"id":"actual-api-id"}', 201);
         }
-        return http.Response(
-          jsonEncode({
-            'submissionScope': 'opaque-main-scope',
-            'receipt': committed,
-          }),
-          200,
-        );
+        return http.Response(jsonEncode(committed), 200);
       });
       final config = AppConfig.fromValues(nextProblemsDataSource: 'api');
       final data = LocalDataStore(backend: backend);
@@ -708,7 +694,15 @@ void main() {
           baseUrl: Uri.parse('http://localhost:8787'),
           client: transport,
         );
-        return ApiNextProblemsRepository(client: client, data: d);
+        return ApiNextProblemsRepository(
+          client: client,
+          userId: 'untrusted',
+          sessions: ProposalSessionStore(
+            client: client,
+            data: d,
+            environment: ProposalScope.environmentFor(config),
+          ),
+        );
       }
 
       ProposalSubmissionCoordinator coordinator(LocalDataStore d) =>
@@ -741,7 +735,7 @@ void main() {
       final next = coordinator(LocalDataStore(backend: backend));
       expect(next.current(scope).status, SubmissionStatus.outcomeUnknown);
       final before = requests.length;
-      expect(before, 3); // list preparation, scope verification, POST
+      expect(before, 3); // bootstrap, lease verification, POST
       expect(
         (await next.reconcile(scope)).intent!.receipt!.id,
         'actual-api-id',
@@ -756,11 +750,11 @@ void main() {
         requests.where(
           (r) => r.method == 'POST' && r.url.path.endsWith('/proposal-session'),
         ),
-        isEmpty,
+        hasLength(1),
       );
       expect(
         requests.last.url.path,
-        '/v1/municipalities/bologna/next-problem-submissions/persisted-api-key',
+        '/v1/municipalities/bologna/submissions/persisted-api-key',
       );
       expect(
         next.current(scope).intent!.receipt!.createdAt,

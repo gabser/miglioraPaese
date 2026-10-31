@@ -48,7 +48,7 @@ void main() {
         const ValueKey('proposal-location-reference'),
       );
       await tester.enterText(label, '  Via Milano  ');
-      final details = find.text('Aggiungi dettagli del luogo');
+      final details = find.text('Riferimenti facoltativi');
       await tester.ensureVisible(details);
       await tester.pumpAndSettle();
       await tester.tap(details);
@@ -140,7 +140,7 @@ void main() {
       final router = await pumpHost(tester, prefs);
       await fill(tester, '  Alberi da potare  ');
       expect(find.text('Bozza salvata su questo dispositivo.'), findsOneWidget);
-      await tester.tap(find.byTooltip('Torna alle proposte'));
+      await tester.tap(find.byTooltip('Torna ai temi'));
       await tester.pumpAndSettle();
       expect(find.text('Lista'), findsOneWidget);
       router.go('/suggest-problem');
@@ -275,16 +275,16 @@ void main() {
       await pumpHost(tester, prefs, repository: repo);
       await fill(tester, 'Testo da conservare');
       expect(find.text('Bozza salvata su questo dispositivo.'), findsNothing);
-      expect(find.text('Riprova salvataggio'), findsOneWidget);
+      expect(find.text('Riprova il salvataggio'), findsOneWidget);
       await send(tester);
       await tester.pumpAndSettle();
       expect(repo.calls, 0);
-      await tester.tap(find.byTooltip('Torna alle proposte'));
+      await tester.tap(find.byTooltip('Torna ai temi'));
       await tester.pumpAndSettle();
       expect(find.byType(SuggestProblemPage), findsOneWidget);
       expect(text(tester, title), 'Testo da conservare');
       backend.failWrite = false;
-      final retry = find.text('Riprova salvataggio');
+      final retry = find.text('Riprova il salvataggio');
       await tester.ensureVisible(retry);
       await tester.pumpAndSettle();
       await tester.tap(retry);
@@ -315,8 +315,7 @@ void main() {
       final priorNamespace = prefs.localData.namespace;
       router.go('/privacy');
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Elimina dati e riparti'));
-      await tester.tap(find.text('Elimina dati e riparti'));
+      await tester.tap(find.text('Azzera dati locali e riparti'));
       await tester.pumpAndSettle();
       expect(find.byType(BootScreen), findsOneWidget);
       expect(prefs.municipalityId, isNull);
@@ -355,19 +354,15 @@ void main() {
       await fill(tester, 'Da cancellare');
       router.go('/privacy');
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Elimina dati e riparti'));
-      await tester.tap(find.text('Elimina dati e riparti'));
+      await tester.tap(find.text('Azzera dati locali e riparti'));
       await tester.pumpAndSettle();
       expect(
-        find.text('Cancellazione non completata: Riprova.'),
+        find.text('Non riesco a completare la cancellazione. Riprova.'),
         findsOneWidget,
       );
       expect(find.byType(PrivacyPage), findsOneWidget);
       backend.failClear = false;
-      await tester.ensureVisible(find.text('Elimina dati e riparti'));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Elimina dati e riparti'));
-      await tester.tap(find.text('Elimina dati e riparti'));
+      await tester.tap(find.text('Azzera dati locali e riparti'));
       await tester.pumpAndSettle();
       expect(find.byType(BootScreen), findsOneWidget);
     },

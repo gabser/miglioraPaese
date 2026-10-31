@@ -21,10 +21,7 @@ class RecordingSubmissionGateway implements ProposalSubmissionGateway {
   final NextProblemsRepository repository;
   final receipts = <String, SuggestedProblem>{};
   @override
-  Future<String> prepareSubmissionScope({
-    String? expectedScope,
-    String? municipalityId,
-  }) async {
+  Future<String> prepareSubmissionScope({String? expectedScope}) async {
     if (repository is ProposalFormCapabilities) {
       await (repository as ProposalFormCapabilities).prepareProposalForm();
     }

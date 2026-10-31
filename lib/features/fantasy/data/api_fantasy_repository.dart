@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:fanta_comune/features/next_problems/data/proposal_session_store.dart';
+import 'package:fanta_comune/core/persistence/local_data_store.dart';
 import 'package:fanta_comune/features/fantasy/data/fantasy_league_repository.dart';
 import 'dart:math';
 import 'package:fanta_comune/core/network/api_client.dart';
@@ -15,38 +18,161 @@ class ApiFantasyRepository
     required this.prefs,
     required this.environment,
     required this.municipalityId,
-  });
+    SessionLeaseSource? sessions,
+    this.municipality,
+    this.municipalityChanges,
+    String? seasonId,
+  }) : sessions =
+           sessions ??
+           ProposalSessionStore(
+             client: client,
+             data: prefs.localData,
+             environment: environment,
+           ) {
+    _selectedSeasonId = seasonId;
+    _lastMunicipality = currentMunicipality;
+    municipalityChanges?.addListener(_municipalityChanged);
+  }
+  final SessionLeaseSource sessions;
+  ProposalSessionLease? _lease;
+  int _generation = 0;
   final ApiClient client;
   final AppPrefs prefs;
   final String environment;
   final String municipalityId;
+  final String Function()? municipality;
+  final Listenable? municipalityChanges;
+  String get currentMunicipality => municipality?.call() ?? municipalityId;
+  late String _lastMunicipality;
+  String? _selectedSeasonId, _resolvedSeasonId;
+  String? get selectedSeasonId => _selectedSeasonId;
+  Map<String, String> get _query => {
+    if (_resolvedSeasonId ?? _selectedSeasonId case final id?) 'seasonId': id,
+  };
+  void _invalidateScope() {
+    _generation++;
+    _cached = null;
+    _pending = null;
+    _scope = null;
+    _days.clear();
+    _resolvedSeasonId = null;
+  }
+
+  void _municipalityChanged() {
+    if (currentMunicipality != _lastMunicipality) {
+      _lastMunicipality = currentMunicipality;
+      _selectedSeasonId = null;
+      _invalidateScope();
+    }
+  }
+
+  void selectSeason(String? id) {
+    if (_selectedSeasonId != id) {
+      _selectedSeasonId = id;
+      _invalidateScope();
+    }
+  }
+
+  void dispose() => municipalityChanges?.removeListener(_municipalityChanged);
+
   FantasyData? _cached;
   String? _scope;
   Map<String, dynamic>? _pending;
   bool _deleted = false;
+  bool _remoteErased = false;
   final Map<String, Matchday> _days = {};
   @override
-  FantasyData? get cached => _cached;
+  FantasyData? get cached {
+    final lease = _lease;
+    if (lease != null) {
+      try {
+        sessions.checkLease(lease);
+      } on LocalDataResetException {
+        _generation++;
+        _cached = null;
+        _pending = null;
+        _scope = null;
+        _days.clear();
+        _lease = null;
+      }
+    }
+    return _cached;
+  }
+
   @override
   bool get hasPendingTransfer => _pending != null;
   List<String> path(List<String> tail) => [
     'v1',
     'fantasy',
     'municipalities',
-    municipalityId,
+    currentMunicipality,
     ...tail,
   ];
-  Future<Map<String, dynamic>> get(List<String> tail) async =>
-      FantasyApiMapper.object(await client.getJson(path(tail)));
+  Future<Map<String, dynamic>> get(List<String> tail) async {
+    final lease = _lease!;
+    final generation = _generation;
+    final result = await client.getJson(
+      path(tail),
+      headers: _headers,
+      queryParameters: _query,
+    );
+    if (generation != _generation) throw const LocalDataResetException();
+    sessions.checkLease(lease);
+    return FantasyApiMapper.object(result);
+  }
+
   Future<Map<String, dynamic>> post(
     List<String> tail,
     Map<String, Object?> body,
-  ) async =>
-      FantasyApiMapper.object(await client.postJson(path(tail), body: body));
+  ) async {
+    final lease = _lease!;
+    final generation = _generation;
+    final result = await client.postJson(
+      path(tail),
+      body: body,
+      headers: _headers,
+      queryParameters: _query,
+    );
+    if (generation != _generation) throw const LocalDataResetException();
+    sessions.checkLease(lease);
+    return FantasyApiMapper.object(result);
+  }
+
+  Future<void> put(List<String> tail, Map<String, Object?> body) async {
+    final lease = _lease!;
+    final generation = _generation;
+    await client.putJson(
+      path(tail),
+      body: body,
+      headers: _headers,
+      queryParameters: _query,
+    );
+    if (generation != _generation) throw const LocalDataResetException();
+    sessions.checkLease(lease);
+  }
+
+  Map<String, String> get _headers {
+    final lease = _lease;
+    if (lease == null) throw const LocalDataResetException();
+    sessions.checkLease(lease);
+    return lease.headers;
+  }
+
+  Future<void> _saveReceipt(String scope, String? value) async {
+    _headers;
+    await prefs.setFantasyReceipt(scope, value, expectedEpoch: _lease!.epoch);
+    _headers;
+  }
 
   Future<T> _guard<T>(Future<T> Function() action) async {
+    final generation = _generation;
+    final epoch = prefs.localData.epoch;
     try {
-      return await action();
+      final value = await action();
+      if (generation != _generation || epoch != prefs.localData.epoch)
+        throw const LocalDataResetException();
+      if (_lease != null) sessions.checkLease(_lease!);
+      return value;
     } on ApiException catch (e) {
       if (e.code == 'stale_revision') {
         throw const FantasyFailure(
@@ -56,13 +182,10 @@ class ApiFantasyRepository
       }
       rethrow;
     } on FormatException catch (e) {
-      throw ApiException.invalidPayload(
-        'I dati della squadra non sono leggibili.',
-        cause: e,
-      );
+      throw ApiException.invalidPayload('Dati fantasy non validi.', cause: e);
     } on TypeError catch (e) {
       throw ApiException.invalidPayload(
-        'I dati ricevuti non sono compatibili con il gioco.',
+        'Contratto fantasy non valido.',
         cause: e,
       );
     }
@@ -70,25 +193,37 @@ class ApiFantasyRepository
 
   @override
   Future<FantasyData> load() => _guard(() async {
-    if (municipalityId.isEmpty) {
+    if (currentMunicipality.isEmpty) {
       throw ApiException.configuration(
         code: 'fantasy_municipality_required',
-        message:
-            'Per giocare online serve il Comune previsto per questa prova.',
+        message: 'Configura il Comune pilot per le API fantasy.',
       );
     }
+    final generation = _generation;
+    final epoch = prefs.localData.epoch;
+    final lease = await sessions.active(allowCreate: true);
+    if (generation != _generation || epoch != prefs.localData.epoch)
+      throw const LocalDataResetException();
+    sessions.checkLease(lease);
+    _lease = lease;
     _deleted = false;
-    final season = await get(['season']), catalog = await get(['cards']);
+    _remoteErased = false;
+    final season = await get(['season']);
+    final resolved = FantasyApiMapper.object(season['season'])['id'] as String;
+    if (_selectedSeasonId != null && resolved != _selectedSeasonId)
+      throw const FormatException('Mixed selected season');
+    _resolvedSeasonId = resolved;
+    final catalog = await get(['cards']);
     Map<String, dynamic> team;
     try {
       team = await get(['team']);
     } on ApiException catch (e) {
-      if (e.statusCode != 404) rethrow;
+      if (e.statusCode != 404 || e.code != 'team_not_found') rethrow;
       team = await post(['enrollment'], {});
     }
     final scope = jsonEncode([
       environment,
-      municipalityId,
+      currentMunicipality,
       team['seasonId'],
       team['sessionScope'] as String,
     ]);
@@ -142,7 +277,7 @@ class ApiFantasyRepository
     if (hasPendingTransfer) {
       throw const FantasyFailure(
         FantasyFailureKind.busy,
-        'Premi Riprova salvataggio per verificare il cambio di carte precedente.',
+        'Verifica il trasferimento precedente con Riprova.',
       );
     }
     final v = FantasyApiMapper.object(
@@ -178,12 +313,12 @@ class ApiFantasyRepository
       // Only a definitive rejection permits forgetting this key. A lost reply
       // must be retried verbatim, including after a browser restart or lock.
       if (e.statusCode != null && e.statusCode! >= 400 && e.statusCode! < 500) {
-        await prefs.setFantasyReceipt(_scope!, null);
+        await _saveReceipt(_scope!, null);
         _pending = null;
       }
       rethrow;
     }
-    await prefs.setFantasyReceipt(_scope!, null);
+    await _saveReceipt(_scope!, null);
     _pending = null;
     return load();
   });
@@ -236,7 +371,7 @@ class ApiFantasyRepository
           ).replaceAll('=', ''),
         };
         // Persist BEFORE sending. No competitive data is accepted locally.
-        await prefs.setFantasyReceipt(_scope!, jsonEncode(_pending));
+        await _saveReceipt(_scope!, jsonEncode(_pending));
         return retryPendingTransfer();
       case ReflectOnFantasyCard():
         await post(
@@ -252,7 +387,7 @@ class ApiFantasyRepository
       case StartFantasyMatchday():
         throw const FantasyFailure(
           FantasyFailureKind.invalidCommand,
-          'Il calendario online è deciso dal servizio.',
+          'Il calendario è gestito dal server.',
         );
       default:
         final starters = [...state.starterIds],
@@ -286,9 +421,9 @@ class ApiFantasyRepository
               'Comando non supportato.',
             );
         }
-        await client.putJson(
-          path(['team']),
-          body: {
+        await put(
+          ['team'],
+          {
             ...base,
             'starterIds': starters,
             'captainId': captain,
@@ -336,16 +471,16 @@ class ApiFantasyRepository
         'Verifica prima la creazione della lega precedente selezionando lo stesso tipo.',
       );
     }
-    await prefs.setFantasyReceipt(scope, jsonEncode(body));
+    await _saveReceipt(scope, jsonEncode(body));
     try {
       await post(['leagues'], body.cast<String, Object?>());
     } on ApiException catch (e) {
       if (e.statusCode != null && e.statusCode! >= 400 && e.statusCode! < 500) {
-        await prefs.setFantasyReceipt(scope, null);
+        await _saveReceipt(scope, null);
       }
       rethrow;
     }
-    await prefs.setFantasyReceipt(scope, null);
+    await _saveReceipt(scope, null);
   });
   @override
   Future<void> joinLeague(String token) => _guard(() async {
@@ -353,7 +488,11 @@ class ApiFantasyRepository
   });
   @override
   Future<void> leaveLeague(String id) => _guard(() async {
-    await client.deleteJson(path(['leagues', id, 'membership']));
+    await client.deleteJson(
+      path(['leagues', id, 'membership']),
+      headers: _headers,
+      queryParameters: _query,
+    );
   });
   @override
   Future<FantasyLeagueInvite> rotateInvite(String id) => _guard(() async {
@@ -370,22 +509,64 @@ class ApiFantasyRepository
     );
   });
   @override
-  Future<void> revokeInvite(String leagueId, String inviteId) => _guard(
-    () async {
-      await client.deleteJson(path(['leagues', leagueId, 'invites', inviteId]));
-    },
-  );
+  Future<void> revokeInvite(String leagueId, String inviteId) =>
+      _guard(() async {
+        await client.deleteJson(
+          path(['leagues', leagueId, 'invites', inviteId]),
+          headers: _headers,
+          queryParameters: _query,
+        );
+      });
 
-  @override
-  Future<FantasyData?> clear() async {
-    await client.deleteJson(['v1', 'session']);
-    // Remote deletion must succeed before any local state is removed.
+  Future<Map<String, dynamic>> resultsHistory(String dayId) => _guard(() async {
+    final lease = _lease!, generation = _generation, season = _resolvedSeasonId;
+    if (season == null) throw StateError('Seleziona una stagione.');
+    final raw = await client.getJson([
+      'v1',
+      'municipalities',
+      currentMunicipality,
+      'fantasy',
+      'seasons',
+      season,
+      'matchdays',
+      dayId,
+      'results',
+      'history',
+    ], headers: _headers);
+    sessions.checkLease(lease);
+    if (generation != _generation) throw const LocalDataResetException();
+    final m = FantasyApiMapper.object(raw);
+    if (m['seasonId'] != season || m['matchdayId'] != dayId)
+      throw const FormatException('Mixed result history');
+    return m;
+  });
+
+  /// Called only after the server has confirmed global fantasy erasure.
+  void acceptRemoteErase() {
+    _generation++;
+    _remoteErased = true;
     _deleted = true;
     _cached = null;
     _pending = null;
     _scope = null;
     _days.clear();
-    await prefs.clearAll();
+  }
+
+  @override
+  Future<FantasyData?> clear() async {
+    _generation++;
+    if (prefs.beforeClearAll != null) {
+      await prefs.clearAll();
+    } else {
+      if (!_remoteErased && !sessions.preservesCompetitiveDataOnReset) {
+        await client.deleteJson(['v1', 'session'], headers: _headers);
+        acceptRemoteErase();
+      }
+      await sessions.revokeBeforeReset();
+      await prefs.clearAll();
+    }
+    acceptRemoteErase();
+    _lease = null;
     return null;
   }
 }

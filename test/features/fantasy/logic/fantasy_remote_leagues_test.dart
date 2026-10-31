@@ -1,3 +1,5 @@
+import 'package:fanta_comune/core/persistence/local_data_store.dart';
+import '../../../helpers/memory_local_backend.dart';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +21,17 @@ void main() {
       await fixture.start();
       addTearDown(fixture.stop);
       SharedPreferences.setMockInitialValues({});
-      final prefs = AppPrefs(await SharedPreferences.getInstance());
+      final preferences = await SharedPreferences.getInstance();
+      final browserPrefs = List.generate(
+        4,
+        (_) => AppPrefs(
+          preferences,
+          dataStore: LocalDataStore(backend: MemoryLocalBackend()),
+        ),
+      );
+      for (final prefs in browserPrefs) {
+        addTearDown(prefs.dispose);
+      }
       final transports = List.generate(4, (_) => CookieClient());
       for (final t in transports) {
         addTearDown(t.close);
@@ -29,8 +41,8 @@ void main() {
           baseUrl: Uri.parse(fixture.url),
           client: transports[i],
         ),
-        prefs: prefs,
-        environment: 'isolated-leagues',
+        prefs: browserPrefs[i],
+        environment: 'isolated-leagues-$i',
         municipalityId: 'tuglie',
       );
       final repositories = List.generate(4, repository);
@@ -80,7 +92,7 @@ void main() {
           'tuglie',
           'leagues',
           id,
-        ]),
+        ], headers: (await repositories[3].sessions.active()).headers),
         throwsA(isA<ApiException>().having((e) => e.statusCode, 'status', 404)),
       );
       expect(outsider.remoteLeagues, isEmpty);

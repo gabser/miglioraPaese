@@ -128,7 +128,7 @@ class _InsightCardState extends State<InsightCard> {
         .round();
     final verb = switch (choice) {
       PredictionChoice.improve => 'la situazione migliorera\'',
-      PredictionChoice.stable => 'la situazione resterà più o meno uguale',
+      PredictionChoice.stable => 'la situazione restera\' piu\' o meno uguale',
       PredictionChoice.worsen => 'la situazione potrebbe peggiorare',
     };
     return VenialCopy.insightHeadlineTemplate

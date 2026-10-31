@@ -1,3 +1,4 @@
+import 'package:fanta_comune/features/fantasy/data/api_fantasy_repository.dart';
 import 'dart:async';
 import 'package:fanta_comune/features/fantasy/data/fantasy_league_repository.dart';
 import 'package:fanta_comune/core/network/api_exception.dart';
@@ -34,15 +35,30 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
     this._repository, {
     DateTime Function()? now,
     bool observeTime = true,
+    this.identityChanges,
   }) : _now = now ?? DateTime.now {
     final cached = _repository.cached;
     if (cached != null) _apply(cached);
     _queue = _load();
+    identityChanges?.addListener(_identityChanged);
     if (observeTime) {
       WidgetsBinding.instance.addObserver(this);
       _observing = true;
       _timer = Timer.periodic(const Duration(seconds: 1), (_) => refreshTime());
     }
+  }
+
+  final Listenable? identityChanges;
+  void _identityChanged() {
+    if (_disposed) return;
+    _data = null;
+    _projection = null;
+    remoteLeagues = const [];
+    leagueError = null;
+    _failedCommand = null;
+    persistenceError = null;
+    if (!_clearing) _queue = _queue.catchError((_) {}).then((_) => _load());
+    _notify();
   }
 
   final FantasyRepository _repository;
@@ -186,7 +202,7 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
         persistenceError =
             isRemote &&
                 (_repository as RemoteFantasyRepository).hasPendingTransfer
-            ? 'Il cambio di carte è da verificare. Premi Riprova salvataggio.'
+            ? 'Trasferimento da verificare: premi Riprova.'
             : null;
       }
     } catch (error) {
@@ -201,7 +217,7 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
     persistenceError = error is FantasyFailure
         ? error.message
         : error is ApiException
-        ? '${error.message} Puoi solo consultare i dati. Premi Riprova salvataggio.'
+        ? '${error.message} Stato di sola lettura: Riprova.'
         : 'Operazione non riuscita. Riprova.';
   }
 
@@ -294,44 +310,6 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
     await _command(SetFantasyCaptain(id));
   }
 
-  bool get canRestartDemo => _repository is LocalFantasyRepository;
-  bool get hasPreviousDemo =>
-      _repository is LocalFantasyRepository && _repository.hasPreviousDemo;
-
-  Future<bool> restartDemo({bool restorePrevious = false}) async {
-    if (!canRestartDemo ||
-        busy ||
-        _disposed ||
-        _clearing ||
-        (restorePrevious && !hasPreviousDemo)) {
-      return false;
-    }
-    _submitting = true;
-    _notify();
-    var accepted = false;
-    _queue = _queue.then((_) async {
-      try {
-        if (_disposed || _clearing) return;
-        final data = await (_repository as LocalFantasyRepository).restartDemo(
-          expectedRevision: revision,
-          restorePrevious: restorePrevious,
-        );
-        if (_disposed || _clearing) return;
-        _apply(data);
-        persistenceError = null;
-        _failedCommand = null;
-        accepted = true;
-      } catch (error) {
-        if (!_disposed) _error(error);
-      } finally {
-        _submitting = false;
-        _notify();
-      }
-    });
-    await _queue;
-    return accepted;
-  }
-
   Future<bool> confirmLineup() =>
       _command(const ConfirmFantasyLineup(), exclusive: true);
   Future<void> setPrediction(String id, CivicTrend trend) async {
@@ -421,7 +399,7 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
                   isRemote &&
                       (_repository as RemoteFantasyRepository)
                           .hasPendingTransfer
-                  ? 'Il cambio di carte è da verificare. Premi Riprova salvataggio.'
+                  ? 'Trasferimento da verificare: premi Riprova.'
                   : null;
               _pollDelay = 30000;
             }
@@ -482,9 +460,32 @@ class FantasyManager extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void dispose() {
     _disposed = true;
+    identityChanges?.removeListener(_identityChanged);
     _timer?.cancel();
     if (_observing) WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  Map<String, dynamic>? coverageFor(String id) => _data?.coverage[id];
+  int? revisionFor(String id) => _data?.resultRevisions[id];
+  Future<void> selectSeason(String? id) async {
+    if (_repository case final ApiFantasyRepository repo) {
+      repo.selectSeason(id);
+      _data = null;
+      _projection = null;
+      remoteLeagues = const [];
+      persistenceError = null;
+      _failedCommand = null;
+      _notify();
+      _queue = _queue.catchError((_) {}).then((_) => _load());
+      await _queue;
+    }
+  }
+
+  Future<Map<String, dynamic>?> resultsHistory(String dayId) async {
+    if (_repository case final ApiFantasyRepository repo)
+      return repo.resultsHistory(dayId);
+    return null;
   }
 
   FantasySeason get season => _data?.season ?? _game.season;

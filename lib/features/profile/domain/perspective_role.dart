@@ -15,7 +15,7 @@ extension PerspectiveRoleX on PerspectiveRole {
       case PerspectiveRole.realist:
         return 'Realista';
       case PerspectiveRole.caretaker:
-        return 'Attento alle persone';
+        return 'Caregiver';
       case PerspectiveRole.organizer:
         return 'Organizzatore';
       case PerspectiveRole.optimist:
@@ -27,13 +27,13 @@ extension PerspectiveRoleX on PerspectiveRole {
   String get shortDescription {
     switch (this) {
       case PerspectiveRole.observer:
-        return 'Guardi i segnali prima di scegliere.';
+        return 'Guardi i segnali con calma e senza fretta.';
       case PerspectiveRole.realist:
-        return 'Tieni d\'occhio tempi, costi e fattibilità.';
+        return 'Tieni d\'occhio tempi, costi e fattibilita\'.';
       case PerspectiveRole.caretaker:
         return 'Ti interessa l\'impatto sulle persone.';
       case PerspectiveRole.organizer:
-        return 'Guardi come vengono organizzati gli interventi.';
+        return 'Segui il processo e la coordinazione.';
       case PerspectiveRole.optimist:
         return 'Cerchi il potenziale e le svolte positive.';
     }

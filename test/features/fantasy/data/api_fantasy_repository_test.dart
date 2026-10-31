@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:fanta_comune/core/persistence/local_data_store.dart';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
@@ -59,10 +61,7 @@ void main() {
       addTearDown(manager.dispose);
       await manager.settled;
       expect(manager.hasData, isFalse);
-      expect(
-        manager.persistenceError,
-        contains('Comune previsto per questa prova'),
-      );
+      expect(manager.persistenceError, contains('Comune pilot'));
     },
   );
   test(
@@ -93,6 +92,7 @@ void main() {
         'fantasy_manager_state_v1': 'DEMO NOT IMPORTED',
       });
       final prefs = ClearFailurePrefs(await SharedPreferences.getInstance());
+      await prefs.setFantasyStateJson('DEMO NOT IMPORTED');
       final transport = CookieClient();
       addTearDown(transport.close);
       ApiFantasyRepository repository() => ApiFantasyRepository(
@@ -243,6 +243,49 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );
+  for (final resetKind in ['erase', 'local']) {
+    test(
+      'delayed accepted PUT cannot bootstrap or cache after $resetKind reset',
+      () async {
+        HttpOverrides.global = null;
+        final fixture = BackendFixture();
+        await fixture.start();
+        addTearDown(fixture.stop);
+        SharedPreferences.setMockInitialValues({});
+        final prefs = AppPrefs(await SharedPreferences.getInstance());
+        final transport = CookieClient();
+        addTearDown(transport.close);
+        final repo = ApiFantasyRepository(
+          client: ApiClient(baseUrl: Uri.parse(fixture.url), client: transport),
+          prefs: prefs,
+          environment: 'put-race',
+          municipalityId: 'tuglie',
+        );
+        final data = await repo.load();
+        transport.teamReplyArrived = Completer<void>();
+        transport.teamReplyGate = Completer<void>();
+        final writing = repo.execute(
+          const SetFantasyPrediction('buche-centro', CivicTrend.stable),
+          expectedRevision: data.revision,
+        );
+        final rejected = expectLater(
+          writing,
+          throwsA(isA<LocalDataResetException>()),
+        );
+        await transport.teamReplyArrived!.future;
+        if (resetKind == 'erase') {
+          await repo.clear();
+        } else {
+          await prefs.clearAll();
+        }
+        transport.teamReplyGate!.complete();
+        await rejected;
+        expect(transport.sessionCreations, 1);
+        expect(repo.cached, isNull);
+        expect(repo.hasPendingTransfer, isFalse);
+      },
+    );
+  }
   for (final size in [
     const Size(390, 844),
     const Size(1024, 768),
@@ -298,7 +341,7 @@ void main() {
         ),
       );
       await pumpRoutingFrame(tester);
-      await tester.tap(find.text('Crea la tua squadra'));
+      await tester.tap(find.text('Crea la tua rosa'));
       await pumpRoutingFrame(tester);
       for (final label in ['Giornata', 'Mercato', 'Leghe', 'Squadra']) {
         await tester.tap(find.text(label).last);
@@ -328,7 +371,7 @@ void main() {
           expect(tester.takeException(), isNull);
         }
       }
-      expect(find.textContaining('Prova online'), findsOneWidget);
+      expect(find.textContaining('Rehearsal API'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }

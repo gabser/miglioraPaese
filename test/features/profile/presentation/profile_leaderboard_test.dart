@@ -1,5 +1,5 @@
-import 'package:fanta_comune/core/config/app_config.dart';
 import 'dart:async';
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -22,7 +22,7 @@ void main() {
         await _pump(tester, const ProfilePage(), _Repository(), width: width);
         expect(find.text('Punti: 42'), findsOneWidget);
         expect(find.text('Previsioni concluse: 2'), findsOneWidget);
-        expect(find.text('Previsioni corrette: 50%'), findsOneWidget);
+        expect(find.text('Accuratezza: 50%'), findsOneWidget);
         expect(find.textContaining('Pochi dati:'), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
@@ -82,9 +82,7 @@ void main() {
       await _finishLoads(tester);
       expect(find.text('Punti: 0'), findsOneWidget);
       expect(
-        find.text(
-          'Previsioni corrette: non ancora disponibili. Nessuna previsione conclusa.',
-        ),
+        find.text('Accuratezza: non disponibile, nessuna previsione conclusa.'),
         findsOneWidget,
       );
       expect(tester.takeException(), isNull);

@@ -243,11 +243,11 @@ class NextProblemsCubit extends Cubit<NextProblemsState> {
     if (error is ApiException) {
       if (error.code == 'unsupported_municipality' ||
           error.code == 'municipality_not_found') {
-        return 'Questo Comune non è ancora disponibile online. '
+        return 'Questo Comune non e\' ancora disponibile online. '
             'Puoi sceglierne un altro dal profilo.';
       }
       if (error.code == 'duplicate_title') {
-        return 'Esiste già una proposta con questo titolo.';
+        return 'Esiste gia\' una proposta con questo titolo.';
       }
       if (error.kind == ApiExceptionKind.timeout) {
         return 'Il servizio sta impiegando troppo tempo. Riprova tra poco.';

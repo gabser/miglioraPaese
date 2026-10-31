@@ -1,9 +1,6 @@
-import 'package:fanta_comune/core/copy/venial_copy.dart';
-import 'package:flutter/material.dart';
-import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
 import 'package:fanta_comune/core/config/app_config.dart';
-import 'package:fanta_comune/core/network/api_client.dart';
-import 'package:fanta_comune/core/network/api_exception.dart';
+import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
+import 'package:flutter/material.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/privacy/privacy_copy.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
@@ -14,7 +11,7 @@ import 'package:fanta_comune/core/widgets/max_width_container.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Pagina dedicata a privacy e controllo dei dati locali e del pilot.
+/// Pagina dedicata a privacy e controllo dei dati locali.
 class PrivacyPage extends StatefulWidget {
   const PrivacyPage({super.key});
 
@@ -23,82 +20,79 @@ class PrivacyPage extends StatefulWidget {
 }
 
 class _PrivacyPageState extends State<PrivacyPage> {
-  bool _clearing = false;
-  String? _clearError;
+  bool _resetting = false;
+  bool _failed = false;
+
+  Future<void> _clearUnrecoverableData() async {
+    if (_resetting) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ripartire solo su questo dispositivo?'),
+        content: const Text(
+          'La sessione salvata non è recuperabile. Non posso confermare la sua chiusura sul server. '
+          'Le proposte già inviate potrebbero restare presenti. Le bozze e lo storico locali verranno cancellati.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annulla'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Cancella solo i dati locali'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() {
+      _resetting = true;
+      _failed = false;
+    });
+    try {
+      await context.read<AppPrefs>().clearUnrecoverableLocalData();
+      if (mounted) context.go('/boot');
+    } catch (_) {
+      if (mounted)
+        setState(() {
+          _resetting = false;
+          _failed = true;
+        });
+    }
+  }
 
   Future<void> _clearDataAndRestart(BuildContext context) async {
-    if (_clearing) return;
-    final config = context.read<AppConfig>();
-    final hasRemoteData =
-        config.fantasyDataSource == FantasyDataSource.api ||
-        config.gameDataSource == GameDataSource.api ||
-        config.nextProblemsDataSource == NextProblemsDataSource.api;
-    if (hasRemoteData) {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Eliminare i dati online?'),
-          content: const Text(
-            'Saranno cancellati voti, previsioni, esiti, squadra e partecipazione alle leghe associati alla '
-            'sessione anonima. Le proposte pubblicate resteranno senza un '
-            'collegamento alla sessione. Le leghe che hai creato saranno archiviate e i loro inviti revocati. Le squadre degli altri resteranno salvate. Verranno azzerate anche le '
-            'preferenze locali, la partita demo e le partite conservate, le proposte demo, le bozze e le ricevute.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text(VenialCopy.cancelCta),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Elimina e riparti'),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true || !context.mounted) return;
-    }
-
+    if (_resetting) return;
     setState(() {
-      _clearing = true;
-      _clearError = null;
+      _resetting = true;
+      _failed = false;
     });
     final prefs = context.read<AppPrefs>();
-    final fantasyManager = config.fantasyModeEnabled
-        ? context.read<FantasyManager>()
-        : null;
     try {
-      prefs.beginReset();
-      if (hasRemoteData && !(fantasyManager?.isRemote ?? false)) {
-        await context.read<ApiClient>().deleteJson(['v1', 'session']);
-      }
-      if (config.fantasyModeEnabled) {
-        await fantasyManager!.clearLocalData();
+      if (context.read<AppConfig>().fantasyModeEnabled) {
+        await context.read<FantasyManager>().clearLocalData();
       } else {
         await prefs.clearAll();
       }
-      if (!context.mounted) return;
-      context.go(config.fantasyModeEnabled ? '/welcome' : '/boot');
-    } catch (error) {
-      if (!context.mounted) return;
-      setState(
-        () => _clearError =
-            'Cancellazione non completata: ${error is ApiException ? error.message : 'Riprova.'}',
-      );
-    } finally {
-      if (mounted) setState(() => _clearing = false);
+    } catch (_) {
+      if (mounted)
+        setState(() {
+          _resetting = false;
+          _failed = true;
+        });
+      return;
     }
+    if (!context.mounted) return;
+    context.go(
+      context.read<AppConfig>().fantasyModeEnabled ? '/welcome' : '/boot',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    final config = context.watch<AppConfig>();
-    final hasRemoteData =
-        config.fantasyDataSource == FantasyDataSource.api ||
-        config.gameDataSource == GameDataSource.api ||
-        config.nextProblemsDataSource == NextProblemsDataSource.api;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Privacy')),
@@ -135,35 +129,39 @@ class _PrivacyPageState extends State<PrivacyPage> {
                       Text('Controllo dati', style: textTheme.titleLarge),
                       const SizedBox(height: AppTokens.s12),
                       Text(
-                        hasRemoteData
-                            ? 'Puoi eliminare i dati della tua sessione anonima online e quelli locali. Le proposte pubblicate restano, senza il collegamento alla sessione.'
-                            : 'Puoi cancellare i dati su questo dispositivo: preferenze, partita demo, partite conservate, proposte demo, bozze e ricevute. Poi riparti dall’inizio.',
+                        '${context.read<AppConfig>().fantasyModeEnabled ? 'La squadra fantasy personale viene cancellata sul server prima di chiudere la sessione. Le leghe degli altri giocatori restano disponibili. ' : ''}'
+                        'Puoi cancellare bozze, proposte e voti della demo salvati su questo dispositivo, insieme alle preferenze. Le proposte già inviate al server API non vengono cancellate da questo comando.'
+                        '${context.read<AppPrefs>().beforeClearAll == null ? '' : ' In modalità API viene prima chiusa la sessione di invio: se il server non risponde, i dati locali restano disponibili per riprovare.'}',
                         style: textTheme.bodyMedium,
                       ),
                       const SizedBox(height: AppTokens.s12),
-                      if (_clearError != null) ...[
-                        Semantics(
-                          liveRegion: true,
-                          child: Text(
-                            _clearError!,
-                            style: TextStyle(color: colorScheme.error),
-                          ),
-                        ),
-                        const SizedBox(height: AppTokens.s12),
-                      ],
-                      FilledButton.icon(
-                        onPressed: _clearing
+                      FilledButton(
+                        onPressed: _resetting
                             ? null
                             : () => _clearDataAndRestart(context),
-                        icon: const Icon(AppIcons.privacy),
-                        label: Text(
-                          _clearing
+                        child: Text(
+                          _resetting
                               ? 'Cancellazione in corso…'
-                              : hasRemoteData
-                              ? 'Elimina dati e riparti'
-                              : 'Elimina dati e riparti',
+                              : 'Azzera dati locali e riparti',
                         ),
                       ),
+                      if (_failed)
+                        Semantics(
+                          liveRegion: true,
+                          child: const Text(
+                            'Non riesco a completare la cancellazione. Riprova.',
+                          ),
+                        ),
+                      if (_failed &&
+                          context.read<AppPrefs>().sessionUnrecoverable)
+                        TextButton(
+                          onPressed: _resetting
+                              ? null
+                              : _clearUnrecoverableData,
+                          child: const Text(
+                            'Sessione non recuperabile: riparti localmente',
+                          ),
+                        ),
                     ],
                   ),
                 ),

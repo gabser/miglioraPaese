@@ -1,4 +1,3 @@
-import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
@@ -50,9 +49,9 @@ class ProposalDocumentScaffold extends StatelessWidget {
 }
 
 String proposalStatusLabel(SuggestedProblemStatus status) => switch (status) {
-  SuggestedProblemStatus.pending => VenialCopy.nextProblemsStatusPending,
-  SuggestedProblemStatus.approved => VenialCopy.nextProblemsStatusApproved,
-  SuggestedProblemStatus.rejected => VenialCopy.nextProblemsStatusRejected,
+  SuggestedProblemStatus.pending => 'In valutazione',
+  SuggestedProblemStatus.approved => 'Entrata in gioco',
+  SuggestedProblemStatus.rejected => 'Non accolta',
 };
 
 String proposalDateLabel(DateTime value) {
@@ -114,12 +113,12 @@ class ProposalDocument extends StatelessWidget {
         const SizedBox(height: AppTokens.s12),
         Text(
           snapshot
-              ? 'Puoi leggere questa ricevuta anche senza connessione, su questo dispositivo. Mostra la proposta al momento dell’invio. Apri il dettaglio per vedere lo stato aggiornato.'
-              : 'Qui trovi i dati riletti dal servizio o dalla demo. Premi Aggiorna il dettaglio per controllare se sono cambiati.',
+              ? 'Questa ricevuta è salvata su questo dispositivo e si può leggere anche offline. È lo snapshot dell’invio, non lo stato aggiornato della proposta.'
+              : 'Questi dati sono stati riletti dalla fonte delle proposte. Per verificare cambiamenti successivi, aggiorna il dettaglio.',
         ),
         const SizedBox(height: AppTokens.s8),
         const Text(
-          'La proposta è stata ricevuta. Non è una segnalazione ufficiale al Comune e non entra automaticamente nel gioco. L’invio non assegna punti alla squadra né reputazione.',
+          'L’invio ricevuto non è un’approvazione né una segnalazione ufficiale.',
         ),
       ],
     ),

@@ -47,7 +47,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
             FcSectionHeader(
               title: 'Classifica locale',
               subtitle:
-                  'Comune: ${MunicipalityCatalog.displayNameFromId(_municipality!)} · Gioco delle previsioni',
+                  'Comune: ${MunicipalityCatalog.displayNameFromId(_municipality!)} · Gioco demo locale',
             ),
             const SizedBox(height: AppTokens.s16),
             FcPanel(
@@ -58,7 +58,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                   Text('Punti e reputazione', style: theme.titleLarge),
                   const SizedBox(height: AppTokens.s8),
                   const Text(
-                    'Questi punteggi appartengono al gioco delle previsioni: non sono una valutazione ufficiale dei cittadini.',
+                    'Questi punteggi appartengono alla demo: non sono una valutazione ufficiale dei cittadini.',
                   ),
                   const SizedBox(height: AppTokens.s16),
                   FutureBuilder<List<LeaderboardEntry>>(
@@ -96,11 +96,11 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                             ),
                             const SizedBox(height: AppTokens.s12),
                             FilledButton(
-                              onPressed: () => context.push('/suggest-problem'),
+                              onPressed: () => context.go('/suggest-problem'),
                               child: const Text('Proponi un problema'),
                             ),
                             TextButton(
-                              onPressed: () => context.push('/next-problems'),
+                              onPressed: () => context.go('/next-problems'),
                               child: const Text('Vedi le proposte'),
                             ),
                           ],

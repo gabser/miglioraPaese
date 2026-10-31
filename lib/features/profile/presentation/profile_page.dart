@@ -59,16 +59,14 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final repository = context.read<GameRepository>();
       final municipalityId = context.read<AppPrefs>().municipalityId ?? 'demo';
-      final results = await Future.wait<Object>([
-        repository.getReputationHistory(municipalityId: municipalityId),
-        () async {
-          final turn = await repository.getCurrentTurn(municipalityId);
-          return repository.getReputationScore(turn.id);
-        }(),
-      ]);
+      final history = await repository.getReputationHistory(
+        municipalityId: municipalityId,
+      );
       if (!mounted || version != _historyVersion) return;
-      final history = results[0] as List<ReputationScore>;
-      final score = results[1] as ReputationScore;
+      final turn = await repository.getCurrentTurn(municipalityId);
+      if (!mounted || version != _historyVersion) return;
+      final score = await repository.getReputationScore(turn.id);
+      if (!mounted || version != _historyVersion) return;
       setState(() {
         _score = score;
         _history = history;
@@ -77,7 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (_) {
       if (!mounted || version != _historyVersion) return;
       setState(() {
-        _error = 'I punti delle previsioni non sono disponibili. Riprova.';
+        _error = 'La reputazione non è disponibile. Puoi riprovare.';
         _isLoading = false;
       });
     }
@@ -221,7 +219,6 @@ class _ProfilePageState extends State<ProfilePage> {
     final activePerspective = prefs.getActivePerspective();
     final changesCount = prefs.perspectiveChangesCount;
     final isCompact = MediaQuery.of(context).size.width < 600;
-    final pilotLocked = context.read<AppConfig>().pilotMunicipalityId != null;
     final municipalityName = MunicipalityCatalog.displayNameFromId(
       prefs.municipalityId ?? 'demo',
     );
@@ -231,6 +228,61 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            OutlinedButton.icon(
+              onPressed: () => context.push('/diagnostics'),
+              icon: const Icon(AppIcons.info),
+              label: const Text('Informazioni ambiente'),
+            ),
+            if (context.read<AppConfig>().accountModeEnabled)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: FilledButton.icon(
+                  onPressed: () => context.go('/account?returnTo=/profile'),
+                  icon: const Icon(Icons.account_circle_outlined),
+                  label: const Text('Account e dispositivi'),
+                ),
+              ),
+            if (context.read<AppConfig>().cooperationModeEnabled) ...[
+              OutlinedButton(
+                onPressed: () => context.go('/cooperation'),
+                child: const Text('Obiettivo cooperativo del Comune'),
+              ),
+              OutlinedButton(
+                onPressed: () => context.go('/inbox'),
+                child: const Text('Inbox del mio account'),
+              ),
+              OutlinedButton(
+                onPressed: () => context.go('/followed-places'),
+                child: const Text('Luoghi seguiti'),
+              ),
+            ],
+            if (context.read<AppConfig>().measurementsModeEnabled)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: OutlinedButton(
+                  onPressed: () => context.go('/measurements'),
+                  child: const Text('Misurazioni, esiti e contestazioni'),
+                ),
+              ),
+            if (context.read<AppConfig>().reviewModeEnabled) ...[
+              OutlinedButton(
+                onPressed: () => context.go('/review'),
+                child: const Text('Console revisione locale'),
+              ),
+              OutlinedButton(
+                onPressed: () => context.go('/xp'),
+                child: const Text('Stato XP e repliche richieste'),
+              ),
+            ],
+            if (context.read<AppConfig>().missionsModeEnabled)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: OutlinedButton.icon(
+                  onPressed: () => context.go('/missions'),
+                  icon: const Icon(Icons.explore_outlined),
+                  label: const Text('Esplora missioni sintetiche'),
+                ),
+              ),
             const IconLabel(
               icon: AppIcons.profile,
               text: VenialCopy.profileTitle,
@@ -254,22 +306,19 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: AppTokens.s4),
                   Text(
-                    pilotLocked
-                        ? 'Questa prova online è riservata a un solo Comune.'
-                        : 'Scegli un altro Comune da seguire.',
+                    'Cambia Comune per testare o seguire un altro territorio.',
                     style: textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: AppTokens.s12),
-                  if (!pilotLocked)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: OutlinedButton(
-                        onPressed: () => context.go('/change-municipality'),
-                        child: const Text('Cambia Comune'),
-                      ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: OutlinedButton(
+                      onPressed: () => context.go('/change-municipality'),
+                      child: const Text('Cambia Comune'),
                     ),
+                  ),
                 ],
               ),
             ),
@@ -364,15 +413,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const FcSectionHeader(
-                      title: 'La tua reputazione nelle previsioni',
+                      title: 'La tua reputazione nella demo',
                     ),
                     const SizedBox(height: AppTokens.s12),
                     Text('Punti: ${_score!.totalPoints}'),
                     Text('Previsioni concluse: ${_score!.predictionsCount}'),
                     Text(
                       _score!.predictionsCount == 0
-                          ? 'Previsioni corrette: non ancora disponibili. Nessuna previsione conclusa.'
-                          : 'Previsioni corrette: ${(_score!.accuracy * 100).round()}%',
+                          ? 'Accuratezza: non disponibile, nessuna previsione conclusa.'
+                          : 'Accuratezza: ${(_score!.accuracy * 100).round()}%',
                     ),
                     if (_score!.predictionsCount < 6) ...[
                       const SizedBox(height: AppTokens.s8),

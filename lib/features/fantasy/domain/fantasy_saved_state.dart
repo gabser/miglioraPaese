@@ -86,7 +86,13 @@ class FantasySavedState {
       final outcome = CardOutcome(
         matchdayId: item['matchdayId'] as String,
         cardId: item['cardId'] as String,
-        observed: CivicTrend.values.byName(item['observed'] as String),
+        observed: item['observed'] == null
+            ? null
+            : CivicTrend.values.byName(item['observed'] as String),
+        authoritativePublication: item['authoritativePublication'] == true,
+        disposition: item['disposition'] == 'undeterminable'
+            ? OutcomeDisposition.undeterminable
+            : OutcomeDisposition.determinate,
         sourceLabel: item['sourceLabel'] as String,
         sourceDate: DateTime.parse(item['sourceDate'] as String),
         explanation: item['explanation'] as String,
@@ -165,7 +171,10 @@ class FantasySavedState {
           (o) => {
             'matchdayId': o.matchdayId,
             'cardId': o.cardId,
-            'observed': o.observed.name,
+            'observed': o.observed?.name,
+            if (o.authoritativePublication) 'authoritativePublication': true,
+            if (o.disposition == OutcomeDisposition.undeterminable)
+              'disposition': o.disposition.name,
             'sourceLabel': o.sourceLabel,
             'sourceDate': o.sourceDate.toUtc().toIso8601String(),
             'explanation': o.explanation,
@@ -188,6 +197,7 @@ class FantasySavedState {
     startsAt: DateTime.parse(value['startsAt'] as String),
     locksAt: DateTime.parse(value['locksAt'] as String),
     observationEndsAt: DateTime.parse(value['observationEndsAt'] as String),
+    rulesVersion: value['rulesVersion'] as String? ?? 'fantasy-demo-v1',
   );
   static Map<String, dynamic> dayToJson(Matchday day) => {
     'id': day.id,
@@ -195,5 +205,6 @@ class FantasySavedState {
     'startsAt': day.startsAt.toUtc().toIso8601String(),
     'locksAt': day.locksAt.toUtc().toIso8601String(),
     'observationEndsAt': day.observationEndsAt.toUtc().toIso8601String(),
+    if (day.rulesVersion != 'fantasy-demo-v1') 'rulesVersion': day.rulesVersion,
   };
 }

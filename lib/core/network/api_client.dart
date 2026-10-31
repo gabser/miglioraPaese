@@ -20,45 +20,57 @@ class ApiClient {
   Future<Object?> getJson(
     List<String> pathSegments, {
     Map<String, String?> queryParameters = const {},
+    Map<String, String> headers = const {},
   }) {
     final uri = _buildUri(pathSegments, queryParameters);
-    return _send(() => _client.get(uri));
+    return _send(() => _client.get(uri, headers: headers));
   }
 
   Future<Object?> postJson(
     List<String> pathSegments, {
     required Map<String, Object?> body,
+    Map<String, String?> queryParameters = const {},
+    Map<String, String> headers = const {},
   }) {
-    return _writeJson('POST', pathSegments, body);
+    final uri = _buildUri(pathSegments, queryParameters);
+    return _send(
+      () => _client.post(
+        uri,
+        headers: {'content-type': 'application/json', ...headers},
+        body: jsonEncode(body),
+      ),
+      retryTransportFailure: headers.keys.any(
+        (name) => name.toLowerCase() == 'idempotency-key',
+      ),
+    );
   }
 
   Future<Object?> putJson(
     List<String> pathSegments, {
     required Map<String, Object?> body,
+    Map<String, String?> queryParameters = const {},
+    Map<String, String> headers = const {},
   }) {
-    return _writeJson('PUT', pathSegments, body);
-  }
-
-  Future<Object?> deleteJson(List<String> pathSegments) {
-    final uri = _buildUri(pathSegments, const {});
-    return _send(() => _client.delete(uri));
-  }
-
-  Future<Object?> _writeJson(
-    String method,
-    List<String> pathSegments,
-    Map<String, Object?> body,
-  ) {
-    final uri = _buildUri(pathSegments, const {});
-    final encodedBody = jsonEncode(body);
-    const headers = {'content-type': 'application/json'};
+    final uri = _buildUri(pathSegments, queryParameters);
     return _send(
-      () => switch (method) {
-        'POST' => _client.post(uri, headers: headers, body: encodedBody),
-        'PUT' => _client.put(uri, headers: headers, body: encodedBody),
-        _ => throw ArgumentError.value(method, 'method'),
-      },
+      () => _client.put(
+        uri,
+        headers: {'content-type': 'application/json', ...headers},
+        body: jsonEncode(body),
+      ),
+      retryTransportFailure: headers.keys.any(
+        (name) => name.toLowerCase() == 'idempotency-key',
+      ),
     );
+  }
+
+  Future<Object?> deleteJson(
+    List<String> pathSegments, {
+    Map<String, String?> queryParameters = const {},
+    Map<String, String> headers = const {},
+  }) {
+    final uri = _buildUri(pathSegments, queryParameters);
+    return _send(() => _client.delete(uri, headers: headers));
   }
 
   Uri _buildUri(
@@ -79,24 +91,32 @@ class ApiClient {
     );
   }
 
-  Future<Object?> _send(Future<http.Response> Function() request) async {
+  Future<Object?> _send(
+    Future<http.Response> Function() request, {
+    bool retryTransportFailure = false,
+  }) async {
     late final http.Response response;
-    try {
-      response = await request().timeout(timeout);
-    } on TimeoutException catch (error) {
-      throw ApiException(
-        kind: ApiExceptionKind.timeout,
-        code: 'request_timeout',
-        message: 'Il servizio non ha risposto in tempo.',
-        cause: error,
-      );
-    } on http.ClientException catch (error) {
-      throw ApiException(
-        kind: ApiExceptionKind.network,
-        code: 'network_error',
-        message: 'Impossibile raggiungere il servizio.',
-        cause: error,
-      );
+    for (var attempt = 0; ; attempt++) {
+      try {
+        response = await request().timeout(timeout);
+        break;
+      } on TimeoutException catch (error) {
+        if (retryTransportFailure && attempt == 0) continue;
+        throw ApiException(
+          kind: ApiExceptionKind.timeout,
+          code: 'request_timeout',
+          message: 'Il servizio non ha risposto in tempo.',
+          cause: error,
+        );
+      } on http.ClientException catch (error) {
+        if (retryTransportFailure && attempt == 0) continue;
+        throw ApiException(
+          kind: ApiExceptionKind.network,
+          code: 'network_error',
+          message: 'Impossibile raggiungere il servizio.',
+          cause: error,
+        );
+      }
     }
 
     final isSuccess = response.statusCode >= 200 && response.statusCode < 300;
@@ -124,8 +144,6 @@ class ApiClient {
           'too_long',
           'invalid_choice',
           'invalid_location',
-          'invalid',
-          'required',
         };
         for (final entry in rawFields.entries) {
           if (entry.key is String &&
@@ -154,7 +172,7 @@ class ApiClient {
 
   Object? _decodeJson(http.Response response) {
     if (response.body.trim().isEmpty) {
-      throw ApiException.invalidPayload('Il servizio ha risposto senza dati.');
+      throw ApiException.invalidPayload('La risposta JSON e\' vuota.');
     }
     try {
       return jsonDecode(response.body);

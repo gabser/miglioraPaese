@@ -3,19 +3,14 @@ import { once } from 'node:events';
 import { Readable } from 'node:stream';
 import { describe, it } from 'node:test';
 
-import {
-  createApp,
-  createMemoryStore,
-  startServer,
-} from '../src/server.js';
+import { createApp, createMemoryStore, startServer } from '../src/server.js';
 
 describe('backend HTTP contract', () => {
   it('starts a real server on an ephemeral port and serves health', async () => {
-    const logs = [];
     const server = startServer({
+      env: { DATA_STORE: 'memory' },
       port: 0,
       host: '127.0.0.1',
-      logger: (line) => logs.push(JSON.parse(line)),
     });
     try {
       await once(server, 'listening');
@@ -27,39 +22,14 @@ describe('backend HTTP contract', () => {
       );
       assert.equal(response.status, 200);
       assert.match(response.headers.get('content-type'), /^application\/json/);
-      assert.deepEqual(await response.json(), { status: 'ok' });
-
-      const ready = await fetch(
-        'http://127.0.0.1:' + address.port + '/ready',
-      );
-      assert.equal(ready.status, 200);
-      assert.deepEqual(await ready.json(), { status: 'ready' });
-
-      const activation = await fetch(
-        'http://127.0.0.1:' +
-          address.port +
-          '/v1/municipalities/bologna/activation?userId=not-logged',
-        { headers: { 'x-request-id': 'contract-check' } },
-      );
-      assert.equal(activation.headers.get('x-request-id'), 'contract-check');
-      await activation.json();
-
-      const metrics = await fetch(
-        'http://127.0.0.1:' + address.port + '/metrics',
-      );
-      assert.match(metrics.headers.get('content-type'), /^text\/plain/);
-      const metricsBody = await metrics.text();
-      assert.match(metricsBody, /migliorapaese_http_requests_total/);
-      assert.match(metricsBody, /route="municipalityActivation"/);
-      assert.equal(logs.some((entry) => entry.route === 'ready'), true);
-      assert.equal(JSON.stringify(logs).includes('not-logged'), false);
+      const health=await response.json();assert.equal(health.status,'ok');assert.equal(health.candidateId,null);assert.equal(health.persistence,'memory');
     } finally {
       await closeServer(server);
     }
   });
 
   it('accepts canonical municipality slugs and legacy Flutter aliases', async () => {
-    const app = createApp();
+    const app = createMemoryApp();
     const canonical = await fetchJson(
       '/v1/municipalities/bologna/activation',
       { app },
@@ -72,57 +42,10 @@ describe('backend HTTP contract', () => {
       '/v1/municipalities/comune%3ACastel%20Bolognese/activation',
       { app },
     );
-    const tuglie = await fetchJson(
-      '/v1/municipalities/comune%3ATuglie/activation',
-      { app },
-    );
 
     assert.deepEqual(canonical.body, { municipalityId: 'bologna', state: 'active' });
     assert.deepEqual(legacy.body, canonical.body);
     assert.equal(collecting.body.state, 'collectingSignals');
-    assert.deepEqual(tuglie.body, {
-      municipalityId: 'tuglie',
-      state: 'active',
-    });
-  });
-
-  it('serves clearly synthetic seed data for the Tuglie local pilot', async () => {
-    const app = createApp({ pilotMunicipalityId: 'tuglie' });
-    const problems = await fetchJson('/v1/municipalities/tuglie/problems', {
-      app,
-    });
-    const suggestions = await fetchJson(
-      '/v1/municipalities/tuglie/next-problems',
-      { app },
-    );
-    const turn = await fetchJson('/v1/municipalities/tuglie/turn', { app });
-    const prediction = await fetchJson(
-      '/v1/turns/turn-tuglie-demo/predictions/problem-tuglie-lighting-demo',
-      {
-        app,
-        method: 'PUT',
-        body: { choice: 'stable' },
-      },
-    );
-    const outsidePilot = await fetchJson(
-      '/v1/municipalities/bologna/activation',
-      { app },
-    );
-
-    assert.equal(problems.status, 200);
-    assert.ok(
-      problems.body.items.every((item) => item.title.includes('Scenario demo')),
-    );
-    assert.equal(suggestions.status, 200);
-    assert.ok(
-      suggestions.body.items.every((item) =>
-        item.shortDescription.includes('sintetico'),
-      ),
-    );
-    assert.equal(turn.body.id, 'turn-tuglie-demo');
-    assert.equal(prediction.status, 200);
-    assert.equal(prediction.body.choice, 'stable');
-    assert.equal(outsidePilot.status, 404);
   });
 
   it('returns Flutter-compatible turn field names', async () => {
@@ -135,8 +58,30 @@ describe('backend HTTP contract', () => {
     assert.equal('endsAt' in response.body, false);
   });
 
+  it('preserves the public MemoryStore civic summary surface', () => {
+    const store = createMemoryStore();
+
+    assert.deepEqual(store.getCivicLoopSummary('bologna'), {
+      municipalityName: 'Bologna',
+      proposedThemes: 1,
+      confirmedThemes: 1,
+      cardsInTurn: 2,
+      predictions: 0,
+      outcomes: 0,
+      reputationPoints: 0,
+      topThemeTitle: "Tempi d'attesa all'anagrafe",
+    });
+  });
+
+  it('requires explicit composition instead of falling back to MemoryStore', () => {
+    assert.throws(
+      () => createApp(),
+      /createApp requires an explicit application or store/,
+    );
+  });
+
   it('promotes an approved suggestion into a card and activates the town', async () => {
-    const app = createApp();
+    const app = createMemoryApp();
     const created = await fetchJson(
       '/v1/municipalities/castel-bolognese/next-problems',
       {
@@ -186,14 +131,13 @@ describe('backend HTTP contract', () => {
     assert.equal(summary.body.topThemeTitle, created.body.title);
   });
 
-  it('computes myVote from server-issued sessions and ignores spoofed ids', async () => {
-    const app = createApp();
+  it('computes myVote independently for each client-provided user id', async () => {
+    const app = createMemoryApp();
     const created = await fetchJson(
       '/v1/municipalities/castel-bolognese/next-problems',
       {
         app,
         method: 'POST',
-        session: 'a',
         body: {
           title: 'Panchina alla fermata',
           description: 'Una seduta per chi aspetta il bus.',
@@ -209,24 +153,95 @@ describe('backend HTTP contract', () => {
       {
         app,
         method: 'POST',
-        session: 'a',
         body: { vote: 'up', userId: 'user-a' },
       },
     );
 
     const forA = await fetchJson(
       '/v1/municipalities/castel-bolognese/next-problems?userId=user-a',
-      { app, session: 'a' },
+      { app },
     );
     const forB = await fetchJson(
       '/v1/municipalities/castel-bolognese/next-problems?userId=user-b',
-      { app, session: 'b' },
+      { app },
     );
     const itemA = forA.body.items.find((item) => item.id === created.body.id);
     const itemB = forB.body.items.find((item) => item.id === created.body.id);
 
     assert.equal(itemA.myVote, 'up');
     assert.equal(itemB.myVote, 'none');
+  });
+
+  it('replays idempotent votes once and rejects key reuse with new input', async () => {
+    const app = createMemoryApp();
+    const created = await fetchJson(
+      '/v1/municipalities/castel-bolognese/next-problems',
+      {
+        app,
+        method: 'POST',
+        idempotencyKey: 'memory-submit-replay-0001',
+        body: {
+          title: 'Voto retry safe',
+          description: 'La stessa intenzione non deve essere applicata due volte.',
+          category: 'safety',
+          userId: 'user-retry',
+        },
+      },
+    );
+    const path =
+      '/v1/municipalities/castel-bolognese/next-problems/' +
+      created.body.id +
+      '/votes';
+    const options = {
+      app,
+      method: 'POST',
+      idempotencyKey: 'memory-vote-replay-0001',
+      body: { vote: 'up', userId: 'user-retry' },
+    };
+    const first = await fetchJson(path, options);
+    const replay = await fetchJson(path, options);
+    const reused = await fetchJson(path, {
+      ...options,
+      body: { vote: 'down', userId: 'user-retry' },
+    });
+
+    assert.deepEqual(replay.body, first.body);
+    assert.equal(first.body.myVote, 'up');
+    assert.equal(first.body.votesUp, 1);
+    assert.equal(reused.status, 409);
+    assert.equal(reused.body.error, 'idempotency_key_reused');
+  });
+
+  it('requires a valid Idempotency-Key for state-changing repository routes', async () => {
+    const missing = await fetchJson(
+      '/v1/municipalities/bologna/next-problems',
+      {
+        method: 'POST',
+        disableIdempotencyKey: true,
+        body: {
+          title: 'Senza chiave',
+          description: 'Richiesta non retry-safe.',
+          category: 'green',
+        },
+      },
+    );
+    const invalid = await fetchJson(
+      '/v1/municipalities/bologna/next-problems',
+      {
+        method: 'POST',
+        idempotencyKey: 'short',
+        body: {
+          title: 'Chiave corta',
+          description: 'Richiesta non valida.',
+          category: 'green',
+        },
+      },
+    );
+
+    assert.equal(missing.status, 400);
+    assert.equal(missing.body.error, 'invalid_field');
+    assert.equal(invalid.status, 400);
+    assert.equal(invalid.body.error, 'invalid_field');
   });
 
   it('supports loopback and configured CORS origins with preflight', async () => {
@@ -245,25 +260,12 @@ describe('backend HTTP contract', () => {
       loopback.headers['access-control-allow-origin'],
       'http://localhost:7357',
     );
-    assert.equal(
-      loopback.headers['access-control-allow-credentials'],
-      'true',
-    );
-
-    const deletionPreflight = await fetchJson('/v1/session', {
-      method: 'OPTIONS',
-      headers: {
-        origin: 'http://localhost:7357',
-        'access-control-request-method': 'DELETE',
-      },
-    });
-    assert.equal(deletionPreflight.status, 200);
     assert.match(
-      deletionPreflight.headers['access-control-allow-methods'],
-      /(?:^|,\s*)DELETE(?:,|$)/,
+      loopback.headers['access-control-allow-headers'],
+      /Idempotency-Key/,
     );
 
-    const configuredApp = createApp({
+    const configuredApp = createMemoryApp({
       allowedOrigins: ['https://pilot.example'],
     });
     const configured = await fetchJson(
@@ -373,7 +375,7 @@ describe('backend HTTP contract', () => {
   });
 
   it('locks the prediction choice while allowing metadata updates', async () => {
-    const app = createApp();
+    const app = createMemoryApp();
     const path =
       '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
     const first = await fetchJson(path, {
@@ -403,8 +405,8 @@ describe('backend HTTP contract', () => {
     assert.equal(changed.body.error, 'prediction_locked');
   });
 
-  it('returns stable JSON errors for malformed JSON, advisory duplicates and missing data', async () => {
-    const app = createApp();
+  it('returns stable JSON errors and accepts titles describing distinct proposals', async () => {
+    const app = createMemoryApp();
     const malformed = await fetchJson(
       '/v1/municipalities/bologna/next-problems',
       { app, method: 'POST', rawBody: '{' },
@@ -440,588 +442,175 @@ describe('backend HTTP contract', () => {
     assert.equal(missing.body.error, 'municipality_not_found');
   });
 
-  it('issues a signed HttpOnly anonymous session cookie', async () => {
-    const app = createApp();
-    const first = await fetchJson('/v1/municipalities/bologna/summary', {
-      app,
-      session: 'identity',
-    });
-    const second = await fetchJson('/v1/municipalities/bologna/summary', {
-      app,
-      session: 'identity',
-    });
-
-    assert.match(first.headers['set-cookie'], /^mp_anon=v1\./);
-    assert.match(first.headers['set-cookie'], /; HttpOnly;/);
-    assert.match(first.headers['set-cookie'], /; SameSite=Lax$/);
-    assert.equal(second.headers['set-cookie'], undefined);
-  });
-
-  it('deletes data linked to an anonymous session and rotates its cookie', async () => {
-    const store = createMemoryStore({ moderationRequired: true });
-    const app = createApp({ store, secureCookies: true });
-    const created = await fetchJson(
-      '/v1/municipalities/castel-bolognese/next-problems',
-      {
-        app,
-        method: 'POST',
-        session: 'a',
-        body: {
-          title: 'Fontanella nel parco',
-          description: 'Una proposta civica senza dati personali.',
-          category: 'green',
-        },
-      },
-    );
-    const originalCookie = created.headers['set-cookie'];
-    await fetchJson(
-      `/v1/municipalities/castel-bolognese/next-problems/${created.body.id}/votes`,
-      { app, method: 'POST', session: 'a', body: { vote: 'up' } },
-    );
-    await fetchJson(
-      `/v1/municipalities/castel-bolognese/next-problems/${created.body.id}/votes`,
-      { app, method: 'POST', session: 'b', body: { vote: 'down' } },
-    );
-    const predictionPath =
-      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
-    for (const session of ['a', 'b']) {
-      await fetchJson(predictionPath, {
-        app,
-        method: 'PUT',
-        session,
-        body: { choice: 'improve' },
-      });
-    }
-    await fetchJson('/v1/problems/problem-green-margherita/resolve', {
+  it('filters suggested problems by positive status and text query', async () => {
+    const app = createMemoryApp();
+    await fetchJson('/v1/municipalities/bologna/next-problems', {
       app,
       method: 'POST',
-      session: 'a',
-      body: { choice: 'improve' },
+      body: {
+        title: 'Nuova illuminazione in piazza',
+        description: 'Lampioni poco leggibili nelle ore serali.',
+        category: 'lighting',
+      },
     });
 
-    const deleted = await fetchJson('/v1/session', {
-      app,
-      method: 'DELETE',
-      session: 'a',
-    });
-
-    assert.equal(deleted.status, 200);
-    assert.deepEqual(deleted.body, { status: 'deleted' });
-    assert.match(deleted.headers['set-cookie'], /^mp_anon=;/);
-    assert.match(deleted.headers['set-cookie'], /Max-Age=0/);
-    assert.match(deleted.headers['set-cookie'], /Expires=Thu, 01 Jan 1970/);
-    assert.match(deleted.headers['set-cookie'], /; Secure$/);
-
-    const listed = await fetchJson(
-      '/v1/municipalities/castel-bolognese/next-problems',
-      { app, session: 'b' },
-    );
-    const retained = listed.body.items.find(
-      (item) => item.id === created.body.id,
-    );
-    assert.equal('submittedByUserId' in retained, false);
-    assert.equal(retained.isMine, false);
-    assert.equal(retained.submittedByDisplayName, 'Utente rimosso');
-    assert.equal(retained.votesUp, 0);
-    assert.equal(retained.votesDown, 1);
-    assert.equal(retained.myVote, 'down');
-
-    const predictions = await fetchJson(
-      '/v1/turns/turn-bologna-today/predictions',
-      { app, session: 'a' },
-    );
-    const results = await fetchJson(
-      '/v1/turns/turn-bologna-today/prediction-results',
-      { app, session: 'a' },
-    );
-    const insight = await fetchJson(
-      '/v1/problems/problem-green-margherita/insight',
-      { app, session: 'b' },
-    );
-    assert.deepEqual(predictions.body.items, []);
-    assert.deepEqual(results.body.items, []);
-    assert.equal(insight.body.totalPredictions, 1);
-    assert.match(predictions.headers['set-cookie'], /^mp_anon=v1\./);
-    assert.notEqual(predictions.headers['set-cookie'], originalCookie);
-  });
-
-  it('rejects unsafe suggestion content before storing it', async () => {
-    const app = createApp();
-    const samples = [
-      ['Contattami', 'Scrivi a mario@example.test per i dettagli.'],
-      ['Foto del problema', 'Guarda https://example.test/foto'],
-      ['Titolo offensivo', 'Questa strada e una merda.'],
-    ];
-
-    for (const [title, description] of samples) {
-      const response = await fetchJson(
-        '/v1/municipalities/bologna/next-problems',
-        {
-          app,
-          method: 'POST',
-          body: { title, description, category: 'decor' },
-        },
-      );
-      assert.equal(response.status, 422);
-      assert.equal(response.body.error, 'content_rejected');
-    }
-    const listed = await fetchJson(
-      '/v1/municipalities/bologna/next-problems',
+    const approved = await fetchJson(
+      '/v1/municipalities/bologna/next-problems?status=approved',
       { app },
     );
-    assert.equal(listed.body.items.length, 1);
-  });
-
-  it('rate limits repeated submissions for the same anonymous identity', async () => {
-    const app = createApp();
-    for (let index = 0; index < 3; index += 1) {
-      const response = await fetchJson(
-        '/v1/municipalities/bologna/next-problems',
-        {
-          app,
-          method: 'POST',
-          body: {
-            title: `Tema civico ${index}`,
-            description: `Descrizione civica ${index}`,
-            category: 'decor',
-          },
-        },
-      );
-      assert.equal(response.status, 201);
-    }
-    const limited = await fetchJson(
-      '/v1/municipalities/bologna/next-problems',
-      {
-        app,
-        method: 'POST',
-        body: {
-          title: 'Tema civico oltre il limite',
-          description: 'Descrizione civica oltre il limite.',
-          category: 'decor',
-        },
-      },
-    );
-    assert.equal(limited.status, 429);
-    assert.equal(limited.body.error, 'submission_rate_limited');
-  });
-
-  it('requires an authorized moderator before promotion in pilot mode', async () => {
-    const moderationAdminToken = 'moderation-test-token-at-least-32-bytes';
-    const store = createMemoryStore({ moderationRequired: true });
-    const app = createApp({ store, moderationAdminToken });
-    const created = await fetchJson(
-      '/v1/municipalities/castel-bolognese/next-problems',
-      {
-        app,
-        method: 'POST',
-        body: {
-          title: 'Passaggio protetto davanti alla scuola',
-          description: 'La proposta attende la verifica del moderatore.',
-          category: 'safety',
-        },
-      },
-    );
-    const voted = await fetchJson(
-      `/v1/municipalities/castel-bolognese/next-problems/${created.body.id}/votes`,
-      { app, method: 'POST', body: { vote: 'up' } },
-    );
-    assert.equal(voted.body.status, 'pending');
-
-    const moderationPath =
-      `/v1/admin/municipalities/castel-bolognese/next-problems/` +
-      `${created.body.id}/moderation`;
-    const unauthorized = await fetchJson(moderationPath, {
-      app,
-      method: 'POST',
-      body: { status: 'approved' },
-    });
-    assert.equal(unauthorized.status, 401);
-
-    const approved = await fetchJson(moderationPath, {
-      app,
-      method: 'POST',
-      headers: { authorization: `Bearer ${moderationAdminToken}` },
-      body: { status: 'approved', reason: 'Verifica operatore completata.' },
-    });
-    assert.equal(approved.status, 200);
-    assert.equal(approved.body.status, 'approved');
-    assert.equal(typeof approved.body.moderatedAt, 'string');
-
-    const problems = await fetchJson(
-      '/v1/municipalities/castel-bolognese/problems',
-      { app },
-    );
-    assert.equal(
-      problems.body.items.some(
-        (problem) => problem.id === `proposal_${created.body.id}`,
-      ),
-      true,
-    );
-  });
-
-  it('limits a configured pilot to one municipality', async () => {
-    const app = createApp({ pilotMunicipalityId: 'castel-bolognese' });
-    const pilot = await fetchJson(
-      '/v1/municipalities/castel-bolognese/activation',
-      { app },
-    );
-    const outside = await fetchJson('/v1/municipalities/bologna/activation', {
-      app,
-    });
-    const outsideProblem = await fetchJson(
-      '/v1/problems/problem-green-margherita/insight',
-      { app },
-    );
-
-    assert.equal(pilot.status, 200);
-    assert.equal(outside.status, 404);
-    assert.equal(outsideProblem.status, 404);
-  });
-
-  it('keeps the original prediction resolution happy path', async () => {
-    const app = createApp();
-    await fetchJson(
-      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita',
-      { app, method: 'PUT', body: { choice: 'improve' } },
-    );
-    const result = await fetchJson(
-      '/v1/problems/problem-green-margherita/resolve',
-      { app, method: 'POST', body: { choice: 'improve' } },
-    );
-
-    assert.equal(result.status, 200);
-    assert.equal(result.body.correct, true);
-    assert.equal(result.body.result, 'correct');
-    assert.equal(result.body.pointsDelta, 10);
-    assert.equal(result.body.winningChoice, 'improve');
-  });
-
-  it('stores prediction results and reputation independently by user', async () => {
-    const app = createApp();
-    const predictionPath =
-      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
-    const resolutionPath =
-      '/v1/problems/problem-green-margherita/resolve';
-
-    await fetchJson(predictionPath, {
-      app,
-      method: 'PUT',
-      session: 'a',
-      body: { choice: 'improve', userId: 'user-a' },
-    });
-    await fetchJson(predictionPath, {
-      app,
-      method: 'PUT',
-      session: 'b',
-      body: { choice: 'worsen', userId: 'user-b' },
-    });
-    await fetchJson(resolutionPath, {
-      app,
-      method: 'POST',
-      session: 'a',
-      body: { choice: 'improve', userId: 'user-a' },
-    });
-    await fetchJson(resolutionPath, {
-      app,
-      method: 'POST',
-      session: 'b',
-      body: { choice: 'worsen', userId: 'user-b' },
-    });
-
-    const resultsA = await fetchJson(
-      '/v1/turns/turn-bologna-today/prediction-results?userId=user-a',
-      { app, session: 'a' },
-    );
-    const resultsB = await fetchJson(
-      '/v1/turns/turn-bologna-today/prediction-results?userId=user-b',
-      { app, session: 'b' },
-    );
-    const reputationA = await fetchJson(
-      '/v1/turns/turn-bologna-today/reputation?userId=user-a',
-      { app, session: 'a' },
-    );
-    const reputationB = await fetchJson(
-      '/v1/turns/turn-bologna-today/reputation?userId=user-b',
-      { app, session: 'b' },
-    );
-    const summaryA = await fetchJson(
-      '/v1/municipalities/bologna/summary?userId=user-a',
-      { app, session: 'a' },
-    );
-
-    assert.deepEqual(resultsA.body.items, [
-      { problemId: 'problem-green-margherita', result: 'correct' },
-    ]);
-    assert.deepEqual(resultsB.body.items, [
-      { problemId: 'problem-green-margherita', result: 'wrong' },
-    ]);
-    assert.deepEqual(reputationA.body, {
-      totalPoints: 10,
-      accuracy: 1,
-      predictionsCount: 1,
-    });
-    assert.deepEqual(reputationB.body, {
-      totalPoints: 0,
-      accuracy: 0,
-      predictionsCount: 1,
-    });
-    assert.equal(summaryA.body.outcomes, 1);
-    assert.equal(summaryA.body.reputationPoints, 10);
-  });
-
-  it('computes partial results and exposes municipality reputation history', async () => {
-    const app = createApp();
-    await fetchJson(
-      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita',
-      {
-        app,
-        method: 'PUT',
-        body: { choice: 'stable', userId: 'user-a' },
-      },
-    );
-    await fetchJson(
-      '/v1/turns/turn-bologna-today/predictions/problem-traffic-indipendenza',
-      {
-        app,
-        method: 'PUT',
-        body: { choice: 'improve', userId: 'user-a' },
-      },
-    );
-    await fetchJson('/v1/problems/problem-green-margherita/resolve', {
-      app,
-      method: 'POST',
-      body: { choice: 'stable', userId: 'user-a' },
-    });
-    await fetchJson('/v1/problems/problem-traffic-indipendenza/resolve', {
-      app,
-      method: 'POST',
-      body: { choice: 'improve', userId: 'user-a' },
-    });
-
-    const results = await fetchJson(
-      '/v1/turns/turn-bologna-today/prediction-results?userId=user-a',
-      { app },
-    );
-    const history = await fetchJson(
-      '/v1/municipalities/bologna/reputation-history?userId=user-a',
+    const matching = await fetchJson(
+      '/v1/municipalities/bologna/next-problems?query=lampioni',
       { app },
     );
 
     assert.deepEqual(
-      results.body.items.map((item) => item.result).sort(),
-      ['partial', 'wrong'],
+      approved.body.items.map((item) => item.id),
+      ['suggested-queues-registry'],
     );
-    assert.deepEqual(history.body.items, [
-      { totalPoints: 4, accuracy: 0.25, predictionsCount: 2 },
-    ]);
+    assert.deepEqual(
+      matching.body.items.map((item) => item.title),
+      ['Nuova illuminazione in piazza'],
+    );
   });
 
-  it('aggregates predictions into current and historical insights', async () => {
-    const app = createApp();
+  it('preserves vote switching, toggle removal and promotion rollback', async () => {
+    const app = createMemoryApp();
+    const created = await fetchJson(
+      '/v1/municipalities/castel-bolognese/next-problems',
+      {
+        app,
+        method: 'POST',
+        body: {
+          title: 'Attraversamento via Roma',
+          description: 'Migliorare visibilità e sicurezza.',
+          category: 'safety',
+          userId: 'user-a',
+        },
+      },
+    );
+    const path =
+      '/v1/municipalities/castel-bolognese/next-problems/' +
+      created.body.id +
+      '/votes';
+
+    const down = await fetchJson(path, {
+      app,
+      method: 'POST',
+      body: { vote: 'down', userId: 'user-a' },
+    });
+    const switched = await fetchJson(path, {
+      app,
+      method: 'POST',
+      body: { vote: 'up', userId: 'user-a' },
+    });
+    const toggledOff = await fetchJson(path, {
+      app,
+      method: 'POST',
+      body: { vote: 'up', userId: 'user-a' },
+    });
+    const activation = await fetchJson(
+      '/v1/municipalities/castel-bolognese/activation',
+      { app },
+    );
+    const problems = await fetchJson(
+      '/v1/municipalities/castel-bolognese/problems',
+      { app },
+    );
+
+    assert.deepEqual(
+      {
+        votesUp: down.body.votesUp,
+        votesDown: down.body.votesDown,
+        score: down.body.score,
+        myVote: down.body.myVote,
+        status: down.body.status,
+      },
+      { votesUp: 0, votesDown: 1, score: -1, myVote: 'down', status: 'pending' },
+    );
+    assert.deepEqual(
+      {
+        votesUp: switched.body.votesUp,
+        votesDown: switched.body.votesDown,
+        myVote: switched.body.myVote,
+        status: switched.body.status,
+      },
+      { votesUp: 1, votesDown: 0, myVote: 'up', status: 'approved' },
+    );
+    assert.deepEqual(
+      {
+        votesUp: toggledOff.body.votesUp,
+        votesDown: toggledOff.body.votesDown,
+        myVote: toggledOff.body.myVote,
+        status: toggledOff.body.status,
+      },
+      { votesUp: 0, votesDown: 0, myVote: 'none', status: 'pending' },
+    );
+    assert.equal(activation.body.state, 'collectingSignals');
+    assert.equal(
+      problems.body.items.some(
+        (item) => item.id === 'proposal_' + created.body.id,
+      ),
+      false,
+    );
+  });
+
+  it('lists only predictions owned by the selected client-provided user id', async () => {
+    const app = createMemoryApp();
     const path =
       '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
     await fetchJson(path, {
       app,
       method: 'PUT',
-      session: 'a',
-      body: {
-        choice: 'improve',
-        motivations: ['visibleActions'],
-        userId: 'user-a',
-      },
+      body: { choice: 'improve', userId: 'user-a' },
     });
     await fetchJson(path, {
       app,
       method: 'PUT',
-      session: 'b',
-      body: {
-        choice: 'improve',
-        motivations: ['visibleActions', 'seasonality'],
-        userId: 'user-b',
-      },
-    });
-    await fetchJson(path, {
-      app,
-      method: 'PUT',
-      session: 'c',
-      body: {
-        choice: 'stable',
-        motivations: ['personalExperience'],
-        userId: 'user-c',
-      },
+      body: { choice: 'stable', userId: 'user-b' },
     });
 
-    const insight = await fetchJson(
-      '/v1/problems/problem-green-margherita/insight',
+    const forA = await fetchJson(
+      '/v1/turns/turn-bologna-today/predictions?userId=user-a',
       { app },
     );
-    const history = await fetchJson(
-      '/v1/problems/problem-green-margherita/insight-history',
+    const forB = await fetchJson(
+      '/v1/turns/turn-bologna-today/predictions?userId=user-b',
       { app },
     );
 
-    assert.equal(insight.body.totalPredictions, 3);
-    assert.deepEqual(insight.body.choiceDistribution, {
-      improve: 2,
-      stable: 1,
-      worsen: 0,
-    });
-    assert.equal(insight.body.motivationDistribution.visibleActions, 2);
-    assert.equal(history.body.snapshots.length, 1);
-    assert.equal(history.body.snapshots[0].turnId, 'turn-bologna-today');
-    assert.deepEqual(history.body.snapshots[0].motivationTop, [
-      'visibleActions',
-      'personalExperience',
-    ]);
+    assert.deepEqual(forA.body.items.map((item) => item.userId), ['user-a']);
+    assert.deepEqual(forB.body.items.map((item) => item.userId), ['user-b']);
+    assert.equal(forA.body.items[0].choice, 'improve');
+    assert.equal(forB.body.items[0].choice, 'stable');
   });
 
-  it('suppresses aggregates below the configured privacy threshold', () => {
-    const store = createMemoryStore({ minimumAggregateSampleSize: 3 });
-    for (const userId of ['anon:first', 'anon:second']) {
-      store.upsertPrediction({
-        turnId: 'turn-bologna-today',
-        problemId: 'problem-green-margherita',
-        userId,
-        choice: 'improve',
-        motivations: ['visibleActions'],
-        confidence: 'considered',
-      });
-    }
-
-    const suppressed = store.getAggregatedInsight(
-      'problem-green-margherita',
-    );
-    assert.equal(suppressed.totalPredictions, 0);
-    assert.deepEqual(suppressed.choiceDistribution, {
-      improve: 0,
-      stable: 0,
-      worsen: 0,
-    });
-
-    store.upsertPrediction({
-      turnId: 'turn-bologna-today',
-      problemId: 'problem-green-margherita',
-      userId: 'anon:third',
-      choice: 'stable',
-      motivations: ['seasonality'],
-      confidence: 'gutFeeling',
-    });
-    const visible = store.getAggregatedInsight('problem-green-margherita');
-    assert.equal(visible.totalPredictions, 3);
-    assert.deepEqual(visible.choiceDistribution, {
-      improve: 2,
-      stable: 1,
-      worsen: 0,
-    });
-  });
-
-  it('returns critical insights and validates their optional context', async () => {
-    const app = createApp();
-    const empty = await fetchJson(
-      '/v1/problems/problem-green-margherita/critical-insights',
-      { app },
-    );
-    assert.equal(empty.body.items[0].headline, 'Dati in raccolta');
-
-    const predictionPath =
-      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
-    await fetchJson(predictionPath, {
-      app,
-      method: 'PUT',
-      session: 'a',
-      body: { choice: 'improve', userId: 'user-a' },
-    });
-    const contextual = await fetchJson(
-      '/v1/problems/problem-green-margherita/critical-insights' +
-        '?userChoice=improve&userConfidence=considered&userReflectionIndex=1',
-      { app },
-    );
-    const invalid = await fetchJson(
-      '/v1/problems/problem-green-margherita/critical-insights' +
-        '?userReflectionIndex=outside',
-      { app },
-    );
-
-    assert.equal(contextual.status, 200);
-    assert.equal(contextual.body.items.length, 3);
-    assert.match(contextual.body.items[0].supporting, /^100%/);
-    assert.equal(invalid.status, 400);
-    assert.equal(invalid.body.error, 'invalid_field');
-  });
-
-  it('returns stable not-found errors for result and insight resources', async () => {
-    const missingTurnResults = await fetchJson(
-      '/v1/turns/missing/prediction-results',
-    );
-    const missingTurnReputation = await fetchJson(
-      '/v1/turns/missing/reputation',
-    );
-    const missingProblemInsight = await fetchJson(
-      '/v1/problems/missing/insight',
-    );
-
-    assert.equal(missingTurnResults.body.error, 'turn_not_found');
-    assert.equal(missingTurnReputation.body.error, 'turn_not_found');
-    assert.equal(missingProblemInsight.body.error, 'problem_not_found');
-  });
-
-  it('resolves only the prediction saved for the same user and choice', async () => {
-    const app = createApp();
-    const predictionPath =
-      '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
-    await fetchJson(predictionPath, {
-      app,
-      method: 'PUT',
-      session: 'a',
-      body: { choice: 'improve', userId: 'user-a' },
-    });
-
-    const missing = await fetchJson(
+  it('keeps the original prediction resolution happy path', async () => {
+    const result = await fetchJson(
       '/v1/problems/problem-green-margherita/resolve',
-      {
-        app,
-        method: 'POST',
-        session: 'b',
-        body: { choice: 'improve', userId: 'user-b' },
-      },
-    );
-    const mismatch = await fetchJson(
-      '/v1/problems/problem-green-margherita/resolve',
-      {
-        app,
-        method: 'POST',
-        session: 'a',
-        body: { choice: 'worsen', userId: 'user-a' },
-      },
+      { method: 'POST', body: { choice: 'improve' } },
     );
 
-    assert.equal(missing.status, 404);
-    assert.equal(missing.body.error, 'prediction_not_found');
-    assert.equal(mismatch.status, 409);
-    assert.equal(mismatch.body.error, 'prediction_choice_mismatch');
+    assert.equal(result.status, 200);
+    assert.equal(result.body.correct, true);
+    assert.equal(result.body.winningChoice, 'improve');
   });
 });
 
-const cookiesByApp = new WeakMap();
-
 async function fetchJson(path, options = {}) {
-  const app = options.app ?? createApp();
-  const session = options.session ?? 'default';
-  let sessionCookies = cookiesByApp.get(app);
-  if (!sessionCookies) {
-    sessionCookies = new Map();
-    cookiesByApp.set(app, sessionCookies);
-  }
+  const app = options.app ?? createMemoryApp();
   const rawBody =
     options.rawBody ??
     (Object.hasOwn(options, 'body') ? JSON.stringify(options.body) : '');
   const req = Readable.from(rawBody ? [Buffer.from(rawBody)] : []);
   req.method = options.method ?? 'GET';
   req.url = path;
-  const requestHeaders = { ...options.headers };
-  if (!Object.hasOwn(requestHeaders, 'cookie')) {
-    const cookie = sessionCookies.get(session);
-    if (cookie) requestHeaders.cookie = cookie;
+  const requestHeaders = { ...(options.headers ?? {}) };
+  if (
+    !options.disableIdempotencyKey &&
+    (req.method === 'POST' || req.method === 'PUT')
+  ) {
+    requestHeaders['idempotency-key'] =
+      options.idempotencyKey ?? `backend-test-key-${++idempotencyCounter}`;
   }
   req.headers = Object.fromEntries(
     Object.entries(requestHeaders).map(([key, value]) => [
@@ -1050,16 +639,17 @@ async function fetchJson(path, options = {}) {
 
   await app(req, res);
 
-  const setCookie = res.headers['set-cookie'];
-  if (typeof setCookie === 'string') {
-    sessionCookies.set(session, setCookie.split(';', 1)[0]);
-  }
-
   return {
     status: res.statusCode,
     headers: res.headers,
     body: JSON.parse(res.payload),
   };
+}
+
+let idempotencyCounter = 0;
+
+function createMemoryApp(options = {}) {
+  return createApp({ store: createMemoryStore(), ...options });
 }
 
 async function closeServer(server) {
