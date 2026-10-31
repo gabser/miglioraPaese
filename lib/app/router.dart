@@ -2,6 +2,9 @@ import 'package:fanta_comune/features/next_problems/presentation/proposal_receip
 import 'package:fanta_comune/features/next_problems/presentation/proposal_detail_page.dart';
 import 'package:fanta_comune/features/next_problems/domain/proposal_route_context.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
+import 'package:fanta_comune/core/models/municipality_catalog.dart';
+import 'package:fanta_comune/features/map/presentation/tuglie_map_page.dart';
 import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/features/boot/boot_screen.dart';
@@ -136,6 +139,23 @@ GoRouter buildRouter(AppPrefs appPrefs, AppConfig config) {
       ),
 
       GoRoute(path: '/board', builder: (context, state) => const BoardPage()),
+      GoRoute(
+        path: '/map',
+        redirect: (_, __) => config.tuglieMapEnabled ? null : '/home',
+        builder: (context, state) {
+          final query = state.uri.queryParametersAll['municipality'];
+          final id = query == null
+              ? MunicipalityCatalog.apiIdFor(appPrefs.municipalityId ?? '')
+              : query.length == 1
+              ? MunicipalityCatalog.apiIdFor(query.single)
+              : null;
+          return TuglieMapPage(
+            key: ValueKey('${state.uri}:${appPrefs.municipalityId}'),
+            municipalityId: id,
+          );
+        },
+      ),
+
       GoRoute(
         path: '/how-it-works',
         builder: (context, state) => const HowItWorksPage(),
@@ -294,6 +314,23 @@ GoRouter _buildFantasyRouter(AppPrefs appPrefs, AppConfig config) {
             preference: appPrefs.municipalityId,
           ).restrictToPilot(config.pilotMunicipalityId),
         ),
+      ),
+
+      GoRoute(
+        path: '/map',
+        redirect: (_, __) => config.tuglieMapEnabled ? null : '/squad',
+        builder: (context, state) {
+          final query = state.uri.queryParametersAll['municipality'];
+          final id = query == null
+              ? MunicipalityCatalog.apiIdFor(appPrefs.municipalityId ?? '')
+              : query.length == 1
+              ? MunicipalityCatalog.apiIdFor(query.single)
+              : null;
+          return TuglieMapPage(
+            key: ValueKey('${state.uri}:${appPrefs.municipalityId}'),
+            municipalityId: id,
+          );
+        },
       ),
 
       GoRoute(

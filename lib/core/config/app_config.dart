@@ -12,6 +12,11 @@ class AppConfig {
     required this.gameDataSource,
     required this.fantasyModeEnabled,
     this.fantasyDataSource = FantasyDataSource.mock,
+    this.tuglieMapEnabled = false,
+    this.mapTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    this.mapProviderAttribution = '',
+    this.mapProviderAttributionUrl = '',
+
     required Uri apiBaseUrl,
     String? pilotMunicipalityId,
     this.apiTimeout = const Duration(seconds: 8),
@@ -47,6 +52,17 @@ class AppConfig {
       apiBaseUrl: apiBaseUrl,
       pilotMunicipalityId: pilotMunicipalityId,
       fantasyModeEnabled: fantasyModeEnabled,
+      tuglieMapEnabled: const bool.fromEnvironment('TUGLIE_MAP_ENABLED'),
+      mapTileUrl: const String.fromEnvironment(
+        'MAP_TILE_URL',
+        defaultValue: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      ),
+      mapProviderAttribution: const String.fromEnvironment(
+        'MAP_PROVIDER_ATTRIBUTION',
+      ),
+      mapProviderAttributionUrl: const String.fromEnvironment(
+        'MAP_PROVIDER_ATTRIBUTION_URL',
+      ),
     );
   }
 
@@ -57,6 +73,10 @@ class AppConfig {
     String apiBaseUrl = 'http://localhost:8787',
     String? pilotMunicipalityId,
     bool fantasyModeEnabled = false,
+    bool tuglieMapEnabled = false,
+    String mapTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    String mapProviderAttribution = '',
+    String mapProviderAttributionUrl = '',
     Duration apiTimeout = const Duration(seconds: 8),
   }) {
     final nextProblemsSource = switch (nextProblemsDataSource
@@ -89,6 +109,10 @@ class AppConfig {
       gameDataSource: gameSource,
       fantasyDataSource: fantasySource,
       fantasyModeEnabled: fantasyModeEnabled,
+      tuglieMapEnabled: tuglieMapEnabled,
+      mapTileUrl: mapTileUrl,
+      mapProviderAttribution: mapProviderAttribution,
+      mapProviderAttributionUrl: mapProviderAttributionUrl,
       apiBaseUrl: Uri.parse(apiBaseUrl),
       pilotMunicipalityId: pilotMunicipalityId,
       apiTimeout: apiTimeout,
@@ -99,6 +123,10 @@ class AppConfig {
   final GameDataSource gameDataSource;
   final FantasyDataSource fantasyDataSource;
   final bool fantasyModeEnabled;
+  final bool tuglieMapEnabled;
+  final String mapTileUrl;
+  final String mapProviderAttribution;
+  final String mapProviderAttributionUrl;
   final Uri apiBaseUrl;
   final String? pilotMunicipalityId;
   final Duration apiTimeout;

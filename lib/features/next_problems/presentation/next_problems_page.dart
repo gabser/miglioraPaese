@@ -94,6 +94,18 @@ class _NextProblemsView extends StatelessWidget {
         ),
         title: const Text(VenialCopy.appTitle),
         actions: [
+          if (context.read<AppConfig?>()?.tuglieMapEnabled ?? false)
+            IconButton(
+              tooltip: 'Mappa / Elenco',
+              icon: const Icon(Icons.map_outlined),
+              onPressed: () => context.go(
+                ProposalRouteContext.location(
+                  '/map',
+                  routeContext.municipalityId,
+                ),
+              ),
+            ),
+
           IconButton(
             onPressed: () =>
                 _openProposalForm(context, routeContext.municipalityId),

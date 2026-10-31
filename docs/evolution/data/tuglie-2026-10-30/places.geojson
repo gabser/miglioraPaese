@@ -1,0 +1,364 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "osm:way/381917183",
+      "properties": {
+        "municipalityId": "tuglie",
+        "source": "OpenStreetMap",
+        "source_type": "way",
+        "source_id": 381917183,
+        "source_version": 3,
+        "source_updated_at": "2026-01-25T16:56:14Z",
+        "name": "Municipio di Tuglie",
+        "category": "townhall",
+        "source_tags": {
+          "amenity": "townhall",
+          "building": "yes",
+          "name": "Municipio di Tuglie",
+          "wikidata": "Q134690104"
+        },
+        "source_url": "https://www.openstreetmap.org/way/381917183",
+        "source_version_url": "https://www.openstreetmap.org/api/0.6/way/381917183/3",
+        "retrieved_on": "2026-10-30",
+        "license": "ODbL-1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "© OpenStreetMap contributors",
+        "coordinate_method": "polygon_centroid_lon_lat",
+        "verification_status": "source_checked_not_field_verified",
+        "quality_note": "Centroide derivato dalla superficie OSM; interno al poligono nel campione. Ingresso, accesso pubblico e precisione da verificare sul posto.",
+        "content_kind": "real_place",
+        "content_links": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.1017857,
+          40.0728851
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "osm:way/320163049",
+      "properties": {
+        "municipalityId": "tuglie",
+        "source": "OpenStreetMap",
+        "source_type": "way",
+        "source_id": 320163049,
+        "source_version": 4,
+        "source_updated_at": "2019-11-04T14:41:12Z",
+        "name": "Parco di Montegrappa",
+        "category": "park",
+        "source_tags": {
+          "leisure": "park",
+          "name": "Parco di Montegrappa",
+          "natural": "wood"
+        },
+        "source_url": "https://www.openstreetmap.org/way/320163049",
+        "source_version_url": "https://www.openstreetmap.org/api/0.6/way/320163049/4",
+        "retrieved_on": "2026-10-30",
+        "license": "ODbL-1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "© OpenStreetMap contributors",
+        "coordinate_method": "polygon_centroid_lon_lat",
+        "verification_status": "source_checked_not_field_verified",
+        "quality_note": "Centroide derivato dalla superficie OSM; interno al poligono nel campione. Ingresso, accesso pubblico e precisione da verificare sul posto.",
+        "content_kind": "real_place",
+        "content_links": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.0954104,
+          40.0794993
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "osm:way/741835763",
+      "properties": {
+        "municipalityId": "tuglie",
+        "source": "OpenStreetMap",
+        "source_type": "way",
+        "source_id": 741835763,
+        "source_version": 1,
+        "source_updated_at": "2019-11-04T08:58:32Z",
+        "name": "Piazzale Montegrappa",
+        "category": "park",
+        "source_tags": {
+          "leisure": "park",
+          "name": "Piazzale Montegrappa"
+        },
+        "source_url": "https://www.openstreetmap.org/way/741835763",
+        "source_version_url": "https://www.openstreetmap.org/api/0.6/way/741835763/1",
+        "retrieved_on": "2026-10-30",
+        "license": "ODbL-1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "© OpenStreetMap contributors",
+        "coordinate_method": "polygon_centroid_lon_lat",
+        "verification_status": "source_checked_not_field_verified",
+        "quality_note": "Centroide derivato dalla superficie OSM; interno al poligono nel campione. Ingresso, accesso pubblico e precisione da verificare sul posto.",
+        "content_kind": "real_place",
+        "content_links": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.0930864,
+          40.0787013
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "osm:way/403157109",
+      "properties": {
+        "municipalityId": "tuglie",
+        "source": "OpenStreetMap",
+        "source_type": "way",
+        "source_id": 403157109,
+        "source_version": 4,
+        "source_updated_at": "2025-02-06T17:20:55Z",
+        "name": "Santuario della Madonna del Montegrappa",
+        "category": "place_of_worship",
+        "source_tags": {
+          "addr:city": "Tuglie",
+          "addr:country": "IT",
+          "addr:hamlet": "Montegrappa",
+          "addr:postcode": "73058",
+          "addr:province": "LE",
+          "addr:street": "Piazzale Montegrappa",
+          "amenity": "place_of_worship",
+          "building": "church",
+          "name": "Santuario della Madonna del Montegrappa",
+          "religion": "christian",
+          "start_date": "1940",
+          "wikidata": "Q3949724"
+        },
+        "source_url": "https://www.openstreetmap.org/way/403157109",
+        "source_version_url": "https://www.openstreetmap.org/api/0.6/way/403157109/4",
+        "retrieved_on": "2026-10-30",
+        "license": "ODbL-1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "© OpenStreetMap contributors",
+        "coordinate_method": "polygon_centroid_lon_lat",
+        "verification_status": "source_checked_not_field_verified",
+        "quality_note": "Centroide derivato dalla superficie OSM; interno al poligono nel campione. Ingresso, accesso pubblico e precisione da verificare sul posto.",
+        "content_kind": "real_place",
+        "content_links": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.0928025,
+          40.0784685
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "osm:way/616896483",
+      "properties": {
+        "municipalityId": "tuglie",
+        "source": "OpenStreetMap",
+        "source_type": "way",
+        "source_id": 616896483,
+        "source_version": 4,
+        "source_updated_at": "2021-06-30T16:42:54Z",
+        "name": "Teatro Comunale di Tuglie",
+        "category": "theatre",
+        "source_tags": {
+          "addr:city": "Tuglie",
+          "addr:country": "IT",
+          "addr:hamlet": "Montegrappa",
+          "addr:housenumber": "76",
+          "addr:postcode": "73058",
+          "addr:province": "LE",
+          "addr:street": "Corso Cesare Vergine",
+          "amenity": "theatre",
+          "building": "yes",
+          "name": "Teatro Comunale di Tuglie"
+        },
+        "source_url": "https://www.openstreetmap.org/way/616896483",
+        "source_version_url": "https://www.openstreetmap.org/api/0.6/way/616896483/4",
+        "retrieved_on": "2026-10-30",
+        "license": "ODbL-1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "© OpenStreetMap contributors",
+        "coordinate_method": "polygon_centroid_lon_lat",
+        "verification_status": "source_checked_not_field_verified",
+        "quality_note": "Centroide derivato dalla superficie OSM; interno al poligono nel campione. Ingresso, accesso pubblico e precisione da verificare sul posto.",
+        "content_kind": "real_place",
+        "content_links": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.0914987,
+          40.0813249
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "osm:node/1765980022",
+      "properties": {
+        "municipalityId": "tuglie",
+        "source": "OpenStreetMap",
+        "source_type": "node",
+        "source_id": 1765980022,
+        "source_version": 4,
+        "source_updated_at": "2026-01-25T19:20:51Z",
+        "name": "Tuglie",
+        "category": "railway_station",
+        "source_tags": {
+          "name": "Tuglie",
+          "operator": "Ferrovie del Sud Est",
+          "operator:short": "FSE",
+          "public_transport": "station",
+          "railway": "station",
+          "wikidata": "Q86661907"
+        },
+        "source_url": "https://www.openstreetmap.org/node/1765980022",
+        "source_version_url": "https://www.openstreetmap.org/api/0.6/node/1765980022/4",
+        "retrieved_on": "2026-10-30",
+        "license": "ODbL-1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "© OpenStreetMap contributors",
+        "coordinate_method": "osm_node",
+        "verification_status": "source_checked_not_field_verified",
+        "quality_note": "Posizione del nodo OSM; precisione, permanenza del luogo e accessibilità da verificare sul posto.",
+        "content_kind": "real_place",
+        "content_links": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.1045325,
+          40.0701288
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "osm:node/6944584113",
+      "properties": {
+        "municipalityId": "tuglie",
+        "source": "OpenStreetMap",
+        "source_type": "node",
+        "source_id": 6944584113,
+        "source_version": 6,
+        "source_updated_at": "2023-07-15T10:52:08Z",
+        "name": "Menhir di Monteprino",
+        "category": "archaeological_site",
+        "source_tags": {
+          "addr:city": "Tuglie",
+          "addr:country": "IT",
+          "addr:hamlet": "Montegrappa",
+          "addr:housenumber": "5",
+          "addr:postcode": "73058",
+          "addr:province": "LE",
+          "addr:street": "Via Luigi Rizzo",
+          "archaeological_site": "megalith",
+          "historic": "archaeological_site",
+          "megalith_type": "menhir",
+          "name": "Menhir di Monteprino"
+        },
+        "source_url": "https://www.openstreetmap.org/node/6944584113",
+        "source_version_url": "https://www.openstreetmap.org/api/0.6/node/6944584113/6",
+        "retrieved_on": "2026-10-30",
+        "license": "ODbL-1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "© OpenStreetMap contributors",
+        "coordinate_method": "osm_node",
+        "verification_status": "source_checked_not_field_verified",
+        "quality_note": "Posizione del nodo OSM; precisione, permanenza del luogo e accessibilità da verificare sul posto.",
+        "content_kind": "real_place",
+        "content_links": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.0953782,
+          40.0775806
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "osm:node/11402806155",
+      "properties": {
+        "municipalityId": "tuglie",
+        "source": "OpenStreetMap",
+        "source_type": "node",
+        "source_id": 11402806155,
+        "source_version": 1,
+        "source_updated_at": "2023-12-08T09:17:41Z",
+        "name": "Centro Polivalente San Matteo",
+        "category": "social_facility",
+        "source_tags": {
+          "amenity": "social_facility",
+          "name": "Centro Polivalente San Matteo"
+        },
+        "source_url": "https://www.openstreetmap.org/node/11402806155",
+        "source_version_url": "https://www.openstreetmap.org/api/0.6/node/11402806155/1",
+        "retrieved_on": "2026-10-30",
+        "license": "ODbL-1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "© OpenStreetMap contributors",
+        "coordinate_method": "osm_node",
+        "verification_status": "source_checked_not_field_verified",
+        "quality_note": "Posizione del nodo OSM; precisione, permanenza del luogo e accessibilità da verificare sul posto.",
+        "content_kind": "real_place",
+        "content_links": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.0950997,
+          40.072561
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "osm:node/4805885721",
+      "properties": {
+        "municipalityId": "tuglie",
+        "source": "OpenStreetMap",
+        "source_type": "node",
+        "source_id": 4805885721,
+        "source_version": 1,
+        "source_updated_at": "2017-04-20T14:16:22Z",
+        "name": "Vivi L'Acqua",
+        "category": "drinking_water",
+        "source_tags": {
+          "amenity": "drinking_water",
+          "name": "Vivi L'Acqua",
+          "operator": "Acquedotto Pugliese - Cooperativa Comunità Melpignano"
+        },
+        "source_url": "https://www.openstreetmap.org/node/4805885721",
+        "source_version_url": "https://www.openstreetmap.org/api/0.6/node/4805885721/1",
+        "retrieved_on": "2026-10-30",
+        "license": "ODbL-1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "© OpenStreetMap contributors",
+        "coordinate_method": "osm_node",
+        "verification_status": "source_checked_not_field_verified",
+        "quality_note": "Posizione del nodo OSM; precisione, permanenza del luogo e accessibilità da verificare sul posto.",
+        "content_kind": "real_place",
+        "content_links": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.1041614,
+          40.0701981
+        ]
+      }
+    }
+  ]
+}

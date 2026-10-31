@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
+import 'package:fanta_comune/core/widgets/municipality_sign.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
@@ -37,8 +39,12 @@ class HomePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                MunicipalitySign(
+                  name: MunicipalityCatalog.displayNameFromId(municipalityId),
+                ),
+                const SizedBox(height: AppTokens.s8),
                 Text(
-                  'Comune: ${MunicipalityCatalog.displayNameFromId(municipalityId)} · Gioco delle previsioni',
+                  'Gioco delle previsioni',
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(height: AppTokens.s12),
@@ -205,6 +211,21 @@ class _MunicipalityActivationDashboard extends StatelessWidget {
         OutlinedButton(
           onPressed: () => context.push('/next-problems'),
           child: const Text(VenialCopy.activationSecondaryCta),
+        ),
+        if ((context.read<AppConfig?>()?.tuglieMapEnabled ?? false) &&
+            MunicipalityCatalog.apiIdFor(
+                  context.read<AppPrefs>().municipalityId ?? '',
+                ) ==
+                'tuglie')
+          OutlinedButton.icon(
+            onPressed: () => context.go('/map?municipality=tuglie'),
+            icon: const Icon(Icons.map_outlined),
+            label: const Text('Mappa / Elenco di Tuglie'),
+          ),
+        OutlinedButton.icon(
+          onPressed: () => context.push('/board'),
+          icon: const Icon(AppIcons.board),
+          label: const Text('Tabellone'),
         ),
       ],
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
@@ -106,6 +107,16 @@ class _BoardPageState extends State<BoardPage> {
               context.canPop() ? context.pop() : context.go('/play'),
         ),
         title: const Text(VenialCopy.boardTitle),
+        actions: [
+          if (context.read<AppConfig?>()?.tuglieMapEnabled ?? false)
+            TextButton.icon(
+              onPressed: () => context.go(
+                '/map?municipality=${MunicipalityCatalog.apiIdFor(context.read<AppPrefs>().municipalityId ?? '') ?? ''}',
+              ),
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('Mappa / Elenco'),
+            ),
+        ],
       ),
       body: SafeArea(
         child: MaxWidthContainer(
