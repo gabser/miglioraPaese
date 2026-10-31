@@ -5,7 +5,9 @@
 - Accettato dal decision owner: 14 luglio 2026.
 - Work package: `UC-00.4`.
 - Decision owner: proprietario del prodotto/repository.
-- Esecuzione: non avviata; richiede un comando separato del proprietario.
+- Esecuzione: `UC-02` avviato dal proprietario il 15 luglio 2026;
+  `UC-02.1` completato il 15 luglio; `UC-02.2` e `UC-02.3` completati il 16
+  luglio 2026.
 
 ## Contesto
 
@@ -22,9 +24,8 @@ livello ORM aggiuntivo.
 
 Adottare:
 
-1. `pg` 8.x come unico driver PostgreSQL runtime; all'apertura di `UC-02`
-   viene scelta una release 8.x esatta e registrata senza range nel manifest e
-   nel lockfile;
+1. `pg` 8.22.0 come unico driver PostgreSQL runtime, selezionato all'apertura
+   di `UC-02` e registrato senza range nel manifest e nel lockfile;
 2. `node-pg-migrate` 8.0.4 come tool di migrazione fissato senza range nel
    manifest e nel lockfile;
 3. SQL parametrizzato e mapper espliciti dietro porte repository applicative;
@@ -33,10 +34,11 @@ Adottare:
 6. strategia production forward-only con expand/backfill/contract e restore
    verificato per cambi distruttivi.
 
-L'accettazione di questa decisione non autorizza l'installazione dei pacchetti,
-la creazione di un database o l'introduzione di risorse cloud. La release esatta
-di `pg` 8.x viene selezionata e documentata all'apertura di `UC-02`, quindi
-installata con manifest e lockfile coerenti. Usare una versione diversa di
+L'accettazione iniziale di questa decisione non autorizzava l'installazione dei
+pacchetti, la creazione di un database o l'introduzione di risorse cloud. Il
+comando proprietario del 15 luglio 2026 ha aperto `UC-02`: `pg` 8.22.0 e'
+quindi installato con manifest e lockfile coerenti e il gate usa PostgreSQL
+17.10 reale ed effimero. Usare una versione diversa di
 `node-pg-migrate`, una nuova major di `pg`, un altro driver o un altro migration
 tool richiede prima un emendamento proprietario o un ADR sostitutivo. Gli
 aggiornamenti minor/patch di `pg` restano normali PR di dipendenza, ma fissano
@@ -177,6 +179,12 @@ Su PostgreSQL reale ed effimero, Node.js 24 e versioni fissate:
     timeout;
 14. eseguire backup/restore automatizzato prima dell'uscita del work package.
 
+Al termine di `UC-02.4`, i gate 1--13 applicabili alla storia corrente sono
+verificati su PostgreSQL reale. Non esistono migrazioni approvate che usino
+`noTransaction()`: il relativo gate resta obbligatorio prima di introdurne una
+e non viene marcato artificialmente come superato. Backup/restore e prova
+attraverso restart chiudono `UC-02.5` e l'intero work package.
+
 I test unitari continuano a usare adapter memory. Constraint, query,
 concorrenza e migrazioni non vengono validati con un database simulato.
 
@@ -253,6 +261,7 @@ L'accettazione del proprietario del 14 luglio 2026 copre:
 
 ## Riferimenti
 
+- [pg 8.22.0 su npm](https://www.npmjs.com/package/pg/v/8.22.0)
 - [node-postgres: pool](https://node-postgres.com/apis/pool)
 - [node-postgres: query parametrizzate](https://node-postgres.com/features/queries)
 - [node-postgres: transazioni](https://node-postgres.com/features/transactions)

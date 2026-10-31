@@ -1,13 +1,17 @@
+import { assertPublicProposalContent, assertSubmissionQuota, validateProposalReview } from '../domain/proposal-policy.js';
+import { newProposalSession, sessionHash, sessionIdentity, sessionRevoked, scopedSubmissionKey } from '../domain/proposal-session.js';
 import {
   canonicalMunicipalityId,
   createProblem,
   createSuggestedProblem,
-  normalizeTitle,
   statusToChoice,
 } from '../domain/catalog.js';
 import { httpError } from '../domain/errors.js';
+import { normalizeProposalLocation, proposalLocationLabel } from '../domain/proposal-location.js';
 
-export function createMemoryStore() {
+export function createMemoryStore({ clock = Date.now } = {}) {
+  if (typeof clock !== 'function') throw new TypeError('A server clock is required.');
+  const reviewHistory = [];
   const municipalities = new Map([
     [
       'castel-bolognese',
@@ -122,6 +126,62 @@ export function createMemoryStore() {
 
   const votesByProblem = new Map();
   const predictionsByTurn = new Map();
+  const idempotentWrites = new Map();
+  const sessions = new Map();
+
+  function createProposalSession() {
+    const session = newProposalSession();
+    sessions.set(session.tokenHash, { submissionScope: session.submissionScope, revoked: false });
+    return { token: session.token, submissionScope: session.submissionScope };
+  }
+
+  function getProposalSession(token,requestedScope=null) {
+    const session = sessions.get(sessionHash(token));
+    if (!session || session.revoked) throw sessionRevoked();
+    if(requestedScope!==null&&requestedScope!==session.submissionScope)throw httpError(404,'submission_scope_not_owned','The submission scope is not owned by this session.');
+    return { submissionScope: session.submissionScope };
+  }
+
+  function revokeProposalSession(token) {
+    const key = sessionHash(token);
+    const session = sessions.get(key);
+    if (!session) throw sessionRevoked();
+    session.revoked = true;
+    return { revoked: true };
+  }
+
+  function sessionInput(input) {
+    const { sessionToken, ...fields } = input;
+    if (!sessionToken) {
+      if (/^(?:session|account):/.test(fields.userId??'')) throw httpError(401, 'proposal_session_required', 'A valid proposal session is required.');
+      return fields;
+    }
+    const session = getProposalSession(sessionToken);
+    const municipalityId = fields.municipalityId===undefined
+      ? findTurn(fields.turnId).municipalityId : getMunicipality(fields.municipalityId).id;
+    return { ...fields, municipalityId, userId: sessionIdentity(session),
+      ...(fields.idempotencyKey ? { idempotencyKey: scopedSubmissionKey(
+        session.submissionScope, municipalityId, fields.idempotencyKey) } : {}) };
+  }
+
+  function lookupSubmission(input) {
+    getProposalSession(input.sessionToken);
+    const fields = sessionInput(input);
+    const record = idempotentWrites.get('submit_suggestion:' + fields.idempotencyKey);
+    if (!record) throw httpError(404, 'submission_not_found', 'Submission not found.');
+    return structuredClone(record.value);
+  }
+
+  function getOwnNextProblem(input) {
+    getProposalSession(input.sessionToken);
+    const fields = sessionInput(input);
+    const value = getNextProblem(fields);
+    if (value.submittedByUserId !== fields.userId) {
+      throw httpError(404, 'suggested_problem_not_found', 'Suggested problem not found.');
+    }
+    return value;
+  }
+
   let nextProblemCounter = 200;
 
   function getMunicipality(municipalityId) {
@@ -159,34 +219,55 @@ export function createMemoryStore() {
       items = items.filter((item) => {
         return (
           item.title.toLowerCase().includes(normalized) ||
-          item.shortDescription.toLowerCase().includes(normalized)
+          item.shortDescription.toLowerCase().includes(normalized) ||
+          (item.location !== null && proposalLocationLabel(item.location).toLowerCase().includes(normalized)) ||
+          (item.location?.reference ?? '').toLowerCase().includes(normalized)
         );
       });
     }
     return items.map((item) => withUserVote(item, userId));
   }
 
-  function submitNextProblem({
+  function submitNextProblem(input) {
+    const { idempotencyKey, location: rawLocation, ...fields } = sessionInput(input);
+    const location = normalizeProposalLocation(rawLocation);
+    const request = { ...fields, ...(location === null ? {} : { location }) };
+    return runIdempotentWrite(
+      'submit_suggestion',
+      idempotencyKey,
+      request,
+      () => submitNextProblemCore(request),
+    );
+  }
+
+  function getNextProblem({ municipalityId, problemId, userId = 'demo-user' }) {
+    const municipality = getMunicipality(municipalityId);
+    const items = nextProblemsByMunicipality.get(municipality.id) ?? [];
+    const problem = items.find((item) => item.id === problemId);
+    if (!problem) throw httpError(404, 'suggested_problem_not_found', 'Suggested problem not found.');
+    return withUserVote(problem, userId);
+  }
+
+  function submitNextProblemCore({
     municipalityId,
     title,
     description,
     category,
+    location = null,
     userId,
   }) {
     const municipality = getMunicipality(municipalityId);
+    assertPublicProposalContent({ title, description, location });
     const items = nextProblemsByMunicipality.get(municipality.id) ?? [];
-    const duplicate = items.some(
-      (item) => normalizeTitle(item.title) === normalizeTitle(title),
-    );
-    if (duplicate) {
-      throw httpError(409, 'duplicate_title', 'A suggestion with this title exists.');
-    }
-
+    const nowMs = clock();
+    assertSubmissionQuota(items.filter(item => item.submittedByUserId === userId).map(item => item.createdAt), nowMs);
     const created = createSuggestedProblem({
+      createdAt: new Date(nowMs).toISOString(),
       id: `suggested-${nextProblemCounter++}`,
       title,
       shortDescription: description,
       category,
+      location,
       status: 'pending',
       votesUp: 0,
       votesDown: 0,
@@ -197,7 +278,30 @@ export function createMemoryStore() {
     return withUserVote(created, userId);
   }
 
-  function voteNextProblem({ municipalityId, problemId, vote, userId }) {
+  function reviewSuggestion(input) {
+    const review = validateProposalReview(input);
+    const municipality = getMunicipality(input.municipalityId);
+    const items = nextProblemsByMunicipality.get(municipality.id) ?? [];
+    const item = items.find(value => value.id === input.problemId);
+    if (!item) throw httpError(404, 'suggested_problem_not_found', 'Suggested problem not found.');
+    if (item.status !== review.expectedStatus) throw httpError(409, 'review_conflict', 'The proposal state changed.');
+    const event = { ...review, municipalityId: municipality.id, problemId: item.id, reviewedAt: new Date(clock()).toISOString() };
+    item.status = review.targetStatus;
+    reviewHistory.push(event);
+    return withUserVote(item, input.userId ?? 'operator');
+  }
+
+  function voteNextProblem(input) {
+    const { idempotencyKey, ...request } = sessionInput(input);
+    return runIdempotentWrite(
+      'vote_suggestion',
+      idempotencyKey,
+      request,
+      () => voteNextProblemCore(request),
+    );
+  }
+
+  function voteNextProblemCore({ municipalityId, problemId, vote, userId }) {
     const municipality = getMunicipality(municipalityId);
     const items = nextProblemsByMunicipality.get(municipality.id) ?? [];
     const index = items.findIndex((item) => item.id === problemId);
@@ -210,6 +314,9 @@ export function createMemoryStore() {
     }
 
     const current = items[index];
+    if (current.status === 'rejected') {
+      throw httpError(404, 'suggested_problem_not_found', 'Suggested problem not found.');
+    }
     const userVotes = votesByProblem.get(problemId) ?? new Map();
     const previousVote = userVotes.get(userId) ?? 'none';
     let votesUp = current.votesUp;
@@ -266,7 +373,7 @@ export function createMemoryStore() {
           id: promotedId,
           key: suggestion.category,
           title: suggestion.title,
-          zoneName: 'Tema scelto dai cittadini',
+          zoneName: proposalLocationLabel(suggestion.location),
           status: 'stable',
           trendPercent: 0,
           updatedAt: new Date().toISOString(),
@@ -288,13 +395,25 @@ export function createMemoryStore() {
         : 'collectingSignals';
   }
 
-  function getPredictions({ turnId, userId }) {
+  function getPredictions({ turnId, userId, sessionToken = null }) {
+    if(sessionToken!==null)userId=sessionIdentity(getProposalSession(sessionToken));
+    else if(/^(?:session|account):/.test(userId??''))throw httpError(401,'proposal_session_required','A valid proposal session is required.');
     findTurn(turnId);
     const turnPredictions = predictionsByTurn.get(turnId) ?? new Map();
     return [...turnPredictions.values()].filter((item) => item.userId === userId);
   }
 
-  function upsertPrediction({
+  function upsertPrediction(input) {
+    const { idempotencyKey, ...request } = sessionInput(input);
+    return runIdempotentWrite(
+      'upsert_prediction',
+      idempotencyKey,
+      request,
+      () => upsertPredictionCore(request),
+    );
+  }
+
+  function upsertPredictionCore({
     turnId,
     problemId,
     userId,
@@ -340,6 +459,29 @@ export function createMemoryStore() {
     turnPredictions.set(id, prediction);
     predictionsByTurn.set(turnId, turnPredictions);
     return prediction;
+  }
+
+  function runIdempotentWrite(operation, idempotencyKey, request, callback) {
+    if (!idempotencyKey) return callback();
+    const recordKey = `${operation}:${idempotencyKey}`;
+    const fingerprint = JSON.stringify(request);
+    const existing = idempotentWrites.get(recordKey);
+    if (existing) {
+      if (existing.fingerprint !== fingerprint) {
+        throw httpError(
+          409,
+          'idempotency_key_reused',
+          'Idempotency-Key was already used for a different request.',
+        );
+      }
+      return structuredClone(existing.value);
+    }
+    const value = callback();
+    idempotentWrites.set(recordKey, {
+      fingerprint,
+      value: structuredClone(value),
+    });
+    return value;
   }
 
   function resolvePrediction({ problemId, choice }) {
@@ -409,11 +551,14 @@ export function createMemoryStore() {
   }
 
   return {
+    createProposalSession, getProposalSession, revokeProposalSession, lookupSubmission, getOwnNextProblem,
     getMunicipality,
     getCurrentTurn,
     listProblems,
     listNextProblems,
+    getNextProblem,
     submitNextProblem,
+    reviewSuggestion,
     voteNextProblem,
     getPredictions,
     upsertPrediction,

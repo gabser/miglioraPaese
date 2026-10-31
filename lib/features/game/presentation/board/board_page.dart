@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
+import 'package:fanta_comune/core/models/municipality_catalog.dart';
+import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
-import 'package:fanta_comune/core/theme/app_motion.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
@@ -23,19 +25,69 @@ class BoardPage extends StatefulWidget {
   State<BoardPage> createState() => _BoardPageState();
 }
 
+enum _BoardSort { updated, title, trend }
+
 class _BoardPageState extends State<BoardPage> {
   Future<_BoardSnapshot>? _snapshotFuture;
   String? _loadedMunicipalityId;
+  ProblemKey? _category;
+  ProblemStatus? _status;
+  _BoardSort _sort = _BoardSort.updated;
+  final _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _category = null;
+      _status = null;
+      _search.clear();
+    });
+  }
+
+  List<Problem> _visibleProblems(List<Problem> problems) {
+    final query = _search.text.trim().toLowerCase();
+    final items = problems
+        .where(
+          (problem) =>
+              (_category == null || problem.key == _category) &&
+              (_status == null || problem.status == _status) &&
+              (query.isEmpty ||
+                  '${problem.title} ${problem.zoneName ?? ''}'
+                      .toLowerCase()
+                      .contains(query)),
+        )
+        .toList();
+    items.sort(
+      (a, b) => switch (_sort) {
+        _BoardSort.updated => b.updatedAt.compareTo(a.updatedAt),
+        _BoardSort.title => a.title.toLowerCase().compareTo(
+          b.title.toLowerCase(),
+        ),
+        _BoardSort.trend => b.trendPercent.abs().compareTo(
+          a.trendPercent.abs(),
+        ),
+      },
+    );
+    return items;
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final prefs = context.read<AppPrefs>();
+    final prefs = context.watch<AppPrefs>();
     final municipalityId = prefs.municipalityId ?? 'demo';
     if (_snapshotFuture != null && _loadedMunicipalityId == municipalityId) {
       return;
     }
 
+    _category = null;
+    _status = null;
+    _search.clear();
     _loadedMunicipalityId = municipalityId;
     _snapshotFuture = _loadSnapshot(
       repository: context.read<GameRepository>(),
@@ -46,204 +98,262 @@ class _BoardPageState extends State<BoardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isCompact = MediaQuery.of(context).size.width < 600;
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            final navigator = Navigator.of(context);
-            if (navigator.canPop()) {
-              navigator.pop();
-            } else {
-              context.go('/play');
-            }
-          },
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/play'),
         ),
         title: const Text(VenialCopy.boardTitle),
+        actions: [
+          if (context.read<AppConfig?>()?.tuglieMapEnabled ?? false)
+            TextButton.icon(
+              onPressed: () => context.go(
+                '/map?municipality=${MunicipalityCatalog.apiIdFor(context.read<AppPrefs>().municipalityId ?? '') ?? ''}',
+              ),
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('Mappa / Elenco'),
+            ),
+        ],
       ),
       body: SafeArea(
         child: MaxWidthContainer(
-          child: Padding(
-            padding: EdgeInsets.all(isCompact ? AppTokens.s12 : AppTokens.s16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  VenialCopy.boardSubtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: AppTokens.s16),
-                Expanded(
-                  child: FutureBuilder<_BoardSnapshot>(
-                    future: _snapshotFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (snapshot.hasError) {
-                        return Center(
-                          child: Text(
-                            snapshot.error.toString(),
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        );
-                      }
-                      final data = snapshot.data;
-                      final items = data?.problems ?? const <Problem>[];
-                      if (items.isEmpty) {
-                        return const SingleChildScrollView(
-                          child: _BoardActivationEmpty(),
-                        );
-                      }
-
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isWide = constraints.maxWidth >= 1000;
-                          final gridCrossAxisCount = isWide
-                              ? 3
-                              : constraints.maxWidth < 430
-                              ? 1
-                              : 2;
-                          final tileExtent = isWide ? 216.0 : 208.0;
-                          final rows = (items.length / gridCrossAxisCount)
-                              .ceil();
-                          final boardFrameHeight =
-                              (rows * tileExtent) +
-                              ((rows - 1) * AppTokens.s16) +
-                              (AppTokens.s16 * 2) +
-                              (AppTokens.s8 * 2);
-
-                          final mainContent = Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _BoardNewsSection(snapshot: data),
-                              const SizedBox(height: AppTokens.s16),
-                              _BoardTokensSection(snapshot: data),
-                              const SizedBox(height: AppTokens.s16),
-                              if (isWide)
-                                Expanded(
-                                  child: _BoardFrame(
-                                    child: GridView.builder(
-                                      gridDelegate:
-                                          SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: gridCrossAxisCount,
-                                            crossAxisSpacing: AppTokens.s16,
-                                            mainAxisSpacing: AppTokens.s16,
-                                            mainAxisExtent: tileExtent,
-                                          ),
-                                      itemCount: items.length,
-                                      itemBuilder: (context, index) {
-                                        return _BoardTile(
-                                          problem: items[index],
-                                          prediction:
-                                              data?.predictionsByProblem[items[index]
-                                                  .id],
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                )
-                              else
-                                SizedBox(
-                                  height: boardFrameHeight,
-                                  child: _BoardFrame(
-                                    child: GridView.builder(
-                                      shrinkWrap: true,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      gridDelegate:
-                                          SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: gridCrossAxisCount,
-                                            crossAxisSpacing: AppTokens.s16,
-                                            mainAxisSpacing: AppTokens.s16,
-                                            mainAxisExtent: tileExtent,
-                                          ),
-                                      itemCount: items.length,
-                                      itemBuilder: (context, index) {
-                                        return _BoardTile(
-                                          problem: items[index],
-                                          prediction:
-                                              data?.predictionsByProblem[items[index]
-                                                  .id],
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              const SizedBox(height: AppTokens.s12),
-                              _BoardLegend(),
-                            ],
-                          );
-
-                          if (!isWide) {
-                            return SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  mainContent,
-                                  const SizedBox(height: AppTokens.s16),
-                                  _BoardSideCard(
-                                    title: VenialCopy.boardCardOfDayTitle,
-                                    body: VenialCopy.boardCardOfDayBody,
-                                    icon: Icons.auto_awesome_outlined,
-                                    onTap: () => context.go('/play'),
-                                  ),
-                                  const SizedBox(height: AppTokens.s16),
-                                  _BoardSideCard(
-                                    title: VenialCopy.boardShowcaseTitle,
-                                    body: VenialCopy.boardShowcaseBody,
-                                    icon: Icons.style_outlined,
-                                    onTap: () => context.go('/next-problems'),
-                                  ),
-                                ],
-                              ),
+          child: FutureBuilder<_BoardSnapshot>(
+            future: _snapshotFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return SingleChildScrollView(
+                  child: FcPanel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Il tabellone non è disponibile. Riprova tra poco.',
+                        ),
+                        TextButton(
+                          onPressed: () => setState(() {
+                            _snapshotFuture = _loadSnapshot(
+                              repository: context.read<GameRepository>(),
+                              prefs: context.read<AppPrefs>(),
+                              municipalityId: _loadedMunicipalityId!,
                             );
-                          }
-
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: mainContent),
-                              const SizedBox(width: AppTokens.s16),
-                              SizedBox(
-                                width: 280,
-                                child: Column(
-                                  children: [
-                                    _BoardSideCard(
-                                      title: VenialCopy.boardCardOfDayTitle,
-                                      body: VenialCopy.boardCardOfDayBody,
-                                      icon: Icons.auto_awesome_outlined,
-                                      onTap: () => context.go('/play'),
+                          }),
+                          child: const Text('Riprova'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              final data = snapshot.data!;
+              final visible = _visibleProblems(data.problems);
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppTokens.s16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FcSectionHeader(
+                        title:
+                            'Comune: ${MunicipalityCatalog.displayNameFromId(_loadedMunicipalityId!)}',
+                        subtitle:
+                            '${VenialCopy.boardSubtitle} · Gioco demo locale',
+                      ),
+                      const SizedBox(height: AppTokens.s16),
+                      if (data.problems.isEmpty)
+                        const _BoardActivationEmpty()
+                      else ...[
+                        _BoardNewsSection(snapshot: data),
+                        const SizedBox(height: AppTokens.s16),
+                        _BoardTokensSection(snapshot: data),
+                        const SizedBox(height: AppTokens.s16),
+                        TextField(
+                          key: const ValueKey('board-search'),
+                          controller: _search,
+                          decoration: const InputDecoration(
+                            labelText: 'Cerca problema o zona',
+                            prefixIcon: Icon(Icons.search),
+                          ),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: AppTokens.s12),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final fieldWidth = constraints.maxWidth < 700
+                                ? constraints.maxWidth
+                                : (constraints.maxWidth - AppTokens.s24) / 3;
+                            return Wrap(
+                              spacing: AppTokens.s12,
+                              runSpacing: AppTokens.s12,
+                              children: [
+                                SizedBox(
+                                  width: fieldWidth,
+                                  child: DropdownButtonFormField<ProblemKey>(
+                                    key: ValueKey(
+                                      'board-category-${_category?.name}',
                                     ),
-                                    const SizedBox(height: AppTokens.s16),
-                                    _BoardSideCard(
-                                      title: VenialCopy.boardShowcaseTitle,
-                                      body: VenialCopy.boardShowcaseBody,
-                                      icon: Icons.style_outlined,
-                                      onTap: () => context.go('/next-problems'),
+                                    initialValue: _category,
+                                    isExpanded: true,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Categoria',
                                     ),
-                                  ],
+                                    hint: const Text('Tutte le categorie'),
+                                    items: [
+                                      const DropdownMenuItem(
+                                        value: null,
+                                        child: Text('Tutte le categorie'),
+                                      ),
+                                      ...ProblemKey.values.map(
+                                        (key) => DropdownMenuItem(
+                                          value: key,
+                                          child: Text(
+                                            AppIcons.labelForProblemKey(key),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    onChanged: (value) =>
+                                        setState(() => _category = value),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
+                                SizedBox(
+                                  width: fieldWidth,
+                                  child: DropdownButtonFormField<ProblemStatus>(
+                                    key: ValueKey(
+                                      'board-status-${_status?.name}',
+                                    ),
+                                    initialValue: _status,
+                                    isExpanded: true,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Andamento',
+                                    ),
+                                    hint: const Text('Tutti gli andamenti'),
+                                    items: [
+                                      const DropdownMenuItem(
+                                        value: null,
+                                        child: Text('Tutti gli andamenti'),
+                                      ),
+                                      ...ProblemStatus.values.map(
+                                        (status) => DropdownMenuItem(
+                                          value: status,
+                                          child: Text(_statusLabel(status)),
+                                        ),
+                                      ),
+                                    ],
+                                    onChanged: (value) =>
+                                        setState(() => _status = value),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: fieldWidth,
+                                  child: DropdownButtonFormField<_BoardSort>(
+                                    key: const ValueKey('board-sort'),
+                                    initialValue: _sort,
+                                    isExpanded: true,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Ordina per',
+                                    ),
+                                    items: const [
+                                      DropdownMenuItem(
+                                        value: _BoardSort.updated,
+                                        child: Text('Ultimo aggiornamento'),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: _BoardSort.title,
+                                        child: Text('Titolo A–Z'),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: _BoardSort.trend,
+                                        child: Text('Variazione maggiore'),
+                                      ),
+                                    ],
+                                    onChanged: (value) =>
+                                        setState(() => _sort = value!),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: AppTokens.s16),
+                        Text(
+                          '${visible.length} di ${data.problems.length} problemi',
+                        ),
+                        const SizedBox(height: AppTokens.s12),
+                        if (visible.isEmpty)
+                          FcPanel(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Nessun problema corrisponde a ricerca e filtri.',
+                                ),
+                                TextButton(
+                                  key: const ValueKey('board-clear-filters'),
+                                  onPressed: _clearFilters,
+                                  child: const Text('Azzera ricerca e filtri'),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final largeText =
+                                  MediaQuery.textScalerOf(context).scale(14) >
+                                  20;
+                              final columns =
+                                  largeText || constraints.maxWidth < 650
+                                  ? 1
+                                  : constraints.maxWidth >= 1000
+                                  ? 3
+                                  : 2;
+                              final width =
+                                  (constraints.maxWidth -
+                                      AppTokens.s16 * (columns - 1)) /
+                                  columns;
+                              return Wrap(
+                                spacing: AppTokens.s16,
+                                runSpacing: AppTokens.s16,
+                                children: [
+                                  for (final problem in visible)
+                                    SizedBox(
+                                      width: width,
+                                      child: _BoardTile(
+                                        problem: problem,
+                                        prediction: data
+                                            .predictionsByProblem[problem.id],
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                        const SizedBox(height: AppTokens.s16),
+                        _BoardLegend(),
+                      ],
+                    ],
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
     );
   }
 }
+
+String _statusLabel(ProblemStatus status) => switch (status) {
+  ProblemStatus.improving => 'Migliora',
+  ProblemStatus.stable => 'Stabile',
+  ProblemStatus.worsening => 'Peggiora',
+};
 
 class _BoardActivationEmpty extends StatelessWidget {
   const _BoardActivationEmpty();
@@ -279,19 +389,27 @@ class _BoardActivationEmpty extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTokens.s16),
+          const FcSectionHeader(
+            title: 'Cosa puoi osservare',
+            subtitle:
+                'Indica la zona o il percorso che conosci; non serve una mappa.',
+          ),
+          const SizedBox(height: AppTokens.s12),
+          const Text(
+            'Buche e marciapiedi · illuminazione · rifiuti · verde pubblico · sicurezza dei percorsi',
+          ),
+          const SizedBox(height: AppTokens.s16),
           Wrap(
             spacing: AppTokens.s12,
             runSpacing: AppTokens.s8,
             children: [
-              FilledButton.icon(
+              FilledButton(
                 onPressed: () => context.go('/suggest-problem'),
-                icon: const Icon(AppIcons.play),
-                label: const Text(VenialCopy.activationPrimaryCta),
+                child: const Text(VenialCopy.activationPrimaryCta),
               ),
-              OutlinedButton.icon(
+              OutlinedButton(
                 onPressed: () => context.go('/next-problems'),
-                icon: const Icon(AppIcons.board),
-                label: const Text(VenialCopy.activationSecondaryCta),
+                child: const Text(VenialCopy.activationSecondaryCta),
               ),
             ],
           ),
@@ -301,209 +419,54 @@ class _BoardActivationEmpty extends StatelessWidget {
   }
 }
 
-class _BoardTile extends StatefulWidget {
+class _BoardTile extends StatelessWidget {
   const _BoardTile({required this.problem, required this.prediction});
-
   final Problem problem;
   final Prediction? prediction;
 
   @override
-  State<_BoardTile> createState() => _BoardTileState();
-}
-
-class _BoardTileState extends State<_BoardTile> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-
-  void _setHovered(bool value) {
-    if (_isHovered == value) return;
-    setState(() => _isHovered = value);
-  }
-
-  void _setPressed(bool value) {
-    if (_isPressed == value) return;
-    setState(() => _isPressed = value);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final statusColor = switch (widget.problem.status) {
-      ProblemStatus.improving => colorScheme.primary,
-      ProblemStatus.stable => colorScheme.tertiary,
-      ProblemStatus.worsening => colorScheme.error,
+    final color = switch (problem.status) {
+      ProblemStatus.improving => AppTokens.success,
+      ProblemStatus.stable => AppTokens.warning,
+      ProblemStatus.worsening => AppTokens.danger,
     };
-    final statusIcon = switch (widget.problem.status) {
-      ProblemStatus.improving => Icons.trending_up,
-      ProblemStatus.stable => Icons.drag_handle,
-      ProblemStatus.worsening => Icons.trending_down,
-    };
-
-    final tokenColor = _tokenColor(colorScheme, widget.prediction?.choice);
-
-    return MouseRegion(
-      onEnter: (_) => _setHovered(true),
-      onExit: (_) => _setHovered(false),
-      child: GestureDetector(
-        onTapDown: (_) => _setPressed(true),
-        onTapUp: (_) => _setPressed(false),
-        onTapCancel: () => _setPressed(false),
-        child: FcPanel(
-          padding: const EdgeInsets.all(AppTokens.s12),
-          elevated: true,
-          child: Stack(
-            children: [
-              Positioned(
-                right: -8,
-                top: -10,
-                child: _TileGlint(isVisible: _isHovered || _isPressed),
-              ),
-              if (tokenColor != null)
-                Positioned(
-                  top: AppTokens.s8,
-                  right: AppTokens.s8,
-                  child: _TokenChip(color: tokenColor),
-                ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(
-                        AppTokens.radiusSmall,
-                      ),
-                    ),
-                    child: Icon(
-                      AppIcons.forProblemKey(widget.problem.key),
-                      color: statusColor,
-                    ),
-                  ),
-                  const SizedBox(height: AppTokens.s8),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(AppTokens.s8),
-                        decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(AppTokens.radius),
-                        ),
-                        child: Icon(statusIcon, color: statusColor, size: 20),
-                      ),
-                      const SizedBox(width: AppTokens.s8),
-                      Expanded(
-                        child: Text(
-                          widget.problem.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTokens.s8),
-                  Row(
-                    children: [
-                      Icon(
-                        AppIcons.forProblemKey(widget.problem.key),
-                        size: 18,
-                      ),
-                      const SizedBox(width: AppTokens.s8),
-                      Expanded(
-                        child: Text(
-                          widget.problem.zoneName ??
-                              AppIcons.labelForProblemKey(widget.problem.key),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Wrap(
-                    spacing: AppTokens.s8,
-                    runSpacing: AppTokens.s4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTokens.s8,
-                          vertical: AppTokens.s8 / 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(AppTokens.radius),
-                        ),
-                        child: Text(
-                          VenialCopy.boardTileLabel,
-                          style: textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 150),
-                        child: Text(
-                          '${VenialCopy.boardZoneLabel}: ${widget.problem.zoneName ?? AppIcons.labelForProblemKey(widget.problem.key)}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
+    return FcPanel(
+      key: ValueKey('board-problem-${problem.id}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FcStatusChip(
+            label: _statusLabel(problem.status),
+            color: color,
+            icon: switch (problem.status) {
+              ProblemStatus.improving => Icons.trending_up,
+              ProblemStatus.stable => Icons.drag_handle,
+              ProblemStatus.worsening => Icons.trending_down,
+            },
           ),
-        ),
-      ),
-    );
-  }
-
-  Color? _tokenColor(ColorScheme colorScheme, PredictionChoice? choice) {
-    if (choice == null) return null;
-    return switch (choice) {
-      PredictionChoice.improve => colorScheme.primary,
-      PredictionChoice.stable => colorScheme.tertiary,
-      PredictionChoice.worsen => colorScheme.error,
-    };
-  }
-}
-
-class _TileGlint extends StatelessWidget {
-  const _TileGlint({required this.isVisible});
-
-  final bool isVisible;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return AnimatedOpacity(
-      duration: AppMotion.fast,
-      opacity: isVisible ? 1 : 0,
-      child: Transform.rotate(
-        angle: -0.2,
-        child: Container(
-          width: 32,
-          height: 10,
-          decoration: BoxDecoration(
-            color: colorScheme.primary.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+          const SizedBox(height: AppTokens.s12),
+          Text(problem.title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: AppTokens.s8),
+          Text('Zona: ${problem.zoneName ?? 'non specificata'}'),
+          Text('Categoria: ${AppIcons.labelForProblemKey(problem.key)}'),
+          const SizedBox(height: AppTokens.s8),
+          Text(
+            '${problem.trendPercent >= 0 ? '+' : ''}${problem.trendPercent}% andamento nella demo',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppTokens.foregroundFor(color),
+            ),
           ),
-        ),
+          if (prediction != null) ...[
+            const SizedBox(height: AppTokens.s8),
+            Text('La tua previsione: ${_choiceLabel(prediction!.choice)}'),
+          ],
+          const SizedBox(height: AppTokens.s12),
+          TextButton(
+            onPressed: () => context.go('/play'),
+            child: const Text('Vai al turno'),
+          ),
+        ],
       ),
     );
   }
@@ -754,9 +717,18 @@ class _BoardLegend extends StatelessWidget {
             spacing: AppTokens.s4,
             runSpacing: AppTokens.s4,
             children: [
-              _TokenChip(color: colorScheme.primary),
-              _TokenChip(color: colorScheme.tertiary),
-              _TokenChip(color: colorScheme.error),
+              _TokenChip(
+                color: colorScheme.primary,
+                label: VenialCopy.choiceImproveLabel,
+              ),
+              _TokenChip(
+                color: colorScheme.tertiary,
+                label: VenialCopy.choiceStableLabel,
+              ),
+              _TokenChip(
+                color: colorScheme.error,
+                label: VenialCopy.choiceWorsenLabel,
+              ),
             ],
           );
           final copy = Column(
@@ -778,7 +750,7 @@ class _BoardLegend extends StatelessWidget {
             ],
           );
 
-          if (constraints.maxWidth < 360) {
+          if (constraints.maxWidth < 700) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -813,84 +785,6 @@ class _BoardLegend extends StatelessWidget {
   }
 }
 
-class _BoardFrame extends StatelessWidget {
-  const _BoardFrame({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(AppTokens.s16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-        border: Border.all(color: colorScheme.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.08),
-            blurRadius: 28,
-            offset: const Offset(0, 16),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withOpacity(0.22),
-                borderRadius: BorderRadius.circular(AppTokens.radius),
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              margin: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppTokens.radius - 4),
-                border: Border.all(color: colorScheme.outlineVariant),
-              ),
-            ),
-          ),
-          Positioned(
-            left: -10,
-            top: -10,
-            child: _CornerChip(color: colorScheme.primary.withOpacity(0.15)),
-          ),
-          Positioned(
-            right: -12,
-            bottom: -12,
-            child: _CornerChip(color: colorScheme.tertiary.withOpacity(0.12)),
-          ),
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.all(AppTokens.s8),
-              child: child,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CornerChip extends StatelessWidget {
-  const _CornerChip({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    );
-  }
-}
-
 class _TokenChip extends StatelessWidget {
   const _TokenChip({required this.color, this.label});
 
@@ -920,63 +814,9 @@ class _TokenChip extends StatelessWidget {
           ),
           if (label != null) ...[
             const SizedBox(width: AppTokens.s8),
-            Text(label!, style: textTheme.labelSmall),
+            Flexible(child: Text(label!, style: textTheme.labelSmall)),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _BoardSideCard extends StatelessWidget {
-  const _BoardSideCard({
-    required this.title,
-    required this.body,
-    required this.icon,
-    this.onTap,
-  });
-
-  final String title;
-  final String body;
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final note = FcPanel(
-      padding: const EdgeInsets.all(AppTokens.s12),
-      tint: AppTokens.blue,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _BoardIconBadge(icon: icon, color: colorScheme.primary),
-          const SizedBox(height: AppTokens.s12),
-          Text(
-            title,
-            style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: AppTokens.s4),
-          Text(
-            body,
-            style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (onTap == null) return note;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        child: note,
       ),
     );
   }

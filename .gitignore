@@ -42,3 +42,6 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local Sentinelle checkpoints, synthetic database and verification artifacts
+/.sentinelle-local/

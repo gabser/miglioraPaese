@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:fanta_comune/core/persistence/local_data_store.dart';
 
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/models/problem_key.dart';
@@ -27,11 +28,35 @@ class MockGameRepository implements GameRepository {
   /// Crea un repository mock con dati fittizi.
   MockGameRepository({CivicLoopStore? civicLoopStore})
     : _civicLoopStore =
-          civicLoopStore ?? CivicLoopStore(currentUserId: _currentUserId);
+          civicLoopStore ?? CivicLoopStore(currentUserId: _currentUserId) {
+    _initialProblems = List<Problem>.of(_problems);
+    _civicLoopStore.addResetListener(_onLocalReset);
+  }
 
   static const _latency = Duration(milliseconds: 250);
   static const _currentUserId = 'user:self';
   final CivicLoopStore _civicLoopStore;
+  late final List<Problem> _initialProblems;
+
+  void _onLocalReset() {
+    _predictions.clear();
+    _results.clear();
+    _insightCache.clear();
+    _insightHistoryCache.clear();
+    _reflectionQuestionCache.clear();
+    _criticalInsightsCache.clear();
+    _reputationHistoryCache = null;
+    _reputation = const ReputationScore(
+      totalPoints: 0,
+      accuracy: 0,
+      predictionsCount: 0,
+    );
+    _problems
+      ..clear()
+      ..addAll(_initialProblems);
+  }
+
+  void dispose() => _civicLoopStore.removeResetListener(_onLocalReset);
   final Turn _currentTurn = Turn(
     id: 'turn-2024-09',
     startAt: DateTime.now().subtract(const Duration(days: 5)),
@@ -127,7 +152,11 @@ class MockGameRepository implements GameRepository {
   );
 
   Future<T> _withDelay<T>(T Function() body) async {
+    if (_civicLoopStore.resetting) throw const LocalDataResetException();
+    final epoch = _civicLoopStore.epoch;
     await Future.delayed(_latency);
+    if (epoch != _civicLoopStore.epoch || _civicLoopStore.resetting)
+      throw const LocalDataResetException();
     return body();
   }
 
@@ -789,6 +818,9 @@ class MockGameRepository implements GameRepository {
     return _withDelay(() {
       if (_hasActiveTurn(municipalityId)) {
         return MunicipalityActivationState.active;
+      }
+      if (_civicLoopStore.proposedCount(municipalityId) > 0) {
+        return MunicipalityActivationState.collectingSignals;
       }
       return MunicipalityCatalog.activationStateFor(municipalityId);
     });

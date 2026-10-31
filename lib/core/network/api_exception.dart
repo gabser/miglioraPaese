@@ -12,6 +12,8 @@ class ApiException implements Exception {
     required this.code,
     required this.message,
     this.statusCode,
+    this.retryAfterSeconds,
+    this.fieldErrors = const {},
     this.cause,
   });
 
@@ -39,6 +41,8 @@ class ApiException implements Exception {
   final String code;
   final String message;
   final int? statusCode;
+  final int? retryAfterSeconds;
+  final Map<String, String> fieldErrors;
   final Object? cause;
 
   bool get isRetryable =>

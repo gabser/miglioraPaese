@@ -1,4 +1,4 @@
-import { httpError } from '../domain/errors.js';
+import { httpError, fieldError } from '../domain/errors.js';
 
 export function requireText(value, field, maxLength = null) {
   if (typeof value !== 'string' || value.trim().length === 0) {
@@ -27,7 +27,7 @@ export function optionalText(value, field, maxLength) {
 
 export function requireEnum(value, values, field) {
   if (typeof value !== 'string' || !values.has(value)) {
-    throw httpError(400, 'invalid_field', `${field} is invalid.`);
+    throw fieldError(field, 'invalid_choice', `${field} is invalid.`);
   }
   return value;
 }
@@ -51,4 +51,16 @@ export function requireEnumArray(value, values, field, maxItems) {
     );
   }
   return value;
+}
+
+export function requireIdempotencyKey(value) {
+  const key = requireText(value, 'Idempotency-Key', 160);
+  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{7,159}$/.test(key)) {
+    throw httpError(
+      400,
+      'invalid_field',
+      'Idempotency-Key must contain 8-160 safe ASCII characters.',
+    );
+  }
+  return key;
 }

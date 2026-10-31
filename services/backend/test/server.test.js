@@ -7,7 +7,11 @@ import { createApp, createMemoryStore, startServer } from '../src/server.js';
 
 describe('backend HTTP contract', () => {
   it('starts a real server on an ephemeral port and serves health', async () => {
-    const server = startServer({ port: 0, host: '127.0.0.1' });
+    const server = startServer({
+      env: { DATA_STORE: 'memory' },
+      port: 0,
+      host: '127.0.0.1',
+    });
     try {
       await once(server, 'listening');
       const address = server.address();
@@ -18,14 +22,14 @@ describe('backend HTTP contract', () => {
       );
       assert.equal(response.status, 200);
       assert.match(response.headers.get('content-type'), /^application\/json/);
-      assert.deepEqual(await response.json(), { status: 'ok' });
+      const health=await response.json();assert.equal(health.status,'ok');assert.equal(health.candidateId,null);assert.equal(health.persistence,'memory');
     } finally {
       await closeServer(server);
     }
   });
 
   it('accepts canonical municipality slugs and legacy Flutter aliases', async () => {
-    const app = createApp();
+    const app = createMemoryApp();
     const canonical = await fetchJson(
       '/v1/municipalities/bologna/activation',
       { app },
@@ -69,8 +73,15 @@ describe('backend HTTP contract', () => {
     });
   });
 
+  it('requires explicit composition instead of falling back to MemoryStore', () => {
+    assert.throws(
+      () => createApp(),
+      /createApp requires an explicit application or store/,
+    );
+  });
+
   it('promotes an approved suggestion into a card and activates the town', async () => {
-    const app = createApp();
+    const app = createMemoryApp();
     const created = await fetchJson(
       '/v1/municipalities/castel-bolognese/next-problems',
       {
@@ -121,7 +132,7 @@ describe('backend HTTP contract', () => {
   });
 
   it('computes myVote independently for each client-provided user id', async () => {
-    const app = createApp();
+    const app = createMemoryApp();
     const created = await fetchJson(
       '/v1/municipalities/castel-bolognese/next-problems',
       {
@@ -161,6 +172,78 @@ describe('backend HTTP contract', () => {
     assert.equal(itemB.myVote, 'none');
   });
 
+  it('replays idempotent votes once and rejects key reuse with new input', async () => {
+    const app = createMemoryApp();
+    const created = await fetchJson(
+      '/v1/municipalities/castel-bolognese/next-problems',
+      {
+        app,
+        method: 'POST',
+        idempotencyKey: 'memory-submit-replay-0001',
+        body: {
+          title: 'Voto retry safe',
+          description: 'La stessa intenzione non deve essere applicata due volte.',
+          category: 'safety',
+          userId: 'user-retry',
+        },
+      },
+    );
+    const path =
+      '/v1/municipalities/castel-bolognese/next-problems/' +
+      created.body.id +
+      '/votes';
+    const options = {
+      app,
+      method: 'POST',
+      idempotencyKey: 'memory-vote-replay-0001',
+      body: { vote: 'up', userId: 'user-retry' },
+    };
+    const first = await fetchJson(path, options);
+    const replay = await fetchJson(path, options);
+    const reused = await fetchJson(path, {
+      ...options,
+      body: { vote: 'down', userId: 'user-retry' },
+    });
+
+    assert.deepEqual(replay.body, first.body);
+    assert.equal(first.body.myVote, 'up');
+    assert.equal(first.body.votesUp, 1);
+    assert.equal(reused.status, 409);
+    assert.equal(reused.body.error, 'idempotency_key_reused');
+  });
+
+  it('requires a valid Idempotency-Key for state-changing repository routes', async () => {
+    const missing = await fetchJson(
+      '/v1/municipalities/bologna/next-problems',
+      {
+        method: 'POST',
+        disableIdempotencyKey: true,
+        body: {
+          title: 'Senza chiave',
+          description: 'Richiesta non retry-safe.',
+          category: 'green',
+        },
+      },
+    );
+    const invalid = await fetchJson(
+      '/v1/municipalities/bologna/next-problems',
+      {
+        method: 'POST',
+        idempotencyKey: 'short',
+        body: {
+          title: 'Chiave corta',
+          description: 'Richiesta non valida.',
+          category: 'green',
+        },
+      },
+    );
+
+    assert.equal(missing.status, 400);
+    assert.equal(missing.body.error, 'invalid_field');
+    assert.equal(invalid.status, 400);
+    assert.equal(invalid.body.error, 'invalid_field');
+  });
+
   it('supports loopback and configured CORS origins with preflight', async () => {
     const loopback = await fetchJson(
       '/v1/municipalities/bologna/next-problems',
@@ -177,8 +260,12 @@ describe('backend HTTP contract', () => {
       loopback.headers['access-control-allow-origin'],
       'http://localhost:7357',
     );
+    assert.match(
+      loopback.headers['access-control-allow-headers'],
+      /Idempotency-Key/,
+    );
 
-    const configuredApp = createApp({
+    const configuredApp = createMemoryApp({
       allowedOrigins: ['https://pilot.example'],
     });
     const configured = await fetchJson(
@@ -288,7 +375,7 @@ describe('backend HTTP contract', () => {
   });
 
   it('locks the prediction choice while allowing metadata updates', async () => {
-    const app = createApp();
+    const app = createMemoryApp();
     const path =
       '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
     const first = await fetchJson(path, {
@@ -318,8 +405,8 @@ describe('backend HTTP contract', () => {
     assert.equal(changed.body.error, 'prediction_locked');
   });
 
-  it('returns stable JSON errors for malformed JSON, duplicates and missing data', async () => {
-    const app = createApp();
+  it('returns stable JSON errors and accepts titles describing distinct proposals', async () => {
+    const app = createMemoryApp();
     const malformed = await fetchJson(
       '/v1/municipalities/bologna/next-problems',
       { app, method: 'POST', rawBody: '{' },
@@ -349,14 +436,14 @@ describe('backend HTTP contract', () => {
 
     assert.equal(malformed.status, 400);
     assert.equal(malformed.body.error, 'invalid_json');
-    assert.equal(duplicate.status, 409);
-    assert.equal(duplicate.body.error, 'duplicate_title');
+    assert.equal(duplicate.status, 201);
+    assert.equal(duplicate.body.title, 'Tema   con   spazi');
     assert.equal(missing.status, 404);
     assert.equal(missing.body.error, 'municipality_not_found');
   });
 
   it('filters suggested problems by positive status and text query', async () => {
-    const app = createApp();
+    const app = createMemoryApp();
     await fetchJson('/v1/municipalities/bologna/next-problems', {
       app,
       method: 'POST',
@@ -387,7 +474,7 @@ describe('backend HTTP contract', () => {
   });
 
   it('preserves vote switching, toggle removal and promotion rollback', async () => {
-    const app = createApp();
+    const app = createMemoryApp();
     const created = await fetchJson(
       '/v1/municipalities/castel-bolognese/next-problems',
       {
@@ -468,7 +555,7 @@ describe('backend HTTP contract', () => {
   });
 
   it('lists only predictions owned by the selected client-provided user id', async () => {
-    const app = createApp();
+    const app = createMemoryApp();
     const path =
       '/v1/turns/turn-bologna-today/predictions/problem-green-margherita';
     await fetchJson(path, {
@@ -510,15 +597,23 @@ describe('backend HTTP contract', () => {
 });
 
 async function fetchJson(path, options = {}) {
-  const app = options.app ?? createApp();
+  const app = options.app ?? createMemoryApp();
   const rawBody =
     options.rawBody ??
     (Object.hasOwn(options, 'body') ? JSON.stringify(options.body) : '');
   const req = Readable.from(rawBody ? [Buffer.from(rawBody)] : []);
   req.method = options.method ?? 'GET';
   req.url = path;
+  const requestHeaders = { ...(options.headers ?? {}) };
+  if (
+    !options.disableIdempotencyKey &&
+    (req.method === 'POST' || req.method === 'PUT')
+  ) {
+    requestHeaders['idempotency-key'] =
+      options.idempotencyKey ?? `backend-test-key-${++idempotencyCounter}`;
+  }
   req.headers = Object.fromEntries(
-    Object.entries(options.headers ?? {}).map(([key, value]) => [
+    Object.entries(requestHeaders).map(([key, value]) => [
       key.toLowerCase(),
       value,
     ]),
@@ -549,6 +644,12 @@ async function fetchJson(path, options = {}) {
     headers: res.headers,
     body: JSON.parse(res.payload),
   };
+}
+
+let idempotencyCounter = 0;
+
+function createMemoryApp(options = {}) {
+  return createApp({ store: createMemoryStore(), ...options });
 }
 
 async function closeServer(server) {

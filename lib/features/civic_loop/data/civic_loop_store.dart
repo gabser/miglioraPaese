@@ -1,4 +1,12 @@
 import 'dart:math';
+import 'dart:convert';
+import 'package:fanta_comune/core/network/api_exception.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_submission_intent.dart';
+import 'package:flutter/foundation.dart';
+import 'package:fanta_comune/core/persistence/local_data_store.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_scope.dart';
+import 'package:fanta_comune/features/next_problems/data/suggested_problem_mapper.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_location.dart';
 
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/models/problem_key.dart';
@@ -10,20 +18,91 @@ import 'package:fanta_comune/features/next_problems/domain/suggested_problem_sta
 import 'package:fanta_comune/features/next_problems/domain/vote_choice.dart';
 
 class CivicLoopStore {
-  CivicLoopStore({required this.currentUserId});
+  CivicLoopStore({
+    required String currentUserId,
+    LocalDataStore? localData,
+    String Function()? storageKey,
+    String Function()? userId,
+  }) : _currentUserId = currentUserId,
+       _localData = localData,
+       _storageKey = storageKey ?? (() => 'civic_loop_mock_v1'),
+       _userId = userId {
+    _seenEpoch = epoch;
+    _localData?.addListener(_onLocalData);
+  }
 
   static const promotionThreshold = 1;
 
-  final String currentUserId;
+  final String _currentUserId;
+  final String Function()? _userId;
+  String get currentUserId => _userId?.call() ?? _currentUserId;
+  final LocalDataStore? _localData;
+  final String Function() _storageKey;
+  int _seenEpoch = 0;
+  int _loadedRevision = -1;
+  int _memoryEpoch = 0;
+  final List<VoidCallback> _resetListeners = [];
+  void addResetListener(VoidCallback listener) => _resetListeners.add(listener);
+  void removeResetListener(VoidCallback listener) =>
+      _resetListeners.remove(listener);
+  int get epoch => _localData?.epoch ?? _memoryEpoch;
+  bool get resetting => _localData?.resetting ?? false;
   final Map<String, List<SuggestedProblem>> _cacheByMunicipality = {};
   final Map<String, Map<String, VoteChoice>> _votesByProblem = {};
-  int _counter = 100;
+  final Map<String, Map<String, Object?>> _submissions = {};
+  void _onLocalData() {
+    if (_seenEpoch == epoch) return;
+    _seenEpoch = epoch;
+    _cacheByMunicipality.clear();
+    _votesByProblem.clear();
+    _submissions.clear();
+    _loadedRevision = -1;
+    for (final listener in List<VoidCallback>.of(_resetListeners)) {
+      listener();
+    }
+  }
+
+  void resetMemory() {
+    _memoryEpoch++;
+    _onLocalData();
+  }
+
+  void _load() {
+    final storage = _localData;
+    if (storage == null || _loadedRevision == storage.revision) return;
+    final value = storage.read(_storageKey());
+    _restore(value);
+    _loadedRevision = storage.revision;
+  }
+
+  Future<SuggestedProblem> _mutate(
+    SuggestedProblem Function(CivicLoopStore) change,
+  ) async {
+    final storage = _localData;
+    if (storage == null) return change(this);
+    final capturedEpoch = epoch;
+    final result = await storage.mutate(_storageKey(), (value) {
+      final candidate = CivicLoopStore(currentUserId: currentUserId);
+      try {
+        candidate._restore(value);
+        final result = change(candidate);
+        return LocalDataMutation(candidate._snapshot(), result);
+      } finally {
+        candidate.dispose();
+      }
+    }, expectedEpoch: capturedEpoch);
+    _loadedRevision = -1;
+    _load();
+    return result;
+  }
 
   List<SuggestedProblem> listNextProblems({
     required String municipalityId,
     String? query,
     SuggestedProblemStatus? status,
   }) {
+    _load();
+    municipalityId = ProposalScope.canonicalMunicipality(municipalityId);
     final items = _cacheByMunicipality.putIfAbsent(
       municipalityId,
       () => _seedProblems(municipalityId),
@@ -38,41 +117,154 @@ class CivicLoopStore {
       filtered = filtered.where(
         (item) =>
             item.title.toLowerCase().contains(normalizedQuery) ||
-            item.shortDescription.toLowerCase().contains(normalizedQuery),
+            item.shortDescription.toLowerCase().contains(normalizedQuery) ||
+            (item.location?.displayLabel.toLowerCase().contains(
+                  normalizedQuery,
+                ) ??
+                false) ||
+            (item.location?.reference?.toLowerCase().contains(
+                  normalizedQuery,
+                ) ??
+                false),
       );
     }
 
     return filtered
         .map(
           (item) => item.copyWith(
-            myVote: _votesByProblem[item.id]?[currentUserId] ?? VoteChoice.none,
+            myVote:
+                _votesByProblem[_voteKey(
+                  municipalityId,
+                  item.id,
+                )]?[currentUserId] ??
+                VoteChoice.none,
           ),
         )
         .toList(growable: false);
   }
 
-  SuggestedProblem submitSuggestedProblem({
+  Future<SuggestedProblem> submitSuggestedProblem({
     required String municipalityId,
     required String title,
     required String description,
     required ProblemKey category,
+    ProposalLocation? location,
+  }) => _mutate(
+    (candidate) => candidate._submitSuggestedProblem(
+      municipalityId: municipalityId,
+      title: title,
+      description: description,
+      category: category,
+      location: location,
+    ),
+  );
+
+  String _submissionKey(ProposalSubmissionIntent intent) => jsonEncode([
+    intent.submissionScope,
+    intent.scope.municipalityId,
+    intent.idempotencyKey,
+  ]);
+
+  Future<SuggestedProblem> submitIntent(ProposalSubmissionIntent intent) {
+    if (_localData != null && intent.scope.namespace != _localData.namespace) {
+      return Future.error(const LocalDataResetException());
+    }
+    return _mutate((candidate) {
+      final key = _submissionKey(intent);
+      final prior = candidate._submissions[key];
+      final payload = jsonEncode(intent.payload);
+      if (prior != null) {
+        if (prior['payload'] != payload) {
+          throw const ApiException(
+            kind: ApiExceptionKind.response,
+            statusCode: 409,
+            code: 'idempotency_key_reused',
+            message: 'La chiave appartiene a un altro invio.',
+          );
+        }
+        return SuggestedProblemMapper.fromResponse(prior['receipt']);
+      }
+      final problem = candidate._submitSuggestedProblem(
+        municipalityId: intent.scope.municipalityId,
+        title: intent.title,
+        description: intent.description,
+        category: intent.category,
+        location: intent.location,
+      );
+      candidate._submissions[key] = {
+        'payload': payload,
+        'receipt': SuggestedProblemMapper.toJson(problem),
+      };
+      return problem;
+    });
+  }
+
+  SuggestedProblem lookupIntent(ProposalSubmissionIntent intent) {
+    if (_localData != null && intent.scope.namespace != _localData.namespace) {
+      throw const LocalDataResetException();
+    }
+    _load();
+    final prior = _submissions[_submissionKey(intent)];
+    if (prior == null) {
+      throw const ApiException(
+        kind: ApiExceptionKind.response,
+        statusCode: 404,
+        code: 'submission_not_found',
+        message: 'Invio non trovato.',
+      );
+    }
+    return SuggestedProblemMapper.fromResponse(prior['receipt']);
+  }
+
+  SuggestedProblem getOwnSuggestedProblem({
+    required String municipalityId,
+    required String problemId,
+    required String submissionScope,
   }) {
+    _load();
+    final municipality = ProposalScope.canonicalMunicipality(municipalityId);
+    final owned = _submissions.entries.any((entry) {
+      final key = jsonDecode(entry.key) as List;
+      final receipt = SuggestedProblemMapper.fromResponse(
+        entry.value['receipt'],
+      );
+      return key[0] == submissionScope &&
+          key[1] == municipality &&
+          receipt.id == problemId;
+    });
+    if (owned) {
+      for (final item in listNextProblems(municipalityId: municipality)) {
+        if (item.id == problemId) return item;
+      }
+    }
+    throw const ApiException(
+      kind: ApiExceptionKind.response,
+      statusCode: 404,
+      code: 'suggested_problem_not_found',
+      message: 'Proposta non trovata.',
+    );
+  }
+
+  SuggestedProblem _submitSuggestedProblem({
+    required String municipalityId,
+    required String title,
+    required String description,
+    required ProblemKey category,
+    ProposalLocation? location,
+  }) {
+    municipalityId = ProposalScope.canonicalMunicipality(municipalityId);
     final items = _cacheByMunicipality.putIfAbsent(
       municipalityId,
       () => _seedProblems(municipalityId),
     );
-    final normalizedTitle = _normalizeTitle(title);
-    final hasDuplicate = items.any(
-      (item) => _normalizeTitle(item.title) == normalizedTitle,
-    );
-    if (hasDuplicate) {
-      throw Exception('duplicate_title');
-    }
-
     final problem = SuggestedProblem(
-      id: 'custom_${_counter++}',
-      title: title,
-      shortDescription: description,
+      id: 'custom_${newLocalId()}',
+      title: ProposalLimits.text(title, ProposalLimits.title),
+      shortDescription: ProposalLimits.text(
+        description,
+        ProposalLimits.description,
+      ),
+      location: location,
       category: category,
       createdAt: DateTime.now(),
       status: SuggestedProblemStatus.pending,
@@ -86,15 +278,28 @@ class CivicLoopStore {
       ),
     );
     items.insert(0, problem);
-    _votesByProblem[problem.id] = {};
+    _votesByProblem[_voteKey(municipalityId, problem.id)] = {};
     return problem;
   }
 
-  SuggestedProblem voteSuggestedProblem({
+  Future<SuggestedProblem> voteSuggestedProblem({
+    required String municipalityId,
+    required String problemId,
+    required VoteChoice vote,
+  }) => _mutate(
+    (candidate) => candidate._voteSuggestedProblem(
+      municipalityId: municipalityId,
+      problemId: problemId,
+      vote: vote,
+    ),
+  );
+
+  SuggestedProblem _voteSuggestedProblem({
     required String municipalityId,
     required String problemId,
     required VoteChoice vote,
   }) {
+    municipalityId = ProposalScope.canonicalMunicipality(municipalityId);
     final items = _cacheByMunicipality.putIfAbsent(
       municipalityId,
       () => _seedProblems(municipalityId),
@@ -105,7 +310,10 @@ class CivicLoopStore {
     }
 
     final current = items[index];
-    final votesForProblem = _votesByProblem.putIfAbsent(problemId, () => {});
+    final votesForProblem = _votesByProblem.putIfAbsent(
+      _voteKey(municipalityId, problemId),
+      () => {},
+    );
     final previousVote = votesForProblem[currentUserId] ?? VoteChoice.none;
     var votesUp = current.votesUp;
     var votesDown = current.votesDown;
@@ -145,6 +353,8 @@ class CivicLoopStore {
   }
 
   List<SuggestedProblem> confirmedThemes(String municipalityId) {
+    _load();
+    municipalityId = ProposalScope.canonicalMunicipality(municipalityId);
     final items = _cacheByMunicipality.putIfAbsent(
       municipalityId,
       () => _seedProblems(municipalityId),
@@ -163,6 +373,7 @@ class CivicLoopStore {
   }
 
   Problem? problemByCardId(String problemId) {
+    _load();
     for (final items in _cacheByMunicipality.values) {
       for (final item in items) {
         if (_cardIdFor(item.id) == problemId &&
@@ -179,6 +390,8 @@ class CivicLoopStore {
   }
 
   int proposedCount(String municipalityId) {
+    _load();
+    municipalityId = ProposalScope.canonicalMunicipality(municipalityId);
     return _cacheByMunicipality
         .putIfAbsent(municipalityId, () => _seedProblems(municipalityId))
         .length;
@@ -250,12 +463,10 @@ class CivicLoopStore {
       id: _cardIdFor(suggestion.id),
       key: suggestion.category,
       title: suggestion.title,
-      zoneName: 'Tema scelto dai cittadini',
+      zoneName: suggestion.location?.displayLabel ?? 'Luogo non indicato',
       status: status,
       trendPercent: trend,
-      updatedAt: DateTime.now().subtract(
-        Duration(hours: 1 + random.nextInt(8)),
-      ),
+      updatedAt: suggestion.createdAt,
     );
   }
 
@@ -329,7 +540,7 @@ class CivicLoopStore {
           ? SuggestedProblemStatus.approved
           : SuggestedProblemStatus.pending;
       return SuggestedProblem(
-        id: 'seed_$index',
+        id: 'seed_${base64Url.encode(utf8.encode(municipalityId)).replaceAll('=', '')}_$index',
         title: title,
         shortDescription: description,
         category: category,
@@ -349,7 +560,139 @@ class CivicLoopStore {
 
   String _cardIdFor(String suggestionId) => 'proposal_$suggestionId';
 
-  String _normalizeTitle(String value) {
-    return value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  String _voteKey(String municipalityId, String id) =>
+      jsonEncode([municipalityId, id]);
+
+  Map<String, Object?> _snapshot() => {
+    'version': 2,
+    'submissions': _submissions,
+    'municipalities': _cacheByMunicipality.map(
+      (key, items) => MapEntry(
+        key,
+        items
+            .map(
+              (item) => {
+                'id': item.id,
+                'title': item.title,
+                'shortDescription': item.shortDescription,
+                'location': item.location?.toJson(),
+                'category': item.category.name,
+                'createdAt': item.createdAt.toUtc().toIso8601String(),
+                'status': item.status.name,
+                'votesUp': item.votesUp,
+                'votesDown': item.votesDown,
+                'myVote': 'none',
+                'submittedByDisplayName': item.submittedByDisplayName,
+                'promotionRule': {
+                  'threshold': item.promotionRule.threshold,
+                  'scopeLabel': item.promotionRule.scopeLabel,
+                  'reason': item.promotionRule.reason,
+                },
+              },
+            )
+            .toList(),
+      ),
+    ),
+    'votes': _votesByProblem.map(
+      (key, values) =>
+          MapEntry(key, values.map((user, vote) => MapEntry(user, vote.name))),
+    ),
+  };
+
+  void _restore(Object? value) {
+    final municipalities = <String, List<SuggestedProblem>>{};
+    final votes = <String, Map<String, VoteChoice>>{};
+    final submissions = <String, Map<String, Object?>>{};
+    if (value != null) {
+      try {
+        if (value is! Map<String, dynamic> ||
+            !((value['version'] == 1 && value.length == 3) ||
+                (value['version'] == 2 &&
+                    value.length == 4 &&
+                    value['submissions'] is Map<String, dynamic>)) ||
+            value['municipalities'] is! Map<String, dynamic> ||
+            value['votes'] is! Map<String, dynamic>) {
+          throw const LocalDataCorruptException();
+        }
+        for (final entry
+            in (value['municipalities'] as Map<String, dynamic>).entries) {
+          if (ProposalScope.canonicalMunicipality(entry.key) != entry.key ||
+              entry.value is! List)
+            throw const LocalDataCorruptException();
+          final items = (entry.value as List)
+              .map(SuggestedProblemMapper.fromResponse)
+              .toList();
+          if (items.map((item) => item.id).toSet().length != items.length ||
+              items.any(
+                (item) =>
+                    item.votesUp < 0 ||
+                    item.votesDown < 0 ||
+                    item.promotionRule.threshold <= 0,
+              ))
+            throw const LocalDataCorruptException();
+          municipalities[entry.key] = items;
+        }
+        for (final entry in (value['votes'] as Map<String, dynamic>).entries) {
+          final scope = jsonDecode(entry.key);
+          if (scope is! List ||
+              scope.length != 2 ||
+              scope.any((part) => part is! String) ||
+              entry.value is! Map<String, dynamic> ||
+              !(municipalities[scope[0]]?.any((item) => item.id == scope[1]) ??
+                  false))
+            throw const LocalDataCorruptException();
+          votes[entry.key] = (entry.value as Map<String, dynamic>).map((
+            user,
+            raw,
+          ) {
+            final vote = VoteChoice.values.byName(raw as String);
+            if (user.isEmpty || vote == VoteChoice.none)
+              throw const LocalDataCorruptException();
+            return MapEntry(user, vote);
+          });
+        }
+        if (value['version'] == 2) {
+          for (final entry
+              in (value['submissions'] as Map<String, dynamic>).entries) {
+            final key = jsonDecode(entry.key);
+            final record = entry.value;
+            if (key is! List ||
+                key.length != 3 ||
+                key.any((part) => part is! String || part.isEmpty) ||
+                record is! Map<String, dynamic> ||
+                record.length != 2 ||
+                record['payload'] is! String) {
+              throw const LocalDataCorruptException();
+            }
+            final receipt = SuggestedProblemMapper.fromResponse(
+              record['receipt'],
+            );
+            if (!(municipalities[key[1]]?.any(
+                  (problem) => problem.id == receipt.id,
+                ) ??
+                false)) {
+              throw const LocalDataCorruptException();
+            }
+            submissions[entry.key] = Map<String, Object?>.from(record);
+          }
+        }
+      } catch (_) {
+        throw const LocalDataCorruptException();
+      }
+    }
+    _cacheByMunicipality
+      ..clear()
+      ..addAll(municipalities);
+    _votesByProblem
+      ..clear()
+      ..addAll(votes);
+    _submissions
+      ..clear()
+      ..addAll(submissions);
+  }
+
+  void dispose() {
+    _localData?.removeListener(_onLocalData);
+    _resetListeners.clear();
   }
 }

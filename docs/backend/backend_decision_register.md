@@ -2,12 +2,11 @@
 
 ## Stato
 
-- Data consolidamento: 14 luglio 2026.
+- Ultimo aggiornamento: 16 luglio 2026.
 - Decision owner: proprietario del prodotto/repository.
-- Work package decisionale: `UC-00`.
-- Stato: decisioni consolidate; `UC-01` completato il 14 luglio 2026.
-- Prossimo work package eseguibile: `UC-02`, soltanto dopo un nuovo comando del
-  proprietario.
+- Work package in esecuzione: `UC-02`.
+- Stato: decisioni consolidate; `UC-01` e `UC-02.1`--`UC-02.4` completati.
+- Prossima unita' eseguibile: `UC-02.5`, backup, restore e gate completo.
 
 Questo registro riassume gli ADR accettati e distingue le decisioni gia' prese
 da quelle intenzionalmente rinviate. In caso di conflitto, il testo completo
@@ -17,7 +16,7 @@ del relativo ADR resta autorevole.
 
 | ADR | Scelta consolidata | Guardrail principali |
 | --- | --- | --- |
-| [ADR-0001](adr/0001-postgresql-access-and-migrations.md) | PostgreSQL tramite `pg` 8.x senza ORM; `node-pg-migrate` 8.0.4; porte repository e migrazioni forward-only | Versioni senza range, ledger append-only dei checksum applicati, ruolo di attestazione separato, pool entro il 70% del limite, timeout numerici e restore drill prima di ogni `contract` distruttivo |
+| [ADR-0001](adr/0001-postgresql-access-and-migrations.md) | PostgreSQL tramite `pg` 8.22.0 senza ORM; `node-pg-migrate` 8.0.4; porte repository e migrazioni forward-only | Versioni senza range, ledger append-only dei checksum applicati, ruolo di attestazione separato, pool entro il 70% del limite, timeout numerici e restore drill prima di ogni `contract` distruttivo |
 | [ADR-0002](adr/0002-anonymous-identity-sessions-and-authorization.md) | Principal server-side, token opachi, otto recovery code, ruoli separati e cancellazione fail-toward-deletion | Promessa di recupero limitata a codici validi, cutover `userId` coordinato, test browser reali, AAL2, dual-control, quorum di due admin, recovery offline e gate privacy prima del pilot |
 | [ADR-0003](adr/0003-local-and-zero-cost-remote-prototype.md) | Locale autorevole; remoto gratuito opzionale e provider ancora aperto | Costo zero senza overage, pubblico read-only oppure fixture-only ristretto, soli dati applicativi sintetici, evidenza free entro 30 giorni, teardown, nessuna garanzia operativa e nuovo ADR hosting prima di `UC-09` |
 
@@ -26,26 +25,25 @@ del relativo ADR resta autorevole.
 Questi punti non sono impliciti e non possono essere scelti durante
 l'implementazione senza il relativo gate:
 
-1. release esatta di `pg` nella major 8: selezionata e fissata all'apertura di
-   `UC-02`, con il gate previsto da ADR-0001;
-2. provider AAL2 degli operatori e policy privacy/legale di retention,
+1. provider AAL2 degli operatori e policy privacy/legale di retention,
    anonimizzazione e backup: obbligatori prima del pilot;
-3. provider del remote-prototype gratuito: eventuale shortlist e PoC separati,
+2. provider del remote-prototype gratuito: eventuale shortlist e PoC separati,
    seguiti da approvazione esplicita prima di creare ogni risorsa;
-4. provider, regioni, budget, DPA, HA, RPO/RTO, backup e osservabilita' di
+3. provider, regioni, budget, DPA, HA, RPO/RTO, backup e osservabilita' di
    staging/pilot: nuovo ADR accettato tra `UC-08` e `UC-09`;
-5. qualsiasi piano a pagamento o con rischio di addebito: nuova decisione del
+4. qualsiasi piano a pagamento o con rischio di addebito: nuova decisione del
    proprietario, mai upgrade automatico.
 
 ## Confine dell'autorizzazione
 
-Il proprietario ha autorizzato e chiuso `UC-01`; questa autorizzazione non si
-estende ai work package successivi. Fino a un nuovo comando non vengono
-avviati:
+Il proprietario ha autorizzato `UC-02` il 15 luglio 2026. L'autorizzazione
+copre il database locale, le dipendenze fissate da ADR-0001 e le cinque
+micro-sessioni del work package; non si estende ai work package successivi.
+Fino a un nuovo comando non vengono avviati:
 
-- `UC-02`--`UC-10` o modifiche applicative collegate;
-- installazione di dipendenze di produzione;
-- creazione di database, account, registry, app, bucket, domini o secret;
+- `UC-03`--`UC-10` o modifiche applicative collegate;
+- dipendenze o database estranei a `UC-02`;
+- account, registry, app, bucket, domini o secret esterni;
 - inserimento di metodi di pagamento o assunzione di costi;
 - deploy locali esposti, tunnel o remote-prototype;
 - trattamento di dati o account appartenenti a persone reali.
@@ -89,3 +87,20 @@ cambia uno dei suoi elementi sostanziali, per esempio:
   bloccanti, 34 test passati e build web release riuscita.
 - Nessuna dipendenza di produzione, risorsa esterna, credenziale, dato reale o
   spesa introdotta.
+
+## Evidenza di avanzamento UC-02
+
+- `UC-02.1`: schema reversibile, versioni fissate, manifest SHA-256 e ledger
+  append-only verificati su PostgreSQL 17 reale.
+- `UC-02.2`: `DATA_STORE` obbligatorio, pool e timeout numerici, seed
+  locale/test separati, mapper fail-closed e letture PostgreSQL per Comuni,
+  turni, problemi, proposte e previsioni.
+- `UC-02.3`: proposta, voto/promozione/attivazione e previsione usano un solo
+  client per transazione; rollback e traduzione SQLSTATE sono verificati.
+- `UC-02.4`: chiavi idempotenti persistite nella transazione, retry Flutter con
+  chiave stabile, voto/previsione concorrenti, fault injection, due runner,
+  recovery transazionale e gate append-only sono verificati.
+- Nessun fallback da PostgreSQL a `MemoryStore`: letture e scritture
+  autorizzate usano esclusivamente l'adapter selezionato.
+- Pool runtime unico per composition root e shutdown verificato; nessuna
+  migrazione o seed viene eseguito implicitamente all'avvio HTTP.

@@ -8,8 +8,8 @@ Ultracode oltre lo scaffold locale descritto in
 
 Le decisioni di `UC-00` sono state consolidate il 14 luglio 2026 nel
 [registro decisioni backend](backend_decision_register.md). `UC-00` e `UC-01`
-sono chiusi; `UC-02`--`UC-10` non sono ancora avviati e richiedono un nuovo
-comando del proprietario.
+sono chiusi; il proprietario ha avviato `UC-02` il 15 luglio 2026 e la prima
+micro-sessione e' completa. `UC-03`--`UC-10` non sono ancora autorizzati.
 
 L'obiettivo non e' rendere pubblico lo scaffold in-memory esistente, ma
 costruire un pilot limitato e realmente utilizzabile da uno o due Comuni:
@@ -349,7 +349,22 @@ Il completamento di `UC-00.7` ha chiuso il work package `UC-00` il 14 luglio
 
 `UC-01` e' stato chiuso il 14 luglio 2026. Il file `src/server.js` e' ora un
 composition root; il contratto `/v1`, gli enum e gli error code sono rimasti
-invariati. `UC-02` resta fuori dall'autorizzazione corrente.
+invariati.
+
+### Sequenza eseguibile di UC-02
+
+| Unita' | Risultato principale | Gate di uscita | Stato |
+| --- | --- | --- | --- |
+| `UC-02.1` | Schema iniziale, migrazione reversibile, versioni fissate e ledger checksum append-only | PostgreSQL reale parte da vuoto, una seconda `up` non ha pending, vincoli principali e `down/up` sono verificati; test HTTP invariati | `complete` |
+| `UC-02.2` | Porte asincrone, seed locale separato e letture PostgreSQL | Mapper stretti e letture di Comuni, turni, problemi, proposte e previsioni passano su PostgreSQL reale senza cambiare response HTTP | `complete` |
+| `UC-02.3` | Scritture PostgreSQL e transazioni | Proposte, voti e previsioni sono atomici; errori SQL sono tradotti in error code applicativi stabili | `complete` |
+| `UC-02.4` | Concorrenza, rollback e immutabilita' della storia | Runner concorrenti, failure injection, doppio voto, lock e gate append-only sono verificati | `complete` |
+| `UC-02.5` | Backup, restore e gate completo | Restore automatizzato, restart persistente, documentazione operativa e quality gate completo sono verdi | `pending` |
+
+`UC-02.1` e' stato chiuso il 15 luglio 2026; `UC-02.2`--`UC-02.4` il 16
+luglio 2026. L'handoff verificabile e il prossimo incarico sono in
+[UC-02 execution log](uc02_execution_log.md). Nessuna micro-sessione e'
+attualmente `in_progress`; la prossima unita' eseguibile e' `UC-02.5`.
 
 Gli ADR nascono in stato `proposed`. La scelta raccomandata non diventa
 `accepted` senza approvazione del proprietario, in particolare quando implica

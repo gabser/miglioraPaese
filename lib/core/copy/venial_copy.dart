@@ -100,7 +100,7 @@ class VenialCopy {
   static const activationSubtitle =
       'Qui non ci sono ancora carte civiche. Possiamo iniziare dai primi segnali del posto.';
   static const activationGoal =
-      'Obiettivo leggero: 5 contributi per aprire il primo turno civico.';
+      'Nel prototipo basta 1 approvazione netta per portare una proposta nel turno.';
   static const activationPrimaryCta = 'Proponi il primo tema';
   static const activationSecondaryCta = 'Vedi temi proposti';
   static const activationOfficialHint =
@@ -234,7 +234,7 @@ class VenialCopy {
   static const nextProblemsSortSplit = 'Divisivi';
   static const nextProblemsPendingHelper =
       'In valutazione: vediamo se entra in gioco.';
-  static const nextProblemsPromotionTitle = 'Regola di ingresso';
+  static const nextProblemsPromotionTitle = 'Regola del prototipo';
   static const nextProblemsPromotionComplete =
       'Soglia raggiunta: puo\' entrare nelle carte del turno.';
   static const nextProblemsPromotionMissingSingular =
@@ -244,15 +244,15 @@ class VenialCopy {
   static const nextProblemsProposedBy = 'Proposto da';
   static const nextProblemsVotedSnack = 'Segnato.';
 
-  static const suggestTitle = 'Proponi un tema';
+  static const suggestTitle = 'Proponi un problema';
   static const suggestSubtitle = 'E\' solo un suggerimento, senza formalita\'.';
   static const suggestOfficialHint = 'Non e\' una segnalazione ufficiale.';
   static const suggestRibbonLabel = 'Nuova proposta';
   static const suggestTitleHint = 'Titolo breve';
   static const suggestDescriptionHint =
-      'Descrivi in 140 caratteri, anche telegrafico.';
+      'Descrivi il problema e perché è importante.';
   static const suggestCategoryLabel = 'Categoria';
-  static const suggestSubmit = 'Mettilo in lista';
+  static const suggestSubmit = 'Invia proposta';
   static const suggestReviewHint =
       'Va in valutazione. Se piace, entra in gioco.';
   static const suggestSuccess = 'Ok, in valutazione.';

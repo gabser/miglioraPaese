@@ -16,7 +16,7 @@ Le modifiche rilevanti al progetto sono documentate in questo file seguendo
 
 ### Modificato
 
-- Flutter fissato alla versione `3.44.2` per sviluppo e CI;
+- Flutter fissato alla versione `3.47.5` per sviluppo e CI;
 - backend CI aggiornato a Node.js 24;
 - metadati locali degli IDE esclusi dal repository.
 - contratto backend aggiornato a OpenAPI 0.2.0 con schemi response/error;

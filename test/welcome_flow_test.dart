@@ -59,5 +59,8 @@ void main() {
 
     expect(find.text('Milano'), findsOneWidget);
     expect(find.text('Roma'), findsOneWidget);
+    // Completa le risposte mock già partite prima di lasciare il profilo.
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
   });
 }

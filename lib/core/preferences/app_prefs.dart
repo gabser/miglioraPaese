@@ -1,4 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
+import 'package:fanta_comune/core/persistence/local_data_store.dart';
+import 'package:fanta_comune/core/persistence/browser_namespace.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fanta_comune/features/profile/domain/perspective_role.dart';
 
@@ -6,9 +9,41 @@ import 'package:fanta_comune/features/profile/domain/perspective_role.dart';
 /// utilizzato anche per notificare i listener quando cambiano i dati.
 class AppPrefs extends ChangeNotifier {
   /// Crea un'istanza usando le [SharedPreferences] già disponibili.
-  AppPrefs(this._prefs);
+  AppPrefs(this._prefs, {LocalDataStore? dataStore}) {
+    final key =
+        'proposal_local_data_v1:${base64Url.encode(utf8.encode(browserNamespace()))}';
+    localData =
+        dataStore ??
+        LocalDataStore(
+          backend: SharedPreferencesLocalBackend(
+            _prefs,
+            resetKeys: {
+              key,
+              _motionDemoKey,
+              _municipalityKey,
+              _cynicOnboardingKey,
+              _warmWelcomeKey,
+              _lastSuggestedAtKey,
+              _userIdKey,
+              _activePerspectiveKey,
+              _perspectiveChangesKey,
+              _lastSeenTurnIdKey,
+              _insightSignaturesKey,
+            },
+          ),
+          key: key,
+        );
+  }
 
+  /// Explicit runtime profile pin, independent of user preferences and resets.
+  String? configuredMunicipalityId;
   final SharedPreferences _prefs;
+  late final LocalDataStore localData;
+
+  /// API composition installs revocation before the local reset barrier.
+  Future<void> Function()? beforeClearAll;
+  bool _sessionUnrecoverable = false;
+  bool get sessionUnrecoverable => _sessionUnrecoverable;
 
   static const _motionDemoKey = 'motion_demo_enabled';
   static const _municipalityKey = 'municipality_id';
@@ -26,10 +61,8 @@ class AppPrefs extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final existingUserId = prefs.getString(_userIdKey);
     if (existingUserId == null || existingUserId.isEmpty) {
-      await prefs.setString(
-        _userIdKey,
-        'user_${DateTime.now().millisecondsSinceEpoch}',
-      );
+      if (!await prefs.setString(_userIdKey, 'user_${newLocalId()}'))
+        throw const LocalDataWriteException();
     }
     return AppPrefs(prefs);
   }
@@ -39,16 +72,19 @@ class AppPrefs extends ChangeNotifier {
 
   /// Aggiorna la preferenza della demo di motion.
   Future<void> setMotionDemoEnabled(bool value) async {
-    await _prefs.setBool(_motionDemoKey, value);
+    await _checkedWrite(() => _prefs.setBool(_motionDemoKey, value));
     notifyListeners();
   }
 
   /// Restituisce l'identificativo del Comune selezionato, se presente.
-  String? get municipalityId => _prefs.getString(_municipalityKey);
+  String? get municipalityId =>
+      configuredMunicipalityId ?? _prefs.getString(_municipalityKey);
 
   /// Imposta l'identificativo del Comune selezionato e notifica i listener.
   Future<void> setMunicipalityId(String municipalityId) async {
-    await _prefs.setString(_municipalityKey, municipalityId);
+    await _checkedWrite(
+      () => _prefs.setString(_municipalityKey, municipalityId),
+    );
     notifyListeners();
   }
 
@@ -58,7 +94,7 @@ class AppPrefs extends ChangeNotifier {
 
   /// Aggiorna il flag di completamento dell'onboarding "cinico".
   Future<void> setHasSeenCynicOnboarding(bool value) async {
-    await _prefs.setBool(_cynicOnboardingKey, value);
+    await _checkedWrite(() => _prefs.setBool(_cynicOnboardingKey, value));
     notifyListeners();
   }
 
@@ -68,7 +104,7 @@ class AppPrefs extends ChangeNotifier {
 
   /// Aggiorna il flag di completamento del benvenuto "umano".
   Future<void> setHasSeenWarmWelcome(bool value) async {
-    await _prefs.setBool(_warmWelcomeKey, value);
+    await _checkedWrite(() => _prefs.setBool(_warmWelcomeKey, value));
     notifyListeners();
   }
 
@@ -88,7 +124,9 @@ class AppPrefs extends ChangeNotifier {
 
   /// Aggiorna la lente attiva.
   Future<void> setActivePerspective(PerspectiveRole role) async {
-    await _prefs.setString(_activePerspectiveKey, role.name);
+    await _checkedWrite(
+      () => _prefs.setString(_activePerspectiveKey, role.name),
+    );
     notifyListeners();
   }
 
@@ -98,7 +136,9 @@ class AppPrefs extends ChangeNotifier {
   /// Incrementa il conteggio dei cambi di lente.
   Future<void> incrementPerspectiveChangesCount() async {
     final current = perspectiveChangesCount;
-    await _prefs.setInt(_perspectiveChangesKey, current + 1);
+    await _checkedWrite(
+      () => _prefs.setInt(_perspectiveChangesKey, current + 1),
+    );
     notifyListeners();
   }
 
@@ -108,11 +148,11 @@ class AppPrefs extends ChangeNotifier {
   /// Salva l'ultimo turno risolto che l'utente ha rivisitato.
   Future<void> setLastSeenTurnId(String? value) async {
     if (value == null || value.isEmpty) {
-      await _prefs.remove(_lastSeenTurnIdKey);
+      await _checkedWrite(() => _prefs.remove(_lastSeenTurnIdKey));
       notifyListeners();
       return;
     }
-    await _prefs.setString(_lastSeenTurnIdKey, value);
+    await _checkedWrite(() => _prefs.setString(_lastSeenTurnIdKey, value));
     notifyListeners();
   }
 
@@ -133,14 +173,14 @@ class AppPrefs extends ChangeNotifier {
   /// Salva le firme degli insight viste dall'utente.
   Future<void> setInsightSignatures(Map<String, String> signatures) async {
     if (signatures.isEmpty) {
-      await _prefs.remove(_insightSignaturesKey);
+      await _checkedWrite(() => _prefs.remove(_insightSignaturesKey));
       notifyListeners();
       return;
     }
     final encoded = signatures.entries
         .map((e) => '${e.key}|${e.value}')
         .join(';');
-    await _prefs.setString(_insightSignaturesKey, encoded);
+    await _checkedWrite(() => _prefs.setString(_insightSignaturesKey, encoded));
     notifyListeners();
   }
 
@@ -153,7 +193,9 @@ class AppPrefs extends ChangeNotifier {
 
   /// Aggiorna la data dell'ultima proposta inviata.
   Future<void> setLastSuggestedAt(DateTime value) async {
-    await _prefs.setInt(_lastSuggestedAtKey, value.millisecondsSinceEpoch);
+    await _checkedWrite(
+      () => _prefs.setInt(_lastSuggestedAtKey, value.millisecondsSinceEpoch),
+    );
     notifyListeners();
   }
 
@@ -164,9 +206,67 @@ class AppPrefs extends ChangeNotifier {
     return DateTime.now().difference(last) > cooldown;
   }
 
+  /// Fantasy documents share the reset barrier and atomic storage with proposals.
+  String? get fantasyStateJson => localData.read('fantasy-state-v1') as String?;
+
+  Future<void> setFantasyStateJson(String value) => localData.mutate<void>(
+    'fantasy-state-v1',
+    (_) => LocalDataMutation(value, null),
+  );
+
+  String? fantasyReceipt(String scope) =>
+      localData.read('fantasy-receipt:$scope') as String?;
+
+  Future<void> setFantasyReceipt(
+    String scope,
+    String? value, {
+    int? expectedEpoch,
+  }) => localData.mutate<void>(
+    'fantasy-receipt:$scope',
+    (_) => LocalDataMutation(value, null),
+    expectedEpoch: expectedEpoch,
+  );
+
   /// Cancella tutte le preferenze locali.
   Future<void> clearAll() async {
-    await _prefs.clear();
+    _sessionUnrecoverable = false;
+    try {
+      await beforeClearAll?.call();
+    } on LocalDataCorruptException {
+      _sessionUnrecoverable = true;
+      rethrow;
+    }
+    await _resetLocalData();
+  }
+
+  /// UI must explain that an unreadable token cannot be remotely revoked.
+  /// Ordinary connectivity/revocation errors never enable this recovery path.
+  Future<void> clearUnrecoverableLocalData() async {
+    if (!_sessionUnrecoverable)
+      throw StateError('Sessione non dimostrata come illeggibile.');
+    await _resetLocalData();
+  }
+
+  Future<void> _resetLocalData() async {
+    await localData.reset();
+    await _checkedWrite(
+      () => _prefs.setString(_userIdKey, 'user_${newLocalId()}'),
+    );
+    _sessionUnrecoverable = false;
     notifyListeners();
+  }
+
+  Future<void> _checkedWrite(Future<bool> Function() write) =>
+      localData.run(() async {
+        if (!await write()) {
+          await _prefs.reload();
+          throw const LocalDataWriteException();
+        }
+      });
+
+  @override
+  void dispose() {
+    localData.dispose();
+    super.dispose();
   }
 }

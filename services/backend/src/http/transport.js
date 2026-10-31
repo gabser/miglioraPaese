@@ -32,9 +32,10 @@ export function corsHeadersForRequest(req, allowedOrigins) {
     origin,
     headers: {
       'access-control-allow-origin': origin,
-      'access-control-allow-methods': 'GET, POST, PUT, OPTIONS',
-      'access-control-allow-headers': 'Content-Type',
+      'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'access-control-allow-headers': 'Content-Type, Idempotency-Key, Authorization',
       'access-control-max-age': '600',
+      'access-control-expose-headers': 'Retry-After',
       vary: 'Origin',
     },
   };

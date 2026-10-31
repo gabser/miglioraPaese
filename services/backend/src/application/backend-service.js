@@ -1,55 +1,87 @@
+import { httpError } from '../domain/errors.js';
+import { isPublicSuggestion, publicSuggestion } from '../domain/public-suggestion.js';
+
 export function createBackendService(store) {
   if (!store) {
     throw new TypeError('A store is required.');
   }
 
+  async function getPublicNextProblem(input) {
+    try {
+      const problem = await store.getNextProblem(input);
+      if (!isPublicSuggestion(problem)) {
+        throw httpError(404, 'suggested_problem_not_found', 'Suggested problem not found.');
+      }
+      return publicSuggestion(problem);
+    } catch (error) {
+      if (error.statusCode === 404) {
+        throw httpError(404, 'suggested_problem_not_found', 'Suggested problem not found.');
+      }
+      throw error;
+    }
+  }
+
   return {
-    getMunicipalityActivation(municipalityId) {
-      const municipality = store.getMunicipality(municipalityId);
+    createProposalSession: () => store.createProposalSession(),
+    getProposalSession: (token,scope) => store.getProposalSession(token,scope),
+    revokeProposalSession: token => store.revokeProposalSession(token),
+    async lookupSubmission(input) {
+      return publicSuggestion(await store.lookupSubmission(input));
+    },
+    async getOwnNextProblem(input) {
+      return publicSuggestion(await store.getOwnNextProblem(input));
+    },
+    async getMunicipalityActivation(municipalityId) {
+      const municipality = await store.getMunicipality(municipalityId);
       return {
         municipalityId: municipality.id,
         state: municipality.activationState,
       };
     },
 
-    getCivicLoopSummary(municipalityId) {
-      return store.getCivicLoopSummary(municipalityId);
+    async getCivicLoopSummary(municipalityId) {
+      return await store.getCivicLoopSummary(municipalityId);
     },
 
-    getCurrentTurn(municipalityId) {
-      return store.getCurrentTurn(municipalityId);
+    async getCurrentTurn(municipalityId) {
+      return await store.getCurrentTurn(municipalityId);
     },
 
-    listProblems(municipalityId) {
-      return { items: store.listProblems(municipalityId) };
+    async listProblems(municipalityId) {
+      return { items: await store.listProblems(municipalityId) };
     },
 
-    getLeaderboard(municipalityId) {
-      return { items: store.getLeaderboard(municipalityId) };
+    async getLeaderboard(municipalityId) {
+      return { items: await store.getLeaderboard(municipalityId) };
     },
 
-    listNextProblems(input) {
-      return { items: store.listNextProblems(input) };
+    async listNextProblems(input) {
+      const items = await store.listNextProblems(input);
+      return { items: items.filter(isPublicSuggestion).map(publicSuggestion) };
     },
 
-    submitNextProblem(input) {
-      return store.submitNextProblem(input);
+    getNextProblem: getPublicNextProblem,
+
+    async submitNextProblem(input) {
+      return publicSuggestion(await store.submitNextProblem(input));
     },
 
-    voteNextProblem(input) {
-      return store.voteNextProblem(input);
+    async voteNextProblem(input) {
+      // This also prevents replay of a cached public vote after rejection.
+      await getPublicNextProblem(input);
+      return publicSuggestion(await store.voteNextProblem(input));
     },
 
-    getPredictions(input) {
-      return { items: store.getPredictions(input) };
+    async getPredictions(input) {
+      return { items: await store.getPredictions(input) };
     },
 
-    upsertPrediction(input) {
-      return store.upsertPrediction(input);
+    async upsertPrediction(input) {
+      return await store.upsertPrediction(input);
     },
 
-    resolvePrediction(input) {
-      return store.resolvePrediction(input);
+    async resolvePrediction(input) {
+      return await store.resolvePrediction(input);
     },
   };
 }

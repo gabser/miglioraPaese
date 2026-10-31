@@ -6,17 +6,20 @@
 - Micro-sessioni: `UC-00.1 complete`; `UC-00.2 complete`;
   `UC-00.3 complete`; `UC-00.4 complete`; `UC-00.5 complete`;
   `UC-00.6 complete`; `UC-00.7 complete`.
-- Data inventario: 13 luglio 2026; ultima revisione: 14 luglio 2026 dopo
-  chiusura di `UC-01`.
-- Scopo corrente: `UC-00` e `UC-01` chiusi; ADR accettati, backlog consolidato
-  e contratto OpenAPI invariato. `UC-02` non e' avviato.
+- Data inventario: 13 luglio 2026; ultima revisione: 16 luglio 2026 dopo
+  chiusura di `UC-02.4`.
+- Scopo corrente: `UC-00` e `UC-01` chiusi; `UC-02` ha schema, migrazioni,
+  letture e scritture PostgreSQL complete fino al gate di concorrenza;
+  classificazioni consumer invariate.
 - Classificazione: Next Problems completata in `UC-00.2`; Game completata in
   `UC-00.3`.
 
-Questa baseline non implementa endpoint o dipendenze. Gli ADR accettati rendono
-vincolante la direzione architetturale, non avviano l'esecuzione. Le righe sono
-state valutate congiuntamente rispetto a schema, comportamento, test e consumer;
-non restano elementi `not_assessed`.
+Questa matrice resta la baseline del contratto HTTP. `UC-02.1` ha introdotto
+dipendenze fissate, schema e migrazioni PostgreSQL; `UC-02.2` ha collegato
+l'adapter di lettura, `UC-02.3` le scritture transazionali e `UC-02.4`
+idempotenza e concorrenza. Le righe sono
+state valutate congiuntamente rispetto a schema, comportamento, test e
+consumer; non restano elementi `not_assessed`.
 
 ## Riepilogo inventario
 
@@ -26,7 +29,7 @@ non restano elementi `not_assessed`.
 | Metodi di `NextProblemsRepository` | 3 |
 | Operazioni dichiarate in OpenAPI | 12 |
 | Route registrate dal matcher HTTP | 12 |
-| Casi di test backend | 19 |
+| Casi di test backend | 48 |
 | File di test Flutter direttamente rilevanti per Next Problems | 6 |
 | File di test Flutter che esercitano direttamente `GameRepository` | 1 |
 
@@ -114,12 +117,12 @@ il pilot anche quando una route backend e' gia' disponibile.
 | Membro | Stato | Base disponibile | Gap che impediscono `complete` | Destinazione iniziale |
 | --- | --- | --- | --- | --- |
 | `currentUserId` | `missing` | Getter mock e consumer home/leaderboard. | Nessuna identita' server; `userId` e' falsificabile e la leaderboard usa `demo-user`. | `UC-03`, `UC-06` |
-| `getCurrentTurn` | `partial` | `GET .../turn`, schema `Turn` e handler. | Nessun adapter/mapper; lifecycle e caso no-turn non definiti; mock e backend divergono per Comuni nuovi/in raccolta. | `UC-05`, `UC-06` |
-| `getMunicipalityActivationState` | `partial` | `GET .../activation`, enum e test alias/promozione. | `newMunicipality` non e' raggiungibile dal server corrente; Comune sconosciuto e' `404`; adapter assente. | `UC-05`, `UC-06` |
+| `getCurrentTurn` | `partial` | `GET .../turn`, schema `Turn`, handler e lettura PostgreSQL con mapper stretto. | Manca l'adapter Flutter Game; lifecycle e caso no-turn non definiti; mock e backend divergono per Comuni nuovi/in raccolta. | `UC-05`, `UC-06` |
+| `getMunicipalityActivationState` | `partial` | `GET .../activation`, enum, test alias/promozione e lettura PostgreSQL. | `newMunicipality` non e' raggiungibile dal server corrente; Comune sconosciuto e' `404`; adapter Flutter Game assente. | `UC-05`, `UC-06` |
 | `getCivicLoopSummary` | `partial` | `GET .../summary`, schema con tutti i campi e handler. | `cardsInTurn` ha semantica diversa dal mock; predictions usa `demo-user`; outcomes e reputazione sono sempre zero; mapper assente. | `UC-03`, `UC-05`, `UC-06` |
-| `listProblems` | `partial` | `GET .../problems`, schema `Problem` e handler. | Adapter/mapper assenti; persistenza e appartenenza al turno non formalizzate; test shape/empty/error mancanti. | `UC-02`, `UC-05`, `UC-06` |
-| `getMyPredictions` | `partial` | `GET .../predictions`, schema `Prediction` e filtro per utente. | Adapter/mapper assenti; lista HTTP da convertire in mappa; identita' client-controlled; store volatile; happy path non testato. | `UC-01`, `UC-02`, `UC-03`, `UC-06` |
-| `upsertPrediction` | `partial` | `PUT .../predictions/{problemId}`, enum, lock e validazione. | Adapter assente; identita' e persistenza mancanti; test Flutter API/end-to-end assenti. | `UC-01`, `UC-02`, `UC-03`, `UC-06` |
+| `listProblems` | `partial` | `GET .../problems`, schema `Problem`, handler, mapper e appartenenza al turno verificati su PostgreSQL. | Adapter Flutter Game assente; test empty/error dedicati mancanti. | `UC-05`, `UC-06` |
+| `getMyPredictions` | `partial` | `GET .../predictions`, schema, mapper PostgreSQL, filtro e isolamento utente verificati. | Lista HTTP da convertire in mappa nel futuro adapter Game; identita' client-controlled. | `UC-03`, `UC-06` |
+| `upsertPrediction` | `partial` | `PUT .../predictions/{problemId}`, enum, lock, idempotenza, persistenza PostgreSQL, rollback e choice concorrenti verificati. | Identita' server assente; adapter Flutter Game e test end-to-end ancora mancanti. | `UC-03`, `UC-06` |
 | `updatePredictionMotivations` | `missing` | Il PUT esistente puo' aggiornare metadati solo reinviando `choice`. | La firma Flutter non passa `choice` o `confidence`; una traduzione via cache/lettura puo' perdere metadati e non esiste operazione merge dedicata. | `UC-05`, `UC-06` |
 | `getReflectionQuestion` | `missing` | Dominio e generatore mock. | Nessuno schema/endpoint; ownership e versionamento domanda/risposta non decisi; il caricamento gioco la richiede. | `UC-05`, `UC-06` |
 | `resolvePrediction` | `partial` | `POST .../resolve`, schema e happy-path backend. | Risposta backend booleana contro enum Flutter a quattro stati; nessun risultato persistito; comando client non legato a chiusura turno o ruolo. | `UC-02`, `UC-05`, `UC-06`, `UC-07` |
@@ -176,9 +179,9 @@ in `lib/app/app_dependencies.dart:69`. Il mock delega a
 
 | Metodo | Evidenza positiva | Gap che impediscono `complete` | Destinazione iniziale |
 | --- | --- | --- | --- |
-| `listNextProblems` | Adapter, canonicalizzazione Comune, query/status, schema lista, mapper stretto e handler sono presenti. I test Dart verificano path e query; i test Node verificano `myVote`, stato invalido e Comune assente. | `userId` controllato dal client; store volatile; capability API limitata a due Comuni mentre il catalogo UI ne espone altri; nessun test backend positivo di query/status; limite query non gestito dal consumer; nessun end-to-end Dart-Node. | `UC-02`, `UC-03`, `UC-04` |
-| `submitSuggestedProblem` | `POST`, request/response OpenAPI, validazione, mapper, codice `duplicate_title` e consumer sono presenti. | Store volatile; autore controllato dal body; controllo duplicati non transazionale e retry ambiguo; nessun test focalizzato sulla response `201` completa; limiti UI 60/140 diversi dai limiti API 120/1000. | `UC-01`, `UC-02`, `UC-03`, `UC-04` |
-| `voteSuggestedProblem` | Path, request `up/down`, risposta aggiornata, conteggi per utente, mapper e happy path sono implementati. | La firma Flutter accetta anche `VoteChoice.none`, che l'adapter API rifiuta; la semantica toggle non idempotente non e' descritta in OpenAPI; retry dopo timeout puo' annullare un voto; mancano test per `down`, toggle, cambio scelta ed errori; la soglia demo promuove senza moderazione. | `UC-01`, `UC-03`, `UC-04`, `UC-07` |
+| `listNextProblems` | Adapter Flutter, canonicalizzazione Comune, query/status, schema lista e mapper sono presenti. La lettura PostgreSQL verifica conteggi, `myVote`, query, stato e isolamento utente. | `userId` controllato dal client; capability API limitata a due Comuni mentre il catalogo UI ne espone altri; limite query non gestito dal consumer; nessun end-to-end Dart-Node. | `UC-03`, `UC-04` |
+| `submitSuggestedProblem` | `POST`, request/response OpenAPI, validazione, mapper, transazione PostgreSQL e traduzione `duplicate_title` sono presenti. | Autore controllato dal body; retry/idempotenza non definiti; limiti UI 60/140 diversi dai limiti API 120/1000. | `UC-03`, `UC-04` |
+| `voteSuggestedProblem` | Path, request `up/down`, conteggi per utente e transazione PostgreSQL includono toggle, cambio, promozione, demozione, attivazione e rollback. | La firma Flutter accetta anche `VoteChoice.none`, che l'adapter API rifiuta; la semantica toggle non e' retry-safe; la soglia demo promuove senza moderazione. | `UC-03`, `UC-04`, `UC-07` |
 
 ### Backlog derivato da Next Problems
 

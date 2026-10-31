@@ -1,5 +1,13 @@
 # Fanta Comune UX/UI alignment plan
 
+## Implementazione corrente (10 ottobre 2026)
+
+Il registro operativo è [ui_implementation_log.md](ui_implementation_log.md), riconciliato col piano consolidato della sessione. Il testo di luglio sotto rimane il riferimento storico; non certifica che tutte le tranche siano implementate.
+
+`assets/tokens.json` descrive ora i token effettivi di `AppTokens` e del tema Material2021 con Roboto. Le tinte semantiche restano invariate; i piccoli testi e gli stati usano foreground scuri distinti. Il mockup HTML mantiene il suo stile storico e non definisce il font runtime. Nessun nuovo font richiesto.
+
+Form, lista proposte e Home hanno ricevuto una prima tranche con test automatici. Luogo, bozze, invio recuperabile e conferma persistente richiedono ancora le tranche del piano; nessuna delle modifiche visive ne dimostra il completamento.
+
 ## Stato aggiornato (11 luglio 2026)
 
 Questo piano parte dal nuovo mockup v2 e dal baseline Flutter introdotto nella PR #19. La PR #21 ha poi integrato selettivamente il primo loop civico e ha superato la PR #20, che non deve essere riaperta o unita integralmente.

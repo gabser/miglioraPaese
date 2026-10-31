@@ -1,16 +1,17 @@
 # Backend foundation plan
 
-## Stato aggiornato (11 luglio 2026)
+## Stato aggiornato (16 luglio 2026)
 
-La fase 1 locale è completata come scaffold contrattuale: avvio reale, store
-in-memory, validazione, CORS loopback, OpenAPI 0.2.0 e test di contratto. Il
-primo consumer HTTP è `ApiNextProblemsRepository`, attivabile solo con
-configurazione ambiente; `GameRepository` resta mock finché risultati,
+La fase 1 locale è completata come scaffold contrattuale: avvio reale,
+validazione, CORS loopback, OpenAPI 0.2.0 e test di contratto. `UC-02.2`--
+`UC-02.4` hanno aggiunto letture e scritture PostgreSQL opt-in con pool, seed,
+mapper, transazioni e retry idempotenti verificati anche in concorrenza; lo
+store memory resta un adapter esplicito per test e demo. Il primo consumer HTTP è
+`ApiNextProblemsRepository`; `GameRepository` resta mock finché risultati,
 reputazione e insight non avranno contratti server completi.
 
 Lo scaffold non è un servizio pubblico: `userId` è controllato dal client e
-mancano persistenza, autenticazione, moderazione, rate limiting e cancellazione
-remota.
+mancano autenticazione, moderazione, rate limiting e cancellazione remota.
 
 ## Decisione
 
@@ -51,17 +52,18 @@ services/backend/
   src/config/          # configurazione ambiente validata
   src/domain/          # enum, factory ed errori condivisi
   src/http/            # routing e trasporto JSON
-  src/infrastructure/  # MemoryStore sostituibile
+  src/infrastructure/  # adapter MemoryStore esplicito
+  src/persistence/     # migrazioni, seed, pool, mapper e adapter PostgreSQL
   src/server.js        # composition root e avvio
-  test/                # test di contratto, regressione e configurazione
-  openapi.yaml         # contratto invariato
+  test/                # test di contratto, regressione e integrazione reale
+  openapi.yaml         # contratto HTTP eseguibile
   package.json
 ```
 
-Il servizio espone JSON versionato sotto `/v1`. Lo store in-memory serve solo a
-bloccare shape, stati e comportamento dei primi endpoint ed e' isolato dietro
-il servizio applicativo. La fase successiva potra' sostituirlo con persistenza
-reale mantenendo gli stessi endpoint.
+Il servizio espone JSON versionato sotto `/v1`. `DATA_STORE=memory` e
+`DATA_STORE=postgres` selezionano esplicitamente l'adapter; una configurazione
+PostgreSQL assente o invalida blocca l'avvio. Letture e scritture persistenti
+mantengono gli stessi endpoint e response shape senza fallback in-memory.
 
 ## Contratti frontend da rispettare
 

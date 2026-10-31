@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:fanta_comune/features/next_problems/domain/proposal_location.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -12,6 +13,131 @@ import 'package:fanta_comune/features/next_problems/domain/suggested_problem_sta
 import 'package:fanta_comune/features/next_problems/domain/vote_choice.dart';
 
 void main() {
+  test(
+    'reads exact municipality and opaque ID with place and no idempotency header',
+    () async {
+      late http.Request captured;
+      const id = 'suggested/1?x#à';
+      final repository = _repository((request) async {
+        captured = request;
+        return http.Response(
+          jsonEncode({
+            ..._payload(),
+            'id': id,
+            'location': {
+              'kind': 'specific',
+              'label': 'Via Milano',
+              'civic': '12/A',
+            },
+          }),
+          200,
+        );
+      });
+      final problem = await repository.getSuggestedProblem(
+        municipalityId: 'comune:Castel Bolognese',
+        problemId: id,
+      );
+      expect(captured.method, 'GET');
+      expect(captured.url.pathSegments, [
+        'root',
+        'v1',
+        'municipalities',
+        'castel-bolognese',
+        'next-problems',
+        id,
+      ]);
+      expect(captured.url.queryParameters, {'userId': 'user:test'});
+      expect(captured.headers.containsKey('idempotency-key'), false);
+      expect(problem.id, id);
+      expect(
+        problem.location,
+        ProposalLocation.specific(label: 'Via Milano', civic: '12/A'),
+      );
+    },
+  );
+
+  test(
+    'rejects a mismatched or nonpublic detail and malformed location',
+    () async {
+      for (final payload in [
+        {..._payload(), 'id': 'other-id'},
+        {..._payload(), 'status': 'rejected'},
+        {
+          ..._payload(),
+          'location': {'kind': 'specific'},
+        },
+      ]) {
+        final repository = _repository(
+          (_) async => http.Response(jsonEncode(payload), 200),
+        );
+        await expectLater(
+          repository.getSuggestedProblem(
+            municipalityId: 'bologna',
+            problemId: 'suggested-1',
+          ),
+          throwsA(
+            isA<ApiException>().having(
+              (e) => e.kind,
+              'kind',
+              ApiExceptionKind.invalidPayload,
+            ),
+          ),
+        );
+      }
+    },
+  );
+
+  test('keeps the uniform detail not-found response typed', () async {
+    final repository = _repository(
+      (_) async => http.Response(
+        jsonEncode({
+          'error': 'suggested_problem_not_found',
+          'message': 'Suggested problem not found.',
+        }),
+        404,
+      ),
+    );
+    await expectLater(
+      repository.getSuggestedProblem(
+        municipalityId: 'bologna',
+        problemId: 'missing',
+      ),
+      throwsA(
+        isA<ApiException>()
+            .having((e) => e.statusCode, 'status', 404)
+            .having((e) => e.code, 'code', 'suggested_problem_not_found'),
+      ),
+    );
+  });
+
+  test('invalid detail context never reaches the HTTP client', () async {
+    var calls = 0;
+    final repository = _repository((_) async {
+      calls++;
+      return http.Response(jsonEncode(_payload()), 200);
+    });
+    await expectLater(
+      repository.getSuggestedProblem(municipalityId: 'bologna', problemId: ''),
+      throwsA(
+        isA<ApiException>().having((e) => e.code, 'code', 'invalid_problem_id'),
+      ),
+    );
+    await expectLater(
+      repository.getSuggestedProblem(
+        municipalityId: 'comune:Pincara',
+        problemId: 'suggested-1',
+      ),
+      throwsA(
+        isA<ApiException>().having(
+          (e) => e.code,
+          'code',
+          'unsupported_municipality',
+        ),
+      ),
+    );
+    expect(calls, 0);
+  });
+
   test(
     'lists problems with canonical municipality, query and status',
     () async {
@@ -69,7 +195,55 @@ void main() {
       'category': 'lighting',
       'userId': 'user:test',
     });
+    expect(captured.headers['idempotency-key'], 'flutter-test-key');
   });
+
+  test('normalizes Unicode text and transports a structured place', () async {
+    late http.Request captured;
+    final place = ProposalLocation.specific(label: 'Via Milano', civic: '12/A');
+    final repository = _repository((request) async {
+      captured = request;
+      return http.Response(
+        jsonEncode(_payload()..['location'] = place.toJson()),
+        201,
+      );
+    });
+    final title = List.filled(120, '😀').join();
+    final description = List.filled(1000, '😀').join();
+    final created = await repository.submitSuggestedProblem(
+      municipalityId: 'bologna',
+      title: '  $title  ',
+      description: ' $description ',
+      category: ProblemKey.green,
+      location: place,
+    );
+    final payload = jsonDecode(captured.body) as Map<String, dynamic>;
+    expect(payload['title'], title);
+    expect(payload['description'], description);
+    expect(payload['location'], place.toJson());
+    expect(created.location, place);
+  });
+
+  test(
+    'invalid text is rejected before transport without truncation',
+    () async {
+      var calls = 0;
+      final repository = _repository((request) async {
+        calls++;
+        return http.Response(jsonEncode(_payload()), 201);
+      });
+      await expectLater(
+        repository.submitSuggestedProblem(
+          municipalityId: 'bologna',
+          title: List.filled(121, '😀').join(),
+          description: 'Testo',
+          category: ProblemKey.green,
+        ),
+        throwsFormatException,
+      );
+      expect(calls, 0);
+    },
+  );
 
   test('votes with an encoded problem path and user ID', () async {
     late http.Request captured;
@@ -94,6 +268,7 @@ void main() {
       'votes',
     ]);
     expect(jsonDecode(captured.body), {'vote': 'up', 'userId': 'user:test'});
+    expect(captured.headers['idempotency-key'], 'flutter-test-key');
     expect(updated.myVote, VoteChoice.up);
   });
 
@@ -145,6 +320,7 @@ ApiNextProblemsRepository _repository(
       client: MockClient(handler),
     ),
     userId: 'user:test',
+    idempotencyKeyFactory: () => 'flutter-test-key',
   );
 }
 

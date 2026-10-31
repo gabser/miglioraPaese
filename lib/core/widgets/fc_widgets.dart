@@ -78,28 +78,50 @@ class FcSectionHeader extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
 
-    return Row(
+    final heading = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
+        Semantics(
+          header: true,
+          child: Text(title, style: textTheme.titleLarge),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: AppTokens.s4),
+          Text(
+            subtitle!,
+            style: textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 600 ||
+            MediaQuery.textScalerOf(context).scale(14) > 20) {
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: textTheme.titleLarge),
-              if (subtitle != null) ...[
-                const SizedBox(height: AppTokens.s4),
-                Text(
-                  subtitle!,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
+              heading,
+              if (action != null) ...[
+                const SizedBox(height: AppTokens.s8),
+                action!,
               ],
             ],
-          ),
-        ),
-        if (action != null) ...[const SizedBox(width: AppTokens.s12), action!],
-      ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: heading),
+            if (action != null) ...[
+              const SizedBox(width: AppTokens.s12),
+              action!,
+            ],
+          ],
+        );
+      },
     );
   }
 }
@@ -119,6 +141,7 @@ class FcStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final foreground = AppTokens.foregroundFor(color);
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -134,14 +157,16 @@ class FcStatusChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 16, color: color),
+            Icon(icon, size: 16, color: foreground),
             const SizedBox(width: AppTokens.s8),
           ],
-          Text(
-            label,
-            style: textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
+          Flexible(
+            child: Text(
+              label,
+              style: textTheme.labelSmall?.copyWith(
+                color: foreground,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
@@ -201,8 +226,6 @@ class FcMetricCard extends StatelessWidget {
           const SizedBox(height: AppTokens.s8),
           Text(
             label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: textTheme.labelLarge?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
@@ -211,8 +234,6 @@ class FcMetricCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               caption!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
               style: textTheme.bodySmall?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),
@@ -240,19 +261,34 @@ class FcPredictionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = improve + stable + worsen;
-    final safeTotal = total <= 0 ? 1 : total;
+    double safe(double value) => value.isFinite && value > 0 ? value : 0;
+    final values = [safe(improve), safe(stable), safe(worsen)];
+    final total = values.fold<double>(0, (sum, value) => sum + value);
+    final colors = [AppTokens.success, AppTokens.warning, AppTokens.danger];
+    final label = total == 0
+        ? 'Nessuna previsione disponibile'
+        : 'Previsioni: migliora ${(values[0] / total * 100).round()}%, '
+              'stabile ${(values[1] / total * 100).round()}%, '
+              'peggiora ${(values[2] / total * 100).round()}%';
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
-      child: SizedBox(
-        height: height,
-        child: Row(
-          children: [
-            _Segment(value: improve / safeTotal, color: AppTokens.success),
-            _Segment(value: stable / safeTotal, color: AppTokens.warning),
-            _Segment(value: worsen / safeTotal, color: AppTokens.danger),
-          ],
+    return Semantics(
+      label: label,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(999),
+        child: SizedBox(
+          height: height,
+          child: total == 0
+              ? const ColoredBox(color: AppTokens.line)
+              : Row(
+                  children: [
+                    for (var index = 0; index < values.length; index++)
+                      if (values[index] > 0)
+                        _Segment(
+                          value: values[index] / total,
+                          color: colors[index],
+                        ),
+                  ],
+                ),
         ),
       ),
     );
@@ -301,4 +337,38 @@ class FcPageShell extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Material locale e identità di storage distinta dalla posizione dello scroll.
+class FcDisclosure extends StatelessWidget {
+  const FcDisclosure({
+    super.key,
+    required this.storageId,
+    required this.title,
+    required this.children,
+    this.controller,
+  });
+
+  final ExpansibleController? controller;
+  final String storageId;
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    type: MaterialType.transparency,
+    child: ExpansionTile(
+      key: PageStorageKey<String>(storageId),
+      controller: controller,
+      title: Text(title),
+      // Nested scrollables must not read ExpansionTile's boolean storage value.
+      children: [
+        for (var index = 0; index < children.length; index++)
+          KeyedSubtree(
+            key: PageStorageKey<String>('$storageId:child:$index'),
+            child: children[index],
+          ),
+      ],
+    ),
+  );
 }

@@ -1,0 +1,30 @@
+flowchart LR
+    subgraph client ["Partecipanti e operatori"]
+        browser["Browser - Flutter web"]
+    end
+    subgraph gateway ["Accesso HTTPS"]
+        pages["Cloudflare Pages Free"]
+        api["Supabase endpoint"]
+    end
+    subgraph service ["Servizi Supabase Free"]
+        auth["Supabase Auth - codice email"]
+        functions["Supabase Edge Functions - regole applicative"]
+        storage["Supabase Storage API - accesso privato"]
+    end
+    subgraph datastore ["Dati persistenti Supabase"]
+        postgres["PostgreSQL - profili, missioni, XP, audit"]
+        objects["Storage - fotografie private"]
+    end
+    subgraph external ["Consegna email"]
+        resend["Resend Free - dominio verificato"]
+    end
+    browser -->|"Carica app"| pages
+    browser -->|"Login e richieste JWT"| api
+    api -->|"Invia e verifica OTP"| auth
+    api -->|"Invoca logica"| functions
+    api -->|"Legge prove autorizzate"| storage
+    auth -->|"Gestisce identita"| postgres
+    functions -->|"Transazioni e ruoli"| postgres
+    functions -->|"Gestisce prove"| storage
+    storage -->|"Legge e scrive"| objects
+    auth -.->|"Resend: consegna OTP via SMTP TLS"| resend

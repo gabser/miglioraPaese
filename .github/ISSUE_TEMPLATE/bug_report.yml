@@ -42,7 +42,7 @@ body:
     attributes:
       label: Ambiente
       description: Sistema operativo, browser e versione Flutter se rilevante.
-      placeholder: macOS 15, Chrome 140, Flutter 3.44.2
+      placeholder: macOS 15, Chrome 140, Flutter 3.47.5
     validations:
       required: true
 

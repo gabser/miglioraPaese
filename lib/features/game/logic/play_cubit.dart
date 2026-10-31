@@ -44,6 +44,7 @@ class PlayCubit extends Cubit<PlayState> {
   Future<Map<String, ReflectionQuestion>> _loadReflectionQuestionsForProblems(
     Iterable<String> problemIds,
   ) async {
+    if (!repository.supportsReflection) return const {};
     final targets = problemIds.toSet();
     final preserved = Map<String, ReflectionQuestion>.fromEntries(
       state.reflectionQuestions.entries.where(
