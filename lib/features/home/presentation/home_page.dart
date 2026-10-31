@@ -9,6 +9,7 @@ import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/game_banner.dart';
+import 'package:fanta_comune/core/widgets/municipality_sign.dart';
 import 'package:fanta_comune/features/civic_loop/domain/civic_loop_summary.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/prediction.dart';
@@ -38,8 +39,12 @@ class HomePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                MunicipalitySign(
+                  name: MunicipalityCatalog.displayNameFromId(municipalityId),
+                ),
+                const SizedBox(height: AppTokens.s8),
                 Text(
-                  'Comune: ${MunicipalityCatalog.displayNameFromId(municipalityId)} · Gioco demo locale',
+                  'Gioco demo locale',
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(height: AppTokens.s12),

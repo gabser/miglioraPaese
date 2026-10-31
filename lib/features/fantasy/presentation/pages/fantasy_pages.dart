@@ -6,6 +6,7 @@ import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
+import 'package:fanta_comune/core/widgets/municipality_sign.dart';
 import 'package:fanta_comune/features/fantasy/domain/fantasy_models.dart'
     hide FantasyCard;
 import 'package:fanta_comune/features/fantasy/domain/fantasy_models.dart'
@@ -318,6 +319,12 @@ class SquadPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          MunicipalitySign(
+            name: MunicipalityCatalog.displayNameFromId(
+              context.watch<AppPrefs>().municipalityId ?? 'demo',
+            ),
+          ),
+          const SizedBox(height: AppTokens.s16),
           _PageHeader(
             eyebrow:
                 '${manager.season.name} · Giornata ${manager.season.currentMatchday}/${manager.season.totalMatchdays}',

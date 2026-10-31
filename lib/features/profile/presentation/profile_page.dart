@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
+import 'package:fanta_comune/core/widgets/municipality_sign.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
@@ -298,12 +299,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   Text('Comune', style: TypographyX.titleLarge(context)),
                   const SizedBox(height: AppTokens.s8),
-                  Text(
-                    municipalityName,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+                  MunicipalitySign(name: municipalityName),
                   const SizedBox(height: AppTokens.s4),
                   Text(
                     'Cambia Comune per testare o seguire un altro territorio.',

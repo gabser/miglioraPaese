@@ -26,9 +26,9 @@ void main() {
     GoRouter.of(context).go('/onboarding');
     await pumpRoutingFrame(tester);
 
-    expect(find.text('Milano'), findsOneWidget);
+    expect(find.text('MILANO'), findsOneWidget);
 
-    await tester.tap(find.text('Milano'));
+    await tester.tap(find.text('MILANO'));
     await pumpRoutingFrame(tester);
     await tester.pump(const Duration(seconds: 2));
 
@@ -57,8 +57,8 @@ void main() {
     await tester.tap(find.text('Cambia Comune'));
     await pumpRoutingFrame(tester);
 
-    expect(find.text('Milano'), findsOneWidget);
-    expect(find.text('Roma'), findsOneWidget);
+    expect(find.text('MILANO'), findsOneWidget);
+    expect(find.text('ROMA'), findsOneWidget);
     // Completa le risposte mock già partite prima di lasciare il profilo.
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();

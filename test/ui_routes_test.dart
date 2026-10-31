@@ -82,7 +82,7 @@ void main() {
         router.routeInformationProvider.value.uri.queryParameters['returnTo'],
         '/suggest-problem',
       );
-      await tester.tap(find.text('Bologna'));
+      await tester.tap(find.text('BOLOGNA'));
       await _finishLoads(tester);
       expect(
         router.routeInformationProvider.value.uri.path,
