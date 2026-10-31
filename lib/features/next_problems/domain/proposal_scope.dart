@@ -41,7 +41,6 @@ class ProposalScope {
   }
 
   static String environmentFor(AppConfig config) => jsonEncode([
-    config.fantasyModeEnabled ? 'fantasy' : 'legacy',
     config.nextProblemsDataSource.name,
     config.apiBaseUrl.origin,
     config.apiBaseUrl.pathSegments.where((part) => part.isNotEmpty).toList(),

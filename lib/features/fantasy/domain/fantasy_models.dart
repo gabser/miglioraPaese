@@ -51,6 +51,7 @@ class Matchday {
     required this.startsAt,
     required this.locksAt,
     required this.observationEndsAt,
+    this.rulesVersion = 'fantasy-demo-v1',
   });
 
   final String id;
@@ -58,6 +59,7 @@ class Matchday {
   final DateTime startsAt;
   final DateTime locksAt;
   final DateTime observationEndsAt;
+  final String rulesVersion;
   bool isLockedAt(DateTime now) => !now.isBefore(locksAt);
 }
 
@@ -130,6 +132,8 @@ class Transfer {
   final int cost;
 }
 
+enum OutcomeDisposition { determinate, undeterminable }
+
 class CardOutcome {
   const CardOutcome({
     required this.matchdayId,
@@ -139,11 +143,20 @@ class CardOutcome {
     required this.sourceDate,
     required this.explanation,
     required this.sourceStatus,
+    this.disposition = OutcomeDisposition.determinate,
+    this.undeterminableReason,
+    this.evaluationId,
+    this.evaluationVersion,
+    this.authoritativePublication = false,
   });
 
+  final bool authoritativePublication;
+  final OutcomeDisposition disposition;
+  final String? undeterminableReason, evaluationId;
+  final int? evaluationVersion;
   final String matchdayId;
   final String cardId;
-  final CivicTrend observed;
+  final CivicTrend? observed;
   final String sourceLabel;
   final DateTime sourceDate;
   final String explanation;
@@ -270,8 +283,19 @@ ScoreBreakdown scoreFantasyOutcome({
   required bool captain,
   required bool reflection,
   bool eligible = true,
+  String rulesVersion = 'fantasy-demo-v1',
+  OutcomeDisposition? disposition,
 }) {
-  final hasResult = eligible && observed != null;
+  if (!['fantasy-demo-v1', 'fantasy-v2'].contains(rulesVersion))
+    throw const FormatException('Unsupported scoring rules');
+  if (rulesVersion == 'fantasy-v2' &&
+      disposition == OutcomeDisposition.determinate &&
+      observed == null)
+    throw const FormatException('Determinate outcome requires direction');
+  final closedV2 =
+      rulesVersion == 'fantasy-v2' &&
+      disposition == OutcomeDisposition.undeterminable;
+  final hasResult = eligible && observed != null && !closedV2;
   final observation = !hasResult
       ? 0
       : observed == CivicTrend.improves
@@ -290,7 +314,7 @@ ScoreBreakdown scoreFantasyOutcome({
     cardId: cardId,
     observationPoints: observation,
     predictionPoints: forecast,
-    reflectionPoints: hasResult && reflection ? 1 : 0,
-    captainMultiplier: hasResult && captain ? 1.5 : 1,
+    reflectionPoints: (hasResult || closedV2 && eligible) && reflection ? 1 : 0,
+    captainMultiplier: (hasResult || closedV2 && eligible) && captain ? 1.5 : 1,
   );
 }

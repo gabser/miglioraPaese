@@ -27,12 +27,12 @@ class ProposalSimilarityPanel extends StatelessWidget {
           liveRegion: true,
           child: Text(switch (controller.status) {
             SimilarityStatus.checking =>
-              'Confronto delle proposte disponibili per questo Comune…',
+              'Sto confrontando le proposte leggibili di questo Comune.',
             SimilarityStatus.unavailable =>
               'Il confronto non è disponibile. Puoi continuare senza perdere la bozza.',
             _ =>
               controller.candidates.isEmpty
-                  ? 'Non risultano proposte simili tra quelle disponibili. Potrebbero essercene altre che qui non puoi vedere.'
+                  ? 'Non ho trovato un confronto tra le proposte leggibili. Potrebbero esserci altri problemi simili.'
                   : 'Controlla queste proposte. Stesso titolo o luogo non significano necessariamente lo stesso problema.',
           }),
         ),

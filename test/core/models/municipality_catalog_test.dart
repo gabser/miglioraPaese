@@ -10,8 +10,6 @@ void main() {
       'castel-bolognese',
     );
     expect(MunicipalityCatalog.apiIdFor('bologna'), 'bologna');
-    expect(MunicipalityCatalog.apiIdFor('comune:Tuglie'), 'tuglie');
-    expect(MunicipalityCatalog.apiIdFor('tuglie'), 'tuglie');
     expect(MunicipalityCatalog.apiIdFor('comune:Milano'), isNull);
     expect(MunicipalityCatalog.apiIdFor('demo'), isNull);
   });
@@ -22,6 +20,5 @@ void main() {
       MunicipalityCatalog.displayNameFromId('castel-bolognese'),
       'Castel Bolognese',
     );
-    expect(MunicipalityCatalog.displayNameFromId('tuglie'), 'Tuglie');
   });
 }

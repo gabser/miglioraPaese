@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "migrations": [
+    {
+      "id": "20260715090000000",
+      "name": "20260715090000000_initial_persistence_schema",
+      "file": "20260715090000000_initial_persistence_schema.js",
+      "sha256": "47c33d43581be79f03b9b973d0a2cfe40875c4def3764448ccedd193dab0418b"
+    },
+    {
+      "id": "20260716190000000",
+      "name": "20260716190000000_write_idempotency",
+      "file": "20260716190000000_write_idempotency.js",
+      "sha256": "eca4c445ed67586cdc9f1d8145a180ad25dcd93c7ff08754c4ced73fc6ad6ede"
+    },
+    {
+      "id": "20261010110000000",
+      "name": "20261010110000000_proposal_location",
+      "file": "20261010110000000_proposal_location.js",
+      "sha256": "e347235e5df4c6ac08604d18ec552a9cf931d3748b2e46a84d0a7de0ae2c0534"
+    },
+    {
+      "id": "20261010150000000",
+      "name": "20261010150000000_proposal_sessions",
+      "file": "20261010150000000_proposal_sessions.js",
+      "sha256": "01f96be427cb8da42834c07a14ddf69df7bbe2ebf7a8b1f4e7683e60b2ceb63f"
+    },
+    {
+      "id": "20261011100000000",
+      "name": "20261011100000000_proposal_reviews",
+      "file": "20261011100000000_proposal_reviews.js",
+      "sha256": "f4804dc88890c19906fc876677fe38946ba9f1afaebf5749ae65c8c3392c6162"
+    },
+    {
+      "id": "20261013100000000",
+      "name": "20261013100000000_fantasy_v1",
+      "file": "20261013100000000_fantasy_v1.js",
+      "sha256": "98e7084794cb35a6591500c6e638ebc2ffa35ab99f31395a9dcba918ce64e830"
+    },
+    {
+      "id": "20261014090000000",
+      "name": "20261014090000000_fantasy_transfer_order",
+      "file": "20261014090000000_fantasy_transfer_order.js",
+      "sha256": "9012becf7b7e1a3d09b32e23c94057421e36ef9404cc52585dc95fbc26f63f2c"
+    },
+    {
+      "id": "20261014130000000",
+      "name": "20261014130000000_accounts",
+      "file": "20261014130000000_accounts.js",
+      "sha256": "d57920cde07b036306b0c79a3c6f884f65b5faa9be881d63602125cadc4c7ac0"
+    },
+    {
+      "id": "20261014160000000",
+      "name": "20261014160000000_missions",
+      "file": "20261014160000000_missions.js",
+      "sha256": "9f357748bafd39a09b13b3dcc20b13fcbdbd5a6d47942a269ef98f5e8b1d58fd"
+    },
+    {
+      "id": "20261015100000000",
+      "name": "20261015100000000_observation_review",
+      "file": "20261015100000000_observation_review.js",
+      "sha256": "55c3a78c791f60c64e77842f410c5daffad0792bc16128516a0bd0a86933ce26"
+    },
+    {
+      "id": "20261015110000000",
+      "name": "20261015110000000_review_downgrade_index_compat",
+      "file": "20261015110000000_review_downgrade_index_compat.js",
+      "sha256": "f6f8dca20d5df88da6cc3913ea973f8b3081870aac4677e1620da44d0b4884c3"
+    },
+    {
+      "id": "20261015120000000",
+      "name": "20261015120000000_measurements",
+      "file": "20261015120000000_measurements.js",
+      "sha256": "2f9cb1888d28031e60b3bd9b756a1ef1ed39fd4a70cad0acc675c3d9b0f4ebaf"
+    },
+    {
+      "id": "20261015130000000",
+      "name": "20261015130000000_measurement_result_owner_link",
+      "file": "20261015130000000_measurement_result_owner_link.js",
+      "sha256": "a06a353900e2f03f158d05f5a105ea22eebd30744e278266f524c15bc884716c"
+    },
+    {
+      "id": "20261015140000000",
+      "name": "20261015140000000_league_continuity",
+      "file": "20261015140000000_league_continuity.js",
+      "sha256": "87dc5f077fd9aa2362ca691644ef3c079380d08ab9aacce2400c683357422d3f"
+    },
+    {
+      "id": "20261015150000000",
+      "name": "20261015150000000_league_creator_identity",
+      "file": "20261015150000000_league_creator_identity.js",
+      "sha256": "09bd835671ed767a462a75a24ca02b93ba591d0a5ecba2868ccdee7ff8f88557"
+    },
+    {
+      "id": "20261015160000000",
+      "name": "20261015160000000_cooperation",
+      "file": "20261015160000000_cooperation.js",
+      "sha256": "9827c4d191898cdd07725067bafce5baa7ee548fdf29228bac2c298093720f36"
+    }
+  ]
+}

@@ -7,6 +7,9 @@ class CookieClient extends http.BaseClient {
   final http.Client inner = http.Client();
   String? cookie;
   bool loseTransferReply = false;
+  Completer<void>? teamReplyArrived;
+  Completer<void>? teamReplyGate;
+  int sessionCreations = 0;
   bool offline = false;
   bool loseLeagueReply = false;
   final List<String> leagueKeys = [];
@@ -24,7 +27,15 @@ class CookieClient extends http.BaseClient {
       );
     }
     if (cookie != null) request.headers['cookie'] = cookie!;
+    if (request.method == 'POST' && request.url.path == '/v1/proposal-session')
+      sessionCreations++;
     final response = await inner.send(request);
+    if (request.method == 'PUT' &&
+        request.url.path.endsWith('/team') &&
+        teamReplyGate != null) {
+      teamReplyArrived?.complete();
+      await teamReplyGate!.future;
+    }
     cookie = response.headers['set-cookie']?.split(';').first ?? cookie;
     if (request.method == 'POST' && request.url.path.endsWith('/leagues')) {
       leagueKeys.add(
@@ -59,12 +70,13 @@ class BackendFixture {
   late Process process;
   late StreamIterator<String> lines;
   late String url;
+  final StringBuffer _stderr = StringBuffer();
   Future<void> start() async {
     final node = Platform.environment['FANTASY_TEST_NODE'] ?? 'node';
     process = await Process.start(node, [
       'test/support/fantasy_backend_fixture.mjs',
     ]);
-    process.stderr.drain<void>();
+    process.stderr.transform(utf8.decoder).listen(_stderr.write);
     lines = StreamIterator(
       process.stdout.transform(utf8.decoder).transform(const LineSplitter()),
     );
@@ -72,8 +84,30 @@ class BackendFixture {
   }
 
   Future<Map<String, dynamic>> read() async {
-    await lines.moveNext().timeout(const Duration(seconds: 15));
+    final available = await lines.moveNext().timeout(
+      const Duration(seconds: 15),
+    );
+    if (!available)
+      throw StateError('Fantasy PostgreSQL fixture exited: $_stderr');
     return (jsonDecode(lines.current) as Map).cast<String, dynamic>();
+  }
+
+  Future<Map<String, dynamic>> privateCommand(
+    String action, [
+    Object? value,
+  ]) async {
+    process.stdin.writeln(jsonEncode({'action': action, 'value': value}));
+    return read();
+  }
+
+  Future<String> accountCode(String email) async {
+    process.stdin.writeln(
+      jsonEncode({'action': 'accountCode', 'value': email}),
+    );
+    final result = await read();
+    if (result['code'] is! String)
+      throw StateError('Missing synthetic delivery');
+    return result['code'] as String;
   }
 
   Future<void> command(String action, [String? value]) async {

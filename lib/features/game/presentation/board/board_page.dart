@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/models/problem_key.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
@@ -106,6 +107,16 @@ class _BoardPageState extends State<BoardPage> {
               context.canPop() ? context.pop() : context.go('/play'),
         ),
         title: const Text(VenialCopy.boardTitle),
+        actions: [
+          if (context.read<AppConfig?>()?.tuglieMapEnabled ?? false)
+            TextButton.icon(
+              onPressed: () => context.go(
+                '/map?municipality=${MunicipalityCatalog.apiIdFor(context.read<AppPrefs>().municipalityId ?? '') ?? ''}',
+              ),
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('Mappa / Elenco'),
+            ),
+        ],
       ),
       body: SafeArea(
         child: MaxWidthContainer(
@@ -151,7 +162,7 @@ class _BoardPageState extends State<BoardPage> {
                         title:
                             'Comune: ${MunicipalityCatalog.displayNameFromId(_loadedMunicipalityId!)}',
                         subtitle:
-                            '${VenialCopy.boardSubtitle} · Gioco delle previsioni',
+                            '${VenialCopy.boardSubtitle} · Gioco demo locale',
                       ),
                       const SizedBox(height: AppTokens.s16),
                       if (data.problems.isEmpty)
@@ -393,11 +404,11 @@ class _BoardActivationEmpty extends StatelessWidget {
             runSpacing: AppTokens.s8,
             children: [
               FilledButton(
-                onPressed: () => context.push('/suggest-problem'),
+                onPressed: () => context.go('/suggest-problem'),
                 child: const Text(VenialCopy.activationPrimaryCta),
               ),
               OutlinedButton(
-                onPressed: () => context.push('/next-problems'),
+                onPressed: () => context.go('/next-problems'),
                 child: const Text(VenialCopy.activationSecondaryCta),
               ),
             ],
@@ -441,7 +452,7 @@ class _BoardTile extends StatelessWidget {
           Text('Categoria: ${AppIcons.labelForProblemKey(problem.key)}'),
           const SizedBox(height: AppTokens.s8),
           Text(
-            '${problem.trendPercent >= 0 ? '+' : ''}${problem.trendPercent}% andamento del tema',
+            '${problem.trendPercent >= 0 ? '+' : ''}${problem.trendPercent}% andamento nella demo',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppTokens.foregroundFor(color),
             ),
@@ -555,7 +566,7 @@ class _BoardNewsSection extends StatelessWidget {
         icon: Icons.add_circle_outline,
         title: VenialCopy.boardNewsProposals,
         body: VenialCopy.boardNewsProposalsBody,
-        onTap: () => context.push('/next-problems'),
+        onTap: () => context.go('/next-problems'),
       ),
     );
 

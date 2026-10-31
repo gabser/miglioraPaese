@@ -8,6 +8,9 @@ on:
       - ".github/workflows/backend.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "services/backend/**"
+      - ".github/workflows/backend.yml"
 
 permissions:
   contents: read
@@ -20,19 +23,45 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17.10-alpine
+        env:
+          POSTGRES_DB: migliorapaese_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d migliorapaese_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/migliorapaese_test
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Set up Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
+          cache-dependency-path: services/backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: services/backend
+        run: npm ci
+
+      - name: Verify append-only migration history
+        if: github.event_name == 'pull_request'
+        working-directory: services/backend
+        env:
+          MIGRATION_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: npm run migrations:verify-history
 
       - name: Test backend
         working-directory: services/backend
         run: npm test
-
-      - name: Build staging image
-        run: docker build --tag migliorapaese/backend:ci services/backend

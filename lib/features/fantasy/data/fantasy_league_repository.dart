@@ -4,6 +4,7 @@ import 'package:fanta_comune/features/fantasy/domain/fantasy_models.dart';
 class RemoteFantasyLeague {
   const RemoteFantasyLeague({
     required this.table,
+    this.seasonId,
     required this.memberCount,
     required this.competitiveCount,
     required this.isOwner,
@@ -12,6 +13,7 @@ class RemoteFantasyLeague {
     required this.firstLocksAt,
   });
   final FantasyLeague table;
+  final String? seasonId;
   final int memberCount;
   final int competitiveCount;
   final bool isOwner;
@@ -37,6 +39,7 @@ class RemoteFantasyLeague {
       );
     }).toList();
     return RemoteFantasyLeague(
+      seasonId: raw['seasonId'] as String?,
       table: FantasyLeague(
         id: l['id'] as String,
         name: l['name'] as String,

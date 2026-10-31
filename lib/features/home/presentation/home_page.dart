@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
 import 'package:fanta_comune/core/preferences/app_prefs.dart';
 import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
@@ -38,7 +39,7 @@ class HomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Comune: ${MunicipalityCatalog.displayNameFromId(municipalityId)} · Gioco delle previsioni',
+                  'Comune: ${MunicipalityCatalog.displayNameFromId(municipalityId)} · Gioco demo locale',
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(height: AppTokens.s12),
@@ -48,7 +49,7 @@ class HomePage extends StatelessWidget {
                   GameBanner(
                     title: 'Fanta Comune',
                     subtitle:
-                        'Fai una previsione sui problemi del Comune. Confronta gli esiti e i tuoi punti in classifica.',
+                        'Prevedi come si muovono i problemi della citta\', confronta le percezioni e scala la classifica locale.',
                     stickerLabel: _turnLabel(data.turn),
                     shimmer: data.predictions.isNotEmpty,
                     cta: FilledButton.icon(
@@ -65,7 +66,7 @@ class HomePage extends StatelessWidget {
                   FcPanel(
                     tint: AppTokens.danger,
                     child: Text(
-                      'Non puoi caricare il riepilogo. Riprova.',
+                      'Non riusciamo a caricare la dashboard. Riprova tra poco.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -119,11 +120,11 @@ class _HomeDashboard extends StatelessWidget {
         caption: 'Su questo turno',
       ),
       FcMetricCard(
-        label: 'Previsioni corrette',
+        label: 'Accuratezza',
         value: accuracy,
         icon: Icons.adjust,
         color: AppTokens.warning,
-        caption: 'Previsioni concluse',
+        caption: 'Mock locale',
       ),
       FcMetricCard(
         label: 'Classifica',
@@ -199,13 +200,23 @@ class _MunicipalityActivationDashboard extends StatelessWidget {
       runSpacing: AppTokens.s8,
       children: [
         FilledButton(
-          onPressed: () => context.push('/suggest-problem'),
+          onPressed: () => context.go('/suggest-problem'),
           child: const Text(VenialCopy.activationPrimaryCta),
         ),
         OutlinedButton(
-          onPressed: () => context.push('/next-problems'),
+          onPressed: () => context.go('/next-problems'),
           child: const Text(VenialCopy.activationSecondaryCta),
         ),
+        if ((context.read<AppConfig?>()?.tuglieMapEnabled ?? false) &&
+            MunicipalityCatalog.apiIdFor(
+                  context.read<AppPrefs>().municipalityId ?? '',
+                ) ==
+                'tuglie')
+          OutlinedButton.icon(
+            onPressed: () => context.go('/map?municipality=tuglie'),
+            icon: const Icon(Icons.map_outlined),
+            label: const Text('Mappa / Elenco di Tuglie'),
+          ),
       ],
     );
 
@@ -363,7 +374,7 @@ class _ActivationTrustPanel extends StatelessWidget {
           ),
           const SizedBox(height: AppTokens.s8),
           Text(
-            'La proposta viene ricevuta. I voti la sostengono; il passaggio al gioco delle previsioni segue le regole del servizio.',
+            'La proposta entra nella lista dei temi. Altri cittadini possono votarla e, quando ci sono abbastanza segnali, diventa una carta del turno.',
             style: textTheme.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
               height: 1.42,
@@ -472,7 +483,7 @@ class _ProblemRow extends StatelessWidget {
                 ),
                 const SizedBox(height: AppTokens.s12),
                 Text(
-                  '${trend >= 0 ? '+' : ''}$trend% andamento del tema',
+                  '${trend >= 0 ? '+' : ''}$trend% andamento nella demo',
                   style: textTheme.labelSmall?.copyWith(
                     color: AppTokens.foregroundFor(status.color),
                     fontWeight: FontWeight.w800,
@@ -532,7 +543,7 @@ class _RightRail extends StatelessWidget {
               ),
               const SizedBox(height: AppTokens.s4),
               Text(
-                '$accuracy previsioni corrette · ${data.reputation.predictionsCount} previsioni',
+                '$accuracy accuratezza · ${data.reputation.predictionsCount} previsioni',
                 style: textTheme.bodySmall?.copyWith(
                   color: AppTokens.successSoft,
                   fontWeight: FontWeight.w700,
@@ -540,7 +551,7 @@ class _RightRail extends StatelessWidget {
               ),
               const SizedBox(height: AppTokens.s16),
               Text(
-                'Punti maturati nel gioco delle previsioni',
+                'Punti maturati nella demo locale',
                 style: textTheme.bodySmall?.copyWith(color: Colors.white),
               ),
             ],
@@ -758,6 +769,6 @@ Future<_HomeSnapshot> _loadHomeSnapshot(
 String _summaryLine(CivicLoopSummary summary) {
   final topTheme = summary.topThemeTitle ?? 'nessuna carta promossa';
   return 'Riepilogo Comune: ${summary.proposedThemes} proposte, '
-      '${summary.confirmedThemes} nel gioco, ${summary.cardsInTurn} carte del turno. '
+      '${summary.confirmedThemes} confermate, ${summary.cardsInTurn} carte del turno. '
       'Tema principale: $topTheme. Reputazione: ${summary.reputationPoints} pt.';
 }

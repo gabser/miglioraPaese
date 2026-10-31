@@ -166,7 +166,6 @@ class ProposalSubmissionCoordinator extends ChangeNotifier {
     try {
       await gateway.prepareSubmissionScope(
         expectedScope: pending?.submissionScope,
-        municipalityId: scope.municipalityId,
       );
       if (!_valid(scope, epoch)) throw const LocalDataResetException();
     } catch (error) {
@@ -218,9 +217,7 @@ class ProposalSubmissionCoordinator extends ChangeNotifier {
         _publish(scope, result);
         return result;
       }
-      final submissionScope = await gateway.prepareSubmissionScope(
-        municipalityId: scope.municipalityId,
-      );
+      final submissionScope = await gateway.prepareSubmissionScope();
       if (!_valid(scope, epoch))
         return const SubmissionView(SubmissionStatus.reset);
       intent = ProposalSubmissionIntent(
@@ -359,7 +356,7 @@ class ProposalSubmissionCoordinator extends ChangeNotifier {
         SubmissionStatus.receiptUnsaved,
         intent: accepted,
         message:
-            'Il servizio ha ricevuto la proposta, ma la ricevuta non è salvata su questo dispositivo. Riprova il salvataggio senza inviare di nuovo.',
+            'Il servizio ha ricevuto la proposta, ma la conferma non è salvata qui. Riprova il salvataggio, senza inviare di nuovo.',
       );
       _publish(intent.scope, result);
       return result;
@@ -390,8 +387,7 @@ class ProposalSubmissionCoordinator extends ChangeNotifier {
           (error.statusCode == 401 ||
               error.code == 'proposal_scope_missing' ||
               error.code == 'proposal_scope_changed' ||
-              error.code == 'idempotency_conflict' ||
-              error.code == 'submission_scope_changed');
+              error.code == 'idempotency_key_reused');
 
   Future<SubmissionView> _failure(
     ProposalSubmissionIntent intent,
@@ -429,7 +425,7 @@ class ProposalSubmissionCoordinator extends ChangeNotifier {
     try {
       saved = await store.save(record, epoch: epoch);
     } catch (_) {
-      message += ' Lo storico sul dispositivo non è stato aggiornato.';
+      message += ' Non riesco ad aggiornare lo storico locale.';
     }
     if (!_valid(intent.scope, epoch))
       return const SubmissionView(SubmissionStatus.reset);
@@ -495,7 +491,7 @@ class ProposalSubmissionCoordinator extends ChangeNotifier {
         view.status,
         intent: view.intent,
         message:
-            'La scelta di abbandonare non è stata salvata. L’invio resta da verificare.',
+            'Non riesco a salvare l’abbandono. L’invio resta da verificare.',
       );
       if (_valid(scope, epoch)) _publish(scope, result);
       return result;

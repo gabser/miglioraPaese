@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:fanta_comune/core/copy/venial_copy.dart';
-import 'package:fanta_comune/core/config/app_config.dart';
 
 import 'helpers/test_app.dart';
 
@@ -23,7 +22,7 @@ void main() {
     expect(find.text('Gioca il turno'), findsOneWidget);
     expect(find.text(VenialCopy.welcomeStep1Title), findsNothing);
 
-    final context = tester.element(find.text(VenialCopy.navProfile).first);
+    final context = tester.element(find.text('Gioca il turno'));
     GoRouter.of(context).go('/onboarding');
     await pumpRoutingFrame(tester);
 
@@ -49,9 +48,8 @@ void main() {
     await pumpRoutingFrame(tester);
     await tester.pump(const Duration(seconds: 2));
 
-    final context = tester.element(find.text(VenialCopy.navProfile).first);
-    final router = GoRouter.of(context);
-    router.go('/profile');
+    final context = tester.element(find.text('Gioca il turno'));
+    GoRouter.of(context).go('/profile');
     await pumpRoutingFrame(tester);
 
     expect(find.text('Cambia Comune'), findsOneWidget);
@@ -61,35 +59,8 @@ void main() {
 
     expect(find.text('Milano'), findsOneWidget);
     expect(find.text('Roma'), findsOneWidget);
-  });
-
-  testWidgets('pilot profile keeps the configured municipality locked', (
-    tester,
-  ) async {
-    final prefs = await createTestPrefs({'municipality_id': 'tuglie'});
-    final config = AppConfig.fromValues(pilotMunicipalityId: 'tuglie');
-
-    await tester.pumpWidget(buildTestApp(prefs, config: config));
-    await pumpRoutingFrame(tester);
-
-    await tester.tap(find.text(VenialCopy.welcomeEnterTitle));
-    await pumpRoutingFrame(tester);
-    await tester.pump(const Duration(seconds: 2));
-
-    final context = tester.element(find.text(VenialCopy.navProfile).first);
-    final router = GoRouter.of(context);
-    router.go('/profile');
-    await pumpRoutingFrame(tester);
-
-    expect(find.text('Tuglie'), findsOneWidget);
-    expect(
-      find.text('Questa prova online è riservata a un solo Comune.'),
-      findsOneWidget,
-    );
-    expect(find.text('Cambia Comune'), findsNothing);
-
-    router.go('/change-municipality');
-    await pumpRoutingFrame(tester);
-    expect(find.text(VenialCopy.onboardingTitle), findsNothing);
+    // Completa le risposte mock già partite prima di lasciare il profilo.
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
   });
 }

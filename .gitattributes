@@ -1,0 +1,2 @@
+# The published migration checksum covers these exact bytes, including blank-line spaces.
+services/backend/migrations/20261013100000000_fantasy_v1.js -whitespace

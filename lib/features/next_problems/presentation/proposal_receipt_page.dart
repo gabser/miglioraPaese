@@ -42,7 +42,7 @@ class ProposalReceiptPage extends StatelessWidget {
     final valid = ProposalRouteContext.validProblemId(problemId);
     final intent = valid ? view.intent : null;
     return ProposalDocumentScaffold(
-      title: 'Ricevuta dell’invio',
+      title: 'Conferma dell’invio',
       municipalityId: municipality,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,7 +80,7 @@ class ProposalReceiptPage extends StatelessWidget {
                 child: Text(
                   view.status == SubmissionStatus.storageFailed
                       ? 'La ricevuta locale non è leggibile. Non inviare di nuovo per recuperarla.'
-                      : 'Su questo dispositivo non c’è una ricevuta per questa proposta e questo Comune. Potresti averla cancellata insieme ai dati locali.',
+                      : 'La ricevuta non è disponibile su questo dispositivo per questo Comune. Potrebbe essere stata cancellata con i dati locali.',
                 ),
               ),
             ),

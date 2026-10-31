@@ -5,14 +5,14 @@ class MunicipalityCatalog {
 
   static const _apiIdsByLocalId = <String, String>{
     'comune:Bologna': 'bologna',
-    'comune:Castel Bolognese': 'castel-bolognese',
     'comune:Tuglie': 'tuglie',
+    'comune:Castel Bolognese': 'castel-bolognese',
   };
 
   static const _displayNamesByApiId = <String, String>{
     'bologna': 'Bologna',
-    'castel-bolognese': 'Castel Bolognese',
     'tuglie': 'Tuglie',
+    'castel-bolognese': 'Castel Bolognese',
   };
 
   static const activeCities = [

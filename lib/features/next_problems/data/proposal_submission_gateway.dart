@@ -3,10 +3,7 @@ import 'package:fanta_comune/features/next_problems/domain/suggested_problem.dar
 
 /// Recovery always proves the original scope; it cannot bootstrap a new one.
 abstract interface class ProposalSubmissionGateway {
-  Future<String> prepareSubmissionScope({
-    String? expectedScope,
-    String? municipalityId,
-  });
+  Future<String> prepareSubmissionScope({String? expectedScope});
   Future<SuggestedProblem> submitIntent(ProposalSubmissionIntent intent);
   Future<SuggestedProblem> lookupIntent(ProposalSubmissionIntent intent);
 }

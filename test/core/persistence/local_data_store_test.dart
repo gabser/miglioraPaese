@@ -5,6 +5,83 @@ import '../../helpers/memory_local_backend.dart';
 
 void main() {
   test(
+    'scope guard rollback failure blocks all access until explicit reset',
+    () async {
+      final backend = MemoryLocalBackend();
+      final store = LocalDataStore(backend: backend);
+      await store.mutate(
+        'draft',
+        (_) => const LocalDataMutation('prior', true),
+      );
+      var changed = false, writes = 0;
+      backend.onWrite = (_, __) async {
+        writes++;
+        changed = true;
+        return writes == 1;
+      };
+      await expectLater(
+        store.mutate(
+          'draft',
+          (_) => const LocalDataMutation('stale', true),
+          check: () {
+            if (changed) throw const LocalDataResetException();
+          },
+        ),
+        throwsA(isA<LocalDataWriteException>()),
+      );
+      expect(
+        () => store.read('draft'),
+        throwsA(isA<LocalDataResetException>()),
+      );
+      await expectLater(
+        store.mutate('later', (_) => const LocalDataMutation('blocked', true)),
+        throwsA(isA<LocalDataResetException>()),
+      );
+      backend.onWrite = null;
+      await store.reset();
+      expect(store.read('draft'), isNull);
+    },
+  );
+  test(
+    'scope guard rollback exception blocks all access until explicit reset',
+    () async {
+      final backend = MemoryLocalBackend();
+      final store = LocalDataStore(backend: backend);
+      await store.mutate(
+        'draft',
+        (_) => const LocalDataMutation('prior', true),
+      );
+      var changed = false, writes = 0;
+      backend.onWrite = (_, __) async {
+        writes++;
+        changed = true;
+        if (writes != 1) throw StateError('synthetic disk failure');
+        return true;
+      };
+      await expectLater(
+        store.mutate(
+          'draft',
+          (_) => const LocalDataMutation('stale', true),
+          check: () {
+            if (changed) throw const LocalDataResetException();
+          },
+        ),
+        throwsA(isA<LocalDataWriteException>()),
+      );
+      expect(
+        () => store.read('draft'),
+        throwsA(isA<LocalDataResetException>()),
+      );
+      await expectLater(
+        store.mutate('later', (_) => const LocalDataMutation('blocked', true)),
+        throwsA(isA<LocalDataResetException>()),
+      );
+      backend.onWrite = null;
+      await store.reset();
+      expect(store.read('draft'), isNull);
+    },
+  );
+  test(
     'serializes changes and reconstructs an isolated snapshot with the same namespace',
     () async {
       final backend = MemoryLocalBackend();

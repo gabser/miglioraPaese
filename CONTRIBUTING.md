@@ -5,7 +5,7 @@ backend in `services/backend` è uno scaffold locale, non un servizio pubblico.
 
 ## Ambiente
 
-- Flutter `3.44.2`, preferibilmente tramite [FVM](https://fvm.app/);
+- Flutter `3.47.5`, preferibilmente tramite [FVM](https://fvm.app/);
 - Node.js 24 per il backend locale.
 
 ```bash

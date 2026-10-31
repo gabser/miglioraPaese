@@ -236,7 +236,7 @@ class GameMapper {
 
   static String? _nullableString(Map<String, Object?> json, String field) {
     if (!json.containsKey(field)) {
-      throw ApiException.invalidPayload('$field è obbligatorio.');
+      throw ApiException.invalidPayload('$field e\' obbligatorio.');
     }
     final value = json[field];
     if (value == null) return null;
@@ -286,7 +286,7 @@ class GameMapper {
     String field,
   ) {
     if (!json.containsKey(field)) {
-      throw ApiException.invalidPayload('$field è obbligatorio.');
+      throw ApiException.invalidPayload('$field e\' obbligatorio.');
     }
     final value = json[field];
     return value == null ? null : _enumFromRaw(values, value, field);

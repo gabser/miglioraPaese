@@ -69,7 +69,7 @@ class FantasyApiMapper {
 
   static Matchday day(Object? raw) {
     final v = object(raw);
-    if (v['rulesVersion'] != 'fantasy-demo-v1') {
+    if (!['fantasy-demo-v1', 'fantasy-v2'].contains(v['rulesVersion'])) {
       throw const FormatException('Unsupported rules');
     }
     return Matchday(
@@ -78,19 +78,55 @@ class FantasyApiMapper {
       startsAt: date(v['startsAt']),
       locksAt: date(v['locksAt']),
       observationEndsAt: date(v['observationEndsAt']),
+      rulesVersion: v['rulesVersion'] as String,
     );
   }
 
   static CardOutcome outcome(Object? raw) {
-    final v = object(raw);
+    final v = object(raw), v2 = v['rulesVersion'] == 'fantasy-v2';
+    if (!v2 && v['disposition'] != null)
+      throw const FormatException('V2 outcome requires explicit rulesVersion');
+    if (v['rulesVersion'] != null &&
+        !['fantasy-demo-v1', 'fantasy-v2'].contains(v['rulesVersion']))
+      throw const FormatException('Unknown outcome rules');
+    if (v['disposition'] != null &&
+            !['determinate', 'undeterminable'].contains(v['disposition']) ||
+        v['disposition'] == 'undeterminable' && v['observed'] != null)
+      throw const FormatException('Invalid outcome disposition');
+    if (v2 && v['disposition'] == null)
+      throw const FormatException('Missing v2 disposition');
+    final sources = v2 ? (v['sources'] as List) : const [];
+    final first = sources.isEmpty ? null : object(sources.first);
     return CardOutcome(
       matchdayId: v['matchdayId'] as String,
       cardId: v['cardId'] as String,
-      observed: trend(v['observed']),
-      sourceLabel: v['sourceLabel'] as String,
-      sourceDate: date(v['sourceDate']),
-      explanation: v['explanation'] as String,
-      sourceStatus: source(v['sourceStatus']),
+      observed: v['disposition'] == 'undeterminable'
+          ? null
+          : trend(v['observed']),
+      disposition: v['disposition'] == 'undeterminable'
+          ? OutcomeDisposition.undeterminable
+          : OutcomeDisposition.determinate,
+      undeterminableReason: v['undeterminableReason'] as String?,
+      evaluationId: (v['publicationId'] ?? v['evaluationId']) as String?,
+      evaluationVersion: (v['version'] ?? v['evaluationVersion']) as int?,
+      sourceLabel: v2
+          ? (first?['label'] as String? ??
+                (v['origin'] == 'deadline'
+                    ? 'Chiusura automatica al termine pubblicato'
+                    : 'Valutazione umana con misure approvate'))
+          : v['sourceLabel'] as String,
+      sourceDate: date(
+        v2 ? (first?['sourceDate'] ?? v['publishedAt']) : v['sourceDate'],
+      ),
+      explanation: (v2 ? v['rationale'] : v['explanation']) as String,
+      authoritativePublication: v2,
+      // Published v2 evaluations are authoritative even when the disposition is
+      // undeterminable. This permits reflection without manufacturing a source.
+      sourceStatus: v2
+          ? (first == null
+                ? FantasySourceStatus.unavailable
+                : FantasySourceStatus.verified)
+          : source(v['sourceStatus']),
     );
   }
 
@@ -123,6 +159,8 @@ class FantasyApiMapper {
         personal = <String, CardOutcome>{};
     final reflections = <String, ReflectionAnswer>{},
         scores = <String, ScoreBreakdown>{};
+    final revisions = <String, int>{},
+        coverage = <String, Map<String, dynamic>>{};
     final summaries = <String, MatchdayScore>{}, statuses = <String, String>{};
     for (final reveal in reveals) {
       if (reveal['seasonId'] != s['id']) {
@@ -158,6 +196,11 @@ class FantasyApiMapper {
         throw const FormatException('Unknown status');
       }
       statuses[id] = status as String;
+      if (reveal['currentRevision'] != null || reveal['resultRevision'] != null)
+        revisions[id] =
+            (reveal['currentRevision'] ?? reveal['resultRevision']) as int;
+      if (summary['coverage'] != null)
+        coverage[id] = Map.unmodifiable(object(summary['coverage']));
       summaries[id] = MatchdayScore(
         frozenPoints: summary['frozenPoints'] as int,
         reflectionBonus: summary['reflectionBonus'] as int,
@@ -210,6 +253,8 @@ class FantasyApiMapper {
       scores: Map.unmodifiable(scores),
       summaries: Map.unmodifiable(summaries),
       summaryStatuses: Map.unmodifiable(statuses),
+      resultRevisions: Map.unmodifiable(revisions),
+      coverage: Map.unmodifiable(coverage),
     );
   }
 }

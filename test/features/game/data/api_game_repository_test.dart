@@ -7,7 +7,6 @@ import 'package:http/testing.dart';
 import 'package:fanta_comune/core/network/api_client.dart';
 import 'package:fanta_comune/core/network/api_exception.dart';
 import 'package:fanta_comune/features/game/data/api_game_repository.dart';
-import 'package:fanta_comune/features/game/data/mock_game_repository.dart';
 import 'package:fanta_comune/features/game/domain/hypothesis_confidence.dart';
 import 'package:fanta_comune/features/game/domain/motivation_key.dart';
 import 'package:fanta_comune/features/game/domain/prediction_choice.dart';
@@ -236,7 +235,6 @@ ApiGameRepository _repository(
       client: MockClient(handler),
     ),
     userId: 'user:test',
-    localFallback: MockGameRepository(),
   );
 }
 

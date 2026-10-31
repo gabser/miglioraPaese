@@ -1,3 +1,4 @@
+import 'package:fanta_comune/features/next_problems/data/proposal_session_store.dart';
 import 'package:fanta_comune/core/models/municipality_catalog.dart';
 import 'package:fanta_comune/core/network/api_client.dart';
 import 'package:fanta_comune/core/network/api_exception.dart';
@@ -18,25 +19,27 @@ import 'package:fanta_comune/features/game/domain/reflection_question.dart';
 import 'package:fanta_comune/features/game/domain/turn.dart';
 import 'package:fanta_comune/features/leaderboard/domain/leaderboard_entry.dart';
 
-/// Implementazione HTTP progressiva del contratto di gioco.
-///
-/// Le domande di riflessione restano locali finché il backend non espone un
-/// contratto dedicato. Il segnale che modifica lo stato di un problema è
-/// rifiutato esplicitamente per evitare aggiornamenti solo apparenti. L'ID
-/// locale identifica l'utente nella UI; il backend usa invece la propria
-/// identità anonima firmata e non accetta identificativi dal client.
-class ApiGameRepository implements GameRepository {
+/// HTTP game data. Unsupported capabilities fail explicitly; local data is
+/// never substituted for a remote operation. Server identity comes from the
+/// bearer proposal session, independently of the local user identifier.
+class ApiGameRepository implements GameRepository, GameRepositoryCapabilities {
   ApiGameRepository({
     required ApiClient client,
     required String userId,
-    required GameRepository localFallback,
+    this.sessions,
   }) : _client = client,
-       _userId = userId,
-       _localFallback = localFallback;
+       _userId = userId;
 
+  @override
+  bool get supportsReflection => false;
+  @override
+  bool get supportsSignals => false;
+  final SessionLeaseSource? sessions;
+  Future<Map<String, String>> _headers() async => sessions == null
+      ? const {}
+      : (await sessions!.active(allowCreate: true)).headers;
   final ApiClient _client;
   final String _userId;
-  final GameRepository _localFallback;
   final Map<String, Problem> _problemCache = {};
 
   @override
@@ -46,6 +49,7 @@ class ApiGameRepository implements GameRepository {
   Future<Turn> getCurrentTurn(String municipalityId) async {
     final payload = await _client.getJson(
       _municipalityPath(municipalityId, 'turn'),
+      headers: await _headers(),
     );
     return GameMapper.turnFromResponse(payload);
   }
@@ -56,6 +60,7 @@ class ApiGameRepository implements GameRepository {
   ) async {
     final payload = await _client.getJson(
       _municipalityPath(municipalityId, 'activation'),
+      headers: await _headers(),
     );
     return GameMapper.activationFromResponse(payload);
   }
@@ -64,6 +69,7 @@ class ApiGameRepository implements GameRepository {
   Future<CivicLoopSummary> getCivicLoopSummary(String municipalityId) async {
     final payload = await _client.getJson(
       _municipalityPath(municipalityId, 'summary'),
+      headers: await _headers(),
     );
     return GameMapper.civicSummaryFromResponse(payload);
   }
@@ -72,6 +78,7 @@ class ApiGameRepository implements GameRepository {
   Future<List<Problem>> listProblems(String municipalityId) async {
     final payload = await _client.getJson(
       _municipalityPath(municipalityId, 'problems'),
+      headers: await _headers(),
     );
     final problems = GameMapper.problemsFromResponse(payload);
     for (final problem in problems) {
@@ -87,7 +94,7 @@ class ApiGameRepository implements GameRepository {
       'turns',
       turnId,
       'predictions',
-    ]);
+    ], headers: await _headers());
     return GameMapper.predictionsFromResponse(payload);
   }
 
@@ -146,12 +153,16 @@ class ApiGameRepository implements GameRepository {
         'motivations': motivations.map((value) => value.name).toList(),
         'confidence': confidence?.name,
       },
+      headers: await _headers(),
     );
   }
 
   @override
   Future<ReflectionQuestion> getReflectionQuestion(String problemId) {
-    return _localFallback.getReflectionQuestion(problemId);
+    throw ApiException.configuration(
+      code: 'unsupported_remote_capability',
+      message: 'Il backend non supporta ancora le domande di riflessione.',
+    );
   }
 
   @override
@@ -162,6 +173,7 @@ class ApiGameRepository implements GameRepository {
     final payload = await _client.postJson(
       ['v1', 'problems', problemId, 'resolve'],
       body: {'choice': choice.name},
+      headers: await _headers(),
     );
     return GameMapper.predictionResultFromResolution(payload);
   }
@@ -184,7 +196,7 @@ class ApiGameRepository implements GameRepository {
       'problems',
       problemId,
       'insight',
-    ]);
+    ], headers: await _headers());
     return GameMapper.aggregatedInsightFromResponse(payload);
   }
 
@@ -206,6 +218,7 @@ class ApiGameRepository implements GameRepository {
     final payload = await _client.getJson(
       _municipalityPath(municipalityId, 'leaderboard'),
       queryParameters: {'leagueId': leagueId},
+      headers: await _headers(),
     );
     return GameMapper.leaderboardFromResponse(payload);
   }
@@ -219,7 +232,7 @@ class ApiGameRepository implements GameRepository {
       'turns',
       turnId,
       'prediction-results',
-    ]);
+    ], headers: await _headers());
     return GameMapper.resultsFromResponse(payload);
   }
 
@@ -230,7 +243,7 @@ class ApiGameRepository implements GameRepository {
       'turns',
       turnId,
       'reputation',
-    ]);
+    ], headers: await _headers());
     return GameMapper.reputationFromResponse(payload);
   }
 
@@ -241,7 +254,7 @@ class ApiGameRepository implements GameRepository {
       'problems',
       problemId,
       'insight-history',
-    ]);
+    ], headers: await _headers());
     return GameMapper.insightHistoryFromResponse(payload);
   }
 
@@ -251,6 +264,7 @@ class ApiGameRepository implements GameRepository {
   }) async {
     final payload = await _client.getJson(
       _municipalityPath(municipalityId, 'reputation-history'),
+      headers: await _headers(),
     );
     return GameMapper.reputationHistoryFromResponse(payload);
   }
@@ -269,6 +283,7 @@ class ApiGameRepository implements GameRepository {
         'userConfidence': userConfidence?.name,
         'userReflectionIndex': userReflectionIndex?.toString(),
       },
+      headers: await _headers(),
     );
     return GameMapper.criticalInsightsFromResponse(payload);
   }
@@ -278,7 +293,7 @@ class ApiGameRepository implements GameRepository {
     if (apiId == null) {
       throw ApiException.configuration(
         code: 'unsupported_municipality',
-        message: 'Questo Comune non è ancora disponibile online.',
+        message: 'Il Comune selezionato non e\' ancora disponibile via API.',
       );
     }
     return ['v1', 'municipalities', apiId, resource];

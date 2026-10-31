@@ -9,6 +9,7 @@ import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/theme/typography_x.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/icon_label.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_route_context.dart';
 
 /// Schermata di onboarding per scegliere il Comune di riferimento.
 class OnboardingPage extends StatefulWidget {
@@ -50,7 +51,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final prefs = context.read<AppPrefs>();
     await prefs.setMunicipalityId(MunicipalityCatalog.idForCity(city));
     if (!context.mounted) return;
-    context.go(widget.afterSelectionRoute);
+    context.go(
+      ProposalRouteContext.isProposalPath(widget.afterSelectionRoute)
+          ? ProposalRouteContext.location(
+              widget.afterSelectionRoute,
+              MunicipalityCatalog.idForCity(city),
+            )
+          : widget.afterSelectionRoute,
+    );
   }
 
   @override

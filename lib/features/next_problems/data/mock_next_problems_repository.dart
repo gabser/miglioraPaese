@@ -41,10 +41,7 @@ class MockNextProblemsRepository
   }
 
   @override
-  Future<String> prepareSubmissionScope({
-    String? expectedScope,
-    String? municipalityId,
-  }) async {
+  Future<String> prepareSubmissionScope({String? expectedScope}) async {
     final scope = 'mock:${_store.currentUserId}';
     if (expectedScope != null && expectedScope != scope) {
       throw ApiException.configuration(

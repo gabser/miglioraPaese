@@ -55,19 +55,6 @@ class NextProblemsPage extends StatelessWidget {
   }
 }
 
-Future<void> _openProposalForm(
-  BuildContext context,
-  String? municipality,
-) async {
-  final list = context.read<NextProblemsCubit>();
-  await context.push(
-    ProposalRouteContext.location('/suggest-problem', municipality),
-  );
-  if (context.mounted && !list.isClosed) {
-    await list.load();
-  }
-}
-
 class _NextProblemsView extends StatelessWidget {
   const _NextProblemsView({required this.routeContext});
   final ProposalRouteContext routeContext;
@@ -80,23 +67,30 @@ class _NextProblemsView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
-          },
-          tooltip: (GoRouter.maybeOf(context)?.canPop() ?? false)
-              ? 'Torna indietro'
-              : 'Torna all’inizio',
+          onPressed: () => context.go('/home'),
+          tooltip: 'Torna alla home',
           icon: const Icon(AppIcons.back),
         ),
         title: const Text(VenialCopy.appTitle),
         actions: [
+          if (context.read<AppConfig?>()?.tuglieMapEnabled ?? false)
+            IconButton(
+              tooltip: 'Mappa / Elenco',
+              icon: const Icon(Icons.map_outlined),
+              onPressed: () => context.go(
+                ProposalRouteContext.location(
+                  '/map',
+                  routeContext.municipalityId,
+                ),
+              ),
+            ),
           IconButton(
-            onPressed: () =>
-                _openProposalForm(context, routeContext.municipalityId),
+            onPressed: () => context.go(
+              ProposalRouteContext.location(
+                '/suggest-problem',
+                routeContext.municipalityId,
+              ),
+            ),
             tooltip: VenialCopy.playSuggestCta,
             icon: const Icon(Icons.add),
           ),
@@ -395,7 +389,7 @@ class _NextProblemsError extends StatelessWidget {
               ),
               const SizedBox(height: AppTokens.s12),
               Text(
-                'Proposte non disponibili',
+                'Temi non disponibili',
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
@@ -446,7 +440,7 @@ class _NextProblemsEmpty extends StatelessWidget {
             children: [
               if (!isFiltered)
                 const FcStatusChip(
-                  label: 'Nessuna proposta',
+                  label: VenialCopy.activationTitle,
                   color: AppTokens.blue,
                   icon: AppIcons.play,
                 ),
@@ -481,9 +475,11 @@ class _NextProblemsEmpty extends StatelessWidget {
                 ),
                 const SizedBox(height: AppTokens.s12),
                 FilledButton(
-                  onPressed: () => _openProposalForm(
-                    context,
-                    context.read<NextProblemsCubit>().state.municipalityId,
+                  onPressed: () => context.go(
+                    ProposalRouteContext.location(
+                      '/suggest-problem',
+                      context.read<NextProblemsCubit>().state.municipalityId,
+                    ),
                   ),
                   child: const Text(VenialCopy.activationPrimaryCta),
                 ),

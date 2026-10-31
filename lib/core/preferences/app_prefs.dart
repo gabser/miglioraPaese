@@ -17,7 +17,6 @@ class AppPrefs extends ChangeNotifier {
         LocalDataStore(
           backend: SharedPreferencesLocalBackend(
             _prefs,
-            resetKeyPrefixes: {'fantasy_receipt_'},
             resetKeys: {
               key,
               _motionDemoKey,
@@ -30,19 +29,21 @@ class AppPrefs extends ChangeNotifier {
               _perspectiveChangesKey,
               _lastSeenTurnIdKey,
               _insightSignaturesKey,
-              _fantasyStateKey,
-              _fantasyDemoArchiveKey,
-              ..._prefs.getKeys().where(
-                (key) => key.startsWith('fantasy_receipt_'),
-              ),
             },
           ),
           key: key,
         );
   }
 
+  /// Explicit runtime profile pin, independent of user preferences and resets.
+  String? configuredMunicipalityId;
   final SharedPreferences _prefs;
   late final LocalDataStore localData;
+
+  /// API composition installs revocation before the local reset barrier.
+  Future<void> Function()? beforeClearAll;
+  bool _sessionUnrecoverable = false;
+  bool get sessionUnrecoverable => _sessionUnrecoverable;
 
   static const _motionDemoKey = 'motion_demo_enabled';
   static const _municipalityKey = 'municipality_id';
@@ -54,8 +55,6 @@ class AppPrefs extends ChangeNotifier {
   static const _perspectiveChangesKey = 'perspective_changes_count';
   static const _lastSeenTurnIdKey = 'last_seen_turn_id';
   static const _insightSignaturesKey = 'insight_signatures';
-  static const _fantasyStateKey = 'fantasy_manager_state_v1';
-  static const _fantasyDemoArchiveKey = 'fantasy_demo_archive_v1';
 
   /// Inizializza le preferenze condivise e restituisce il wrapper.
   static Future<AppPrefs> init() async {
@@ -78,7 +77,8 @@ class AppPrefs extends ChangeNotifier {
   }
 
   /// Restituisce l'identificativo del Comune selezionato, se presente.
-  String? get municipalityId => _prefs.getString(_municipalityKey);
+  String? get municipalityId =>
+      configuredMunicipalityId ?? _prefs.getString(_municipalityKey);
 
   /// Imposta l'identificativo del Comune selezionato e notifica i listener.
   Future<void> setMunicipalityId(String municipalityId) async {
@@ -184,53 +184,6 @@ class AppPrefs extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Stato locale del prototipo Manager civico. Non contiene dati certificati.
-  String? get fantasyStateJson => _prefs.getString(_fantasyStateKey);
-
-  Future<void> setFantasyStateJson(String value) async {
-    await _checkedWrite(() => _prefs.setString(_fantasyStateKey, value));
-  }
-
-  /// Previous demo games remain recoverable, independently of other local data.
-  List<String>? _readFantasyDemoArchive() {
-    final raw = _prefs.getString(_fantasyDemoArchiveKey);
-    if (raw == null) return const [];
-    try {
-      return (jsonDecode(raw) as List).cast<String>().toList();
-    } on FormatException {
-      return null;
-    } on TypeError {
-      return null;
-    }
-  }
-
-  bool get fantasyDemoArchiveCorrupted => _readFantasyDemoArchive() == null;
-  List<String> get fantasyDemoArchive => _readFantasyDemoArchive() ?? const [];
-
-  Future<void> archiveFantasyDemo(String state) async {
-    // Retain the original unreadable bytes as an opaque archive entry.
-    final archive =
-        _readFantasyDemoArchive() ??
-        [_prefs.getString(_fantasyDemoArchiveKey)!];
-    await _checkedWrite(
-      () => _prefs.setString(
-        _fantasyDemoArchiveKey,
-        jsonEncode([...archive, state]),
-      ),
-    );
-  }
-
-  // Only an idempotent command receipt is stored remotely, never a draft or score.
-  String? fantasyReceipt(String scope) =>
-      _prefs.getString('fantasy_receipt_$scope');
-  Future<void> setFantasyReceipt(String scope, String? value) async {
-    await _checkedWrite(
-      () => value == null
-          ? _prefs.remove('fantasy_receipt_$scope')
-          : _prefs.setString('fantasy_receipt_$scope', value),
-    );
-  }
-
   /// Data dell'ultima proposta inviata, se presente.
   DateTime? get lastSuggestedAt {
     final millis = _prefs.getInt(_lastSuggestedAtKey);
@@ -253,11 +206,44 @@ class AppPrefs extends ChangeNotifier {
     return DateTime.now().difference(last) > cooldown;
   }
 
-  /// Cancella tutte le preferenze locali.
-  void beginReset() => localData.invalidateForReset();
+  /// Fantasy documents share the reset barrier and atomic storage with proposals.
+  String? get fantasyStateJson => localData.read('fantasy-state-v1') as String?;
 
+  Future<void> setFantasyStateJson(String value) => localData.mutate<void>(
+    'fantasy-state-v1',
+    (_) => LocalDataMutation(value, null),
+  );
+
+  String? fantasyReceipt(String scope) =>
+      localData.read('fantasy-receipt:$scope') as String?;
+
+  Future<void> setFantasyReceipt(
+    String scope,
+    String? value, {
+    int? expectedEpoch,
+  }) => localData.mutate<void>(
+    'fantasy-receipt:$scope',
+    (_) => LocalDataMutation(value, null),
+    expectedEpoch: expectedEpoch,
+  );
+
+  /// Cancella tutte le preferenze locali.
   Future<void> clearAll() async {
-    beginReset();
+    _sessionUnrecoverable = false;
+    try {
+      await beforeClearAll?.call();
+    } on LocalDataCorruptException {
+      _sessionUnrecoverable = true;
+      rethrow;
+    }
+    await _resetLocalData();
+  }
+
+  /// UI must explain that an unreadable token cannot be remotely revoked.
+  /// Ordinary connectivity/revocation errors never enable this recovery path.
+  Future<void> clearUnrecoverableLocalData() async {
+    if (!_sessionUnrecoverable)
+      throw StateError('Sessione non dimostrata come illeggibile.');
     await _resetLocalData();
   }
 
@@ -266,6 +252,7 @@ class AppPrefs extends ChangeNotifier {
     await _checkedWrite(
       () => _prefs.setString(_userIdKey, 'user_${newLocalId()}'),
     );
+    _sessionUnrecoverable = false;
     notifyListeners();
   }
 

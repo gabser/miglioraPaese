@@ -154,7 +154,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
       setState(() {
         _capabilitiesReady = false;
         _capabilityError =
-            'Il servizio proposte non è raggiungibile. La bozza resta su questo dispositivo.';
+            'Non riesco a verificare il servizio proposte. La bozza resta su questo dispositivo.';
       });
     }
   }
@@ -223,16 +223,12 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
       );
       return;
     }
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go(
-        ProposalRouteContext.location(
-          '/next-problems',
-          widget.routeContext.municipalityId,
-        ),
-      );
-    }
+    context.go(
+      ProposalRouteContext.location(
+        '/next-problems',
+        widget.routeContext.municipalityId,
+      ),
+    );
   }
 
   Widget _draftStatus() {
@@ -244,7 +240,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
       DraftSaveStatus.saving => 'Salvataggio della bozza…',
       DraftSaveStatus.saved => 'Bozza salvata su questo dispositivo.',
       DraftSaveStatus.failed =>
-        'Bozza non salvata. Tieni aperta questa pagina e riprova.',
+        'Non riesco a salvare la bozza. Mantieni aperta questa pagina e riprova.',
       DraftSaveStatus.reset =>
         'Dati locali azzerati. Scegli di nuovo il Comune.',
       null => 'Scegli il Comune prima di compilare la proposta.',
@@ -262,7 +258,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
         if (status == DraftSaveStatus.failed)
           TextButton(
             onPressed: _draftController!.retry,
-            child: const Text(VenialCopy.retrySaveCta),
+            child: const Text('Riprova il salvataggio'),
           ),
       ],
     );
@@ -511,15 +507,12 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
       });
     }
     if (result.status == SubmissionStatus.succeeded) {
-      final receiptRoute = ProposalRouteContext.receiptLocation(
-        result.intent!.receipt!.id,
-        scope.municipalityId,
+      context.go(
+        ProposalRouteContext.receiptLocation(
+          result.intent!.receipt!.id,
+          scope.municipalityId,
+        ),
       );
-      if (context.canPop()) {
-        context.pushReplacement(receiptRoute);
-      } else {
-        context.go(receiptRoute);
-      }
     } else if (result.message != null &&
         result.status != SubmissionStatus.outcomeUnknown &&
         result.status != SubmissionStatus.scopeLost &&
@@ -598,7 +591,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
             Text('Proposta: ${receipt.title}'),
             Text('Luogo: ${view.intent!.location.displayLabel}'),
             const Text(
-              'La proposta è stata ricevuta. Non è una segnalazione ufficiale e non entra automaticamente nel gioco.',
+              'Questa è la conferma dell’invio, non un’approvazione o una segnalazione ufficiale.',
             ),
             TextButton(
               onPressed: () => context.push(
@@ -610,12 +603,13 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
               child: const Text('Leggi la ricevuta salvata'),
             ),
             TextButton(
-              onPressed: _leave,
-              child: Text(
-                (GoRouter.maybeOf(context)?.canPop() ?? false)
-                    ? 'Torna indietro'
-                    : 'Vai alle proposte',
+              onPressed: () => context.go(
+                ProposalRouteContext.location(
+                  '/next-problems',
+                  scope.municipalityId,
+                ),
               ),
+              child: const Text('Vai alle proposte'),
             ),
           ],
         ),
@@ -649,7 +643,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                 if (view.status == SubmissionStatus.receiptUnsaved)
                   FilledButton(
                     onPressed: () => _submissionAction(scope, 'save'),
-                    child: const Text('Salva la ricevuta'),
+                    child: const Text('Salva la conferma'),
                   )
                 else ...[
                   FilledButton(
@@ -755,7 +749,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
         FcDisclosure(
           storageId: 'proposal-place-details:${_draftController?.scope.key}',
           controller: _optionalDetails,
-          title: 'Aggiungi dettagli del luogo',
+          title: 'Riferimenti facoltativi',
           children: [
             TextFormField(
               key: const ValueKey('proposal-location-civic'),
@@ -933,7 +927,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: _leave,
-          tooltip: 'Torna alle proposte',
+          tooltip: 'Torna ai temi',
           icon: const Icon(AppIcons.back),
         ),
         title: const Text(VenialCopy.appTitle),
@@ -978,7 +972,7 @@ class _SuggestProblemViewState extends State<_SuggestProblemView> {
                           if (cooldown != null) ...[
                             const SizedBox(height: AppTokens.s8),
                             Text(
-                              'Nella demo puoi inviare una proposta per Comune ogni 5 minuti. Nel frattempo puoi modificare la bozza.',
+                              'Modalità demo: puoi inviare una nuova proposta in questo Comune dopo cinque minuti dall’ultimo invio. La bozza resta modificabile.',
                             ),
                           ],
                           if (!_capabilitiesReady) ...[

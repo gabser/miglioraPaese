@@ -32,7 +32,7 @@ class LocalFantasyRepository implements FantasyRepository {
         _game = _copy(_game.savedState);
       } catch (_) {
         _recovery =
-            'I dati della partita demo non sono leggibili. È stata avviata una partita iniziale: conferma di nuovo la formazione.';
+            'Dati demo incompatibili: partita ripristinata. Conferma nuovamente la formazione.';
       }
     }
   }
@@ -213,46 +213,6 @@ class LocalFantasyRepository implements FantasyRepository {
       }
       if (before == jsonEncode(next.savedState.toJson())) return cached;
       return await _accept(next);
-    } finally {
-      _busy = false;
-    }
-  }
-
-  bool get hasPreviousDemo => _prefs.fantasyDemoArchive.isNotEmpty;
-
-  Future<FantasyData> restartDemo({
-    required int expectedRevision,
-    bool restorePrevious = false,
-  }) async {
-    _check(expectedRevision);
-    _busy = true;
-    try {
-      final archiveCorrupted = _prefs.fantasyDemoArchiveCorrupted;
-      final previous = restorePrevious ? _prefs.fantasyDemoArchive.last : null;
-      final day = _defaultDay();
-      final seed = FantasyDemoSeed(_now(), day);
-      final next = previous == null
-          ? FantasyGame(
-              matchday: day,
-              cards: List.unmodifiable(seed.cards),
-              outcomes: List.unmodifiable(seed.seedOutcomes()),
-              leagues: List.unmodifiable(seed.seedLeagues()),
-              now: _now,
-              usingDemoOutcomes: true,
-            )
-          : _copy(
-              FantasySavedState.fromJson(
-                (jsonDecode(previous) as Map).cast<String, dynamic>(),
-                day,
-              ),
-            );
-      // Archive first: a failed write must never replace the accepted game.
-      await _prefs.archiveFantasyDemo(jsonEncode(_game.savedState.toJson()));
-      await _accept(next);
-      _recovery = archiveCorrupted
-          ? 'L’archivio demo precedente non è leggibile. I dati originali sono conservati. Puoi recuperare la partita che hai appena lasciato.'
-          : null;
-      return cached;
     } finally {
       _busy = false;
     }

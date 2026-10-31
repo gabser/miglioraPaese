@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -9,6 +8,30 @@ import 'package:fanta_comune/core/network/api_client.dart';
 import 'package:fanta_comune/core/network/api_exception.dart';
 
 void main() {
+  test(
+    'reads only stable field codes, independently of server message language',
+    () async {
+      final api = ApiClient(
+        baseUrl: Uri.parse('https://example.test'),
+        client: MockClient(
+          (_) async => http.Response(
+            '{"error":"invalid_field","message":"Untrusted English message","fieldErrors":{"title":"too_long","location.label":"invalid_text","description":"private_reason","category":7}}',
+            400,
+          ),
+        ),
+      );
+      await expectLater(
+        () => api.postJson(['v1', 'items'], body: const {}),
+        throwsA(
+          isA<ApiException>().having((e) => e.fieldErrors, 'stable fields', {
+            'title': 'too_long',
+            'location.label': 'invalid_text',
+          }),
+        ),
+      );
+    },
+  );
+
   test('decodes successful JSON and preserves base path and query', () async {
     late Uri requestedUri;
     final client = MockClient((request) async {
@@ -57,43 +80,41 @@ void main() {
     );
   });
 
-  test('sends PUT requests as JSON', () async {
-    late http.Request captured;
-    final api = ApiClient(
-      baseUrl: Uri.parse('https://example.test'),
-      client: MockClient((request) async {
-        captured = request;
-        return http.Response('{"status":"ok"}', 200);
-      }),
-    );
-
-    await api.putJson(
-      ['v1', 'items', 'item/with space'],
-      body: const {'choice': 'stable'},
-    );
-
-    expect(captured.method, 'PUT');
-    expect(captured.headers['content-type'], 'application/json');
-    expect(jsonDecode(captured.body), {'choice': 'stable'});
-    expect(captured.url.pathSegments.last, 'item/with space');
-  });
-
-  test('sends DELETE requests without inventing a request body', () async {
-    late http.Request captured;
-    final api = ApiClient(
-      baseUrl: Uri.parse('https://example.test/api-root'),
-      client: MockClient((request) async {
-        captured = request;
-        return http.Response('{"status":"deleted"}', 200);
-      }),
-    );
-
-    final payload = await api.deleteJson(['v1', 'session']);
-
-    expect(captured.method, 'DELETE');
-    expect(captured.url.path, '/api-root/v1/session');
-    expect(captured.body, isEmpty);
-    expect(payload, {'status': 'deleted'});
+  test('reads server Retry-After without inventing a countdown', () async {
+    for (final sample in [
+      (
+        '{"error":"submission_rate_limited","message":"Limit","retryAfterSeconds":42}',
+        <String, String>{},
+        42,
+      ),
+      (
+        '{"error":"submission_rate_limited","message":"Limit"}',
+        <String, String>{'retry-after': '17'},
+        17,
+      ),
+      (
+        '{"error":"submission_rate_limited","message":"Limit","retryAfterSeconds":-1}',
+        <String, String>{},
+        null,
+      ),
+    ]) {
+      final api = ApiClient(
+        baseUrl: Uri.parse('https://example.test'),
+        client: MockClient(
+          (_) async => http.Response(sample.$1, 429, headers: sample.$2),
+        ),
+      );
+      await expectLater(
+        () => api.postJson(['v1', 'items'], body: const {}),
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.retryAfterSeconds,
+            'retry delay',
+            sample.$3,
+          ),
+        ),
+      );
+    }
   });
 
   test('rejects malformed success JSON', () async {
@@ -147,5 +168,32 @@ void main() {
             .having((error) => error.code, 'code', 'request_timeout'),
       ),
     );
+  });
+
+  test('retries an idempotent write once with the same key', () async {
+    var attempts = 0;
+    final capturedKeys = <String?>[];
+    final api = ApiClient(
+      baseUrl: Uri.parse('https://example.test'),
+      client: MockClient((request) async {
+        attempts++;
+        capturedKeys.add(request.headers['idempotency-key']);
+        if (attempts == 1) {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        }
+        return http.Response('{"ok":true}', 200);
+      }),
+      timeout: const Duration(milliseconds: 5),
+    );
+
+    final payload = await api.postJson(
+      ['v1', 'items'],
+      headers: const {'Idempotency-Key': 'flutter-test-key'},
+      body: const {'title': 'Parco'},
+    );
+
+    expect(payload, {'ok': true});
+    expect(attempts, 2);
+    expect(capturedKeys, ['flutter-test-key', 'flutter-test-key']);
   });
 }

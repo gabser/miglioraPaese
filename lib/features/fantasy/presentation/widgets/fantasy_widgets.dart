@@ -1,4 +1,4 @@
-import 'package:fanta_comune/core/copy/venial_copy.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fanta_comune/features/fantasy/logic/fantasy_manager.dart';
@@ -35,6 +35,47 @@ class FantasyPage extends StatelessWidget {
               builder: (context, manager, _) => Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (manager.isRemote)
+                    OutlinedButton(
+                      onPressed: manager.busy
+                          ? null
+                          : () async {
+                              final input = TextEditingController();
+                              final result = await showDialog<String>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Consulta stagione'),
+                                  content: TextField(
+                                    controller: input,
+                                    decoration: const InputDecoration(
+                                      labelText: 'ID stagione pubblicata',
+                                      helperText:
+                                          'Vuoto: stagione corrente risolta dal server',
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Annulla'),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () => Navigator.pop(
+                                        context,
+                                        input.text.trim(),
+                                      ),
+                                      child: const Text('Consulta'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (result != null)
+                                await manager.selectSeason(
+                                  result.isEmpty ? null : result,
+                                );
+                              input.dispose();
+                            },
+                      child: const Text('Seleziona stagione / storico'),
+                    ),
                   if (manager.loading || manager.busy)
                     const LinearProgressIndicator(
                       semanticsLabel: 'Operazione in corso',
@@ -60,7 +101,7 @@ class FantasyPage extends StatelessWidget {
                               onPressed: manager.busy
                                   ? null
                                   : manager.retrySave,
-                              child: const Text(VenialCopy.retrySaveCta),
+                              child: const Text('Riprova salvataggio'),
                             ),
                           ],
                         ),
@@ -73,8 +114,8 @@ class FantasyPage extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
                 context.watch<FantasyManager>().isRemote
-                    ? 'Prova online · dati di esempio. La sessione anonima è legata a questo browser. Non puoi recuperarla su altri dispositivi.'
-                    : 'Demo sul dispositivo · carte, fonti e classifiche sono esempi.',
+                    ? 'Rehearsal API · dati sintetici. Sessione anonima legata al browser: nessun recupero su altri dispositivi.'
+                    : 'Demo locale · carte, fonti e classifiche simulate.',
               ),
             ),
             child,
@@ -113,6 +154,7 @@ class RoleBadge extends StatelessWidget {
             Flexible(
               child: Text(
                 role.label,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: color,
                   fontWeight: FontWeight.w800,
@@ -155,14 +197,11 @@ class FormIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Andamento recente: ${form.map((item) => item.label).join(', ')}',
-    child: Wrap(
-      crossAxisAlignment: WrapCrossAlignment.center,
+    label: 'Forma civica: ${form.map((item) => item.label).join(', ')}',
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          'Andamento recente',
-          style: Theme.of(context).textTheme.labelMedium,
-        ),
+        Text('Forma', style: Theme.of(context).textTheme.labelMedium),
         const SizedBox(width: 6),
         ...form.map(
           (trend) => Padding(
@@ -215,6 +254,7 @@ class SourceBadge extends StatelessWidget {
         Flexible(
           child: Text(
             status.label,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: color,
               fontWeight: FontWeight.w700,
@@ -288,18 +328,20 @@ class FantasyCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
+                  Row(
                     children: [
-                      RoleBadge(role: card.role, compact: true),
+                      Expanded(
+                        child: RoleBadge(role: card.role, compact: true),
+                      ),
+                      const SizedBox(width: 8),
                       CreditPill(credits: card.price, label: 'cr'),
                     ],
                   ),
                   const SizedBox(height: 10),
                   Text(
                     card.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
@@ -313,11 +355,9 @@ class FantasyCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   if (compact)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                    Row(
                       children: [
-                        FormIndicator(form: card.form),
+                        Expanded(child: FormIndicator(form: card.form)),
                         if (isCaptain) const CaptainBadge(),
                       ],
                     )
@@ -349,7 +389,7 @@ class FantasyCard extends StatelessWidget {
                       Text('Previsione: ${prediction!.label}'),
                     ],
                   ],
-                  if ((isCaptain && !compact) || isReserve) ...[
+                  if (isCaptain || isReserve) ...[
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
@@ -401,38 +441,26 @@ class SquadBoard extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        'Titolari · ${starters.length}',
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
+      Text('Titolari · 5', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 8),
       _CardGrid(
         cards: starters,
-        builder: (card) => _SquadCard(
+        builder: (card) => FantasyCard(
           card: card,
-          position: starters.indexOf(card) + 1,
+          compact: true,
           isCaptain: card.id == captainId,
           footer: Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               OutlinedButton.icon(
-                key: ValueKey('squad-captain-${card.id}'),
-                style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
-                onPressed: locked || card.id == captainId
-                    ? null
-                    : () => onCaptain(card.id),
-                icon: Icon(
-                  card.id == captainId ? Icons.star : Icons.star_outline,
-                ),
-                label: Text(
-                  card.id == captainId ? 'Capitano scelto' : 'Scegli capitano',
-                ),
+                onPressed: locked ? null : () => onCaptain(card.id),
+                icon: const Icon(Icons.star_outline),
+                label: const Text('Capitano'),
               ),
               PopupMenuButton<String>(
-                key: ValueKey('squad-swap-${card.id}'),
                 enabled: !locked,
-                tooltip: 'Sostituisci ${card.title} con una riserva',
+                tooltip: 'Metti in panchina',
                 onSelected: (reserveId) => onSwap(card.id, reserveId),
                 itemBuilder: (context) => reserves
                     .map(
@@ -442,10 +470,9 @@ class SquadBoard extends StatelessWidget {
                       ),
                     )
                     .toList(),
-                child: _ActionLabel(
+                child: const _ActionLabel(
                   icon: Icons.swap_horiz,
                   label: 'Sostituisci',
-                  enabled: !locked,
                 ),
               ),
             ],
@@ -453,137 +480,15 @@ class SquadBoard extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 20),
-      Text(
-        'Riserve · ${reserves.length}',
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      const SizedBox(height: 4),
-      const Text(
-        'Premi Sostituisci su un titolare per far entrare una riserva.',
-      ),
+      Text('Riserve · 3', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 8),
       _CardGrid(
         cards: reserves,
         maxColumns: 3,
-        builder: (card) => _SquadReserve(card: card),
+        builder: (card) =>
+            FantasyCard(card: card, compact: true, isReserve: true),
       ),
     ],
-  );
-}
-
-class _SquadCard extends StatelessWidget {
-  const _SquadCard({
-    required this.card,
-    required this.position,
-    required this.isCaptain,
-    required this.footer,
-  });
-  final model.FantasyCard card;
-  final int position;
-  final bool isCaptain;
-  final Widget footer;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = roleColor(card.role);
-    final theme = Theme.of(context).textTheme;
-    return Semantics(
-      container: true,
-      explicitChildNodes: true,
-      label: 'Titolare $position',
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTokens.radius),
-          side: BorderSide(
-            color: isCaptain ? AppTokens.navy : color.withValues(alpha: 0.3),
-            width: isCaptain ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              color: color.withValues(alpha: 0.1),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Icon(roleIcon(card.role), color: color, size: 20),
-                  Text(
-                    'IN CAMPO · $position',
-                    style: theme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  if (isCaptain) const CaptainBadge(),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(card.title, style: theme.titleMedium),
-                  const SizedBox(height: 3),
-                  Text(card.zone, style: theme.bodySmall),
-                  const SizedBox(height: 10),
-                  footer,
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      RoleBadge(role: card.role, compact: true),
-                      CreditPill(credits: card.price, label: 'cr'),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  FormIndicator(form: card.form),
-                ],
-              ),
-            ),
-            _UrbanScene(
-              keyName: card.illustrationKey,
-              role: card.role,
-              height: 40,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SquadReserve extends StatelessWidget {
-  const _SquadReserve({required this.card});
-  final model.FantasyCard card;
-  @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(card.title, style: Theme.of(context).textTheme.titleSmall),
-          Text(card.zone, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              RoleBadge(role: card.role, compact: true),
-              CreditPill(credits: card.price, label: 'cr'),
-            ],
-          ),
-          const SizedBox(height: 8),
-          FormIndicator(form: card.form),
-        ],
-      ),
-    ),
   );
 }
 
@@ -618,41 +523,21 @@ class _CardGrid extends StatelessWidget {
 }
 
 class _ActionLabel extends StatelessWidget {
-  const _ActionLabel({
-    required this.icon,
-    required this.label,
-    this.enabled = true,
-  });
+  const _ActionLabel({required this.icon, required this.label});
   final IconData icon;
   final String label;
-  final bool enabled;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    enabled: enabled,
-    child: Container(
-      constraints: const BoxConstraints(minHeight: 48),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: enabled ? null : Theme.of(context).disabledColor),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: enabled ? null : Theme.of(context).disabledColor,
-              ),
-            ),
-          ),
-        ],
-      ),
+  Widget build(BuildContext context) => Container(
+    constraints: const BoxConstraints(minHeight: 48),
+    padding: const EdgeInsets.symmetric(horizontal: 12),
+    decoration: BoxDecoration(
+      border: Border.all(color: Theme.of(context).colorScheme.outline),
+      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [Icon(icon), const SizedBox(width: 8), Text(label)],
     ),
   );
 }
@@ -697,7 +582,7 @@ class MarketComparison extends StatelessWidget {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text(VenialCopy.cancelCta),
+        child: const Text('Annulla'),
       ),
       FilledButton(onPressed: onConfirm, child: const Text('Conferma')),
     ],
@@ -744,7 +629,7 @@ class MatchdayProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     final remaining = locksAt.difference(now);
     final time = locked
-        ? VenialCopy.lineupLockedLabel
+        ? 'Formazione bloccata'
         : '${remaining.inDays}g ${remaining.inHours.remainder(24)}h al blocco';
     return Card(
       color: AppTokens.navy,
@@ -810,16 +695,30 @@ class ScoreReveal extends StatelessWidget {
           Text(card.title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Text('Previsione: ${prediction?.label ?? 'non inserita'}'),
-          Text('Esito osservato: ${outcome.observed.label}'),
+          Text(
+            'Esito osservato: ${outcome.disposition == model.OutcomeDisposition.undeterminable ? 'Non determinabile' : outcome.observed!.label}',
+          ),
           const SizedBox(height: 8),
           Text(outcome.explanation),
           const SizedBox(height: 8),
-          SourceBadge(status: outcome.sourceStatus),
+          if (outcome.authoritativePublication)
+            const Text('Valutazione pubblicata')
+          else
+            SourceBadge(status: outcome.sourceStatus),
+          if (outcome.undeterminableReason != null)
+            Text('Motivo: ${outcome.undeterminableReason}'),
+          if (outcome.evaluationId != null)
+            TextButton(
+              onPressed: () => context.go(
+                '/measurements/evaluations/${outcome.evaluationId}',
+              ),
+              child: const Text('Valutazione, fonti e storico'),
+            ),
           Text('${outcome.sourceLabel} · ${_date(outcome.sourceDate)}'),
           const Divider(height: 24),
           if (!personal)
             const Text(
-              'Questo esito è un esempio demo o non vale per la tua formazione. Non ti assegna punti.',
+              'Esempio demo o esito non valido per la tua formazione: nessun punto personale.',
             ),
           if (personal)
             Text(
@@ -827,10 +726,6 @@ class ScoreReveal extends StatelessWidget {
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-            ),
-          if (personal)
-            Text(
-              'Esito ${score.observationPoints} · previsione ${score.predictionPoints} · riflessione ${score.reflectionPoints} punti base.',
             ),
           if (personal && reflection != null)
             Text('Riflessione confermata: ${reflection!.label}'),
@@ -868,7 +763,7 @@ class LeagueTable extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.all(20),
           child: Text(
-            'La classifica compare quando ci sono abbastanza partecipanti.',
+            'La classifica sarà visibile al raggiungimento della soglia minima di partecipazione.',
           ),
         ),
       );
@@ -883,49 +778,28 @@ class LeagueTable extends StatelessWidget {
                   horizontal: 16,
                   vertical: 12,
                 ),
-                child: MediaQuery.textScalerOf(context).scale(14) > 28
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '#${entry.rank}',
-                            style: const TextStyle(fontWeight: FontWeight.w900),
-                          ),
-                          Text(
-                            entry.displayName,
-                            style: TextStyle(
-                              fontWeight: entry.isCurrentUser
-                                  ? FontWeight.w900
-                                  : FontWeight.w600,
-                            ),
-                          ),
-                          Text('${entry.points} pt'),
-                        ],
-                      )
-                    : Row(
-                        children: [
-                          SizedBox(
-                            width: 42,
-                            child: Text(
-                              '#${entry.rank}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              entry.displayName,
-                              style: TextStyle(
-                                fontWeight: entry.isCurrentUser
-                                    ? FontWeight.w900
-                                    : FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          Text('${entry.points} pt'),
-                        ],
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 42,
+                      child: Text(
+                        '#${entry.rank}',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
                       ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        entry.displayName,
+                        style: TextStyle(
+                          fontWeight: entry.isCurrentUser
+                              ? FontWeight.w900
+                              : FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Text('${entry.points} pt'),
+                  ],
+                ),
               ),
             )
             .toList(),
@@ -943,23 +817,30 @@ class CommunityScore extends StatelessWidget {
     color: AppTokens.successSoft,
     child: Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            'Punteggio cooperativo del Comune',
-            style: Theme.of(context).textTheme.titleMedium,
+          const Icon(Icons.groups_outlined, size: 34, color: AppTokens.success),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Punteggio cooperativo del Comune',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Misura osservazioni verificate e partecipazione, separato dalla classifica.',
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
           Text(
             '$value/100',
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Questo valore demo descrive osservazioni e partecipazione. È separato dalla classifica e dai voti alle proposte.',
           ),
         ],
       ),

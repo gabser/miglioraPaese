@@ -1,8 +1,0 @@
-.env
-.env.*
-data/
-secrets/
-test/
-*.sqlite
-*.sqlite-shm
-*.sqlite-wal

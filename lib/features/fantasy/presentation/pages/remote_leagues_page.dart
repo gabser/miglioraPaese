@@ -1,6 +1,9 @@
-import 'package:fanta_comune/core/copy/venial_copy.dart';
-import 'package:fanta_comune/core/widgets/fc_widgets.dart';
-import 'package:fanta_comune/core/theme/app_tokens.dart';
+import 'package:fanta_comune/features/cooperation/cooperation_page.dart';
+import 'package:go_router/go_router.dart';
+import 'package:fanta_comune/core/config/app_config.dart';
+import 'package:fanta_comune/features/fantasy/continuity/invite_link.dart';
+import 'package:fanta_comune/features/fantasy/continuity/continuity_repository.dart';
+import 'package:fanta_comune/features/fantasy/continuity/ownership_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -33,7 +36,7 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text(VenialCopy.cancelCta),
+              child: const Text('Annulla'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
@@ -55,6 +58,7 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
   Widget build(BuildContext context) {
     final manager = context.watch<FantasyManager>();
     final disabled = manager.busy;
+    final continuity = context.read<AppConfig>().leagueContinuityModeEnabled;
     invites.removeWhere(
       (id, _) => !manager.remoteLeagues.any(
         (l) => l.table.id == id && l.isOwner && !l.archived,
@@ -68,25 +72,17 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
             'Leghe private',
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const Text(
-            'La classifica online è visibile con almeno 3 giocatori in gara. Il punteggio cooperativo non è disponibile.',
+          Text(
+            context.read<AppConfig>().cooperationModeEnabled
+                ? 'Classifica fantasy e obiettivo cooperativo condiviso, con progressi distinti.'
+                : 'Classifica personale dal server, visibile da tre competitori. Punteggio cooperativo non disponibile.',
           ),
-          const Text(
-            'La sessione anonima è legata a questo browser. Non è un account e non consente recupero su altri dispositivi.',
-          ),
-          const SizedBox(height: 16),
-          const FcPanel(
-            tint: AppTokens.blue,
-            child: Text(
-              'Crea una lega o usa un invito. La classifica confronta i punti delle squadre dagli esiti fissati al termine dell’osservazione. Non usa la reputazione né i voti alle proposte.',
-            ),
+          Text(
+            context.read<AppConfig>().accountModeEnabled
+                ? 'Account verificato: leghe disponibili anche da altri dispositivi.'
+                : 'La sessione anonima è legata a questo browser. Non è un account e non consente recupero su altri dispositivi.',
           ),
           const SizedBox(height: 16),
-          if (manager.remoteLeagues.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 16),
-              child: Text('Non partecipi ancora a una lega privata.'),
-            ),
           if (manager.leagueError != null)
             Card(
               child: Padding(
@@ -131,11 +127,11 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                         : () async {
                             if (await confirm(
                                   'Creare la lega?',
-                                  'Il servizio assegna un nome automatico a ogni giocatore. Dopo il primo blocco della stagione puoi entrare solo come spettatore.',
+                                  'Il server assegnerà pseudonimi automatici. Dopo il primo lock della stagione si entra come spettatori.',
                                 ) &&
                                 mounted) {
                               if (await manager.createLeague(template)) {
-                                accepted('Lega creata.');
+                                accepted('Lega creata sul server.');
                               }
                             }
                           },
@@ -157,20 +153,38 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                     onPressed: disabled
                         ? null
                         : () async {
+                            if (continuity) {
+                              try {
+                                await context
+                                    .read<LeagueContinuityRepository>()
+                                    .rememberInvite(
+                                      tokenController.text.trim(),
+                                    );
+                                if (context.mounted)
+                                  context.go('/league-invite');
+                              } catch (_) {
+                                accepted('Inserisci un codice invito valido.');
+                              }
+                              return;
+                            }
                             if (await confirm(
                                   'Entrare nella lega?',
-                                  'Puoi entrare in gara prima del primo blocco della stagione. Dopo, entri come spettatore.',
+                                  'L’ingresso competitivo è consentito prima del primo lock. Un ingresso successivo è da spettatore.',
                                 ) &&
                                 mounted) {
                               if (await manager.joinLeague(
                                 tokenController.text.trim(),
                               )) {
                                 tokenController.clear();
-                                accepted('Sei entrato nella lega.');
+                                accepted('Adesione accettata dal server.');
                               }
                             }
                           },
-                    child: const Text('Entra con invito'),
+                    child: Text(
+                      continuity
+                          ? 'Rivedi invito prima di aderire'
+                          : 'Entra con invito',
+                    ),
                   ),
                 ],
               ),
@@ -200,7 +214,19 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                           ? 'Partecipi come spettatore'
                           : 'Partecipi alla classifica personale',
                     ),
-                    if (league.competitiveCount < 3)
+                    if (context.read<AppConfig>().cooperationModeEnabled &&
+                        league.seasonId != null)
+                      LeagueCooperationTabs(
+                        leagueId: league.table.id,
+                        seasonId: league.seasonId!,
+                        archived: league.archived,
+                        personal: league.competitiveCount < 3
+                            ? const Text(
+                                'Servono almeno tre competitori per mostrare la classifica.',
+                              )
+                            : LeagueTable(league: league.table),
+                      )
+                    else if (league.competitiveCount < 3)
                       const Text(
                         'Servono almeno tre competitori per mostrare la classifica.',
                       )
@@ -213,7 +239,7 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                             : () async {
                                 if (!await confirm(
                                   'Generare un nuovo invito?',
-                                  'I vecchi inviti smettono di funzionare. Il nuovo codice scade entro 24 ore: condividilo solo con il gruppo autorizzato alla prova online.',
+                                  'Tutti gli inviti precedenti saranno revocati. Il codice scade entro 24 ore: condividilo solo con il gruppo pilot autorizzato.',
                                 )) {
                                   return;
                                 }
@@ -233,16 +259,30 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                         const Text(
                           'Invito privato · mostrato solo in questa pagina',
                         ),
-                        SelectableText(invite.token),
+                        SelectableText(
+                          continuity
+                              ? leagueInviteLink(invite.token).toString()
+                              : invite.token,
+                        ),
                         Text('Scadenza: ${invite.expiresAt.toLocal()}'),
                         Wrap(
                           spacing: 8,
                           children: [
                             TextButton(
                               onPressed: () => Clipboard.setData(
-                                ClipboardData(text: invite.token),
+                                ClipboardData(
+                                  text: continuity
+                                      ? leagueInviteLink(
+                                          invite.token,
+                                        ).toString()
+                                      : invite.token,
+                                ),
                               ),
-                              child: const Text('Copia codice'),
+                              child: Text(
+                                continuity
+                                    ? 'Copia link invito'
+                                    : 'Copia codice',
+                              ),
                             ),
                             TextButton(
                               onPressed: disabled
@@ -264,15 +304,24 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                         ),
                       ],
                     ],
+                    if (continuity &&
+                        !league.archived &&
+                        league.seasonId != null)
+                      OwnershipPanel(
+                        key: ValueKey('ownership-${league.table.id}'),
+                        leagueId: league.table.id,
+                        seasonId: league.seasonId!,
+                        onChanged: manager.refreshLeagues,
+                      ),
                     TextButton(
-                      onPressed: disabled
+                      onPressed: disabled || league.archived
                           ? null
                           : () async {
                               if (!await confirm(
                                 'Uscire dalla lega?',
                                 league.isOwner
                                     ? 'La lega sarà archiviata e tutti gli inviti revocati. Le squadre degli altri membri resteranno conservate.'
-                                    : 'La tua squadra e i tuoi punti restano salvati. Se rientri dopo il blocco, partecipi come spettatore.',
+                                    : 'La tua squadra e i tuoi punti personali resteranno conservati. Un eventuale rientro dopo il lock sarà da spettatore.',
                               )) {
                                 return;
                               }
@@ -282,7 +331,7 @@ class _RemoteLeaguesPageState extends State<RemoteLeaguesPage> {
                                     () => invites.remove(league.table.id),
                                   );
                                 }
-                                accepted('Hai lasciato la lega.');
+                                accepted('Uscita accettata dal server.');
                               }
                             },
                       child: const Text('Esci dalla lega'),
