@@ -2330,10 +2330,10 @@ components:
       properties:
         fieldErrors:
           type: object
-          description: Invalid field paths mapped to stable public codes required, invalid, too_long.
+          description: Invalid field paths mapped to stable public codes required, invalid, too_long, invalid_location.
           additionalProperties:
             type: string
-            enum: [required, invalid, too_long]
+            enum: [required, invalid, too_long, invalid_location]
         error:
           type: string
         retryAfterSeconds: { type: integer, minimum: 1 }
@@ -2537,13 +2537,23 @@ components:
             kind: { const: municipality }
         - type: object
           additionalProperties: false
-          required: [kind, label]
+          required: [kind]
+          anyOf:
+            - required: [label]
+            - required: [coordinates]
           properties:
             kind: { const: specific }
             label: { type: string, minLength: 1, maxLength: 120 }
             civic: { type: string, maxLength: 20 }
             reference: { type: string, maxLength: 200 }
-      description: Manual place, Unicode code point limits after trim. Optional blank strings are omitted. No geocoding inferred for legacy null.
+            coordinates:
+              type: object
+              additionalProperties: false
+              required: [latitude, longitude]
+              properties:
+                latitude: { type: number, minimum: -90, maximum: 90 }
+                longitude: { type: number, minimum: -180, maximum: 180 }
+      description: Specific place requires a name or a complete finite geographic coordinate pair. Optional blank strings are omitted; Unicode code point limits after trim. Municipality accepts only kind. No administrative boundary verification or geocoding. Legacy null remains readable.
     SubmitSuggestedProblemRequest:
       type: object
       required: [title, description, category]

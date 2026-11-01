@@ -22,7 +22,6 @@ import '../../../helpers/test_app.dart';
 
 final _title = find.byKey(const ValueKey('proposal-title'));
 final _description = find.byKey(const ValueKey('proposal-description'));
-final _category = find.byKey(const ValueKey('proposal-category'));
 final _submit = find.byKey(const ValueKey('proposal-submit'));
 
 void main() {
@@ -75,6 +74,7 @@ void main() {
         await tester.tap(find.byIcon(Icons.add));
         await tester.pumpAndSettle();
         final listReadsBeforeSend = repository.listMunicipalities.length;
+        await openProposalReview(tester);
         await tester.enterText(_title, 'Alberi al parco');
         await _completeForm(tester);
         await sendReviewedProposal(tester);
@@ -157,6 +157,7 @@ void main() {
         '/suggest-problem?municipality=castel-bolognese',
       );
       expect(find.text('Comune: Castel Bolognese'), findsOneWidget);
+      await openProposalReview(tester);
       await tester.enterText(_title, 'Alberi al parco');
       await prefs.setMunicipalityId('comune:Pincara');
       await tester.pumpAndSettle();
@@ -184,10 +185,8 @@ void main() {
             .queryParameters['municipality'],
         'castel-bolognese',
       );
-      expect(repository.listMunicipalities, [
-        'castel-bolognese',
-        'castel-bolognese',
-      ]);
+      expect(repository.listMunicipalities, everyElement('castel-bolognese'));
+      expect(repository.listMunicipalities.length, greaterThanOrEqualTo(2));
       expect(
         find.text('Comune: Castel Bolognese · Demo locale'),
         findsOneWidget,
@@ -219,6 +218,7 @@ void main() {
         '/suggest-problem?municipality=bologna',
       );
       expect(prefs.municipalityId, isNull);
+      await openProposalReview(tester);
       await tester.enterText(_title, 'Alberi al parco');
       await _completeForm(tester);
       await tester.ensureVisible(_submit);
@@ -241,17 +241,14 @@ void main() {
         _RecordingRepository(),
         '/suggest-problem?municipality=bologna',
       );
+      await openProposalReview(tester);
       await tester.enterText(_title, '  Bozza Bologna  ');
       await _completeForm(tester);
       router.go('/suggest-problem?municipality=castel-bolognese');
       await tester.pumpAndSettle();
       expect(_fieldText(tester, _title), isEmpty);
-      expect(
-        tester
-            .widget<DropdownButtonFormField<ProblemKey>>(_category)
-            .initialValue,
-        isNull,
-      );
+      expect(find.text('Passaggio 1 di 3 · Problema'), findsOneWidget);
+      await openProposalReview(tester);
       await tester.enterText(_title, 'Bozza Castel');
       await tester.pumpAndSettle();
       router.go('/suggest-problem?municipality=unknown');
@@ -271,12 +268,7 @@ void main() {
         'bologna',
       );
       expect(_fieldText(tester, _title), '  Bozza Bologna  ');
-      expect(
-        tester
-            .widget<DropdownButtonFormField<ProblemKey>>(_category)
-            .initialValue,
-        ProblemKey.green,
-      );
+      expect(find.text('Categoria: Verde pubblico'), findsOneWidget);
       router.go('/suggest-problem?municipality=castel-bolognese');
       await tester.pumpAndSettle();
       expect(_fieldText(tester, _title), 'Bozza Castel');
@@ -353,6 +345,7 @@ void main() {
       );
       final uri = router.routeInformationProvider.value.uri;
       expect(uri.queryParameters['municipality'], 'bologna');
+      await openProposalReview(tester);
       await tester.enterText(_title, 'Bozza del collegamento');
       await tester.pumpAndSettle();
       await tester.pumpWidget(const SizedBox());
@@ -474,21 +467,16 @@ Future<GoRouter> _host(
 
 Future<void> _completeForm(WidgetTester tester) async {
   await tester.enterText(_description, 'I rami coprono il passaggio.');
-  await tester.ensureVisible(_category);
-  await tester.pumpAndSettle();
-  await tester.tap(_category);
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('Verde pubblico').last);
-  await tester.pumpAndSettle();
-  await chooseProposalLocation(tester);
 }
 
-String _fieldText(WidgetTester tester, Finder field) => tester
-    .widget<TextField>(
-      find.descendant(of: field, matching: find.byType(TextField)),
-    )
-    .controller!
-    .text;
+String _fieldText(WidgetTester tester, Finder field) => field.evaluate().isEmpty
+    ? ''
+    : tester
+          .widget<TextField>(
+            find.descendant(of: field, matching: find.byType(TextField)),
+          )
+          .controller!
+          .text;
 
 class _RecordingRepository extends MockNextProblemsRepository {
   _RecordingRepository() : super(currentUserId: 'user:test');

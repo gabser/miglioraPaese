@@ -244,3 +244,64 @@ it('manual place search includes civic/reference and quota provides inclusive Re
     assert.equal((await request(app,base+'/next-problems',{method:'POST',cookie,body:{...input,idempotencyKey:'fourth_place_key'}})).status,201);
   } finally {store.close();}
 });
+
+it('pin-only places survive durable replay, lookup, detail and coordinate identity conflicts', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'mp-pin-'));
+  const path = join(directory, 'pilot.sqlite');
+  let cookie, receipt;
+  const coordinates = { latitude: 40.0736, longitude: 18.0986 };
+  const body = { ...input, location: { kind: 'specific', coordinates } };
+  try {
+    for (let iteration = 0; iteration < 2; iteration++) {
+      const store = createPersistentStore({ databasePath: path, moderationRequired: true });
+      const app = createApp({ store });
+      const initial = await request(app, base + '/next-problems?own=true', { cookie });
+      cookie ??= cookieOf(initial);
+      const result = await request(app, base + '/next-problems', { method: 'POST', body, cookie });
+      assert.equal(result.status, iteration ? 200 : 201);
+      receipt ??= result.body;
+      assert.deepEqual(result.body, receipt);
+      assert.deepEqual(result.body.location, body.location);
+      assert.deepEqual((await request(app, base + '/next-problem-submissions/' + body.idempotencyKey, { cookie })).body.receipt, receipt);
+      assert.deepEqual((await request(app, base + '/next-problems/' + receipt.id, { cookie })).body.location, body.location);
+      const conflict = await request(app, base + '/next-problems', { method: 'POST', cookie,
+        body: { ...body, location: { kind: 'specific', coordinates: { ...coordinates, latitude: 41 } } } });
+      assert.equal(conflict.status, 409);
+      assert.equal(conflict.body.error, 'idempotency_conflict');
+      store.close();
+    }
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+it('validates complete finite geographic coordinates and excludes them for the whole municipality', async () => {
+  const app = createApp({ store: createMemoryStore() });
+  for (const location of [
+    { kind: 'specific', coordinates: {} },
+    { kind: 'specific', coordinates: { latitude: 40 } },
+    { kind: 'specific', coordinates: { longitude: 18 } },
+    { kind: 'specific', coordinates: { latitude: '40', longitude: 18 } },
+    { kind: 'specific', coordinates: { latitude: 91, longitude: 18 } },
+    { kind: 'specific', coordinates: { latitude: -91, longitude: 18 } },
+    { kind: 'specific', coordinates: { latitude: 40, longitude: 181 } },
+    { kind: 'specific', coordinates: { latitude: 40, longitude: -181 } },
+    { kind: 'specific', coordinates: { latitude: null, longitude: 18 } },
+    { kind: 'specific', coordinates: { latitude: 40, longitude: 18, extra: 1 } },
+    { kind: 'specific', coordinates: [40, 18] },
+    { kind: 'municipality', coordinates: { latitude: 40, longitude: 18 } },
+  ]) {
+    const result = await request(app, base + '/next-problems', { method: 'POST', body: { ...input, location } });
+    assert.equal(result.status, 400, JSON.stringify(location));
+    assert.equal(result.body.fieldErrors[location.kind === 'municipality' ? 'location' : 'location.coordinates'], location.kind === 'municipality' ? 'invalid' : 'invalid_location');
+  }
+  for (const coordinates of [{ latitude: 0, longitude: 0 }, { latitude: -90, longitude: -180 }, { latitude: 90, longitude: 180 }]) {
+    const result = await request(app, base + '/next-problems', { method: 'POST', body: { ...input, location: { kind: 'specific', coordinates } } });
+    assert.equal(result.status, 201);
+    assert.deepEqual(result.body.location.coordinates, coordinates);
+  }
+  // Direct store calls also reject NaN/Infinity (JSON cannot encode them).
+  const store = createMemoryStore();
+  for (const latitude of [NaN, Infinity, -Infinity]) {
+    assert.throws(() => store.submitSuggestedProblem({ municipalityId: 'castel-bolognese', userId: 'pin-user', ...input,
+      location: { kind: 'specific', coordinates: { latitude, longitude: 18 } } }));
+  }
+});

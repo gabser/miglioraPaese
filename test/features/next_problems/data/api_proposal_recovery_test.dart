@@ -86,8 +86,10 @@ void main() {
             description: 'Serve ombra vicino al passaggio.',
             category: ProblemKey.green,
             location: ProposalLocation.specific(
-              label: 'Via Roma',
-              civic: '12/A',
+              coordinates: ProposalCoordinates(
+                latitude: 40.0736,
+                longitude: 18.0986,
+              ),
             ),
           );
           expect(result.status, SubmissionStatus.outcomeUnknown);
@@ -113,7 +115,11 @@ void main() {
           expect(recovered.status, SubmissionStatus.succeeded);
           expect(recovered.intent!.receipt!.id, id);
           final receipt = recovered.intent!.receipt!;
-          expect(receipt.location!.civic, '12/A');
+          expect(receipt.location!.label, isNull);
+          expect(
+            receipt.location!.coordinates,
+            ProposalCoordinates(latitude: 40.0736, longitude: 18.0986),
+          );
           expect(transport.posts, 1);
           final lookup =
               await api().getJson([

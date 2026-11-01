@@ -1,0 +1,112 @@
+{
+  "browser": "156.0.8078.74",
+  "results": [
+    {
+      "width": 390,
+      "mode": "success",
+      "posts": 1,
+      "lookups": 0,
+      "keyboardEdits": 0,
+      "receiptId": "suggested-200",
+      "coordinates": {
+        "latitude": 40.0736,
+        "longitude": 18.0986
+      },
+      "sameCoordinatesInReceipt": true,
+      "journey": "Flutter choices → location → summary → POST → receipt → live detail"
+    },
+    {
+      "width": 390,
+      "mode": "lost",
+      "posts": 1,
+      "lookups": 1,
+      "keyboardEdits": 0,
+      "receiptId": "suggested-201",
+      "coordinates": {
+        "latitude": 40.0736,
+        "longitude": 18.0986
+      },
+      "sameCoordinatesInReceipt": true,
+      "journey": "Flutter choices → location → summary → POST → receipt → live detail"
+    },
+    {
+      "width": 390,
+      "mode": "malformed",
+      "posts": 1,
+      "lookups": 1,
+      "keyboardEdits": 0,
+      "receiptId": "suggested-202",
+      "coordinates": {
+        "latitude": 40.0736,
+        "longitude": 18.0986
+      },
+      "sameCoordinatesInReceipt": true,
+      "journey": "Flutter choices → location → summary → POST → receipt → live detail"
+    },
+    {
+      "width": 390,
+      "mode": "tile-error",
+      "posts": 1,
+      "lookups": 0,
+      "keyboardEdits": 1,
+      "receiptId": "suggested-203",
+      "coordinates": null,
+      "sameCoordinatesInReceipt": false,
+      "journey": "Flutter choices → location → summary → POST → receipt → live detail"
+    },
+    {
+      "width": 1440,
+      "mode": "success",
+      "posts": 1,
+      "lookups": 0,
+      "keyboardEdits": 0,
+      "receiptId": "suggested-204",
+      "coordinates": {
+        "latitude": 40.0736,
+        "longitude": 18.0986
+      },
+      "sameCoordinatesInReceipt": true,
+      "journey": "Flutter choices → location → summary → POST → receipt → live detail"
+    },
+    {
+      "width": 1440,
+      "mode": "lost",
+      "posts": 1,
+      "lookups": 1,
+      "keyboardEdits": 0,
+      "receiptId": "suggested-205",
+      "coordinates": {
+        "latitude": 40.0736,
+        "longitude": 18.0986
+      },
+      "sameCoordinatesInReceipt": true,
+      "journey": "Flutter choices → location → summary → POST → receipt → live detail"
+    },
+    {
+      "width": 1440,
+      "mode": "malformed",
+      "posts": 1,
+      "lookups": 1,
+      "keyboardEdits": 0,
+      "receiptId": "suggested-206",
+      "coordinates": {
+        "latitude": 40.0736,
+        "longitude": 18.0986
+      },
+      "sameCoordinatesInReceipt": true,
+      "journey": "Flutter choices → location → summary → POST → receipt → live detail"
+    },
+    {
+      "width": 1440,
+      "mode": "tile-error",
+      "posts": 1,
+      "lookups": 0,
+      "keyboardEdits": 1,
+      "receiptId": "suggested-207",
+      "coordinates": null,
+      "sameCoordinatesInReceipt": false,
+      "journey": "Flutter choices → location → summary → POST → receipt → live detail"
+    }
+  ],
+  "limits": "Headless Chrome, simulated local tiles, isolated SQLite. No live map provider, physical device or human screen reader test."
+}

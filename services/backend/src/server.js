@@ -1220,7 +1220,7 @@ export function createMemoryStore(options = {}) {
           key: suggestion.category,
           title: suggestion.title,
           zoneName: suggestion.location?.kind === 'specific'
-            ? [suggestion.location.label, suggestion.location.civic, suggestion.location.reference].filter(Boolean).join(' · ')
+            ? [suggestion.location.label ?? 'Punto sulla mappa', suggestion.location.civic, suggestion.location.reference].filter(Boolean).join(' · ')
             : suggestion.location?.kind === 'municipality' ? 'Intero Comune' : 'Tema scelto dai cittadini',
           status: 'stable',
           trendPercent: 0,
@@ -2119,11 +2119,22 @@ function normalizeLocation(value) {
     if (Object.keys(value).some((key) => key !== 'kind')) throw fieldError('location', 'invalid', 'Municipality location must contain only kind.');
     return { kind };
   }
-  if (Object.keys(value).some((key) => !['kind', 'label', 'civic', 'reference'].includes(key))) throw fieldError('location', 'invalid', 'location contains an unsupported field.');
-  const label = requireText(value.label, 'location.label', 120);
+  if (Object.keys(value).some((key) => !['kind', 'label', 'civic', 'reference', 'coordinates'].includes(key))) throw fieldError('location', 'invalid', 'location contains an unsupported field.');
+  const label = optionalText(value.label, 'location.label', 120);
+  let coordinates;
+  if (Object.hasOwn(value, 'coordinates')) {
+    const pair = value.coordinates;
+    if (!pair || typeof pair !== 'object' || Array.isArray(pair) || Object.keys(pair).length !== 2 ||
+        !Number.isFinite(pair.latitude) || !Number.isFinite(pair.longitude) ||
+        Math.abs(pair.latitude) > 90 || Math.abs(pair.longitude) > 180) {
+      throw fieldError('location.coordinates', 'invalid_location', 'A complete finite geographic coordinate pair is required.');
+    }
+    coordinates = { latitude: pair.latitude, longitude: pair.longitude };
+  }
+  if (!label && !coordinates) throw fieldError('location.label', 'required', 'A place name or coordinates is required.');
   const civic = optionalText(value.civic, 'location.civic', 20);
   const reference = optionalText(value.reference, 'location.reference', 200);
-  return { kind, label, ...(civic ? { civic } : {}), ...(reference ? { reference } : {}) };
+  return { kind, ...(label ? { label } : {}), ...(civic ? { civic } : {}), ...(reference ? { reference } : {}), ...(coordinates ? { coordinates } : {}) };
 }
 
 function normalizeSubmission(body) {

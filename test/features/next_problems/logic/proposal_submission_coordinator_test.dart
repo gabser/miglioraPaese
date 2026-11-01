@@ -604,7 +604,12 @@ void main() {
         title: 'Alberi',
         description: 'Serve ombra',
         category: ProblemKey.green,
-        location: const ProposalLocation.municipality(),
+        location: ProposalLocation.specific(
+          coordinates: ProposalCoordinates(
+            latitude: 40.0736,
+            longitude: 18.0986,
+          ),
+        ),
       );
       final first = await repo.submitIntent(intent);
       await repo.submitIntent(intent);
@@ -631,6 +636,8 @@ void main() {
       );
       final replay = await nextRepo.submitIntent(intent);
       expect(replay.id, first.id);
+      expect(replay.location, intent.location);
+      expect((await nextRepo.lookupIntent(intent)).location, intent.location);
       expect(replay.votesUp, 0);
       expect(replay.status, SuggestedProblemStatus.pending);
       expect(

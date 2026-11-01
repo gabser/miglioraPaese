@@ -3,6 +3,7 @@ import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/next_problems/domain/vote_choice.dart';
 import '../../../helpers/proposal_form_actions.dart';
 import 'dart:async';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -28,10 +29,104 @@ import '../../../helpers/test_app.dart';
 
 final title = find.byKey(const ValueKey('proposal-title'));
 final description = find.byKey(const ValueKey('proposal-description'));
-final category = find.byKey(const ValueKey('proposal-category'));
 final submit = find.byKey(const ValueKey('proposal-submit'));
 
 void main() {
+  setUp(() {
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+  });
+  testWidgets(
+    'legacy v1 draft opens as custom case and preserves text and place in summary',
+    (tester) async {
+      final prefs = await createTestPrefs({
+        'municipality_id': 'comune:Bologna',
+        'user_id': 'user:test',
+      });
+      final scope = ProposalScope.fromConfig(
+        municipalityId: 'bologna',
+        config: AppConfig.fromValues(),
+        namespace: prefs.localData.namespace,
+      );
+      await prefs.localData.mutate(
+        'draft:${scope.key}',
+        (_) => const LocalDataMutation({
+          'version': 1,
+          'revision': 9,
+          'title': ' Titolo precedente ',
+          'description': ' Descrizione precedente ',
+          'category': 'green',
+          'locationKind': 'specific',
+          'locationLabel': ' Via Milano ',
+          'civic': '12/A',
+          'reference': 'Ingresso nord',
+        }, true),
+      );
+      await pumpHost(tester, prefs);
+      expect(
+        text(tester, find.byKey(const ValueKey('proposal-custom-description'))),
+        ' Descrizione precedente ',
+      );
+      await nextProposalStep(tester);
+      expect(
+        text(tester, find.byKey(const ValueKey('proposal-location-label'))),
+        ' Via Milano ',
+      );
+      await nextProposalStep(tester);
+      expect(text(tester, title), ' Titolo precedente ');
+      expect(text(tester, description), ' Descrizione precedente ');
+      expect(find.text('Luogo: Via Milano, 12/A'), findsOneWidget);
+      await prefs.localData.flush();
+      expect(
+        ProposalDraftStore(prefs.localData).load(scope)!.toJson()['version'],
+        2,
+      );
+    },
+  );
+
+  testWidgets(
+    'pin, step and manual text restore in UI and never transfer to another Comune',
+    (tester) async {
+      final prefs = await createTestPrefs({
+        'municipality_id': 'comune:Bologna',
+        'user_id': 'user:test',
+      });
+      await pumpHost(tester, prefs);
+      await chooseProposalCase(
+        tester,
+        category: 'lighting',
+        scenario: 'Lampione spento',
+      );
+      await nextProposalStep(tester);
+      await chooseProposalLocation(tester, label: 'Luogo specifico');
+      await confirmProposalCenter(tester);
+      expect(find.textContaining('Punto confermato:'), findsOneWidget);
+      await nextProposalStep(tester);
+      await tester.enterText(title, 'Titolo da conservare');
+      await tester.enterText(description, 'Testo da conservare.');
+      await prefs.localData.flush();
+      await tester.pumpWidget(const SizedBox());
+      await pumpHost(tester, prefs);
+      expect(find.text('Passaggio 3 di 3 · Riepilogo'), findsOneWidget);
+      expect(text(tester, title), 'Titolo da conservare');
+      expect(text(tester, description), 'Testo da conservare.');
+      expect(find.textContaining('Punto confermato:'), findsOneWidget);
+      await tapProposal(tester, find.text('Modifica luogo'));
+      await prefs.setMunicipalityId('comune:Pincara');
+      await tester.pumpAndSettle();
+      expect(find.text('Passaggio 1 di 3 · Problema'), findsOneWidget);
+      expect(find.textContaining('Punto confermato:'), findsNothing);
+      await prefs.setMunicipalityId('comune:Bologna');
+      await tester.pumpAndSettle();
+      expect(find.text('Passaggio 2 di 3 · Luogo'), findsOneWidget);
+      expect(find.textContaining('Punto confermato:'), findsOneWidget);
+      await tapProposal(tester, find.text('Rimuovi pin'));
+      await nextProposalStep(tester);
+      expect(find.text('Luogo obbligatorio.'), findsOneWidget);
+      expect(find.text('Riepilogo della proposta'), findsNothing);
+    },
+  );
+
   testWidgets(
     'manual place survives reconstruction and reaches mock list, detail and promoted card',
     (tester) async {
@@ -110,6 +205,9 @@ void main() {
         'municipality_id': 'comune:Bologna',
       });
       await pumpHost(tester, prefs);
+      expect(prefs.localData.revision, 0);
+      await openProposalReview(tester);
+      final beforeFocus = prefs.localData.revision;
       final titleController = tester
           .widget<TextField>(
             find.descendant(of: title, matching: find.byType(TextField)),
@@ -117,7 +215,7 @@ void main() {
           .controller!;
       titleController.selection = const TextSelection.collapsed(offset: 0);
       await tester.pumpAndSettle();
-      expect(prefs.localData.revision, 0);
+      expect(prefs.localData.revision, beforeFocus);
       await fill(tester, 'Bozza da conservare');
       final before = prefs.localData.revision;
       titleController.selection = const TextSelection.collapsed(offset: 2);
@@ -146,12 +244,7 @@ void main() {
       router.go('/suggest-problem');
       await tester.pumpAndSettle();
       expect(text(tester, title), '  Alberi da potare  ');
-      expect(
-        tester
-            .widget<DropdownButtonFormField<ProblemKey>>(category)
-            .initialValue,
-        ProblemKey.green,
-      );
+      expect(find.text('Categoria: Verde pubblico'), findsOneWidget);
       expect(
         find.text('Bozza recuperata da questo dispositivo.'),
         findsOneWidget,
@@ -182,6 +275,7 @@ void main() {
       await prefs.setMunicipalityId('comune:Pincara');
       await tester.pumpAndSettle();
       expect(text(tester, title), isEmpty);
+      await openProposalReview(tester);
       await tester.enterText(title, 'Bozza Pincara');
       await tester.pumpAndSettle();
       await prefs.setMunicipalityId('comune:Bologna');
@@ -197,7 +291,11 @@ void main() {
         ),
       );
       expect(text(tester, title), isEmpty);
-      await tester.enterText(title, 'Bozza API');
+      await chooseProposalCase(tester, scenario: 'Il mio caso è diverso');
+      await tester.enterText(
+        find.byKey(const ValueKey('proposal-custom-description')),
+        'Bozza API',
+      );
       await tester.pumpAndSettle();
       await tester.pumpWidget(const SizedBox());
       await pumpHost(tester, prefs);
@@ -252,10 +350,7 @@ void main() {
     router.go('/suggest-problem');
     await tester.pumpAndSettle();
     expect(text(tester, title), isEmpty);
-    expect(
-      tester.widget<DropdownButtonFormField<ProblemKey>>(category).initialValue,
-      isNull,
-    );
+    expect(find.text('Passaggio 1 di 3 · Problema'), findsOneWidget);
   });
 
   testWidgets(
@@ -399,19 +494,22 @@ Future<GoRouter> pumpHost(
   addTearDown(router.dispose);
   final app = MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
   await tester.pumpWidget(
-    AppDependencies(
-      appPrefs: prefs,
-      config: config ?? AppConfig.fromValues(),
-      child: repository == null
-          ? app
-          : Provider<NextProblemsRepository>.value(
-              value: repository,
-              child: recordingSubmissionHost(
-                prefs: prefs,
-                repository: repository,
-                child: app,
+    Provider<TileProvider>.value(
+      value: LocalProposalTiles(),
+      child: AppDependencies(
+        appPrefs: prefs,
+        config: config ?? AppConfig.fromValues(),
+        child: repository == null
+            ? app
+            : Provider<NextProblemsRepository>.value(
+                value: repository,
+                child: recordingSubmissionHost(
+                  prefs: prefs,
+                  repository: repository,
+                  child: app,
+                ),
               ),
-            ),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -419,26 +517,23 @@ Future<GoRouter> pumpHost(
 }
 
 Future<void> fill(WidgetTester tester, String value) async {
+  await openProposalReview(tester);
   await tester.enterText(title, value);
   await tester.enterText(description, 'I rami coprono il passaggio.');
-  await tester.ensureVisible(category);
   await tester.pumpAndSettle();
-  await tester.tap(category);
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('Verde pubblico').last);
-  await tester.pumpAndSettle();
-  await chooseProposalLocation(tester);
 }
 
 Future<void> send(WidgetTester tester) =>
     sendReviewedProposal(tester, settleAfter: false);
 
-String text(WidgetTester tester, Finder field) => tester
-    .widget<TextField>(
-      find.descendant(of: field, matching: find.byType(TextField)),
-    )
-    .controller!
-    .text;
+String text(WidgetTester tester, Finder field) => field.evaluate().isEmpty
+    ? ''
+    : tester
+          .widget<TextField>(
+            find.descendant(of: field, matching: find.byType(TextField)),
+          )
+          .controller!
+          .text;
 
 class FailingBackend extends SharedPreferencesLocalBackend {
   FailingBackend(super.prefs);
