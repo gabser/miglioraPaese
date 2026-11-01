@@ -192,7 +192,7 @@ npm test
 docker build --tag migliorapaese/backend:local .
 ~~~
 
-La CI esegue gli stessi gate con Flutter 3.44.2 e Node.js 24.
+La CI esegue gli stessi gate con Flutter 3.47.5 e Node.js 24.
 
 ## Demo web
 
@@ -203,6 +203,12 @@ come sorgente Pages, l'URL previsto è:
 <https://gabser.github.io/miglioraPaese/>
 
 Il workflow Pages non avvia e non espone **services/backend**.
+
+La demo Pages usa la modalità civica con cambio Comune abilitato: da
+**Profilo → Cambia Comune** puoi scegliere un Comune demo attivo (ad esempio
+Bologna) oppure cercare Tuglie, che mantiene lo stato Comune in attivazione.
+La mappa di Tuglie resta abilitata; le proposte e le preferenze sono locali al
+dispositivo. Il workflow non imposta `PILOT_MUNICIPALITY_ID`.
 
 ## Documentazione
 
