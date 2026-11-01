@@ -874,13 +874,11 @@ class _CivicLoopSummaryCard extends StatelessWidget {
         ? 'Non ci sono ancora carte dalle proposte in questo turno. Proponi un problema o vota una proposta.'
         : 'Tema più votato tra le carte: ${summary.topThemeTitle}. Il turno può contenere più carte civiche.';
 
-    return FcPanel(
-      padding: const EdgeInsets.all(AppTokens.s14),
+    return FcSummaryPanel(
+      title: 'Riepilogo ${summary.municipalityName}',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          FcSectionHeader(title: 'Riepilogo ${summary.municipalityName}'),
-          const SizedBox(height: AppTokens.s8),
           FcStatusChip(
             label: summary.hasCompleteLoop ? 'Percorso completato' : 'In corso',
             color: summary.hasCompleteLoop ? AppTokens.success : AppTokens.blue,

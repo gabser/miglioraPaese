@@ -63,6 +63,101 @@ class FcPanel extends StatelessWidget {
   }
 }
 
+/// Shared civic recap surface; typography and colors follow the active theme.
+class FcSummaryPanel extends StatelessWidget {
+  const FcSummaryPanel({
+    super.key,
+    this.title = 'Riepilogo del Comune',
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppTokens.s16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        border: Border.all(color: theme.colorScheme.secondary),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTokens.s8),
+          DefaultTextStyle.merge(
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
+            ),
+            child: child,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Primary page heading, distinct from navigation and section titles.
+class FcPageHeader extends StatelessWidget {
+  const FcPageHeader({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    this.eyebrow,
+  });
+  final String title;
+  final String subtitle;
+  final String? eyebrow;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (eyebrow != null) ...[
+          Text(
+            eyebrow!,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.secondary,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: AppTokens.s8),
+        ],
+        Semantics(
+          header: true,
+          child: Text(
+            title,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppTokens.s8),
+        Text(
+          subtitle,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class FcSectionHeader extends StatelessWidget {
   const FcSectionHeader({
     super.key,
@@ -362,7 +457,7 @@ class FcDisclosure extends StatelessWidget {
     child: ExpansionTile(
       key: PageStorageKey<String>(storageId),
       controller: controller,
-      title: Text(title),
+      title: Text(title, style: Theme.of(context).textTheme.titleMedium),
       // Nested scrollables must not read ExpansionTile's boolean storage value.
       children: [
         for (var index = 0; index < children.length; index++)

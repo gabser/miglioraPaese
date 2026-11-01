@@ -44,57 +44,78 @@ class AppTheme {
     final baseTextTheme = Typography.material2021().black.apply(
       bodyColor: colorScheme.onSurface,
       displayColor: colorScheme.onSurface,
-      fontFamily: 'Roboto',
+      fontFamily: 'Manrope',
     );
     final textTheme = baseTextTheme.copyWith(
+      headlineLarge: baseTextTheme.headlineLarge?.copyWith(
+        fontSize: 32,
+        fontWeight: FontWeight.w800,
+        height: 1.08,
+        letterSpacing: 0,
+      ),
       headlineMedium: baseTextTheme.headlineMedium?.copyWith(
+        fontSize: 28,
         fontWeight: FontWeight.w800,
         height: 1.08,
         letterSpacing: 0,
       ),
       headlineSmall: baseTextTheme.headlineSmall?.copyWith(
+        fontSize: 24,
         fontWeight: FontWeight.w800,
         height: 1.12,
         letterSpacing: 0,
       ),
       titleLarge: baseTextTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.w700,
+        fontSize: 22,
+        color: AppTokens.navy,
+        fontWeight: FontWeight.w800,
         height: 1.2,
         letterSpacing: 0,
       ),
       titleMedium: baseTextTheme.titleMedium?.copyWith(
+        fontSize: 18,
         fontWeight: FontWeight.w700,
         height: 1.2,
         letterSpacing: 0,
       ),
       titleSmall: baseTextTheme.titleSmall?.copyWith(
+        fontSize: 16,
         fontWeight: FontWeight.w600,
         height: 1.2,
         letterSpacing: 0,
       ),
       bodyLarge: baseTextTheme.bodyLarge?.copyWith(
+        fontSize: 16,
+        letterSpacing: 0,
         fontWeight: FontWeight.w400,
         height: 1.4,
       ),
       bodyMedium: baseTextTheme.bodyMedium?.copyWith(
+        letterSpacing: 0,
+        fontSize: 16,
         fontWeight: FontWeight.w400,
         height: 1.4,
       ),
       bodySmall: baseTextTheme.bodySmall?.copyWith(
+        letterSpacing: 0,
+        fontSize: 14,
         fontWeight: FontWeight.w400,
         height: 1.35,
       ),
       labelLarge: baseTextTheme.labelLarge?.copyWith(
+        fontSize: 14,
         fontWeight: FontWeight.w700,
         letterSpacing: 0,
         height: 1.1,
       ),
       labelMedium: baseTextTheme.labelMedium?.copyWith(
+        fontSize: 12,
         fontWeight: FontWeight.w700,
         letterSpacing: 0,
         height: 1.1,
       ),
       labelSmall: baseTextTheme.labelSmall?.copyWith(
+        fontSize: 11,
         fontWeight: FontWeight.w600,
         letterSpacing: 0,
         height: 1.1,
@@ -102,7 +123,7 @@ class AppTheme {
     );
 
     final baseChipTheme = ChipThemeData(
-      labelStyle: baseTextTheme.labelLarge,
+      labelStyle: textTheme.labelLarge,
       side: BorderSide(color: colorScheme.outlineVariant),
       padding: const EdgeInsets.symmetric(
         horizontal: AppTokens.s12,
@@ -119,6 +140,7 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Manrope',
       colorScheme: colorScheme,
       textTheme: textTheme,
       cardTheme: CardThemeData(
@@ -131,6 +153,7 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
+        titleTextStyle: textTheme.titleMedium,
         backgroundColor: colorScheme.background,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
@@ -168,6 +191,15 @@ class AppTheme {
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
+        labelStyle: textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
+        hintStyle: textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
+        helperStyle: textTheme.bodySmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         ),
@@ -245,6 +277,26 @@ class AppTheme {
               borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
             ),
           ),
+        ),
+      ),
+      expansionTileTheme: ExpansionTileThemeData(
+        backgroundColor: colorScheme.surface,
+        collapsedBackgroundColor: colorScheme.surface,
+        textColor: colorScheme.onSurface,
+        collapsedTextColor: colorScheme.onSurface,
+        iconColor: colorScheme.secondary,
+        collapsedIconColor: colorScheme.secondary,
+        tilePadding: const EdgeInsets.symmetric(
+          horizontal: AppTokens.s16,
+          vertical: AppTokens.s4,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+          side: BorderSide(color: colorScheme.outlineVariant),
+        ),
+        collapsedShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+          side: BorderSide(color: colorScheme.outlineVariant),
         ),
       ),
       chipTheme: baseChipTheme,

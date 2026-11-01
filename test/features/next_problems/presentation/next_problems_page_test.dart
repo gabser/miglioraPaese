@@ -66,7 +66,17 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(reset);
         await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(
+          search,
+          -250,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(tester.widget<TextField>(search).controller!.text, isEmpty);
+        await tester.scrollUntilVisible(
+          find.text('Illuminazione al parco'),
+          250,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('Illuminazione al parco'), findsOneWidget);
         expect(tester.takeException(), isNull);
       },

@@ -7,6 +7,64 @@ import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 
 void main() {
+  testWidgets(
+    'shared recap and disclosure follow changes to the active theme',
+    (tester) async {
+      final base = AppTheme.light();
+      final custom = base.copyWith(
+        colorScheme: base.colorScheme.copyWith(
+          secondaryContainer: Colors.amber.shade50,
+        ),
+        textTheme: base.textTheme.copyWith(
+          bodyMedium: base.textTheme.bodyMedium!.copyWith(fontSize: 19),
+          titleMedium: base.textTheme.titleMedium!.copyWith(fontSize: 21),
+        ),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: custom,
+          home: const Scaffold(
+            body: Column(
+              children: [
+                FcSummaryPanel(
+                  title: 'Sintesi',
+                  child: Text('Contenuto del riepilogo'),
+                ),
+                FcDisclosure(
+                  storageId: 'theme-propagation',
+                  title: 'Apri riepilogo',
+                  children: [Text('Dettagli')],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      final content = tester.element(find.text('Contenuto del riepilogo'));
+      expect(DefaultTextStyle.of(content).style.fontSize, 19);
+      expect(tester.widget<Text>(find.text('Sintesi')).style!.fontSize, 21);
+      expect(
+        tester.widget<Text>(find.text('Apri riepilogo')).style!.fontSize,
+        21,
+      );
+      final surface = tester.widget<Container>(
+        find
+            .descendant(
+              of: find.byType(FcSummaryPanel),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+      expect(
+        (surface.decoration! as BoxDecoration).color,
+        custom.colorScheme.secondaryContainer,
+      );
+      await tester.tap(find.text('Apri riepilogo'));
+      await tester.pumpAndSettle();
+      expect(find.text('Dettagli'), findsOneWidget);
+    },
+  );
+
   test('small semantic text has sufficient contrast on tinted surfaces', () {
     for (final tint in [
       AppTokens.blue,
@@ -53,8 +111,18 @@ void main() {
       ),
     );
     final scale = typography['scale'] as Map<String, dynamic>;
+    expect(theme.appBarTheme.titleTextStyle!.fontSize, scale['titleMedium']);
+    expect(theme.chipTheme.labelStyle!.fontSize, scale['labelLarge']);
     expect(theme.textTheme.bodyMedium!.fontFamily, typography['family']);
+    for (final style in [
+      theme.textTheme.bodyLarge,
+      theme.textTheme.bodyMedium,
+      theme.textTheme.bodySmall,
+    ]) {
+      expect(style!.letterSpacing, typography['letterSpacing']);
+    }
     final styles = {
+      'headlineLarge': theme.textTheme.headlineLarge,
       'headlineMedium': theme.textTheme.headlineMedium,
       'headlineSmall': theme.textTheme.headlineSmall,
       'titleLarge': theme.textTheme.titleLarge,

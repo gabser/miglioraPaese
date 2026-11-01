@@ -516,7 +516,6 @@ class _RightRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
     final accuracy = data.reputation.predictionsCount == 0
         ? '0%'
         : '${(data.reputation.accuracy * 100).round()}%';
@@ -592,16 +591,7 @@ class _RightRail extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppTokens.s16),
-        FcPanel(
-          tint: AppTokens.blue,
-          child: Text(
-            _summaryLine(data.civicSummary),
-            style: textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurface,
-              height: 1.42,
-            ),
-          ),
-        ),
+        FcSummaryPanel(child: Text(_summaryLine(data.civicSummary))),
       ],
     );
   }

@@ -8,7 +8,6 @@ import 'package:fanta_comune/core/theme/app_icons.dart';
 import 'package:fanta_comune/core/theme/app_tokens.dart';
 import 'package:fanta_comune/core/widgets/fc_widgets.dart';
 import 'package:fanta_comune/core/widgets/max_width_container.dart';
-import 'package:fanta_comune/core/theme/typography_x.dart';
 import 'package:fanta_comune/features/game/data/game_repository.dart';
 import 'package:fanta_comune/features/game/domain/aggregated_insight.dart';
 import 'package:fanta_comune/features/game/domain/problem.dart';
@@ -158,11 +157,12 @@ class _BoardPageState extends State<BoardPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      FcSectionHeader(
-                        title:
-                            'Comune: ${MunicipalityCatalog.displayNameFromId(_loadedMunicipalityId!)}',
-                        subtitle:
-                            '${VenialCopy.boardSubtitle} · Gioco delle previsioni',
+                      FcPageHeader(
+                        eyebrow: 'IL TUO COMUNE',
+                        title: MunicipalityCatalog.displayNameFromId(
+                          _loadedMunicipalityId!,
+                        ),
+                        subtitle: VenialCopy.boardSubtitle,
                       ),
                       const SizedBox(height: AppTokens.s16),
                       if (data.problems.isEmpty)
@@ -194,6 +194,9 @@ class _BoardPageState extends State<BoardPage> {
                                 SizedBox(
                                   width: fieldWidth,
                                   child: DropdownButtonFormField<ProblemKey>(
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
                                     key: ValueKey(
                                       'board-category-${_category?.name}',
                                     ),
@@ -224,6 +227,9 @@ class _BoardPageState extends State<BoardPage> {
                                 SizedBox(
                                   width: fieldWidth,
                                   child: DropdownButtonFormField<ProblemStatus>(
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
                                     key: ValueKey(
                                       'board-status-${_status?.name}',
                                     ),
@@ -252,6 +258,9 @@ class _BoardPageState extends State<BoardPage> {
                                 SizedBox(
                                   width: fieldWidth,
                                   child: DropdownButtonFormField<_BoardSort>(
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
                                     key: const ValueKey('board-sort'),
                                     initialValue: _sort,
                                     isExpanded: true,
@@ -448,8 +457,14 @@ class _BoardTile extends StatelessWidget {
           const SizedBox(height: AppTokens.s12),
           Text(problem.title, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppTokens.s8),
-          Text('Zona: ${problem.zoneName ?? 'non specificata'}'),
-          Text('Categoria: ${AppIcons.labelForProblemKey(problem.key)}'),
+          Text(
+            'Zona: ${problem.zoneName ?? 'non specificata'}',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          Text(
+            'Categoria: ${AppIcons.labelForProblemKey(problem.key)}',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
           const SizedBox(height: AppTokens.s8),
           Text(
             '${problem.trendPercent >= 0 ? '+' : ''}${problem.trendPercent}% andamento del tema',
@@ -573,12 +588,7 @@ class _BoardNewsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          VenialCopy.boardNewsTitle,
-          style: TypographyX.titleMedium(
-            context,
-          )?.copyWith(fontWeight: FontWeight.w700),
-        ),
+        const FcSectionHeader(title: VenialCopy.boardNewsTitle),
         const SizedBox(height: AppTokens.s8),
         if (items.isEmpty)
           Text(
@@ -663,17 +673,12 @@ class _BoardTokensSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          VenialCopy.boardTokensTitle,
-          style: TypographyX.titleMedium(
-            context,
-          )?.copyWith(fontWeight: FontWeight.w700),
-        ),
+        const FcSectionHeader(title: VenialCopy.boardTokensTitle),
         const SizedBox(height: AppTokens.s8),
         if (tokens.isEmpty)
           Text(
             VenialCopy.boardTokensEmpty,
-            style: textTheme.bodySmall?.copyWith(
+            style: textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           )
@@ -694,7 +699,7 @@ class _BoardTokensSection extends StatelessWidget {
         const SizedBox(height: AppTokens.s8),
         Text(
           VenialCopy.boardTokensCaption,
-          style: textTheme.labelSmall?.copyWith(
+          style: textTheme.bodySmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
         ),
