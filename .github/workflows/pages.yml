@@ -40,7 +40,6 @@ jobs:
           flutter build web --release --base-href "/miglioraPaese/"
           --dart-define=FANTASY_MODE_ENABLED=false
           --dart-define=TUGLIE_MAP_ENABLED=true
-          --dart-define=PILOT_MUNICIPALITY_ID=tuglie
           --dart-define=FANTASY_DATA_SOURCE=mock
           --dart-define=GAME_DATA_SOURCE=mock
           --dart-define=NEXT_PROBLEMS_DATA_SOURCE=mock
