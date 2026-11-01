@@ -44,11 +44,22 @@ void main() {
           ],
         );
         addTearDown(router.dispose);
+        final baseTheme = AppTheme.light();
+        final theme = baseTheme.copyWith(
+          navigationRailTheme: baseTheme.navigationRailTheme.copyWith(
+            selectedLabelTextStyle: baseTheme.textTheme.titleSmall!.copyWith(
+              fontSize: 19,
+            ),
+            unselectedLabelTextStyle: baseTheme.textTheme.titleSmall!.copyWith(
+              fontSize: 17,
+            ),
+          ),
+        );
         await tester.pumpWidget(
           ChangeNotifierProvider<AppPrefs>.value(
             value: prefs,
             child: MaterialApp.router(
-              theme: AppTheme.light(),
+              theme: theme,
               routerConfig: router,
               builder: (context, child) => MediaQuery(
                 data: MediaQuery.of(
@@ -66,6 +77,7 @@ void main() {
         );
         if (width >= 900) {
           final profile = find.text('Profilo');
+          expect(tester.widget<Text>(profile).style!.fontSize, 17);
           await tester.scrollUntilVisible(
             profile,
             200,
@@ -78,6 +90,9 @@ void main() {
         await tester.pumpAndSettle();
         expect(router.routeInformationProvider.value.uri.path, '/profile');
         expect(find.text('Contenuto profile'), findsOneWidget);
+        if (width >= 900) {
+          expect(tester.widget<Text>(find.text('Profilo')).style!.fontSize, 19);
+        }
         expect(tester.takeException(), isNull);
       },
     );
