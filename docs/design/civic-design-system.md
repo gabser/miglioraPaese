@@ -41,3 +41,11 @@ Dopo un cambio globale verificare tutta la suite Flutter e le schermate a testo
 ingrandito: una tipografia diversa cambia l’altezza dei contenuti e lo scroll.
 
 Manrope è distribuito come asset locale nei pesi 400–800, senza richieste a Google Fonts a runtime. Fonte e licenza sono in `assets/fonts/manrope/`.
+
+## Navigazione
+
+La sidebar personalizzata legge `NavigationRailThemeData` dal tema, come la
+navigazione desktop standard: `titleSmall` (16 px), peso 700 nelle voci inattive,
+800 in quella selezionata. Modificare gli stili selected/unselected nel tema
+aggiorna entrambe. La navigazione mobile usa `labelMedium` (12 px), con la stessa
+famiglia e la stessa gerarchia di pesi.

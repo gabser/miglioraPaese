@@ -166,10 +166,10 @@ class AppTheme {
         indicatorColor: colorScheme.primaryContainer,
         surfaceTintColor: Colors.transparent,
         labelTextStyle: MaterialStateProperty.resolveWith(
-          (states) => textTheme.labelSmall?.copyWith(
+          (states) => textTheme.labelMedium?.copyWith(
             fontWeight: states.contains(MaterialState.selected)
                 ? FontWeight.w800
-                : FontWeight.w600,
+                : FontWeight.w700,
             color: states.contains(MaterialState.selected)
                 ? colorScheme.primary
                 : colorScheme.onSurfaceVariant,
@@ -181,13 +181,13 @@ class AppTheme {
         indicatorColor: colorScheme.primaryContainer,
         selectedIconTheme: const IconThemeData(color: AppTokens.blue),
         unselectedIconTheme: IconThemeData(color: colorScheme.onSurfaceVariant),
-        selectedLabelTextStyle: textTheme.labelMedium?.copyWith(
-          color: colorScheme.primary,
+        selectedLabelTextStyle: textTheme.titleSmall?.copyWith(
+          color: colorScheme.onPrimaryContainer,
           fontWeight: FontWeight.w800,
         ),
-        unselectedLabelTextStyle: textTheme.labelMedium?.copyWith(
-          color: colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.w600,
+        unselectedLabelTextStyle: textTheme.titleSmall?.copyWith(
+          color: colorScheme.onSurface,
+          fontWeight: FontWeight.w700,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(

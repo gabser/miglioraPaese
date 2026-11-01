@@ -263,7 +263,9 @@ class _SidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final navigationTheme = theme.navigationRailTheme;
 
     return Semantics(
       button: true,
@@ -289,12 +291,9 @@ class _SidebarItem extends StatelessWidget {
                 Expanded(
                   child: Text(
                     destination.label,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: selected
-                          ? scheme.primary
-                          : scheme.onSurfaceVariant,
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                    ),
+                    style: selected
+                        ? navigationTheme.selectedLabelTextStyle
+                        : navigationTheme.unselectedLabelTextStyle,
                   ),
                 ),
               ],
