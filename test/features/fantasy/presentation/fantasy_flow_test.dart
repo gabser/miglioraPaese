@@ -110,6 +110,10 @@ void main() {
         await pumpRoutingFrame(tester);
         await tester.tap(find.text('Mercato'));
         await pumpRoutingFrame(tester);
+        await tester.ensureVisible(
+          find.byType(DropdownButtonFormField<String>),
+        );
+        await tester.pumpAndSettle();
         await tester.tap(find.byType(DropdownButtonFormField<String>));
         await tester.pumpAndSettle();
         await tester.tap(

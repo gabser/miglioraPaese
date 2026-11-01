@@ -40,7 +40,7 @@ void main() {
       tester,
     ) async {
       await _pump(tester, width: width, scale: 2);
-      expect(find.textContaining('Comune: Bologna'), findsOneWidget);
+      expect(find.text('Bologna'), findsOneWidget);
       expect(find.text(_problems.first.title), findsOneWidget);
       expect(find.text('Zona: ${_problems.first.zoneName}'), findsOneWidget);
       expect(find.text('-25% andamento del tema'), findsOneWidget);
