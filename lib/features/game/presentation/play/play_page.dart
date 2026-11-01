@@ -113,31 +113,50 @@ class _PlayView extends StatelessWidget {
                                 ),
                                 SizedBox(height: sectionGap),
                                 if (hasProblems) ...[
-                                  Semantics(
-                                    liveRegion: true,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '$completed di ${problems.length} carte giocate',
-                                          key: const ValueKey('play-progress'),
-                                        ),
-                                        const SizedBox(height: AppTokens.s8),
-                                        LinearProgressIndicator(
-                                          value: completed / problems.length,
-                                          semanticsLabel:
-                                              'Carte giocate: $completed di ${problems.length}',
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: AppTokens.s12),
-                                  _TurnActionStrip(
-                                    countdownLabel: _countdownLabel(state),
-                                    predictionCount: completed,
-                                    enabled: completed > 0,
-                                    onResolveTurn: cubit.resolveTurn,
+                                  LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final progress = _TurnProgress(
+                                        completed: completed,
+                                        total: problems.length,
+                                      );
+                                      final action = _TurnActionStrip(
+                                        countdownLabel: _countdownLabel(state),
+                                        predictionCount: completed,
+                                        enabled: completed > 0,
+                                        onResolveTurn: cubit.resolveTurn,
+                                      );
+                                      if (constraints.maxWidth >= 680 &&
+                                          MediaQuery.textScalerOf(
+                                                context,
+                                              ).scale(14) <=
+                                              20) {
+                                        return IntrinsicHeight(
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              Expanded(
+                                                flex: 3,
+                                                child: progress,
+                                              ),
+                                              const SizedBox(
+                                                width: AppTokens.s12,
+                                              ),
+                                              Expanded(flex: 5, child: action),
+                                            ],
+                                          ),
+                                        );
+                                      }
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          progress,
+                                          const SizedBox(height: AppTokens.s12),
+                                          action,
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ],
                                 if (state.civicSummary != null) ...[
@@ -500,15 +519,78 @@ class _BoardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final municipality = context.watch<AppPrefs>().municipalityId ?? 'demo';
-    return FcSectionHeader(
-      title:
-          'Il turno di ${MunicipalityCatalog.displayNameFromId(municipality)}',
-      subtitle: hasNewCards
-          ? 'Gioco delle previsioni · nuovi esiti disponibili'
-          : 'Gioco delle previsioni · nessuna segnalazione ufficiale',
-      action: OutlinedButton(
-        onPressed: onOpenBoard,
-        child: const Text(VenialCopy.playBoardCta),
+    final theme = Theme.of(context);
+    final heading = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'IL TUO COMUNE, IN GIOCO',
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: AppTokens.successForeground,
+          ),
+        ),
+        const SizedBox(height: AppTokens.s8),
+        Semantics(
+          header: true,
+          child: Text(
+            'Il turno di ${MunicipalityCatalog.displayNameFromId(municipality)}',
+            style: theme.textTheme.headlineLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: AppTokens.navy,
+              height: 1.08,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppTokens.s8),
+        Text(
+          'La città cambia. Tu come la vedi?',
+          style: theme.textTheme.titleLarge,
+        ),
+        const SizedBox(height: AppTokens.s8),
+        Text(
+          hasNewCards
+              ? 'Gioco delle previsioni · nuovi esiti disponibili'
+              : 'Gioco delle previsioni · nessuna segnalazione ufficiale',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+    final action = OutlinedButton.icon(
+      onPressed: onOpenBoard,
+      icon: const Icon(AppIcons.board),
+      label: const Text(VenialCopy.playBoardCta),
+    );
+    return Container(
+      padding: const EdgeInsets.all(AppTokens.s20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth >= 640 &&
+              MediaQuery.textScalerOf(context).scale(14) <= 20) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: heading),
+                const SizedBox(width: AppTokens.s16),
+                action,
+              ],
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              heading,
+              const SizedBox(height: AppTokens.s12),
+              action,
+            ],
+          );
+        },
       ),
     );
   }
@@ -601,6 +683,68 @@ class _ProblemTile extends StatelessWidget {
   }
 }
 
+class _TurnProgress extends StatelessWidget {
+  const _TurnProgress({required this.completed, required this.total});
+
+  final int completed;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        padding: const EdgeInsets.all(AppTokens.s20),
+        decoration: BoxDecoration(
+          color: AppTokens.navy,
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'IL TUO TURNO',
+              style: textTheme.labelLarge?.copyWith(color: Colors.white),
+            ),
+            const SizedBox(height: AppTokens.s8),
+            Wrap(
+              spacing: AppTokens.s12,
+              runSpacing: AppTokens.s4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  '$completed di $total',
+                  key: const ValueKey('play-progress'),
+                  style: textTheme.headlineLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  'previsioni fatte',
+                  style: textTheme.titleMedium?.copyWith(color: Colors.white),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTokens.s16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+              child: LinearProgressIndicator(
+                minHeight: 8,
+                value: completed / total,
+                color: Colors.white,
+                backgroundColor: AppTokens.navyDark,
+                semanticsLabel: 'Previsioni fatte: $completed di $total',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _TurnActionStrip extends StatelessWidget {
   const _TurnActionStrip({
     required this.countdownLabel,
@@ -617,11 +761,13 @@ class _TurnActionStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
 
-    return FcPanel(
-      padding: const EdgeInsets.all(AppTokens.s14),
-      tint: AppTokens.blue,
+    return Container(
+      padding: const EdgeInsets.all(AppTokens.s20),
+      decoration: BoxDecoration(
+        color: AppTokens.successForeground,
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+      ),
       child: Wrap(
         spacing: AppTokens.s12,
         runSpacing: AppTokens.s12,
@@ -635,7 +781,8 @@ class _TurnActionStrip extends StatelessWidget {
               children: [
                 Text(
                   VenialCopy.playHeader,
-                  style: textTheme.titleMedium?.copyWith(
+                  style: textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -644,16 +791,14 @@ class _TurnActionStrip extends StatelessWidget {
                   predictionCount == 0
                       ? VenialCopy.playResolveDisabledHint
                       : 'Hai giocato $predictionCount carte. Puoi vedere gli esiti della demo.',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: textTheme.bodyMedium?.copyWith(color: Colors.white),
                 ),
                 if (countdownLabel.isNotEmpty) ...[
                   const SizedBox(height: AppTokens.s4),
                   Text(
                     countdownLabel,
                     style: textTheme.labelMedium?.copyWith(
-                      color: scheme.primary,
+                      color: Colors.white,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -662,6 +807,13 @@ class _TurnActionStrip extends StatelessWidget {
             ),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppTokens.successForeground,
+              disabledBackgroundColor: Colors.white.withValues(alpha: 0.18),
+              disabledForegroundColor: Colors.white.withValues(alpha: 0.65),
+              minimumSize: const Size(48, 48),
+            ),
             onPressed: enabled ? onResolveTurn : null,
             child: const Text(VenialCopy.playResolveCta),
           ),
@@ -847,7 +999,10 @@ class _CardsSectionHeader extends StatelessWidget {
       children: [
         Text(
           VenialCopy.playCardsTitle,
-          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+          style: textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: AppTokens.navy,
+          ),
         ),
         const SizedBox(height: AppTokens.s4),
         Text(

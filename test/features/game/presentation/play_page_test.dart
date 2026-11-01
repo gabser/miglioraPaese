@@ -19,7 +19,12 @@ void main() {
       'Play shows real progress and optional summary at $width with large text',
       (tester) async {
         await _pump(tester, width: width, scale: 2);
-        expect(find.text('0 di 2 carte giocate'), findsOneWidget);
+        await tester.scrollUntilVisible(
+          find.byKey(const ValueKey('play-progress')),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(find.text('0 di 2'), findsOneWidget);
         final summary = find.text('Riepilogo del Comune');
         await tester.scrollUntilVisible(
           summary,
@@ -69,6 +74,11 @@ void main() {
     'prediction updates progress and stays immutable while confidence remains editable',
     (tester) async {
       await _pump(tester, width: 390);
+      await tester.scrollUntilVisible(
+        find.text('Problema 1 di 2'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       final improve = find
           .descendant(
             of: find.byType(SegmentedChoice<PredictionChoice>),
@@ -133,7 +143,7 @@ void main() {
         -250,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('1 di 2 carte giocate'), findsOneWidget);
+      expect(find.text('1 di 2'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
