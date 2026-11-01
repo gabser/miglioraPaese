@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'package:fanta_comune/core/models/problem_key.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_case_catalog.dart';
+import 'package:fanta_comune/features/next_problems/domain/proposal_location.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fanta_comune/features/next_problems/data/proposal_draft_store.dart';
 import 'package:fanta_comune/features/next_problems/domain/proposal_draft.dart';
@@ -38,6 +41,43 @@ class ProposalDraftController extends ChangeNotifier {
       draft = value.withRevision(draft.revision + 1);
     }
     _save();
+  }
+
+  void chooseCategory(ProblemKey category) {
+    if (draft.category == category) return;
+    edit(draft.copyWith(category: category, caseIndex: null, detail: null));
+  }
+
+  void chooseCase(int index) =>
+      edit(draft.copyWith(caseIndex: index, detail: null));
+  void chooseDetail(String? value) => edit(draft.copyWith(detail: value));
+  void chooseKind(ProposalLocationKind? value) => edit(
+    draft.copyWith(
+      locationKind: value,
+      coordinates: value == ProposalLocationKind.municipality
+          ? null
+          : draft.coordinates,
+    ),
+  );
+  void choosePin(ProposalCoordinates? value) => edit(
+    draft.copyWith(
+      coordinates: value,
+      locationKind: ProposalLocationKind.specific,
+    ),
+  );
+  void goToStep(int step) => edit(draft.copyWith(step: step));
+  void regenerate({bool force = false}) {
+    final generated = ProposalCaseCatalog.generate(draft);
+    edit(
+      draft.copyWith(
+        title: force || !draft.titleCustomized ? generated.title : draft.title,
+        description: force || !draft.descriptionCustomized
+            ? generated.description
+            : draft.description,
+        titleCustomized: force ? false : draft.titleCustomized,
+        descriptionCustomized: force ? false : draft.descriptionCustomized,
+      ),
+    );
   }
 
   void retry() {

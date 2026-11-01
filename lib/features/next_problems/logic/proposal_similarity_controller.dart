@@ -146,6 +146,7 @@ class ProposalSimilarityController extends ChangeNotifier {
       final samePlace =
           item.location != null &&
           item.location!.kind == location.kind &&
+          item.location!.coordinates == location.coordinates &&
           _normalize(item.location!.displayLabel) ==
               _normalize(location.displayLabel) &&
           _normalize(item.location!.reference ?? '') ==

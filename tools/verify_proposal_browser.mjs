@@ -21,7 +21,7 @@ async function enableSemantics(page) {
 }
 
 async function enterText(page, label, text) {
-  await page.getByRole('textbox', { name: label, exact: true }).click();
+  await page.getByRole('textbox', { name: label, exact: true }).focus();
   // Flutter creates its editing element after focus; paste once it is ready.
   await page.waitForTimeout(400);
   await page.keyboard.insertText(text);
@@ -60,13 +60,15 @@ try {
       await enableSemantics(page);
       // Avoid numeric sequences that the pilot correctly moderates as phone numbers.
       const title = `Alberi lungo il percorso ${failure} ${crypto.randomUUID().replace(/[0-9-]/g, '')}`;
-      await enterText(page, 'Titolo del problema', title);
-      await enterText(page, 'Descrizione del problema',
+      await page.getByRole('checkbox', { name: 'Verde pubblico', exact: true }).click();
+      await page.getByRole('radio', { name: 'Il mio caso è diverso', exact: true }).click();
+      await enterText(page, 'Descrivi brevemente il tuo caso',
         'I rami coprono il passaggio e devono essere osservati nel Comune.');
-      await page.getByRole('button', { name: /^Categoria/ }).click();
-      await page.getByLabel('Verde pubblico', { exact: true }).last().click();
+      await page.getByRole('button', { name: 'Continua', exact: true }).click();
       await page.getByRole('button', { name: /^Tipo di luogo/ }).click();
       await page.getByLabel('Intero Comune', { exact: true }).last().click();
+      await page.getByRole('button', { name: 'Continua', exact: true }).click();
+      await enterText(page, 'Titolo del problema', title);
       await page.getByRole('button', { name: 'Controlla la proposta', exact: true }).click();
       await page.waitForTimeout(700);
       const comparison = page.getByRole('button', {

@@ -1,6 +1,6 @@
 # Contratto invio proposte — pilot V1
 
-Implementazione locale del 9 ottobre 2026; nessun deploy remoto verificato.
+Implementazione locale aggiornata il 31 ottobre 2026; nessun deploy remoto verificato.
 La nuova UI richiede la capability `proposalSubmission: 1` e il round trip del
 luogo. Un vecchio backend che risponde 201 ignorando campi nuovi non è compatibile.
 
@@ -15,6 +15,12 @@ normalizzazione di casing o indirizzo inferito.
 
 - `{kind: "specific", label: "Via Milano", civic?: "12/A", reference?: "Vicino al parco"}`.
   Label 1–120, civic ≤20, reference ≤200; facoltativi vuoti/null omessi.
+- `specific` accetta anche `coordinates: {latitude, longitude}` senza label.
+  Serve almeno nome o coordinate; la coppia è completa, numerica, finita,
+  con latitudine −90…90 e longitudine −180…180. Coordinate parziali,
+  stringhe, null, proprietà estranee o valori fuori intervallo danno 400.
+  Nessun controllo di appartenenza al poligono comunale.
+  Il client mostra «Punto sulla mappa» se manca il nome.
 - `{kind: "municipality"}` contiene soltanto `kind`.
 - Assente/null resta compatibile con client e dati legacy; il DTO restituisce null.
   La nuova UI richiede sempre una scelta esplicita.
@@ -61,7 +67,9 @@ entra nel digest e non autentica il client; omissione/null è ammessa per rollou
 `idempotencyKey` della nuova UI è casuale e immutabile, charset
 `[A-Za-z0-9_-]{8,128}`. Omissione/null resta legacy senza garanzia di replay.
 Indice comando: identità firmata × Comune canonico × key. Digest server SHA-256
-della tuple normalizzata `[title, description, category, location]`.
+della tuple normalizzata `[title, description, category, location]`, incluse entrambe
+le coordinate. Cambiare il pin con la stessa key dà conflitto; retry e lookup
+conservano il pin originario nella receipt immutabile.
 
 Stessa key/digest restituisce receipt originale prima di quota e moderazione;
 contenuto diverso dà 409 `idempotency_conflict`. Due richieste concorrenti dello
@@ -89,7 +97,7 @@ una decisione successiva, senza trasformare key scadute in comandi nuovi.
 ## Errori e recupero
 
 400 `invalid_field` aggiunge `fieldErrors` mappa percorso → codice pubblico
-`required`, `invalid`, `too_long` (esempio `{"location.label":"required"}`).
+`required`, `invalid`, `too_long`, `invalid_location` (per coordinate non valide; esempio `{"location.label":"required"}`).
 413 oltre 64 KiB; 422 moderazione; 429 quota senza countdown inventato.
 401 revoca e 409 cambio scope richiedono gestione del contesto di sessione.
 
@@ -109,3 +117,18 @@ restart, commit prima del reset, fault SQLite via trigger e rollback di memoria/
 incluso reset fallito, snapshot/client legacy, boundary Unicode e moderazione
 luogo, quota/orologio, precondizione cookie cambiato. Gli altri test backend
 restano regressioni dell’intero servizio; queste prove non attestano un deploy remoto.
+
+
+## Rilascio del luogo con coordinate
+
+Distribuire prima il backend con questa estensione additiva e verificarne POST,
+replay e lookup con un pin senza label, poi distribuire il frontend guidato.
+I client precedenti continuano a inviare il luogo testuale; record e invii
+pendenti privi di coordinate restano validi. Non serve una migrazione SQLite:
+il campo è contenuto negli snapshot JSON e viene validato anche al ripristino.
+La capability `proposalSubmission: 1` continua a verificare la continuità della
+sessione, non attesta da sola che il backend supporti le coordinate: il rilascio
+frontend richiede il backend aggiornato. Questa attività non pubblica servizi.
+
+Il flusso e la migrazione bozze sono descritti in
+[proposal_guided_flow.md](../design/proposal_guided_flow.md).

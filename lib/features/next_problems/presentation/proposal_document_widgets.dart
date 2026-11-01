@@ -1,3 +1,4 @@
+import 'package:fanta_comune/features/next_problems/presentation/proposal_point_map.dart';
 import 'package:fanta_comune/core/copy/venial_copy.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -96,6 +97,11 @@ class ProposalDocument extends StatelessWidget {
         Text(
           'Luogo: ${problem.location?.displayLabel ?? 'Luogo non specificato'}',
         ),
+        if (problem.location?.coordinates != null)
+          ProposalPointMap(
+            municipalityId: municipalityId,
+            coordinates: problem.location!.coordinates,
+          ),
         if (problem.location?.reference != null)
           Text('Riferimento: ${problem.location!.reference}'),
         const SizedBox(height: AppTokens.s12),
