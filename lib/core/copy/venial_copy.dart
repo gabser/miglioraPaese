@@ -89,10 +89,10 @@ class VenialCopy {
   static const onboardingRibbonLabel = 'Comune';
   static const onboardingCityTitle = 'Scegli il tuo Comune';
 
-  static const playHeader = 'Gioca le carte del turno';
+  static const playHeader = 'La tua prossima mossa';
   static const playIntro =
       'Scegli una carta, fai una previsione e indica perché.';
-  static const playCardsTitle = 'Carte da giocare';
+  static const playCardsTitle = 'Le sfide del turno';
   static const playCardsSubtitle =
       '{count} situazioni aperte: scegli se migliorano, restano stabili o peggiorano.';
   static const playBoardHeaderTitle = 'Turno di oggi';
